@@ -1,32 +1,50 @@
-import { defineConfig } from "vite";
+import { ConfigEnv, defineConfig, loadEnv } from "vite";
 import vue from "@vitejs/plugin-vue";
-
-// @ts-expect-error process is a nodejs global
-const host = process.env.TAURI_DEV_HOST;
+import AutoImport from "unplugin-auto-import/vite"; // 自动导入
+import Components from "unplugin-vue-components/vite"; // 组件注入
+import { NaiveUiResolver } from "unplugin-vue-components/resolvers";
+import { getSrcPath, getRootPath } from "./build/config/getPath";
+import vueJsx from "@vitejs/plugin-vue-jsx";
+import unocss from "@unocss/vite";
 
 // https://vite.dev/config/
-export default defineConfig(async () => ({
-  plugins: [vue()],
-
-  // Vite options tailored for Tauri development and only applied in `tauri dev` or `tauri build`
-  //
-  // 1. prevent Vite from obscuring rust errors
-  clearScreen: false,
-  // 2. tauri expects a fixed port, fail if that port is not available
-  server: {
-    port: 1420,
-    strictPort: true,
-    host: host || false,
-    hmr: host
-      ? {
-          protocol: "ws",
-          host,
-          port: 1421,
-        }
-      : undefined,
-    watch: {
-      // 3. tell Vite to ignore watching `src-tauri`
-      ignored: ["**/src-tauri/**"],
+export default defineConfig(({ mode }: ConfigEnv) => {
+  const config = loadEnv(mode, "/");
+  console.log(config);
+  return {
+    resolve: {
+      alias: {
+        "@": getSrcPath(),
+        "~": getRootPath()
+      }
     },
-  },
-}));
+    plugins: [
+      vue({ script: { propsDestructure: true } }),
+      vueJsx(), // 开启jsx功能
+      unocss(), // 开启unocss
+      AutoImport({
+        imports: [
+          "vue",
+          {
+            "naive-ui": ["useDialog", "useMessage", "useNotification", "useLoadingBar"]
+          }
+        ],
+        dts: "src/typings/auto-imports.d.ts"
+      }),
+      Components({
+        dirs: ["src/components/**"],
+        resolvers: [NaiveUiResolver()],
+        dts: "src/typings/components.d.ts"
+      })
+    ],
+    clearScreen: false,
+    server: {
+      port: 1420,
+      strictPort: true,
+      host: "0.0.0.0",
+      watch: {
+        ignored: ["**/src-tauri/**"]
+      }
+    }
+  };
+});

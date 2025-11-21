@@ -1,4 +1,10 @@
 import { createApp } from "vue";
-import App from "./App.vue";
+import "uno.css";
+import "@unocss/reset/eric-meyer.css"; // unocss提供的浏览器默认样式重置
+import { pinia } from "@/stores";
+import piniaPluginPersistedstate from "pinia-plugin-persistedstate";
+import App from "@/App.vue";
 
-createApp(App).mount("#app");
+pinia.use(piniaPluginPersistedstate);
+const app = createApp(App);
+app.use(pinia).mount("#app");
