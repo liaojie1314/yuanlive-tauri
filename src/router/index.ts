@@ -1,0 +1,22 @@
+import { createRouter, createWebHistory, type RouteRecordRaw } from "vue-router";
+
+const getCommonRoutes = (): Array<RouteRecordRaw> => [
+  {
+    name: "index",
+    path: "/",
+    redirect: "/login"
+  },
+  {
+    name: "login",
+    path: "/login",
+    component: () => import("@/views/loginWindow/Login.vue")
+  }
+];
+
+// 创建路由
+const router: any = createRouter({
+  history: createWebHistory(),
+  routes: getCommonRoutes()
+});
+
+export default router;
