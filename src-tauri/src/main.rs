@@ -1,6 +1,10 @@
-// Prevents additional console window on Windows in release, DO NOT REMOVE!!
+// Prevents additional console window on windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-fn main() {
-    yuanlive_tauri_lib::run()
+use dotenv::dotenv;
+
+fn main() -> std::io::Result<()> {
+    dotenv().ok();
+    yuanlive_tauri_lib::run();
+    Ok(())
 }

@@ -15,7 +15,8 @@ declare module "*.vue" {
 
 declare interface Window {
   $message: ReturnType<typeof useMessage>;
-  $notification: ReturnType<typeof useNotification>;
   $loadingBar: ReturnType<typeof useLoadingBar>;
   $dialog: ReturnType<typeof useDialog>;
+  $notification: ReturnType<typeof useNotification>;
+  $modal: ReturnType<typeof useModal>;
 }
