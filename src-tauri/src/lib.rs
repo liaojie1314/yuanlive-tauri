@@ -4,10 +4,8 @@ mod error;
 mod request_client;
 mod request_command;
 
-use crate::app_state_command::is_app_state_ready;
 use crate::configuration::{get_configuration, BackendSettings};
 use crate::error::CommonError;
-use crate::request_command::{login_command, request_command};
 use serde::{Deserialize, Serialize};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
@@ -35,6 +33,8 @@ pub struct UserInfo {
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_process::init())
+        .plugin(tauri_plugin_os::init())
         .plugin(tauri_plugin_fs::init())
         .plugin(
             tauri_plugin_log::Builder::new()
@@ -114,5 +114,7 @@ fn common_setup(app_handle: AppHandle) -> Result<(), Box<dyn std::error::Error>>
 // 公共的命令处理器函数
 fn get_invoke_handlers() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Send + Sync + 'static
 {
+    use crate::app_state_command::is_app_state_ready;
+    use crate::request_command::{login_command, request_command};
     tauri::generate_handler![is_app_state_ready, login_command, request_command]
 }

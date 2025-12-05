@@ -2,11 +2,6 @@ import { createRouter, createWebHistory, type RouteRecordRaw } from "vue-router"
 
 const getCommonRoutes = (): Array<RouteRecordRaw> => [
   {
-    name: "index",
-    path: "/",
-    redirect: "/login"
-  },
-  {
     name: "login",
     path: "/login",
     component: () => import("@/views/loginWindow/Login.vue")

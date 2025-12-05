@@ -10,14 +10,7 @@
     "frontendDist": "../dist"
   },
   "app": {
-    "windows": [
-      {
-        "title": "yuanlive-tauri",
-        "width": 800,
-        "center": true,
-        "height": 600
-      }
-    ],
+    "windows": [],
     "security": {
       "csp": null,
       "capabilities": ["default-capability"]

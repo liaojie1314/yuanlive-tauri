@@ -19,3 +19,21 @@ export enum UrlEnum {
   REGISTER = "register",
   FORGET_PASSWORD = "forgetPassword"
 }
+
+/** 关闭窗口的行为 */
+export enum CloseBxEnum {
+  /** 隐藏 */
+  HIDE = "hide",
+  /** 关闭 */
+  CLOSE = "close"
+}
+
+/** tauri原生跨窗口通信时传输的类型 */
+export enum EventEnum {
+  /** 窗口关闭 */
+  WIN_CLOSE = "winClose",
+  /** 窗口显示 */
+  WIN_SHOW = "winShow",
+  /** 退出程序 */
+  EXIT = "exit"
+}
