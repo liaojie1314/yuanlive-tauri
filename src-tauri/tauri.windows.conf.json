@@ -63,7 +63,7 @@
         "width": 320,
         "height": 448,
         "skipTaskbar": false,
-        "transparent": true,
+        "transparent": false,
         "visible": true,
         "decorations": false
       }

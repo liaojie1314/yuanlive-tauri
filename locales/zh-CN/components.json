@@ -1,0 +1,12 @@
+{
+  "common": {
+    "confirm": "确定",
+    "cancel": "取消"
+  },
+  "actionBar": {
+    "alwaysOnTop": {
+      "enabled": "取消置顶",
+      "disabled": "置顶"
+    }
+  }
+}

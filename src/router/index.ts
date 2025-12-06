@@ -5,6 +5,11 @@ const getCommonRoutes = (): Array<RouteRecordRaw> => [
     name: "login",
     path: "/login",
     component: () => import("@/views/loginWindow/Login.vue")
+  },
+  {
+    name: "home",
+    path: "/home",
+    component: () => import("@/layout/index.vue")
   }
 ];
 

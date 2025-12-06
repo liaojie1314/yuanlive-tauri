@@ -1,24 +1,3 @@
-<template>
-  <n-config-provider
-    :theme-overrides="globalTheme === ThemeEnum.DARK ? darkThemeOverrides : lightThemeOverrides"
-    :theme="globalTheme"
-    :locale="zhCN"
-    :date-locale="dateZhCN">
-    <n-loading-bar-provider>
-      <n-dialog-provider>
-        <n-notification-provider :max="notifyMax">
-          <n-message-provider :max="messageMax">
-            <n-modal-provider>
-              <slot></slot>
-              <naive-provider-content />
-            </n-modal-provider>
-          </n-message-provider>
-        </n-notification-provider>
-      </n-dialog-provider>
-    </n-loading-bar-provider>
-  </n-config-provider>
-</template>
-
 <script setup lang="ts">
 import { darkTheme, lightTheme, dateZhCN, zhCN, type GlobalThemeOverrides } from "naive-ui";
 import { ThemeEnum } from "@/enums";
@@ -202,4 +181,26 @@ watchEffect(() => {
   }
 });
 </script>
+
+<template>
+  <n-config-provider
+    :theme-overrides="globalTheme === ThemeEnum.DARK ? darkThemeOverrides : lightThemeOverrides"
+    :theme="globalTheme"
+    :locale="zhCN"
+    :date-locale="dateZhCN">
+    <n-loading-bar-provider>
+      <n-dialog-provider>
+        <n-notification-provider :max="notifyMax">
+          <n-message-provider :max="messageMax">
+            <n-modal-provider>
+              <slot></slot>
+              <naive-provider-content />
+            </n-modal-provider>
+          </n-message-provider>
+        </n-notification-provider>
+      </n-dialog-provider>
+    </n-loading-bar-provider>
+  </n-config-provider>
+</template>
+
 <style scoped></style>

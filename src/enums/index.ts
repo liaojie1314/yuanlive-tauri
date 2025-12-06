@@ -37,3 +37,9 @@ export enum EventEnum {
   /** 退出程序 */
   EXIT = "exit"
 }
+
+/** pinia存储的名称 */
+export enum StoresEnum {
+  /** 置顶 */
+  ALWAYS_ON_TOP = "alwaysOnTop"
+}

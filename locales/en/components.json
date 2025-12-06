@@ -1,0 +1,12 @@
+{
+  "common": {
+    "confirm": "Confirm",
+    "cancel": "Cancel"
+  },
+  "actionBar": {
+    "alwaysOnTop": {
+      "enabled": "Disable always-on-top",
+      "disabled": "Pin to top"
+    }
+  }
+}
