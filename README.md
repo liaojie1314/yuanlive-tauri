@@ -9,6 +9,12 @@ pnpm i
 pnpm tauri:dev # 启动桌面端 更多命令查看package.json
 ```
 
+### 代码提交
+
+```shell
+pnpm commit
+```
+
 ### 基础组件
 
 | 组件                                        | 描述            |
