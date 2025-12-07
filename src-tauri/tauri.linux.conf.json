@@ -57,7 +57,7 @@
         "resizable": false,
         "center": true,
         "width": 320,
-        "height": 500,
+        "height": 448,
         "skipTaskbar": false,
         "transparent": false,
         "decorations": false,

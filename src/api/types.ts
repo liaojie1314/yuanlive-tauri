@@ -1,3 +1,24 @@
+import type { GenderEnum } from "@/enums";
+
+export type UserInfoType = {
+  // 用户唯一标识
+  uid: string;
+  // 用户账号
+  account: string;
+  // 邮箱
+  email: string;
+  // 密码
+  password?: string;
+  // 用户头像
+  avatar: string;
+  // 用户名
+  userName: string;
+  // 性别 1为男性，2为女性
+  gender: GenderEnum;
+  // 手机号
+  phone?: string;
+};
+
 export type RegisterUserReq = {
   // 头像
   avatar: string;

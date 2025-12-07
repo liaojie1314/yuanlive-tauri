@@ -318,6 +318,7 @@ pub enum Url {
     RefreshToken,
     Logout,
     ForgetPassword,
+    GetUserInfoDetail,
 }
 
 impl Url {
@@ -329,6 +330,7 @@ impl Url {
             Url::RefreshToken => (http::Method::POST, "token/refresh"),
             Url::Logout => (http::Method::POST, "logout"),
             Url::ForgetPassword => (http::Method::PUT, "forget/password"),
+            Url::GetUserInfoDetail => (http::Method::GET, "user/info"),
         }
     }
 
@@ -339,6 +341,7 @@ impl Url {
             "refreshToken" => Ok(Url::RefreshToken),
             "logout" => Ok(Url::Logout),
             "forgetPassword" => Ok(Url::ForgetPassword),
+            "getUserInfoDetail" => Ok(Url::GetUserInfoDetail),
             // 未匹配的字符串
             _ => Err(anyhow::anyhow!("未知的URL类型: {}", s)),
         }

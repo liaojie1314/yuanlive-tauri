@@ -1,0 +1,7 @@
+/**! 可以根据自己的喜好搭配渐变，网址：https://webgradients.com/ */
+.login-box {
+  background-color: #ffffff;
+  background-image: linear-gradient(120deg, #a6c0fe 0%, #f68084 100%);
+  background-repeat: no-repeat;
+  animation: 8s movement linear infinite;
+}

@@ -21,3 +21,9 @@ export async function forgetPassword(body: ForgetPasswordReq) {
     body
   });
 }
+
+export async function getUserDetail() {
+  return await request({
+    url: UrlEnum.GET_USER_INFO_DETAIL
+  });
+}

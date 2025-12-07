@@ -52,6 +52,7 @@
     "naive-ui": "^2.43.2",
     "pinia": "^3.0.4",
     "pinia-plugin-persistedstate": "^4.7.1",
+    "pinia-shared-state": "^1.0.1",
     "vue": "^3.5.13",
     "vue-i18n": "^11.2.2",
     "vue-router": "^4.6.3"
