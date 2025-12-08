@@ -17,19 +17,19 @@ interface RequestParams {
  * 请求选项接口
  */
 interface RequestOptions {
-  /** 是否显示错误提示，默认为 true */
+  // 是否显示错误提示，默认为 true
   showError?: boolean;
-  /** 自定义错误消息 */
+  // 自定义错误消息
   customErrorMessage?: string;
-  /** 错误类型，默认为 Network */
+  // 错误类型，默认为 Network
   errorType?: ErrorType;
-  /** 是否静默调用（不显示错误），默认为 false */
+  // 是否静默调用（不显示错误），默认为 false
   silent?: boolean;
-  /** 重试选项 */
+  // 重试选项
   retry?: {
-    /** 最大重试次数，默认为 3 */
+    // 最大重试次数，默认为 3
     maxRetries?: number;
-    /** 重试间隔（毫秒），默认为 1000 */
+    // 重试间隔（毫秒），默认为 1000
     retryDelay?: number;
   };
 }
@@ -80,4 +80,95 @@ export async function requestSilent<T = any>(requestParams: RequestParams): Prom
     params: requestParams.params || null
   };
   return await invokeSilently<T>("request_command", args);
+}
+
+/**
+ * SSE 流式数据事件类型
+ */
+interface SseStreamEvent {
+  requestId: string;
+  eventType: "chunk" | "done" | "error";
+  data?: string;
+  error?: string;
+}
+
+/**
+ * 流式数据回调函数
+ */
+export interface StreamCallbacks {
+  onChunk?: (chunk: string) => void;
+  onDone?: (fullContent: string) => void;
+  onError?: (error: string) => void;
+}
+
+export async function messageSendStream(
+  body: {
+    conversationId: string;
+    content: string;
+    // 是否使用上下文
+    useContext?: boolean;
+    // 联网搜索
+    useNetwork?: boolean;
+    // 深度思考
+    useReasoning?: boolean;
+  },
+  callbacks?: StreamCallbacks
+) {
+  const { invoke, Channel } = await import("@tauri-apps/api/core");
+  const { TauriCommand } = await import("@/enums");
+
+  // 生成唯一的请求 ID
+  const requestId = `ai-stream-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+  return new Promise<string>((resolve, reject) => {
+    let fullContent = "";
+    let isResolved = false;
+
+    // 创建 Channel 用于接收流式事件
+    const onEvent = new Channel<SseStreamEvent>();
+    onEvent.onmessage = (event: SseStreamEvent) => {
+      const { eventType, data, error, requestId: eventRequestId } = event;
+
+      // 只处理当前请求的事件
+      if (eventRequestId !== requestId) return;
+
+      switch (eventType) {
+        case "chunk":
+          if (data) {
+            fullContent += data;
+            callbacks?.onChunk?.(data);
+          }
+          break;
+        case "done":
+          if (!isResolved) {
+            isResolved = true;
+            const finalContent = data || fullContent;
+            callbacks?.onDone?.(finalContent);
+            resolve(finalContent);
+          }
+          break;
+        case "error":
+          if (!isResolved) {
+            isResolved = true;
+            const errorMsg = error || "未知错误";
+            callbacks?.onError?.(errorMsg);
+            reject(new Error(errorMsg));
+          }
+          break;
+      }
+    };
+
+    // 调用 Rust 后端命令发送请求
+    invoke(TauriCommand.AI_MESSAGE_SEND_STREAM, {
+      body,
+      requestId,
+      onEvent
+    }).catch((error) => {
+      if (!isResolved) {
+        isResolved = true;
+        const errorMsg = error instanceof Error ? error.message : String(error);
+        callbacks?.onError?.(errorMsg);
+        reject(error);
+      }
+    });
+  });
 }

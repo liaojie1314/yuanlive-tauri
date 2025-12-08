@@ -1,12 +1,16 @@
 import { useNetwork } from "@vueuse/core";
-import { useI18nGlobal } from "@/services/i18n.ts";
-import { useUserStore } from "@/stores/user.ts";
-import type { UserInfoType } from "@/api/types.ts";
 import { info } from "@tauri-apps/plugin-log";
-import { ensureAppStateReady } from "@/utils/AppStateReady.ts";
 import { invoke } from "@tauri-apps/api/core";
-import { useWindow } from "@/hooks/useWindow.ts";
 import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
+
+import type { UserInfoType } from "@/api/types.ts";
+import { TauriCommand } from "@/enums";
+
+import { useUserStore } from "@/stores/user.ts";
+import { useI18nGlobal } from "@/services/i18n.ts";
+import { useWindow } from "@/hooks/useWindow.ts";
+import { ensureAppStateReady } from "@/utils/AppStateReady.ts";
+import { invokeSilently } from "@/utils/TauriInvokeHandler.ts";
 
 export function useLogin() {
   const userStore = useUserStore();
@@ -125,6 +129,7 @@ export function useLogin() {
     const { createWebviewWindow } = useWindow();
     try {
       // 创建登录窗口
+      await invokeSilently(TauriCommand.REMOVE_TOKENS);
       await createWebviewWindow("登录", "login", 320, 448, void 0, false, 320, 448);
     } catch (e) {
       console.error("创建登录窗口失败:", e);

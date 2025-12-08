@@ -21,6 +21,7 @@ export enum ThemeEnum {
   OS = "os"
 }
 
+/** url枚举 */
 export enum UrlEnum {
   // 登出
   LOGOUT = "logout",
@@ -29,7 +30,11 @@ export enum UrlEnum {
   // 忘记密码
   FORGET_PASSWORD = "forgetPassword",
   // 获取用户信息详情
-  GET_USER_INFO_DETAIL = "getUserInfoDetail"
+  GET_USER_INFO_DETAIL = "getUserInfoDetail",
+  // 生成登录二维码
+  GENERATE_QR_CODE = "generateQRCode",
+  // 检测二维码状态
+  CHECK_QR_STATUS = "checkQRStatus"
 }
 
 /** 关闭窗口的行为 */
@@ -48,6 +53,14 @@ export enum EventEnum {
   WIN_SHOW = "winShow",
   // 退出程序
   EXIT = "exit"
+}
+
+/** tauri 命令 */
+export enum TauriCommand {
+  // 移除 token
+  REMOVE_TOKENS = "remove_tokens",
+  // AI 消息流式发送
+  AI_MESSAGE_SEND_STREAM = "ai_message_send_stream"
 }
 
 /** pinia存储的名称 */

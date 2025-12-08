@@ -26,6 +26,8 @@ serde_json = "1"
 tauri-plugin-http = "2"
 tauri-plugin-log = { version = "2", features = ["colored"] }
 tauri-plugin-fs = "2"
+tauri-plugin-os = "2"
+tauri-plugin-process = "2"
 
 # Tauri 非官方依赖
 dotenv = "0.15.0"
@@ -42,5 +44,4 @@ reqwest = { version = "0.12", default-features = false, features = [
 ] }
 config = { version = "0.15.19", default-features = false, features = ["yaml"] }
 tokio = "1.48.0"
-tauri-plugin-os = "2"
-tauri-plugin-process = "2"
+futures = "0.3"

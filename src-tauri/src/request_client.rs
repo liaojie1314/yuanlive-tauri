@@ -278,8 +278,8 @@ impl RequestClient {
 }
 
 impl Request for RequestClient {
-    async fn login(&mut self, login_req: LoginReq) -> Result<Option<LoginResp>, anyhow::Error> {
-        let result: Option<LoginResp> = self
+    async fn login(&mut self, login_req: LoginReq) -> Result<Option<AuthResp>, anyhow::Error> {
+        let result: Option<AuthResp> = self
             .request(Url::Login, Some(login_req), None::<serde_json::Value>)
             .await?;
 
@@ -294,8 +294,8 @@ impl Request for RequestClient {
     async fn refresh_token(
         &mut self,
         refresh_token_req: RefreshTokenReq,
-    ) -> Result<Option<RefreshTokenResp>, anyhow::Error> {
-        let result: Option<RefreshTokenResp> = self
+    ) -> Result<Option<AuthResp>, anyhow::Error> {
+        let result: Option<AuthResp> = self
             .request(
                 Url::RefreshToken,
                 Some(refresh_token_req),
@@ -318,19 +318,30 @@ pub enum Url {
     RefreshToken,
     Logout,
     ForgetPassword,
+
+    GenerateQRCode,
+    CheckQRStatus,
+
     GetUserInfoDetail,
+
+    MessageSendStream,
 }
 
 impl Url {
     pub fn get_url(&self) -> (http::Method, &str) {
         match self {
-            // Token 相关
             Url::Register => (http::Method::POST, "register"),
             Url::Login => (http::Method::POST, "login"),
             Url::RefreshToken => (http::Method::POST, "token/refresh"),
             Url::Logout => (http::Method::POST, "logout"),
             Url::ForgetPassword => (http::Method::PUT, "forget/password"),
+            // 扫码登录相关
+            Url::GenerateQRCode => (http::Method::GET, "qr/generate"),
+            Url::CheckQRStatus => (http::Method::GET, "qr/status/query"),
+            // 用户信息相关
             Url::GetUserInfoDetail => (http::Method::GET, "user/info"),
+            // AI 相关
+            Url::MessageSendStream => (http::Method::POST, "ai/chat/stream"),
         }
     }
 
@@ -341,7 +352,13 @@ impl Url {
             "refreshToken" => Ok(Url::RefreshToken),
             "logout" => Ok(Url::Logout),
             "forgetPassword" => Ok(Url::ForgetPassword),
+            // 扫码登录相关
+            "generateQRCode" => Ok(Url::GenerateQRCode),
+            "checkQRStatus" => Ok(Url::CheckQRStatus),
+            // 用户信息相关
             "getUserInfoDetail" => Ok(Url::GetUserInfoDetail),
+            // AI 相关
+            "messageSendStream" => Ok(Url::MessageSendStream),
             // 未匹配的字符串
             _ => Err(anyhow::anyhow!("未知的URL类型: {}", s)),
         }
@@ -371,7 +388,6 @@ pub struct LoginReq {
     pub account: String,
     pub password: String,
     pub grant_type: String,
-    pub system_type: String,
     pub device_type: String,
     pub client_id: String, // 客户端指纹信息
     #[serde(default)]
@@ -381,11 +397,10 @@ pub struct LoginReq {
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
-pub struct LoginResp {
-    pub token: String,
-    pub client: String,
-    pub refresh_token: String,
+pub struct AuthResp {
     pub uid: String,
+    pub token: String,
+    pub refresh_token: String,
     pub expire: String,
 }
 
@@ -395,21 +410,12 @@ pub struct RefreshTokenReq {
     pub refresh_token: String,
 }
 
-#[derive(Serialize, Deserialize, Clone)]
-#[serde(rename_all = "camelCase")]
-pub struct RefreshTokenResp {
-    pub token: String,
-    pub refresh_token: String,
-    pub expire: String,
-    pub uid: String,
-}
-
 pub trait Request {
-    async fn login(&mut self, login_req: LoginReq) -> Result<Option<LoginResp>, anyhow::Error>;
+    async fn login(&mut self, login_req: LoginReq) -> Result<Option<AuthResp>, anyhow::Error>;
     async fn refresh_token(
         &mut self,
         refresh_token_req: RefreshTokenReq,
-    ) -> Result<Option<RefreshTokenResp>, anyhow::Error>;
+    ) -> Result<Option<AuthResp>, anyhow::Error>;
 }
 
 // 测试
@@ -417,22 +423,21 @@ pub trait Request {
 mod test {
     use serde_json::json;
 
-    use crate::request_client::{LoginReq, LoginResp};
+    use crate::request_client::{AuthResp, LoginReq};
     use crate::request_client::{Request, RequestClient};
 
     #[tokio::test]
     async fn test_login() -> Result<(), anyhow::Error> {
         let mut request_client = RequestClient::new("http://127.0.0.1:8081".to_string())?;
         let login_req = json!({
-            "client_id": "testClientId",
+            "clientId": "testClientId",
             "account": "yuanyuan",
             "password": "123456",
             "grantType": "PASSWORD",
-            "systemType": "2",
             "deviceType": "MOBILE",
         });
         let login_req: LoginReq = serde_json::from_value(login_req)?;
-        let result: Option<LoginResp> = request_client.login(login_req).await?;
+        let result: Option<AuthResp> = request_client.login(login_req).await?;
         println!("{:?}", json!(result).to_string());
         Ok(())
     }

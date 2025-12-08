@@ -1,8 +1,7 @@
-mod app_state_command;
+pub mod command;
 mod configuration;
 mod error;
 mod request_client;
-mod request_command;
 
 use crate::configuration::{get_configuration, BackendSettings};
 use crate::error::CommonError;
@@ -86,7 +85,7 @@ async fn initialize_app_data(
 // 功能 setup 函数
 fn common_setup(app_handle: AppHandle) -> Result<(), Box<dyn std::error::Error>> {
     let scope = app_handle.fs_scope();
-    scope.allow_directory("configuration", false).unwrap();
+    scope.allow_directory("configuration", false)?;
 
     match tauri::async_runtime::block_on(initialize_app_data(app_handle.clone())) {
         Ok((user_info, rc, settings)) => {
@@ -114,7 +113,15 @@ fn common_setup(app_handle: AppHandle) -> Result<(), Box<dyn std::error::Error>>
 // 公共的命令处理器函数
 fn get_invoke_handlers() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Send + Sync + 'static
 {
-    use crate::app_state_command::is_app_state_ready;
-    use crate::request_command::{login_command, request_command};
-    tauri::generate_handler![is_app_state_ready, login_command, request_command]
+    use crate::command::ai_command::ai_message_send_stream;
+    use crate::command::app_state_command::is_app_state_ready;
+    use crate::command::request_command::{login_command, request_command};
+    use crate::command::token_command::remove_tokens;
+    tauri::generate_handler![
+        is_app_state_ready,
+        remove_tokens,
+        ai_message_send_stream,
+        login_command,
+        request_command
+    ]
 }

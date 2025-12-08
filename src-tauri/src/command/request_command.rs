@@ -1,4 +1,4 @@
-use crate::request_client::{LoginReq, LoginResp, Request, Url};
+use crate::request_client::{AuthResp, LoginReq, Request, Url};
 use crate::AppData;
 use tauri::{Emitter, State};
 use tracing::info;
@@ -7,7 +7,7 @@ use tracing::info;
 pub async fn login_command(
     data: LoginReq,
     state: State<'_, AppData>,
-) -> Result<Option<LoginResp>, String> {
+) -> Result<Option<AuthResp>, String> {
     if data.is_auto_login {
         // 自动登录逻辑
         info!("Performing automatic login");
@@ -35,7 +35,7 @@ pub async fn login_command(
 }
 
 async fn handle_login_success(
-    login_resp: &LoginResp,
+    login_resp: &AuthResp,
     state: &State<'_, AppData>,
 ) -> Result<(), String> {
     info!("handle_login_success, login_resp: {:?}", login_resp);

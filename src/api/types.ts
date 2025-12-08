@@ -41,14 +41,8 @@ export type LoginUserReq = {
   password: string;
   // 登录方式 PC/MOBILE
   deviceType: "PC" | "MOBILE";
-  // 系统ID
-  systemType: number;
   // 授权方式
   grantType: "CAPTCHA" | "REFRESH_TOKEN" | "PASSWORD" | "MOBILE";
-  // 验证码key
-  key?: string;
-  // 验证码code
-  code?: string;
 };
 
 export type ForgetPasswordReq = {

@@ -7,6 +7,21 @@ const getCommonRoutes = (): Array<RouteRecordRaw> => [
     component: () => import("@/views/loginWindow/Login.vue")
   },
   {
+    name: "register",
+    path: "/register",
+    component: () => import("@/views/registerWindow/index.vue")
+  },
+  {
+    name: "forgetPassword",
+    path: "/forgetPassword",
+    component: () => import("@/views/forgetPasswordWindow/index.vue")
+  },
+  {
+    name: "qrCode",
+    path: "/qrCode",
+    component: () => import("@/views/loginWindow/QRCode.vue")
+  },
+  {
     name: "home",
     path: "/home",
     component: () => import("@/layout/index.vue")
