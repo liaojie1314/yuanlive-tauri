@@ -1,11 +1,13 @@
 pub mod command;
 mod configuration;
 mod error;
+mod plugin;
 mod request_client;
 mod tray;
 
 use crate::configuration::{get_configuration, BackendSettings};
 use crate::error::CommonError;
+use crate::plugin::CustomInit;
 use serde::{Deserialize, Serialize};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
@@ -33,16 +35,7 @@ pub struct UserInfo {
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
-        .plugin(tauri_plugin_process::init())
-        .plugin(tauri_plugin_os::init())
-        .plugin(tauri_plugin_fs::init())
-        .plugin(
-            tauri_plugin_log::Builder::new()
-                .level(tauri_plugin_log::log::LevelFilter::Info)
-                .build(),
-        )
-        .plugin(tauri_plugin_http::init())
-        .plugin(tauri_plugin_opener::init())
+        .init_plugin()
         .setup(move |app| {
             common_setup(app.handle().clone())?;
             Ok(())
@@ -118,9 +111,12 @@ fn get_invoke_handlers() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Se
     use crate::command::ai_command::ai_message_send_stream;
     use crate::command::app_state_command::is_app_state_ready;
     use crate::command::request_command::{login_command, request_command};
+    use crate::command::setting_command::{get_settings, update_settings};
     use crate::command::token_command::remove_token;
     tauri::generate_handler![
         is_app_state_ready,
+        get_settings,
+        update_settings,
         remove_token,
         ai_message_send_stream,
         login_command,
