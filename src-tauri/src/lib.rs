@@ -2,6 +2,7 @@ pub mod command;
 mod configuration;
 mod error;
 mod request_client;
+mod tray;
 
 use crate::configuration::{get_configuration, BackendSettings};
 use crate::error::CommonError;
@@ -106,7 +107,8 @@ fn common_setup(app_handle: AppHandle) -> Result<(), Box<dyn std::error::Error>>
         }
     }
 
-    // todo 桌面托盘菜单
+    #[cfg(desktop)]
+    tray::create_tray(&app_handle)?;
     Ok(())
 }
 

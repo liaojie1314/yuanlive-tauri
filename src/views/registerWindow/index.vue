@@ -1,5 +1,13 @@
-<script setup lang="ts"></script>
+<template>
+  <div>注册页面</div>
+</template>
 
-<template></template>
+<script setup lang="ts">
+import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
+
+onMounted(async () => {
+  await getCurrentWebviewWindow().show();
+});
+</script>
 
 <style scoped></style>

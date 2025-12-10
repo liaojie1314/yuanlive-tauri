@@ -56,7 +56,7 @@ export enum EventEnum {
 }
 
 /** tauri 命令 */
-export enum TauriCommand {
+export enum TauriCommandEnum {
   // 移除 token
   REMOVE_TOKENS = "remove_tokens",
   // AI 消息流式发送
@@ -69,4 +69,10 @@ export enum StoresEnum {
   ALWAYS_ON_TOP = "alwaysOnTop",
   // 用户
   USER = "user"
+}
+
+/** 本地存储的key */
+export enum StorageKeyEnum {
+  CLIENT_ID = "clientId",
+  DEVICE_FINGERPRINT = "deviceFingerprint"
 }

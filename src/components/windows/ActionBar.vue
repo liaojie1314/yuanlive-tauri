@@ -5,7 +5,11 @@
     :class="isCompatibility() ? 'flex justify-end select-none' : 'h-24px select-none w-full'">
     <template v-if="isCompatibility()">
       <!--  登录窗口的代理按钮  -->
-      <div v-if="proxy" :class="{ network: isWindows() }" class="w-30px h-24px flex-center hover-box">
+      <div
+        v-if="proxy"
+        :class="{ network: isWindows() }"
+        class="w-30px h-24px flex-center hover-box"
+        @click="router.push('/network')">
         <svg
           :class="[iconColor !== '' ? `color-${iconColor}` : 'color-[--action-bar-icon-color]']"
           class="size-16px cursor-pointer">
@@ -73,6 +77,8 @@
 import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { info } from "@tauri-apps/plugin-log";
 import { exit } from "@tauri-apps/plugin-process";
+
+import router from "@/router";
 import { useMitt } from "@/hooks/useMitt.ts";
 import { useAlwaysOnTopStore } from "@/stores/alwaysOnTop.ts";
 import { isCompatibility, isMac, isWindows } from "@/utils/PlatformUtils.ts";

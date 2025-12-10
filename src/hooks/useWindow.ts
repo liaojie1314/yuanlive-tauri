@@ -1,5 +1,6 @@
 import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { LogicalSize } from "@tauri-apps/api/dpi";
+import { isWindows10 } from "@/utils/PlatformUtils";
 
 export const useWindow = () => {
   /**
@@ -42,7 +43,8 @@ export const useWindow = () => {
       skipTaskbar: false,
       decorations: true,
       titleBarStyle: "overlay", // mac覆盖标签栏
-      hiddenTitle: true // mac隐藏标题栏
+      hiddenTitle: true, // mac隐藏标题栏
+      ...(isWindows10() ? { shadow: false } : {})
     });
 
     await webview.once("tauri://created", async () => {
@@ -52,7 +54,8 @@ export const useWindow = () => {
       }
     });
 
-    await webview.once("tauri://error", async () => {
+    await webview.once("tauri://error", async (e) => {
+      console.error("窗口创建失败:", e);
       await checkWinExist(label);
     });
 

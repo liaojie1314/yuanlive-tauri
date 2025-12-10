@@ -1,5 +1,5 @@
 <template>
-  <div>二维码</div>
+  <div>网络设置</div>
 </template>
 
 <script setup lang="ts"></script>

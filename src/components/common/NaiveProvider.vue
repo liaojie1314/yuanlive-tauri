@@ -33,9 +33,9 @@ const commonTheme: GlobalThemeOverrides = {
     boxShadowFocus: "0"
   },
   Checkbox: {
-    colorChecked: "#1fc162",
-    borderChecked: "1px solid #1fc162",
-    borderFocus: "1px solid #1fc162",
+    colorChecked: "#13987f",
+    borderChecked: "1px solid #13987f",
+    borderFocus: "1px solid #13987f",
     boxShadowFocus: "0 0 0 2px rgba(19, 152, 127, 0.3)"
   },
   Tag: {
@@ -44,16 +44,16 @@ const commonTheme: GlobalThemeOverrides = {
   Button: {
     borderRadiusMedium: "10px",
     borderRadiusSmall: "6px",
-    colorPrimary: "#1fc162"
+    colorPrimary: "#13987f"
   },
   Tabs: {
     tabTextColorSegment: "#707070",
     tabPaddingMediumSegment: "4px",
-    tabTextColorActiveLine: "#1fc162",
-    tabTextColorHoverLine: "#1fc162",
-    tabTextColorActiveBar: "#1fc162",
-    tabTextColorHoverBar: "#1fc162",
-    barColor: "#1fc162"
+    tabTextColorActiveLine: "#13987f",
+    tabTextColorHoverLine: "#13987f",
+    tabTextColorActiveBar: "#13987f",
+    tabTextColorHoverBar: "#13987f",
+    barColor: "#13987f"
   },
   Popover: {
     padding: "5px",
@@ -66,39 +66,39 @@ const commonTheme: GlobalThemeOverrides = {
     border: "1px solid #fff"
   },
   Switch: {
-    railColorActive: "#1fc162",
-    loadingColor: "#1fc162",
+    railColorActive: "#13987f",
+    loadingColor: "#13987f",
     boxShadowFocus: "0 0 0 2px rgba(19, 152, 127, 0.3)"
   },
   Radio: {
-    boxShadowActive: "inset 0 0 0 1px #1fc162",
-    boxShadowFocus: "inset 0 0 0 1px #1fc162,0 0 0 2px rgba(19, 152, 127, 0.3)",
-    boxShadowHover: "inset 0 0 0 1px #1fc162",
-    dotColorActive: "#1fc162"
+    boxShadowActive: "inset 0 0 0 1px #13987f",
+    boxShadowFocus: "inset 0 0 0 1px #13987f,0 0 0 2px rgba(19, 152, 127, 0.3)",
+    boxShadowHover: "inset 0 0 0 1px #13987f",
+    dotColorActive: "#13987f"
   },
   Message: {
-    iconColorSuccess: "#1fc162",
-    iconColorLoading: "#1fc162",
-    loadingColor: "#1fc162",
+    iconColorSuccess: "#13987f",
+    iconColorLoading: "#13987f",
+    loadingColor: "#13987f",
     borderRadius: "8px"
   },
   Slider: {
     handleSize: "12px",
     fontSize: "10px",
     markFontSize: "8px",
-    fillColor: "#1fc162",
-    fillColorHover: "#1fc162",
+    fillColor: "#13987f",
+    fillColorHover: "#13987f",
     indicatorBorderRadius: "8px"
   },
   Notification: {
     borderRadius: "8px"
   },
   Steps: {
-    indicatorBorderColorProcess: "#1fc162",
-    indicatorColorProcess: "#39f681"
+    indicatorBorderColorProcess: "#13987f",
+    indicatorColorProcess: "#52aea3"
   },
   LoadingBar: {
-    colorLoading: "#1fc162"
+    colorLoading: "#13987f"
   }
 };
 

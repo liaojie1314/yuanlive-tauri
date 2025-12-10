@@ -7,11 +7,11 @@
       <n-progress
         type="line"
         :show-indicator="false"
-        :color="'#1fc162'"
-        :rail-color="'#39f681'"
+        :color="'#13987f'"
+        :rail-color="'#13987f30'"
         :percentage="percentage" />
       <n-flex justify="center" align="center" :gap="12">
-        <n-spin :size="12" :color="'#1fc162'" />
+        <n-spin :size="12" :color="'#13987f'" />
         <span class="text-14px text-#666">{{ loadingText }}</span>
       </n-flex>
     </n-flex>

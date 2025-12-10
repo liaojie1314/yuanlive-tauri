@@ -115,7 +115,7 @@ export async function messageSendStream(
   callbacks?: StreamCallbacks
 ) {
   const { invoke, Channel } = await import("@tauri-apps/api/core");
-  const { TauriCommand } = await import("@/enums");
+  const { TauriCommandEnum } = await import("@/enums");
 
   // 生成唯一的请求 ID
   const requestId = `ai-stream-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
@@ -158,7 +158,7 @@ export async function messageSendStream(
     };
 
     // 调用 Rust 后端命令发送请求
-    invoke(TauriCommand.AI_MESSAGE_SEND_STREAM, {
+    invoke(TauriCommandEnum.AI_MESSAGE_SEND_STREAM, {
       body,
       requestId,
       onEvent

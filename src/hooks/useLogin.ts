@@ -4,13 +4,14 @@ import { invoke } from "@tauri-apps/api/core";
 import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
 
 import type { UserInfoType } from "@/api/types.ts";
-import { TauriCommand } from "@/enums";
+import { StorageKeyEnum, TauriCommandEnum } from "@/enums";
 
 import { useUserStore } from "@/stores/user.ts";
 import { useI18nGlobal } from "@/services/i18n.ts";
 import { useWindow } from "@/hooks/useWindow.ts";
 import { ensureAppStateReady } from "@/utils/AppStateReady.ts";
 import { invokeSilently } from "@/utils/TauriInvokeHandler.ts";
+import { getEnhancedFingerprint } from "@/services/fingerprint.ts";
 
 export function useLogin() {
   const userStore = useUserStore();
@@ -78,7 +79,9 @@ export function useLogin() {
       return;
     }
 
-    // TODO: 存储此次登陆设备指纹
+    // 存储此次登陆设备指纹
+    const clientId = await getEnhancedFingerprint();
+    localStorage.setItem(StorageKeyEnum.CLIENT_ID, clientId);
 
     await ensureAppStateReady();
 
@@ -87,7 +90,7 @@ export function useLogin() {
         account,
         password,
         deviceType,
-        systemType: "2",
+        clientId,
         grantType: "PASSWORD",
         isAutoLogin: auto,
         uid: auto ? userStore.userInfo!.uid : null
@@ -129,7 +132,7 @@ export function useLogin() {
     const { createWebviewWindow } = useWindow();
     try {
       // 创建登录窗口
-      await invokeSilently(TauriCommand.REMOVE_TOKENS);
+      await invokeSilently(TauriCommandEnum.REMOVE_TOKENS);
       await createWebviewWindow("登录", "login", 320, 448, void 0, false, 320, 448);
     } catch (e) {
       console.error("创建登录窗口失败:", e);
@@ -137,6 +140,7 @@ export function useLogin() {
   };
 
   return {
+    uiState,
     userInfo,
     loading,
     loginText,
