@@ -132,7 +132,7 @@ export function useLogin() {
     const { createWebviewWindow } = useWindow();
     try {
       // 创建登录窗口
-      await invokeSilently(TauriCommandEnum.REMOVE_TOKENS);
+      await invokeSilently(TauriCommandEnum.REMOVE_TOKEN);
       await createWebviewWindow("登录", "login", 320, 448, void 0, false, 320, 448);
     } catch (e) {
       console.error("创建登录窗口失败:", e);

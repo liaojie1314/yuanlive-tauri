@@ -45,7 +45,12 @@ export async function generateQRCode() {
 /**
  * 检查二维码状态
  */
-export async function checkQRStatus(params: { qrId: string; clientId: string }) {
+export async function checkQRStatus(params: {
+  qrId: string;
+  clientId: string;
+  deviceHash: string;
+  deviceType: "PC" | "MOBILE";
+}) {
   return await request(
     {
       url: UrlEnum.CHECK_QR_STATUS,

@@ -57,8 +57,10 @@ export enum EventEnum {
 
 /** tauri 命令 */
 export enum TauriCommandEnum {
+  // 更新 token
+  UPDATE_TOKEN = "update_token",
   // 移除 token
-  REMOVE_TOKENS = "remove_tokens",
+  REMOVE_TOKEN = "remove_token",
   // AI 消息流式发送
   AI_MESSAGE_SEND_STREAM = "ai_message_send_stream"
 }

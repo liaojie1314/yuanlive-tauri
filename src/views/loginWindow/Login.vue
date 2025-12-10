@@ -117,9 +117,9 @@
 import { lightTheme } from "naive-ui";
 import { useNetwork } from "@vueuse/core";
 
+import router from "@/router";
 import { useUserStore } from "@/stores/user";
 import { useWindow } from "@/hooks/useWindow";
-import router from "@/router";
 import { useLogin } from "@/hooks/useLogin";
 import { useI18nGlobal } from "@/services/i18n";
 import { formatBottomText } from "@/utils/FormattingUtils";
@@ -135,7 +135,7 @@ const userStore = useUserStore();
 // 输入框占位符
 const accountPH = ref(t("auth.input.account.placeholder"));
 const passwordPH = ref(t("auth.input.pass.placeholder"));
-/** 协议 */
+// 协议
 const protocol = ref(true);
 const moreShow = ref(false);
 // 底部操作栏多语言超过6个字符时显示省略号
