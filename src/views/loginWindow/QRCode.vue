@@ -1,7 +1,7 @@
 <template>
   <n-config-provider :theme="lightTheme" data-tauri-drag-region class="login-box size-full rounded-8px select-none">
     <!--顶部操作栏-->
-    <ActionBar :max-w="false" :shrink="false" proxy data-tauri-drag-region />
+    <action-bar :max-w="false" :shrink="false" proxy data-tauri-drag-region />
 
     <n-flex justify="center" class="mt-15px" data-tauri-drag-region>
       <img src="/vite.svg" class="w-140px h-60px drop-shadow-xl" alt="" data-tauri-drag-region />
@@ -74,7 +74,7 @@
 import { invoke } from "@tauri-apps/api/core";
 
 import router from "@/router";
-import { generateQRCode, checkQRStatus } from "@/api/auth";
+import { generateQRCodeApi, checkQRStatusApi } from "@/api/auth";
 import { useI18nGlobal } from "@/services/i18n";
 import { useWindow } from "@/hooks/useWindow";
 import { lightTheme } from "naive-ui";
@@ -150,7 +150,7 @@ const startPolling = () => {
     pollingRequesting.value = true;
 
     try {
-      const res = await checkQRStatus({
+      const res = await checkQRStatusApi({
         qrId: qrCodeResp.value.qrId,
         clientId: localStorage.getItem(StorageKeyEnum.CLIENT_ID) as string,
         deviceHash: qrCodeResp.value.deviceHash,
@@ -224,7 +224,7 @@ const handleConfirmed = async (res: any) => {
  */
 const handleQRCode = async () => {
   try {
-    qrCodeResp.value = await generateQRCode();
+    qrCodeResp.value = await generateQRCodeApi();
     qrCodeValue.value = JSON.stringify({ type: "login", qrId: qrCodeResp.value.qrId });
     loadTextKey.value = "scanHint";
     loading.value = false;

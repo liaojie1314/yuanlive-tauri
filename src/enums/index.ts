@@ -34,7 +34,9 @@ export enum UrlEnum {
   // 生成登录二维码
   GENERATE_QR_CODE = "generateQRCode",
   // 检测二维码状态
-  CHECK_QR_STATUS = "checkQRStatus"
+  CHECK_QR_STATUS = "checkQRStatus",
+  // 发送邮箱验证码
+  SEND_EMAIL_CAPTCHA = "sendEmailCaptcha"
 }
 
 /** 关闭窗口的行为 */

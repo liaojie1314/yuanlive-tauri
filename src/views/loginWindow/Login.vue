@@ -98,7 +98,7 @@
           <n-flex vertical :size="2">
             <div
               class="register text-14px cursor-pointer hover:bg-#90909030 hover:rounded-6px p-8px"
-              @click="createWebviewWindow('注册', 'register', 600, 600)">
+              @click="createWebviewWindow('注册', 'register', 380, 520)">
               {{ t("auth.option.items.register") }}
             </div>
             <div

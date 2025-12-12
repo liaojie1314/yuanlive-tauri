@@ -74,14 +74,20 @@
 </template>
 
 <script setup lang="ts">
-import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
+import { emit } from "@tauri-apps/api/event";
 import { info } from "@tauri-apps/plugin-log";
 import { exit } from "@tauri-apps/plugin-process";
+import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
 
 import router from "@/router";
+import { EventEnum } from "@/enums";
 import { useMitt } from "@/hooks/useMitt.ts";
 import { useAlwaysOnTopStore } from "@/stores/alwaysOnTop.ts";
 import { isCompatibility, isMac, isWindows } from "@/utils/PlatformUtils.ts";
+
+defineOptions({
+  name: "ActionBar"
+});
 
 const appWindow = WebviewWindow.getCurrent();
 const {
@@ -111,8 +117,8 @@ const alwaysOnTopStatus = computed(() => {
   return getWindowTop(topWinLabel);
 });
 
-// resized 事件的 unlisten 函数
-let unlistenResized: (() => void) | null = null;
+// resized 事件的 unListen 函数
+let unListenResized: (() => void) | null = null;
 
 watchEffect(() => {
   if (alwaysOnTopStatus.value) {
@@ -156,6 +162,9 @@ const handleCloseWin = async () => {
     await exit(0);
   } else if (appWindow.label === "login") {
     await exit(0);
+  } else {
+    await emit(EventEnum.WIN_CLOSE, appWindow.label);
+    await appWindow.close();
   }
 };
 
@@ -165,7 +174,7 @@ onMounted(async () => {
   // 初始化状态
   await updateWindowMaximized();
 
-  unlistenResized = await appWindow.onResized?.(() => {
+  unListenResized = await appWindow.onResized?.(() => {
     updateWindowMaximized();
   });
 
@@ -184,9 +193,9 @@ onMounted(async () => {
 });
 
 onUnmounted(() => {
-  if (unlistenResized) {
-    unlistenResized();
-    unlistenResized = null;
+  if (unListenResized) {
+    unListenResized();
+    unListenResized = null;
   }
 });
 

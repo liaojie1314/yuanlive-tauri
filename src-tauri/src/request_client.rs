@@ -318,6 +318,7 @@ pub enum Url {
     RefreshToken,
     Logout,
     ForgetPassword,
+    SendEmailCaptcha,
 
     GenerateQRCode,
     CheckQRStatus,
@@ -335,6 +336,7 @@ impl Url {
             Url::RefreshToken => (http::Method::POST, "token/refresh"),
             Url::Logout => (http::Method::POST, "logout"),
             Url::ForgetPassword => (http::Method::PUT, "forget/password"),
+            Url::SendEmailCaptcha => (http::Method::POST, "email/captcha"),
             // 扫码登录相关
             Url::GenerateQRCode => (http::Method::GET, "qr/generate"),
             Url::CheckQRStatus => (http::Method::GET, "qr/status/query"),
@@ -352,6 +354,7 @@ impl Url {
             "refreshToken" => Ok(Url::RefreshToken),
             "logout" => Ok(Url::Logout),
             "forgetPassword" => Ok(Url::ForgetPassword),
+            "sendEmailCaptcha" => Ok(Url::SendEmailCaptcha),
             // 扫码登录相关
             "generateQRCode" => Ok(Url::GenerateQRCode),
             "checkQRStatus" => Ok(Url::CheckQRStatus),

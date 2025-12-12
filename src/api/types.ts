@@ -20,8 +20,6 @@ export type UserInfoType = {
 };
 
 export type RegisterUserReq = {
-  // 头像
-  avatar: string;
   // 昵称
   nickName: string;
   // 邮箱

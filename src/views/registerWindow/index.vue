@@ -1,13 +1,453 @@
 <template>
-  <div>注册页面</div>
+  <!-- 单独使用n-config-provider来包裹不需要主题切换的界面 -->
+  <n-config-provider
+    :theme="lightTheme"
+    data-tauri-drag-region
+    class="login-box size-full rounded-8px select-none flex flex-col">
+    <!--顶部操作栏-->
+    <action-bar :max-w="false" />
+
+    <n-flex vertical justify="center" :size="25" class="w-full mt--40px flex-1 pointer-events-none">
+      <!-- 注册菜单 -->
+      <n-flex class="ma text-center w-260px pointer-events-auto" vertical :size="16">
+        <n-flex justify="center" align="center">
+          <span class="text-(24px #70938c) textFont">{{ t("auth.register.title") }}</span>
+          <img class="w-100px h-40px" src="/vite.svg" alt="" />
+        </n-flex>
+        <n-form :model="info" :rules="rules" ref="registerForm">
+          <!-- 注册信息 -->
+          <div>
+            <n-form-item path="name">
+              <n-input
+                :class="[{ 'pr-20px': info.nickName }, { 'pr-16px': showNamePrefix && !info.nickName }]"
+                maxlength="8"
+                minlength="1"
+                size="large"
+                v-model:value="info.nickName"
+                type="text"
+                spellCheck="false"
+                autoComplete="off"
+                autoCorrect="off"
+                autoCapitalize="off"
+                :allow-input="noSideSpace"
+                :placeholder="showNamePrefix ? '' : t('auth.register.placeholders.nickname')"
+                @focus="handleInputState($event, 'nickName')"
+                @blur="handleInputState($event, 'nickName')"
+                clearable />
+            </n-form-item>
+
+            <n-form-item path="password">
+              <n-input
+                :class="{ 'pl-16px': !showPasswordPrefix && !info.password }"
+                maxlength="16"
+                minlength="6"
+                size="large"
+                spellCheck="false"
+                autoComplete="off"
+                autoCorrect="off"
+                autoCapitalize="off"
+                show-password-on="click"
+                v-model:value="info.password"
+                type="password"
+                :allow-input="noSideSpace"
+                :placeholder="showPasswordPrefix ? '' : t('auth.register.placeholders.password')"
+                @focus="handleInputState($event, 'password')"
+                @blur="handleInputState($event, 'password')"
+                clearable />
+            </n-form-item>
+
+            <n-form-item path="confirmPassword">
+              <n-input
+                :class="{ 'pl-16px': !showConfirmPasswordPrefix && !confirmPassword }"
+                maxlength="16"
+                minlength="6"
+                size="large"
+                spellCheck="false"
+                autoComplete="off"
+                autoCorrect="off"
+                autoCapitalize="off"
+                show-password-on="click"
+                v-model:value="confirmPassword"
+                type="password"
+                :allow-input="noSideSpace"
+                :placeholder="showConfirmPasswordPrefix ? '' : t('auth.register.placeholders.confirmPassword')"
+                @focus="handleInputState($event, 'confirmPassword')"
+                @blur="handleInputState($event, 'confirmPassword')"
+                clearable />
+            </n-form-item>
+
+            <n-form-item path="email">
+              <n-auto-complete
+                size="large"
+                v-model:value="info.email"
+                :placeholder="showEmailPrefix ? '' : t('auth.register.placeholders.email')"
+                :options="commonEmailDomains"
+                :get-show="getShow"
+                :append="true"
+                clearable
+                type="text"
+                spellCheck="false"
+                autoComplete="off"
+                autoCorrect="off"
+                autoCapitalize="off"
+                @focus="handleInputState($event, 'email')"
+                @blur="handleInputState($event, 'email')" />
+            </n-form-item>
+
+            <!-- 密码提示信息 -->
+            <n-flex vertical v-if="info.password">
+              <n-flex vertical :size="4">
+                <validation
+                  :value="info.password"
+                  :message="t('auth.register.passwordHints.minLength')"
+                  :validator="validateMinLength" />
+                <validation
+                  :value="info.password"
+                  :message="t('auth.register.passwordHints.alphaNumeric')"
+                  :validator="validateAlphaNumeric" />
+                <validation
+                  :value="info.password"
+                  :message="t('auth.register.passwordHints.specialChar')"
+                  :validator="validateSpecialChar" />
+              </n-flex>
+            </n-flex>
+
+            <!-- 协议 -->
+            <n-flex align="center" justify="center" :size="6" class="mt-10px">
+              <n-checkbox v-model:checked="protocol" />
+              <div class="text-12px color-#909090 cursor-default lh-14px">
+                <span>{{ t("auth.agreement.text1") }}</span>
+                <span class="color-#13987f cursor-pointer">
+                  {{ t("auth.agreement.text2") }}
+                </span>
+                <span>{{ t("auth.agreement.text3") }}</span>
+                <span class="color-#13987f cursor-pointer">
+                  {{ t("auth.agreement.text4") }}
+                </span>
+              </div>
+            </n-flex>
+          </div>
+        </n-form>
+
+        <n-button
+          :loading="loading"
+          :disabled="btnDisabled"
+          tertiary
+          style="color: #fff"
+          class="w-full mt-8px gradient-button"
+          @click="handleStepAction">
+          {{ btnText }}
+        </n-button>
+        <p v-if="sendCodeCoolDown > 0" class="text-(12px #13987f) ml--8px mt-6px whitespace-nowrap">
+          {{ t("auth.register.tips.reopenCode") }}
+        </p>
+      </n-flex>
+    </n-flex>
+
+    <!-- 底部栏 -->
+    <n-flex
+      class="text-(12px #909090) w-full absolute bottom-20px left-1/2 transform -translate-x-1/2"
+      :size="8"
+      justify="center">
+      <span>Copyright {{ currentYear - 1 }}-{{ currentYear }} YuanLive All Rights Reserved.</span>
+    </n-flex>
+
+    <!-- 邮箱验证码输入弹窗 -->
+    <n-modal v-model:show="emailCodeModal" :mask-closable="false" class="rounded-8px" transform-origin="center">
+      <div class="bg-#f0f0f0 w-380px h-fit box-border flex flex-col">
+        <svg @click="emailCodeModal = false" class="w-12px h-12px ml-a mr-4px mt-4px cursor-pointer select-none">
+          <use href="#close"></use>
+        </svg>
+        <n-flex vertical class="w-full h-fit">
+          <n-flex vertical :size="10" class="p-24px">
+            <p class="text-(16px #303030) mb-10px">{{ t("auth.register.emailModal.title") }}</p>
+            <p class="text-(12px #808080) leading-5 mb-10px">
+              {{ t("auth.register.emailModal.desc", { email: info.email }) }}
+            </p>
+
+            <!-- PIN 输入框 -->
+            <div class="mb-20px">
+              <pin-input v-model="emailCode" @complete="register" ref="pinInputRef" />
+            </div>
+
+            <n-button
+              :loading="registerLoading"
+              :disabled="!isEmailCodeComplete"
+              tertiary
+              style="color: #fff"
+              class="w-full gradient-button"
+              @click="register">
+              {{ t("auth.register.actions.submit") }}
+            </n-button>
+          </n-flex>
+        </n-flex>
+      </div>
+    </n-modal>
+  </n-config-provider>
 </template>
 
 <script setup lang="ts">
-import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
+import dayjs from "dayjs";
+import { type FormInst, lightTheme } from "naive-ui";
+import { getCurrentWebviewWindow, WebviewWindow } from "@tauri-apps/api/webviewWindow";
+
+import { registerApi, sendEmailCaptchaApi } from "@/api/auth";
+import { useI18nGlobal } from "@/services/i18n";
+import { RegisterUserReq } from "@/api/types";
+import { validateAlphaNumeric, validateSpecialChar } from "@/utils/ValidateUtils";
+
+const { t } = useI18nGlobal();
+
+// 输入框类型定义
+type InputType = "nickName" | "email" | "password" | "confirmPassword";
+// 注册信息
+const info = unref(
+  ref<RegisterUserReq>({
+    email: "",
+    password: "",
+    nickName: "",
+    code: "",
+    confirmPassword: ""
+  })
+);
+
+// 确认密码
+const confirmPassword = ref("");
+// 协议
+const protocol = ref(true);
+const btnDisabled = ref(false);
+const loading = ref(false);
+const registerLoading = ref(false);
+// 前缀显示状态
+const showNamePrefix = ref(false);
+const showEmailPrefix = ref(false);
+const showPasswordPrefix = ref(false);
+const showConfirmPasswordPrefix = ref(false);
+// 常用邮箱后缀
+const commonEmailDomains = computed(() => {
+  return ["gmail.com", "163.com", "qq.com"].map((suffix) => {
+    return {
+      label: suffix,
+      value: suffix
+    };
+  });
+});
+
+// 发送验证码冷却时间(秒)
+const sendCodeCoolDown = ref(0);
+// 发送验证码按钮文本
+const btnText = computed(() => {
+  if (loading.value) {
+    return t("auth.register.actions.sending");
+  }
+  if (sendCodeCoolDown.value > 0) {
+    return t("auth.register.actions.retryIn", { seconds: sendCodeCoolDown.value });
+  }
+  return t("auth.register.actions.sendCode");
+});
+// 使用day.js获取当前年份
+const currentYear = dayjs().year();
+const registerForm = ref<FormInst | null>(null);
+const emailCodeModal = ref(false);
+let countdownInterval: any = null;
+// 邮箱验证码PIN输入
+const emailCode = ref("");
+const pinInputRef = ref();
+const isEmailCodeComplete = computed(() => emailCode.value.length === 6);
+const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const isEmailValid = computed(() => emailPattern.test(info.email.trim()));
+
+// 校验规则
+const rules = {
+  nickName: {
+    required: true,
+    message: t("auth.register.form.rules.nicknameRequired"),
+    trigger: "blur"
+  },
+  email: {
+    required: true,
+    trigger: ["blur", "input"],
+    validator(_: unknown, value: string) {
+      const email = (value || "").trim();
+      if (!email) {
+        return new Error(t("auth.register.form.rules.emailRequired"));
+      }
+      if (!emailPattern.test(email)) {
+        return new Error(t("auth.register.form.rules.emailInvalid"));
+      }
+      return true;
+    }
+  },
+  password: {
+    required: true,
+    message: t("auth.register.form.rules.passwordRequired"),
+    trigger: ["blur", "input"]
+  },
+  confirmPassword: {
+    required: true,
+    message: t("auth.register.form.rules.confirmMismatch"),
+    trigger: "blur",
+    validator() {
+      if (confirmPassword.value !== info.password) {
+        return false;
+      }
+      return true;
+    }
+  }
+};
+
+// 检查密码是否满足所有条件
+const isPasswordValid = computed(() => {
+  const password = info.password;
+  return validateMinLength(password) && validateAlphaNumeric(password) && validateSpecialChar(password);
+});
+
+// 检查是否可以发送邮箱验证码
+const canSendCode = computed(() => {
+  return (
+    !!info.nickName &&
+    isPasswordValid.value &&
+    confirmPassword.value === info.password &&
+    protocol.value &&
+    isEmailValid.value
+  );
+});
+
+watchEffect(() => {
+  btnDisabled.value = loading.value || !canSendCode.value;
+});
+
+/**
+ * 检查是否允许输入空格
+ * @param value 输入值
+ * @returns 是否允许输入空格
+ */
+const noSideSpace = (value: string) => !value.startsWith(" ") && !value.endsWith(" ");
+
+/**
+ * 检查密码是否满足最小长度要求
+ * @param value 密码值
+ * @returns 是否满足最小长度要求
+ */
+const validateMinLength = (value: string) => value.length >= 6;
+
+/**
+ * 检查邮箱是否以 "@" 结尾
+ * @param value 邮箱值
+ * @returns 是否以 "@" 结尾
+ */
+const getShow = (value: string) => value.endsWith("@");
+
+/**
+ * 处理输入框状态变化
+ * @param type 输入框类型：name-昵称 / email-邮箱 / password-密码 / confirmPassword-确认密码
+ * @param event 事件对象
+ */
+const handleInputState = (event: FocusEvent, type: InputType): void => {
+  const prefixMap: Record<InputType, Ref<boolean>> = {
+    nickName: showNamePrefix,
+    email: showEmailPrefix,
+    password: showPasswordPrefix,
+    confirmPassword: showConfirmPasswordPrefix
+  };
+  prefixMap[type].value = event.type === "focus";
+};
+
+/**
+ * 处理注册步骤操作
+ */
+const handleStepAction = async () => {
+  if (btnDisabled.value || loading.value) return;
+
+  try {
+    await registerForm.value?.validate?.();
+  } catch (error) {
+    return;
+  }
+
+  if (sendCodeCoolDown.value > 0) {
+    emailCodeModal.value = true;
+    await nextTick(() => {
+      pinInputRef.value?.focus();
+    });
+    return;
+  }
+
+  loading.value = true;
+  try {
+    const email = info.email.trim();
+    info.email = email;
+    // 发送邮箱验证码
+    await sendEmailCaptchaApi({ email, operationType: "REGISTER" });
+    startSendCodeCountdown();
+    window.$message.success(t("auth.register.messages.codeSent"));
+    emailCodeModal.value = true;
+    emailCode.value = "";
+    await nextTick(() => {
+      pinInputRef.value?.focus();
+    });
+  } catch (error) {
+    console.error("发送邮箱验证码失败: ", error);
+  } finally {
+    loading.value = false;
+  }
+};
+
+/**
+ * 启动发送邮箱验证码倒计时
+ */
+const startSendCodeCountdown = () => {
+  sendCodeCoolDown.value = 60;
+  // TODO: 使用worker线程
+  countdownInterval = setInterval(() => {
+    sendCodeCoolDown.value--;
+    if (sendCodeCoolDown.value <= 0) {
+      clearInterval(countdownInterval);
+    }
+  }, 1000);
+};
+
+/**
+ * 处理注册操作
+ */
+const register = async () => {
+  registerLoading.value = true;
+  info.code = emailCode.value;
+  info.email = info.email.trim();
+  info.confirmPassword = confirmPassword.value;
+
+  try {
+    // 注册
+    await registerApi({ ...info });
+    window.$message.success(t("auth.register.messages.registerSuccess"));
+    // 关闭弹窗并跳转到登录页
+    emailCodeModal.value = false;
+    setTimeout(() => {
+      WebviewWindow.getByLabel("login").then((win) => win?.setFocus());
+      WebviewWindow.getCurrent().close();
+    }, 1200);
+  } catch (error) {
+    window.$message.error(t("auth.register.messages.registerFail"));
+  } finally {
+    registerLoading.value = false;
+  }
+};
 
 onMounted(async () => {
   await getCurrentWebviewWindow().show();
 });
+
+onUnmounted(() => {
+  clearInterval(countdownInterval);
+  sendCodeCoolDown.value = 0;
+});
 </script>
 
-<style scoped></style>
+<style scoped lang="scss">
+@use "@/styles/global/login-bg";
+@use "@/styles/login";
+
+:deep(.n-form-item.n-form-item--top-labelled) {
+  grid-template-rows: none;
+}
+</style>

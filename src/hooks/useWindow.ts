@@ -1,6 +1,9 @@
 import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { LogicalSize } from "@tauri-apps/api/dpi";
-import { isWindows10 } from "@/utils/PlatformUtils";
+import { isCompatibility, isWindows10 } from "@/utils/PlatformUtils";
+
+// 判断是兼容的系统
+const isCompatibilityMode = computed(() => isCompatibility());
 
 export const useWindow = () => {
   /**
@@ -36,12 +39,12 @@ export const useWindow = () => {
       minWidth,
       minHeight,
       resizable,
-      transparent,
       center: true,
       url: `/${label}`,
       fullscreen: false,
       skipTaskbar: false,
-      decorations: true,
+      decorations: !isCompatibilityMode.value,
+      transparent: transparent || isCompatibilityMode.value,
       titleBarStyle: "overlay", // mac覆盖标签栏
       hiddenTitle: true, // mac隐藏标题栏
       ...(isWindows10() ? { shadow: false } : {})

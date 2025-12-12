@@ -6,7 +6,7 @@ import type { ForgetPasswordReq, RegisterUserReq } from "@/api/types.ts";
  *  注册
  * @param body 注册信息
  */
-export async function register(body: RegisterUserReq) {
+export async function registerApi(body: RegisterUserReq) {
   return await request({
     url: UrlEnum.REGISTER,
     body
@@ -16,7 +16,7 @@ export async function register(body: RegisterUserReq) {
 /**
  * 登出
  */
-export async function logout() {
+export async function logoutApi() {
   return await request({
     url: UrlEnum.LOGOUT
   });
@@ -26,7 +26,7 @@ export async function logout() {
  * 忘记密码
  * @param body 忘记密码信息
  */
-export async function forgetPassword(body: ForgetPasswordReq) {
+export async function forgetPasswordApi(body: ForgetPasswordReq) {
   return await request({
     url: UrlEnum.FORGET_PASSWORD,
     body
@@ -36,7 +36,7 @@ export async function forgetPassword(body: ForgetPasswordReq) {
 /**
  * 生成登录二维码
  */
-export async function generateQRCode() {
+export async function generateQRCodeApi() {
   return await request({
     url: UrlEnum.GENERATE_QR_CODE
   });
@@ -45,7 +45,7 @@ export async function generateQRCode() {
 /**
  * 检查二维码状态
  */
-export async function checkQRStatus(params: {
+export async function checkQRStatusApi(params: {
   qrId: string;
   clientId: string;
   deviceHash: string;
@@ -60,4 +60,14 @@ export async function checkQRStatus(params: {
       showError: false
     }
   );
+}
+
+/**
+ * 发送邮箱验证码
+ */
+export async function sendEmailCaptchaApi(body: { email: string; operationType: "REGISTER" | "FORGET_PASSWORD" }) {
+  return await request({
+    url: UrlEnum.SEND_EMAIL_CAPTCHA,
+    body
+  });
 }

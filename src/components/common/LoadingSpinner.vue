@@ -19,6 +19,10 @@
 </template>
 
 <script setup lang="ts">
+defineOptions({
+  name: "LoadingSpinner"
+});
+
 defineProps<{
   percentage: number;
   loadingText: string;

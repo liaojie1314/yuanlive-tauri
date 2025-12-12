@@ -1,14 +1,14 @@
 import { StoresEnum } from "@/enums";
 import type { UserInfoType } from "@/api/types.ts";
-import { getUserDetail } from "@/api/user.ts";
+import { getUserDetailApi } from "@/api/user.ts";
 
 export const useUserStore = defineStore(
   StoresEnum.USER,
   () => {
     const userInfo = ref<UserInfoType>();
 
-    const getUserDetailAction = () => {
-      getUserDetail()
+    const getUserDetail = () => {
+      getUserDetailApi()
         .then((res) => {
           userInfo.value = { ...userInfo.value, ...res };
         })
@@ -19,7 +19,7 @@ export const useUserStore = defineStore(
 
     return {
       userInfo,
-      getUserDetailAction
+      getUserDetail
     };
   },
   {

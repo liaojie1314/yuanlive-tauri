@@ -15,6 +15,20 @@ pub enum Environment {
     Production,
 }
 
+impl Environment {
+    /// 将Environment枚举转换为字符串
+    /// 用于文件名和路径构建
+    ///
+    /// # 返回值
+    /// * `&'static str` - 对应的环境字符串
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            Environment::Local => "local",
+            Environment::Production => "production",
+        }
+    }
+}
+
 impl TryFrom<String> for Environment {
     type Error = String;
 
