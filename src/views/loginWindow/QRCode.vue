@@ -63,7 +63,7 @@
       <div class="w-1px h-14px bg-#ccc dark:bg-#707070"></div>
       <div
         class="color-#13987f cursor-pointer"
-        @click="createWebviewWindow(t('auth.qr.actions.registerTitle'), 'register', 600, 600)">
+        @click="createWebviewWindow(t('auth.qr.actions.registerTitle'), 'register', 380, 520)">
         {{ t("auth.qr.actions.register") }}
       </div>
     </n-flex>

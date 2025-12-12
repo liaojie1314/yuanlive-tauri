@@ -138,7 +138,7 @@
           @click="handleStepAction">
           {{ btnText }}
         </n-button>
-        <p v-if="sendCodeCoolDown > 0" class="text-(12px #13987f) ml--8px mt-6px whitespace-nowrap">
+        <p v-if="sendCodeCountDown > 0" class="text-(12px #13987f) ml--8px mt-6px whitespace-nowrap">
           {{ t("auth.register.tips.reopenCode") }}
         </p>
       </n-flex>
@@ -194,12 +194,13 @@ import { getCurrentWebviewWindow, WebviewWindow } from "@tauri-apps/api/webviewW
 import { registerApi, sendEmailCaptchaApi } from "@/api/auth";
 import { useI18nGlobal } from "@/services/i18n";
 import { RegisterUserReq } from "@/api/types";
-import { validateAlphaNumeric, validateSpecialChar } from "@/utils/ValidateUtils";
+import { noSideSpace, validateAlphaNumeric, validateMinLength, validateSpecialChar } from "@/utils/ValidateUtils";
 
 const { t } = useI18nGlobal();
 
 // 输入框类型定义
 type InputType = "nickName" | "email" | "password" | "confirmPassword";
+let countdownInterval: any = null;
 // 注册信息
 const info = unref(
   ref<RegisterUserReq>({
@@ -234,14 +235,14 @@ const commonEmailDomains = computed(() => {
 });
 
 // 发送验证码冷却时间(秒)
-const sendCodeCoolDown = ref(0);
+const sendCodeCountDown = ref(0);
 // 发送验证码按钮文本
 const btnText = computed(() => {
   if (loading.value) {
     return t("auth.register.actions.sending");
   }
-  if (sendCodeCoolDown.value > 0) {
-    return t("auth.register.actions.retryIn", { seconds: sendCodeCoolDown.value });
+  if (sendCodeCountDown.value > 0) {
+    return t("auth.register.actions.retryIn", { seconds: sendCodeCountDown.value });
   }
   return t("auth.register.actions.sendCode");
 });
@@ -249,7 +250,6 @@ const btnText = computed(() => {
 const currentYear = dayjs().year();
 const registerForm = ref<FormInst | null>(null);
 const emailCodeModal = ref(false);
-let countdownInterval: any = null;
 // 邮箱验证码PIN输入
 const emailCode = ref("");
 const pinInputRef = ref();
@@ -318,20 +318,6 @@ watchEffect(() => {
 });
 
 /**
- * 检查是否允许输入空格
- * @param value 输入值
- * @returns 是否允许输入空格
- */
-const noSideSpace = (value: string) => !value.startsWith(" ") && !value.endsWith(" ");
-
-/**
- * 检查密码是否满足最小长度要求
- * @param value 密码值
- * @returns 是否满足最小长度要求
- */
-const validateMinLength = (value: string) => value.length >= 6;
-
-/**
  * 检查邮箱是否以 "@" 结尾
  * @param value 邮箱值
  * @returns 是否以 "@" 结尾
@@ -362,10 +348,11 @@ const handleStepAction = async () => {
   try {
     await registerForm.value?.validate?.();
   } catch (error) {
+    console.error("表单验证失败: ", error);
     return;
   }
 
-  if (sendCodeCoolDown.value > 0) {
+  if (sendCodeCountDown.value > 0) {
     emailCodeModal.value = true;
     await nextTick(() => {
       pinInputRef.value?.focus();
@@ -397,14 +384,25 @@ const handleStepAction = async () => {
  * 启动发送邮箱验证码倒计时
  */
 const startSendCodeCountdown = () => {
-  sendCodeCoolDown.value = 60;
+  sendCodeCountDown.value = 60;
   // TODO: 使用worker线程
   countdownInterval = setInterval(() => {
-    sendCodeCoolDown.value--;
-    if (sendCodeCoolDown.value <= 0) {
-      clearInterval(countdownInterval);
+    sendCodeCountDown.value--;
+    if (sendCodeCountDown.value <= 0) {
+      clearCountDown();
     }
   }, 1000);
+};
+
+/**
+ * 清除倒计时
+ */
+const clearCountDown = () => {
+  if (countdownInterval) {
+    clearInterval(countdownInterval);
+    countdownInterval = null;
+    sendCodeCountDown.value = 0;
+  }
 };
 
 /**
@@ -437,10 +435,7 @@ onMounted(async () => {
   await getCurrentWebviewWindow().show();
 });
 
-onUnmounted(() => {
-  clearInterval(countdownInterval);
-  sendCodeCoolDown.value = 0;
-});
+onUnmounted(() => clearCountDown());
 </script>
 
 <style scoped lang="scss">

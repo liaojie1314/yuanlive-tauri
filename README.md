@@ -50,10 +50,9 @@ pnpm commit
 | [commitizen](https://github.com/commitizen/cz-cli)     | 交互式提交工具              |
 
 [ ] 网络设置页面
-[ ] 注册页面窗口
+[x] 注册页面窗口
 [ ] 忘记密码窗口
 [ ] 主界面布局
 [ ] settingStore 主题，语言
 [ ] 配置持久化 json sqlite
 [ ] WebSocket
-[ ] WebRTC

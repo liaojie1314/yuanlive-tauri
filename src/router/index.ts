@@ -1,4 +1,4 @@
-import { createRouter, createWebHistory, type RouteRecordRaw } from "vue-router";
+import { createRouter, createWebHistory, type Router, type RouteRecordRaw } from "vue-router";
 
 const getCommonRoutes = (): Array<RouteRecordRaw> => [
   {
@@ -34,7 +34,7 @@ const getCommonRoutes = (): Array<RouteRecordRaw> => [
 ];
 
 // 创建路由
-const router: any = createRouter({
+const router: Router = createRouter({
   history: createWebHistory(),
   routes: getCommonRoutes()
 });
