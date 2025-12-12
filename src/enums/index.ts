@@ -78,5 +78,6 @@ export enum StoresEnum {
 /** 本地存储的key */
 export enum StorageKeyEnum {
   CLIENT_ID = "clientId",
-  DEVICE_FINGERPRINT = "deviceFingerprint"
+  DEVICE_FINGERPRINT = "deviceFingerprint",
+  PROXY_SETTINGS = "proxySettings"
 }
