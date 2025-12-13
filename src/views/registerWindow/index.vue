@@ -1,7 +1,7 @@
 <template>
   <!-- 单独使用n-config-provider来包裹不需要主题切换的界面 -->
   <n-config-provider
-    :theme="lightTheme"
+    :theme="naiveTheme"
     data-tauri-drag-region
     class="login-box size-full rounded-8px select-none flex flex-col">
     <!--顶部操作栏-->
@@ -188,15 +188,21 @@
 
 <script setup lang="ts">
 import dayjs from "dayjs";
-import { type FormInst, lightTheme } from "naive-ui";
+import { darkTheme, type FormInst, lightTheme } from "naive-ui";
 import { getCurrentWebviewWindow, WebviewWindow } from "@tauri-apps/api/webviewWindow";
+
+import { ThemeEnum } from "@/enums";
+import type { RegisterUserReq } from "@/api/types";
 
 import { registerApi, sendEmailCaptchaApi } from "@/api/auth";
 import { useI18nGlobal } from "@/services/i18n";
-import { RegisterUserReq } from "@/api/types";
 import { noSideSpace, validateAlphaNumeric, validateMinLength, validateSpecialChar } from "@/utils/ValidateUtils";
+import { useSettingStore } from "@/stores/setting";
 
 const { t } = useI18nGlobal();
+const settingStore = useSettingStore();
+const { themes } = storeToRefs(settingStore);
+const naiveTheme = computed(() => (themes.value.content === ThemeEnum.DARK ? darkTheme : lightTheme));
 
 // 输入框类型定义
 type InputType = "nickName" | "email" | "password" | "confirmPassword";

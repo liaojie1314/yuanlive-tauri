@@ -1,5 +1,5 @@
 <template>
-  <n-config-provider :theme="lightTheme" data-tauri-drag-region class="login-box size-full rounded-8px select-none">
+  <n-config-provider :theme="naiveTheme" data-tauri-drag-region class="login-box size-full rounded-8px select-none">
     <!--顶部操作栏-->
     <action-bar :max-w="false" :shrink="false" proxy data-tauri-drag-region />
 
@@ -71,18 +71,22 @@
 </template>
 
 <script setup lang="ts">
+import { darkTheme, lightTheme } from "naive-ui";
 import { invoke } from "@tauri-apps/api/core";
 
 import router from "@/router";
+import { StorageKeyEnum, TauriCommandEnum, ThemeEnum } from "@/enums";
 import { generateQRCodeApi, checkQRStatusApi } from "@/api/auth";
 import { useI18nGlobal } from "@/services/i18n";
 import { useWindow } from "@/hooks/useWindow";
-import { lightTheme } from "naive-ui";
+import { useSettingStore } from "@/stores/setting";
 import { getEnhancedFingerprint } from "~/src/services/fingerprint";
-import { StorageKeyEnum, TauriCommandEnum } from "@/enums";
 
 const { t } = useI18nGlobal();
 const { createWebviewWindow } = useWindow();
+const settingStore = useSettingStore();
+const { themes } = storeToRefs(settingStore);
+const naiveTheme = computed(() => (themes.value.content === ThemeEnum.DARK ? darkTheme : lightTheme));
 
 type LoadTextKey = "loading" | "refreshing" | "scanHint" | "login" | "retry" | "authPending";
 type ScanStatusTextKey = "success" | "error" | "auth" | "expired" | "fetchFailed" | "generateFail" | "generalError";

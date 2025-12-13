@@ -7,6 +7,7 @@ import type { UserInfoType } from "@/api/types.ts";
 import { StorageKeyEnum, TauriCommandEnum } from "@/enums";
 
 import { useUserStore } from "@/stores/user.ts";
+import { useSettingStore } from "@/stores/setting.ts";
 import { useI18nGlobal } from "@/services/i18n.ts";
 import { useWindow } from "@/hooks/useWindow.ts";
 import { ensureAppStateReady } from "@/utils/AppStateReady.ts";
@@ -15,6 +16,7 @@ import { getEnhancedFingerprint } from "@/services/fingerprint.ts";
 
 export function useLogin() {
   const userStore = useUserStore();
+  const settingStore = useSettingStore();
   const { createWebviewWindow } = useWindow();
   const { t } = useI18nGlobal();
 
@@ -50,7 +52,7 @@ export function useLogin() {
    * @param deviceType 设备类型
    * @param auto 是否自动登录
    */
-  const login = async (deviceType: "PC" | "MOBILE", auto: boolean = false) => {
+  const login = async (deviceType: "PC" | "MOBILE", auto: boolean = settingStore.login.autoLogin) => {
     loading.value = true;
     loginText.value = t("auth.status.loggingIn");
     loginDisabled.value = true;
@@ -60,7 +62,7 @@ export function useLogin() {
       loginDisabled.value = false;
       loginText.value = isOnline.value ? t("auth.button.login.default") : t("auth.button.login.networkError");
       uiState.value = "manual";
-      // TODO: setting
+      settingStore.setAutoLogin(false);
       await info("自动登录信息已失效，请手动登录");
       return;
     }
@@ -73,7 +75,7 @@ export function useLogin() {
       loginText.value = isOnline.value ? t("auth.button.login.default") : t("auth.button.login.networkError");
       if (auto) {
         uiState.value = "manual";
-        // TODO: setting
+        settingStore.setAutoLogin(false);
       }
       await info("账号信息缺失，请重新输入");
       return;
@@ -113,7 +115,7 @@ export function useLogin() {
           uiState.value = "manual";
           loginDisabled.value = false;
           loginText.value = t("auth.button.login.default");
-          // TODO: setting
+          settingStore.setAutoLogin(false);
           // 自动填充之前尝试登录的账号信息到手动登录表单
           if (userStore.userInfo) {
             userInfo.value.account = userStore.userInfo.account || userStore.userInfo.email || "";

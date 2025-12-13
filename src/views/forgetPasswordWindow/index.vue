@@ -1,5 +1,7 @@
 <template>
-  <n-config-provider :theme="lightTheme" class="bg-[#d8eee2] size-full rounded-8px select-none overflow-hidden">
+  <n-config-provider
+    :theme="naiveTheme"
+    class="bg-[#d8eee2] dark:bg-[#0f2027] size-full rounded-8px select-none overflow-hidden">
     <!--顶部操作栏-->
     <action-bar :max-w="false" />
 
@@ -158,14 +160,19 @@
 </template>
 
 <script setup lang="ts">
-import { FormInst, lightTheme } from "naive-ui";
+import { darkTheme, FormInst, lightTheme } from "naive-ui";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 
+import { ThemeEnum } from "@/enums";
 import { useI18nGlobal } from "@/services/i18n";
 import { forgetPasswordApi, sendEmailCaptchaApi } from "@/api/auth";
 import { noSideSpace, validateAlphaNumeric, validateMinLength, validateSpecialChar } from "@/utils/ValidateUtils";
+import { useSettingStore } from "@/stores/setting";
 
 const { t } = useI18nGlobal();
+const settingStore = useSettingStore();
+const { themes } = storeToRefs(settingStore);
+const naiveTheme = computed(() => (themes.value.content === ThemeEnum.DARK ? darkTheme : lightTheme));
 
 let countDownInterval: any = null;
 // 步骤状态

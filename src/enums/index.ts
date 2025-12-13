@@ -72,12 +72,15 @@ export enum StoresEnum {
   // 置顶
   ALWAYS_ON_TOP = "alwaysOnTop",
   // 用户
-  USER = "user"
+  USER = "user",
+  // 设置
+  SETTING = "setting"
 }
 
 /** 本地存储的key */
 export enum StorageKeyEnum {
   CLIENT_ID = "clientId",
   DEVICE_FINGERPRINT = "deviceFingerprint",
-  PROXY_SETTINGS = "proxySettings"
+  PROXY_SETTINGS = "proxySettings",
+  SETTING = "setting"
 }

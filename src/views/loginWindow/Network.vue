@@ -1,5 +1,5 @@
 <template>
-  <n-config-provider :theme="lightTheme" data-tauri-drag-region class="login-box size-full rounded-8px select-none">
+  <n-config-provider :theme="naiveTheme" data-tauri-drag-region class="login-box size-full rounded-8px select-none">
     <!--顶部操作栏-->
     <action-bar :max-w="false" :shrink="false" proxy data-tauri-drag-region />
 
@@ -108,15 +108,20 @@
 </template>
 
 <script setup lang="ts">
-import { lightTheme } from "naive-ui";
+import { darkTheme, lightTheme } from "naive-ui";
+
+import type { ProxySettings } from "@/typings/global";
+import { StorageKeyEnum, ThemeEnum } from "@/enums";
 
 import router from "@/router";
-import type { ProxySettings } from "@/typings/global";
 import { useI18nGlobal } from "@/services/i18n";
-import { StorageKeyEnum } from "@/enums";
 import { updateSettings } from "@/utils/TauriCommand";
+import { useSettingStore } from "@/stores/setting";
 
 const { t } = useI18nGlobal();
+const settingStore = useSettingStore();
+const { themes } = storeToRefs(settingStore);
+const naiveTheme = computed(() => (themes.value.content === ThemeEnum.DARK ? darkTheme : lightTheme));
 
 const proxy = ref<"api" | "ws">("api");
 const savedProxy = reactive<ProxySettings>({

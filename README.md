@@ -49,10 +49,10 @@ pnpm commit
 | [husky](https://typicode.github.io/husky)              | 管理Git钩子                 |
 | [commitizen](https://github.com/commitizen/cz-cli)     | 交互式提交工具              |
 
-[ ] 网络设置页面
+[x] 网络设置页面
 [x] 注册页面窗口
 [x] 忘记密码窗口
 [ ] 主界面布局
-[ ] settingStore 主题，语言
+[x] settingStore 主题，语言
 [ ] 配置持久化 json sqlite
 [ ] WebSocket

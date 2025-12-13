@@ -1,6 +1,6 @@
 <template>
   <!-- 单独使用n-config-provider来包裹不需要主题切换的界面 -->
-  <n-config-provider :theme="lightTheme" data-tauri-drag-region class="login-box size-full rounded-8px select-none">
+  <n-config-provider :theme="naiveTheme" data-tauri-drag-region class="login-box size-full rounded-8px select-none">
     <!--顶部操作栏-->
     <action-bar :max-w="false" proxy />
 
@@ -114,11 +114,13 @@
 </template>
 
 <script setup lang="ts">
-import { lightTheme } from "naive-ui";
+import { darkTheme, lightTheme } from "naive-ui";
 import { useNetwork } from "@vueuse/core";
 
 import router from "@/router";
+import { ThemeEnum } from "@/enums";
 import { useUserStore } from "@/stores/user";
+import { useSettingStore } from "@/stores/setting";
 import { useWindow } from "@/hooks/useWindow";
 import { useLogin } from "@/hooks/useLogin";
 import { useI18nGlobal } from "@/services/i18n";
@@ -131,6 +133,9 @@ const { isOnline } = useNetwork();
 const { createWebviewWindow } = useWindow();
 const { userInfo, uiState, loading, loginDisabled, loginText, login } = useLogin();
 const userStore = useUserStore();
+const settingStore = useSettingStore();
+const { themes } = storeToRefs(settingStore);
+const naiveTheme = computed(() => (themes.value.content === ThemeEnum.DARK ? darkTheme : lightTheme));
 
 // 输入框占位符
 const accountPH = ref(t("auth.input.account.placeholder"));
