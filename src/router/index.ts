@@ -30,6 +30,11 @@ const getCommonRoutes = (): Array<RouteRecordRaw> => [
     name: "home",
     path: "/home",
     component: () => import("@/layout/index.vue")
+  },
+  {
+    name: "tray",
+    path: "/tray",
+    component: () => import("@/views/Tray.vue")
   }
 ];
 

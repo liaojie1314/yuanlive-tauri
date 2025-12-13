@@ -29,6 +29,11 @@ svg {
   --action-bar-icon-color: #404040;
   --action-bar-icon-hover: #e7e7e7;
   --user-text-color: #505050;
+  --line-color: #e3e3e3;
+  // 托盘
+  --tray-bg-color: #fff;
+  --tray-hover: #eee;
+  --tray-hover-e: #f5dce1;
 }
 
 html[data-theme="dark"] {
@@ -40,6 +45,11 @@ html[data-theme="dark"] {
   --action-bar-icon-color: #c1c1c1;
   --action-bar-icon-hover: #242424;
   --user-text-color: #b1b1b1;
+  --line-color: #404040;
+  // 托盘
+  --tray-bg-color: #1b1b1b;
+  --tray-hover: #3b3b3b;
+  --tray-hover-e: #bb8188;
 }
 
 /**!修改naive-ui的遮罩层样式*/

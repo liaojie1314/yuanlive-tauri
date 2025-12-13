@@ -8,5 +8,10 @@
       "enabled": "Disable always-on-top",
       "disabled": "Pin to top"
     }
+  },
+  "tray": {
+    "showMainPanel": "Show main panel",
+    "setting": "Setting",
+    "exit": "Exit"
   }
 }

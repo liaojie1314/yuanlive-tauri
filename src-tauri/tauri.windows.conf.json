@@ -10,14 +10,9 @@
     "frontendDist": "../dist"
   },
   "bundle": {
-    "resources": [
-      "configuration"
-    ],
+    "resources": ["configuration"],
     "active": true,
-    "targets": [
-      "msi",
-      "nsis"
-    ],
+    "targets": ["msi", "nsis"],
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",
@@ -43,9 +38,7 @@
       "nsis": {
         "installerIcon": "./icons/icon.ico",
         "displayLanguageSelector": true,
-        "languages": [
-          "SimpChinese"
-        ],
+        "languages": ["SimpChinese"],
         "template": "template/installer.nsi"
       }
     }
@@ -66,6 +59,19 @@
         "transparent": false,
         "visible": true,
         "decorations": false
+      },
+      {
+        "label": "tray",
+        "url": "/tray",
+        "resizable": false,
+        "center": false,
+        "visible": false,
+        "width": 130,
+        "height": 44,
+        "alwaysOnTop": true,
+        "skipTaskbar": true,
+        "decorations": false,
+        "transparent": true
       }
     ],
     "security": {

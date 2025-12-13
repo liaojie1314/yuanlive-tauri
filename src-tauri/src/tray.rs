@@ -1,7 +1,7 @@
 #[cfg(target_os = "windows")]
 use tauri::{
     tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
-    Emitter, Manager, PhysicalPosition, Runtime,
+    Manager, PhysicalPosition, Runtime,
 };
 
 pub fn create_tray<R: Runtime>(app: &tauri::AppHandle<R>) -> tauri::Result<()> {
@@ -67,35 +67,6 @@ pub fn create_tray<R: Runtime>(app: &tauri::AppHandle<R>) -> tauri::Result<()> {
                     }
                     _ => {}
                 },
-                #[cfg(target_os = "windows")]
-                TrayIconEvent::Enter {
-                    id: _,
-                    position: _,
-                    rect: _,
-                } => {
-                    if let Ok(rect) = tray.rect() {
-                        match tray.app_handle().emit_to("notify", "notify_enter", &rect) {
-                            Ok(_) => {
-                                tracing::info!("notify_enter event sent successfully");
-                            }
-                            Err(e) => {
-                                tracing::warn!("Failed to emit notify_enter event: {}", e);
-                            }
-                        }
-                    } else {
-                        tracing::warn!("Failed to get tray rect");
-                    }
-                }
-                #[cfg(target_os = "windows")]
-                TrayIconEvent::Leave {
-                    id: _,
-                    position: _,
-                    rect: _,
-                } => {
-                    if let Err(e) = tray.app_handle().emit_to("notify", "notify_leave", ()) {
-                        tracing::warn!("Failed to emit notify_leave event: {}", e);
-                    }
-                }
                 _ => {}
             })
             .build(app);
