@@ -10,7 +10,7 @@
       <n-flex justify="center" class="w-full pt-35px" data-tauri-drag-region>
         <n-avatar
           class="size-80px rounded-50% border-(2px solid #fff) dark:border-(2px solid #606060)"
-          color="#FFF"
+          :color="themes.content === ThemeEnum.DARK ? '#282828' : '#fff'"
           fallback-src="/vite.svg"
           src="/vite.svg" />
       </n-flex>
@@ -68,7 +68,40 @@
         </n-button>
       </n-flex>
     </n-flex>
-    <!-- TODO: 自动登录 -->
+    <!-- 自动登录 -->
+    <n-flex v-else-if="uiState === 'auto'" vertical :size="29" data-tauri-drag-region>
+      <n-flex justify="center" class="mt-15px">
+        <img src="/vite.svg" class="w-140px h-60px" alt="" />
+      </n-flex>
+      <n-flex :size="30" vertical>
+        <!-- 头像 -->
+        <n-flex justify="center">
+          <n-avatar
+            round
+            :size="110"
+            :color="themes.content === ThemeEnum.DARK ? '#282828' : '#fff'"
+            fallback-src="/vite.svg"
+            src="/vite.svg" />
+        </n-flex>
+
+        <n-flex justify="center">
+          <n-ellipsis style="max-width: 200px" class="text-(18px [--chat-text-color])">
+            {{ userStore.userInfo?.userName || "" }}
+          </n-ellipsis>
+        </n-flex>
+      </n-flex>
+
+      <n-flex justify="center">
+        <n-button
+          :loading="loading"
+          :disabled="loginDisabled"
+          tertiary
+          class="gradient-button w-200px mt-12px mb-40px color-#fff"
+          @click="login('PC', true)">
+          <span>{{ loginText }}</span>
+        </n-button>
+      </n-flex>
+    </n-flex>
     <!-- 底部操作栏 -->
     <div class="text-14px grid grid-cols-[1fr_auto_1fr] items-center gap-x-12px w-full">
       <div

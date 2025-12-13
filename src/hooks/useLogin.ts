@@ -37,7 +37,7 @@ export function useLogin() {
   });
   const uiState = ref<"manual" | "auto">("manual");
 
-  const routerOrOpenHomeWindow = async () => {
+  const openHomeWindow = async () => {
     const registerWindow = await WebviewWindow.getByLabel("register");
     if (registerWindow) {
       await registerWindow.close().catch((error) => {
@@ -53,6 +53,9 @@ export function useLogin() {
    * @param auto 是否自动登录
    */
   const login = async (deviceType: "PC" | "MOBILE", auto: boolean = settingStore.login.autoLogin) => {
+    // //TODO: 测试
+    // await openHomeWindow();
+    // return;
     loading.value = true;
     loginText.value = t("auth.status.loggingIn");
     loginDisabled.value = true;
@@ -102,7 +105,7 @@ export function useLogin() {
         loginDisabled.value = true;
         loading.value = false;
         loginText.value = t("auth.status.successRedirect");
-        await routerOrOpenHomeWindow();
+        await openHomeWindow();
       })
       .catch((e) => {
         console.error("登录异常: ", e);
