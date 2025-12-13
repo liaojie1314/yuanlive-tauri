@@ -85,7 +85,7 @@
         </n-flex>
 
         <n-flex justify="center">
-          <n-ellipsis style="max-width: 200px" class="text-(18px [--chat-text-color])">
+          <n-ellipsis style="max-width: 200px" class="text-(18px [--user-text-color])">
             {{ userStore.userInfo?.userName || "" }}
           </n-ellipsis>
         </n-flex>

@@ -1,0 +1,104 @@
+* {
+  caret-color: #13987f !important; /* 改变输入框光标的颜色 */
+}
+html,
+body,
+svg {
+  &::selection {
+    background: rgba(19, 152, 127, 0.3); /** 输入框选中文本背景色 */
+  }
+  outline: none;
+  overscroll-behavior: none; // 禁止mac的"触底反弹"效果
+}
+
+::selection {
+  background: rgba(19, 152, 127, 0.3); /** 输入框选中文本背景色 */
+}
+/**! 主题变量 */
+:root {
+  // 是否启用阴影
+  --shadow-enabled: 1;
+  // 是否启用透明高斯模糊
+  --blur-enabled: 1;
+
+  --left-bg-color: #64a29c;
+  --left-text-color: #e3e3e3;
+  --right-bg-color: #f1f1f1;
+  // 文字颜色
+  --text-color: #18181c;
+  --action-bar-icon-color: #404040;
+  --action-bar-icon-hover: #e7e7e7;
+  --user-text-color: #505050;
+}
+
+html[data-theme="dark"] {
+  --left-bg-color: rgba(62, 101, 100, 0.8);
+  --left-text-color: #ccc;
+  --right-bg-color: #161616;
+  // 文字颜色
+  --text-color: #fff;
+  --action-bar-icon-color: #c1c1c1;
+  --action-bar-icon-hover: #242424;
+  --user-text-color: #b1b1b1;
+}
+
+/**!修改naive-ui的遮罩层样式*/
+@mixin mask-style($blur: 4px) {
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+}
+
+// 使用CSS变量来控制模糊效果
+html[data-blur="1"] {
+  .n-modal-mask,
+  .n-drawer-mask {
+    background-color: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+  }
+}
+
+.n-modal-mask {
+  @include mask-style;
+}
+
+.n-drawer-mask {
+  @include mask-style(2px);
+}
+
+/** 修改naive-ui复选框的样式 */
+.n-checkbox .n-checkbox-box {
+  border-radius: 50%;
+  width: 16px;
+  height: 16px;
+}
+
+/** 修改naive-ui select 组件的样式 */
+.n-base-selection,
+.n-base-select-menu,
+.n-base-select-menu .n-base-select-option::before {
+  border-radius: 8px;
+  font-size: 12px;
+}
+
+.n-base-select-menu .n-base-select-option .n-base-select-option__content {
+  margin-left: 4px;
+}
+
+/** 修改naive-ui Popselect选中的样式 */
+.n-base-select-menu .n-base-select-option.n-base-select-option--selected {
+  color: #13987f;
+}
+.n-base-select-menu .n-base-select-option .n-base-select-option__check {
+  color: #13987f;
+}
+
+/** 修改默认的naive-ui的选择器样式 */
+.n-base-selection {
+  --n-box-shadow-active: 0 0 0 2px rgba(19, 152, 127, 0.2) !important;
+  --n-border-active: 1px solid #13987f !important;
+  --n-border-hover: 1px solid #13987f !important;
+}

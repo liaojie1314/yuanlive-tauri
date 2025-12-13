@@ -207,7 +207,7 @@ defineExpose({
 
 <style scoped lang="scss">
 .hover-box {
-  @apply w-28px h-24px flex-center hover:bg-[--icon-hover-color];
+  @apply w-28px h-24px flex-center hover:bg-[--action-bar-icon-hover];
 }
 
 .action-close {
