@@ -79,12 +79,15 @@ import { StorageKeyEnum, TauriCommandEnum, ThemeEnum } from "@/enums";
 import { generateQRCodeApi, checkQRStatusApi } from "@/api/auth";
 import { useI18nGlobal } from "@/services/i18n";
 import { useWindow } from "@/hooks/useWindow";
+import { useGlobalStore } from "@/stores/global";
 import { useSettingStore } from "@/stores/setting";
-import { getEnhancedFingerprint } from "~/src/services/fingerprint";
+import { getEnhancedFingerprint } from "@/services/fingerprint";
 
 const { t } = useI18nGlobal();
 const { createWebviewWindow } = useWindow();
+const globalStore = useGlobalStore();
 const settingStore = useSettingStore();
+const { showTray } = storeToRefs(globalStore);
 const { themes } = storeToRefs(settingStore);
 const naiveTheme = computed(() => (themes.value.content === ThemeEnum.DARK ? darkTheme : lightTheme));
 
@@ -278,6 +281,7 @@ const handleError = (key: ScanStatusTextKey = "generalError") => {
 };
 
 onMounted(async () => {
+  showTray.value = false;
   // 存储此次登陆设备指纹
   const clientId = await getEnhancedFingerprint();
   localStorage.setItem(StorageKeyEnum.CLIENT_ID, clientId);

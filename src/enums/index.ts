@@ -71,6 +71,8 @@ export enum TauriCommandEnum {
 export enum StoresEnum {
   // 置顶
   ALWAYS_ON_TOP = "alwaysOnTop",
+  // 全局
+  GLOBAL = "global",
   // 用户
   USER = "user",
   // 设置

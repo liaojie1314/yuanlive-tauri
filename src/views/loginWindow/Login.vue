@@ -149,16 +149,17 @@
 <script setup lang="ts">
 import { darkTheme, lightTheme } from "naive-ui";
 import { useNetwork } from "@vueuse/core";
+import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 
 import router from "@/router";
 import { ThemeEnum } from "@/enums";
 import { useUserStore } from "@/stores/user";
+import { useGlobalStore } from "@/stores/global";
 import { useSettingStore } from "@/stores/setting";
 import { useWindow } from "@/hooks/useWindow";
 import { useLogin } from "@/hooks/useLogin";
 import { useI18nGlobal } from "@/services/i18n";
 import { formatBottomText } from "@/utils/FormattingUtils";
-import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 
 const { t } = useI18nGlobal();
 // 网络连接是否正常
@@ -166,8 +167,10 @@ const { isOnline } = useNetwork();
 const { createWebviewWindow } = useWindow();
 const { userInfo, uiState, loading, loginDisabled, loginText, login } = useLogin();
 const userStore = useUserStore();
+const globalStore = useGlobalStore();
 const settingStore = useSettingStore();
 const { themes } = storeToRefs(settingStore);
+const { showTray } = storeToRefs(globalStore);
 const naiveTheme = computed(() => (themes.value.content === ThemeEnum.DARK ? darkTheme : lightTheme));
 
 // 输入框占位符
@@ -228,6 +231,7 @@ const enterKey = (event: KeyboardEvent) => {
 };
 
 onMounted(async () => {
+  showTray.value = false;
   // 只有在需要登录的情况下才显示登录窗口
   if (!isJumpDirectly.value) {
     await getCurrentWebviewWindow().show();

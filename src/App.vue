@@ -7,13 +7,24 @@
 </template>
 
 <script setup lang="ts">
-import { StorageKeyEnum, ThemeEnum } from "./enums";
+import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
+
+import { StorageKeyEnum, ThemeEnum } from "@/enums";
 import { useSettingStore } from "@/stores/setting";
-import { loadLanguage } from "./services/i18n";
-import { isMobile } from "./utils/PlatformUtils";
+import { loadLanguage } from "@/services/i18n";
+import { isMobile, isWindows, isWindows10 } from "@/utils/PlatformUtils";
+import { useFixedScale } from "@/hooks/useFixedScale.ts";
 
 const settingStore = useSettingStore();
 const { themes, page } = storeToRefs(settingStore);
+const appWindow = WebviewWindow.getCurrent();
+
+// 创建固定缩放控制器（使用 #app-container 作为目标，避免影响浮层定位）
+const fixedScale = useFixedScale({
+  target: "#app-container",
+  mode: "transform",
+  enableWindowsTextScaleDetection: true
+});
 
 // 禁止拖拽图片及输入框
 const preventDefault = (e: MouseEvent) => {
@@ -62,6 +73,15 @@ watch(
 );
 
 onMounted(() => {
+  // 仅在windows上使用
+  if (isWindows()) {
+    fixedScale.enable();
+  }
+  if (isWindows10()) {
+    appWindow.setShadow(false).catch((error) => {
+      console.warn("禁用窗口阴影失败:", error);
+    });
+  }
   // 判断localStorage中是否有设置主题
   if (!localStorage.getItem(StorageKeyEnum.SETTING)) {
     // 初始化设置
@@ -83,6 +103,9 @@ onMounted(() => {
 });
 
 onUnmounted(() => {
+  // 关闭固定缩放，恢复样式与监听
+  fixedScale.disable();
+
   window.removeEventListener("contextmenu", preventGlobalContextMenu, false);
   window.removeEventListener("dragstart", preventDefault);
 });

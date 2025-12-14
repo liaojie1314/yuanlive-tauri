@@ -77,7 +77,7 @@ export const useWindow = () => {
     const newSize = new LogicalSize(width, height);
     // 调用窗口的 setSize 方法进行尺寸调整
     await webview?.setSize(newSize).catch((error) => {
-      console.error("无法调整窗口大小:", error);
+      console.error("无法调整窗口大小: ", error);
     });
   };
 
@@ -92,8 +92,8 @@ export const useWindow = () => {
         // 如果窗口已存在，首先检查是否最小化了
         const minimized = await isExistsWinds.isMinimized();
         // 检查是否是隐藏
-        const hidden = await isExistsWinds.isVisible();
-        if (!hidden) {
+        const isVisible = await isExistsWinds.isVisible();
+        if (!isVisible) {
           await isExistsWinds.show();
         }
         if (minimized) {

@@ -67,7 +67,7 @@
         "center": false,
         "visible": false,
         "width": 130,
-        "height": 44,
+        "height": 48,
         "alwaysOnTop": true,
         "skipTaskbar": true,
         "decorations": false,

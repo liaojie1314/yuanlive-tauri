@@ -7,6 +7,7 @@ import type { UserInfoType } from "@/api/types.ts";
 import { StorageKeyEnum, TauriCommandEnum } from "@/enums";
 
 import { useUserStore } from "@/stores/user.ts";
+import { useGlobalStore } from "@/stores/global.ts";
 import { useSettingStore } from "@/stores/setting.ts";
 import { useI18nGlobal } from "@/services/i18n.ts";
 import { useWindow } from "@/hooks/useWindow.ts";
@@ -16,9 +17,11 @@ import { getEnhancedFingerprint } from "@/services/fingerprint.ts";
 
 export function useLogin() {
   const userStore = useUserStore();
+  const globalStore = useGlobalStore();
   const settingStore = useSettingStore();
-  const { createWebviewWindow } = useWindow();
+  const { createWebviewWindow, resizeWindow } = useWindow();
   const { t } = useI18nGlobal();
+  const { showTray } = storeToRefs(globalStore);
 
   // 网络连接是否正常
   const { isOnline } = useNetwork();
@@ -37,6 +40,9 @@ export function useLogin() {
   });
   const uiState = ref<"manual" | "auto">("manual");
 
+  /**
+   * 打开首页窗口
+   */
   const openHomeWindow = async () => {
     const registerWindow = await WebviewWindow.getByLabel("register");
     if (registerWindow) {
@@ -45,6 +51,9 @@ export function useLogin() {
       });
     }
     await createWebviewWindow("YuanLive", "home", 960, 720, "login", true, 330, 480, undefined, false);
+    // 只有在成功创建home窗口并且已登录的情况下才显示托盘菜单
+    showTray.value = true;
+    await resizeWindow("tray", 130, 138);
   };
 
   /**
@@ -134,11 +143,13 @@ export function useLogin() {
    * 登出
    */
   const logout = async () => {
-    const { createWebviewWindow } = useWindow();
+    showTray.value = false;
     try {
       // 创建登录窗口
       await invokeSilently(TauriCommandEnum.REMOVE_TOKEN);
       await createWebviewWindow("登录", "login", 320, 448, void 0, false, 320, 448);
+      // 调整托盘大小
+      await resizeWindow("tray", 130, 48);
     } catch (e) {
       console.error("创建登录窗口失败:", e);
     }
