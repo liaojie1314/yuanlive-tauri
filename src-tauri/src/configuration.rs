@@ -8,51 +8,6 @@ pub struct BackendSettings {
     pub ws_url: String,
 }
 
-// 应用程序运行环境枚举
-#[derive(Debug)]
-pub enum Environment {
-    Local,
-    Production,
-}
-
-impl Environment {
-    /// 将Environment枚举转换为字符串
-    /// 用于文件名和路径构建
-    ///
-    /// # 返回值
-    /// * `&'static str` - 对应的环境字符串
-    pub fn as_str(&self) -> &'static str {
-        match self {
-            Environment::Local => "local",
-            Environment::Production => "production",
-        }
-    }
-}
-
-impl TryFrom<String> for Environment {
-    type Error = String;
-
-    /// 从字符串解析Environment枚举
-    /// 支持大小写不敏感的解析
-    ///
-    /// # 参数
-    /// * `s` - 要解析的字符串
-    ///
-    /// # 返回值
-    /// * `Ok(Environment)` - 解析成功时返回环境枚举
-    /// * `Err(String)` - 解析失败时返回错误信息
-    fn try_from(s: String) -> Result<Self, Self::Error> {
-        match s.to_lowercase().as_str() {
-            "local" => Ok(Self::Local),
-            "production" => Ok(Self::Production),
-            other => Err(format!(
-                "{} is not a supported environment. Use either `local` or `production`.",
-                other
-            )),
-        }
-    }
-}
-
 /// 获取应用程序配置
 /// 根据APP_ENVIRONMENT环境变量确定运行环境，按优先级加载配置：
 /// 1. 桌面开发环境：文件系统配置文件

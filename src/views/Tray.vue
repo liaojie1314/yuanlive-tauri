@@ -70,12 +70,6 @@ const handleTrayResize = async () => {
 onMounted(async () => {
   // 监听系统缩放变化事件，自动调整托盘窗口尺寸
   window.addEventListener("resize-needed", handleTrayResize);
-
-  const trayWindow = await WebviewWindow.getByLabel("tray");
-  // 监听窗口失去焦点事件，点击窗口外区域时隐藏托盘窗口
-  trayWindow?.listen("tauri://blur", async () => {
-    await trayWindow.hide();
-  });
 });
 
 onUnmounted(() => {

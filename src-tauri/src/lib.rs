@@ -1,13 +1,13 @@
 pub mod command;
 mod configuration;
 mod error;
-mod plugin;
+mod init;
 mod request_client;
 mod tray;
 
 use crate::configuration::{get_configuration, BackendSettings};
 use crate::error::CommonError;
-use crate::plugin::CustomInit;
+use crate::init::CustomInit;
 use serde::{Deserialize, Serialize};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
@@ -36,6 +36,7 @@ pub struct UserInfo {
 pub fn run() {
     tauri::Builder::default()
         .init_plugin()
+        .init_window_event()
         .setup(move |app| {
             common_setup(app.handle().clone())?;
             Ok(())
