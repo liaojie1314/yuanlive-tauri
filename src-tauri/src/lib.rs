@@ -12,7 +12,7 @@ use serde::{Deserialize, Serialize};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use tauri::async_runtime::Mutex;
-use tauri::{AppHandle, Emitter, Manager};
+use tauri::{AppHandle, Emitter, Listener, Manager};
 use tauri_plugin_fs::FsExt;
 
 #[derive(Debug)]
@@ -77,10 +77,81 @@ async fn initialize_app_data(
     Ok((user_info, Arc::new(Mutex::new(rc)), configuration))
 }
 
+/// 处理退出登录时的窗口管理逻辑
+///
+/// 该函数会：
+/// - 关闭除 login/tray 外的大部分窗口
+/// - 优雅地处理窗口关闭过程中的错误
+#[cfg(desktop)]
+pub async fn handle_logout_windows(app_handle: &AppHandle) {
+    tracing::info!("[LOGOUT] Starting to close windows");
+    let all_windows = app_handle.webview_windows();
+    tracing::info!("[LOGOUT] Found {} windows", all_windows.len());
+    // 收集需要关闭的窗口
+    let mut windows_to_close = Vec::new();
+
+    for (label, window) in all_windows {
+        match label.as_str() {
+            // login 和 tray 窗口不处理
+            "login" | "tray" => {
+                tracing::info!("[LOGOUT] Skipping window: {}", label);
+            }
+            // 其他窗口需要关闭
+            _ => {
+                tracing::info!("[LOGOUT] Marking window for closure: {}", label);
+                windows_to_close.push((label, window));
+            }
+        }
+    }
+
+    // 逐个关闭窗口，添加小延迟以避免并发关闭导致的错误
+    for (label, window) in windows_to_close {
+        tracing::info!("[LOGOUT] Closing window: {}", label);
+        // 先隐藏窗口，减少用户感知的延迟
+        let _ = window.hide();
+        match window.destroy() {
+            Ok(_) => {
+                tracing::info!("[LOGOUT] Successfully closed window: {}", label);
+            }
+            Err(error) => {
+                // 检查窗口是否还存在
+                if app_handle.get_webview_window(&label).is_none() {
+                    tracing::info!(
+                        "[LOGOUT] Window {} no longer exists, skipping closure",
+                        label
+                    );
+                } else {
+                    tracing::warn!(
+                        "[LOGOUT] Warning when closing window {}: {} (this is usually normal)",
+                        label,
+                        error
+                    );
+                }
+            }
+        }
+    }
+    tracing::info!("[LOGOUT] Logout completed");
+}
+
+// 设置登出事件监听器
+#[cfg(desktop)]
+fn setup_logout_listener(app_handle: AppHandle) {
+    let app_handle_clone = app_handle.clone();
+    app_handle.listen("logout", move |_| {
+        let app_handle = app_handle_clone.clone();
+        tauri::async_runtime::spawn(async move {
+            handle_logout_windows(&app_handle).await;
+        });
+    });
+}
+
 // 功能 setup 函数
 fn common_setup(app_handle: AppHandle) -> Result<(), Box<dyn std::error::Error>> {
     let scope = app_handle.fs_scope();
     scope.allow_directory("configuration", false)?;
+
+    #[cfg(desktop)]
+    setup_logout_listener(app_handle.clone());
 
     match tauri::async_runtime::block_on(initialize_app_data(app_handle.clone())) {
         Ok((user_info, rc, settings)) => {

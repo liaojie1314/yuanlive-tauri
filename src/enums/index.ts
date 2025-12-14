@@ -54,7 +54,9 @@ export enum EventEnum {
   // 窗口显示
   WIN_SHOW = "winShow",
   // 退出程序
-  EXIT = "exit"
+  EXIT = "exit",
+  // 退出账号
+  LOGOUT = "logout"
 }
 
 /** tauri 命令 */

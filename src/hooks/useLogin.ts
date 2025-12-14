@@ -4,7 +4,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
 
 import type { UserInfoType } from "@/api/types.ts";
-import { StorageKeyEnum, TauriCommandEnum } from "@/enums";
+import { EventEnum, StorageKeyEnum, TauriCommandEnum } from "@/enums";
 
 import { useUserStore } from "@/stores/user.ts";
 import { useGlobalStore } from "@/stores/global.ts";
@@ -14,6 +14,7 @@ import { useWindow } from "@/hooks/useWindow.ts";
 import { ensureAppStateReady } from "@/utils/AppStateReady.ts";
 import { invokeSilently } from "@/utils/TauriInvokeHandler.ts";
 import { getEnhancedFingerprint } from "@/services/fingerprint.ts";
+import { emit } from "@tauri-apps/api/event";
 
 export function useLogin() {
   const userStore = useUserStore();
@@ -148,6 +149,8 @@ export function useLogin() {
       // 创建登录窗口
       await invokeSilently(TauriCommandEnum.REMOVE_TOKEN);
       await createWebviewWindow("登录", "login", 320, 448, void 0, false, 320, 448);
+      // 发送登出事件
+      await emit(EventEnum.LOGOUT);
       // 调整托盘大小
       await resizeWindow("tray", 130, 48);
     } catch (e) {
