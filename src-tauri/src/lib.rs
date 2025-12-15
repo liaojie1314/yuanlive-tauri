@@ -182,6 +182,7 @@ fn get_invoke_handlers() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Se
 {
     use crate::command::ai_command::ai_message_send_stream;
     use crate::command::app_state_command::is_app_state_ready;
+    #[cfg(target_os = "windows")]
     use crate::command::common_command::get_windows_scale_info;
     use crate::command::request_command::{login_command, request_command};
     use crate::command::setting_command::{get_settings, update_settings};
