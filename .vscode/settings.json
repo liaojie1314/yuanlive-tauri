@@ -10,5 +10,8 @@
   "i18n-ally.sortKeys": true,
   "i18n-ally.enabledParsers": [
     "json"
+  ],
+  "cSpell.words": [
+    "minimizable"
   ]
 }

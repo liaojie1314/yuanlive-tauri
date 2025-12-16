@@ -49,6 +49,10 @@ export enum CloseBxEnum {
 
 /** tauri原生跨窗口通信时传输的类型 */
 export enum EventEnum {
+  /** 独立窗口 */
+  ALONE = "alone",
+  /** 多窗口 */
+  MULTI_MSG = "multiMsg",
   // 窗口关闭
   WIN_CLOSE = "winClose",
   // 窗口显示
