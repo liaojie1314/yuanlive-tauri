@@ -173,8 +173,11 @@ const { t } = useI18nGlobal();
 const settingStore = useSettingStore();
 const { themes } = storeToRefs(settingStore);
 const naiveTheme = computed(() => (themes.value.content === ThemeEnum.DARK ? darkTheme : lightTheme));
+// 验证码计时器的唯一ID
+const EMAIL_TIMER_ID = "email_verification_timer";
+// 倒计时定时器 Worker
+const timerWorker = new Worker(new URL("@/workers/timer.worker.ts", import.meta.url));
 
-let countDownInterval: any = null;
 // 步骤状态
 const currentStep = ref(1);
 const stepStatus = ref<"error" | "finish" | "process" | "wait" | undefined>("process");
@@ -272,36 +275,26 @@ const sendEmailCode = async () => {
     });
     window.$message.success(t("auth.forget.messages.codeSent"));
     // 接口成功返回后才开始倒计时
-    //TODO: 使用worker线程
     sendBtnDisabled.value = true;
     countDown.value = 60;
     emailCodeBtnText.value = t("auth.forget.actions.retryIn", { seconds: countDown.value });
-    countDownInterval = setInterval(() => {
-      countDown.value--;
-      if (countDown.value <= 0) {
-        clearCountDown();
-        sendBtnDisabled.value = false;
-        emailCodeBtnText.value = t("auth.forget.actions.resend");
-      } else {
-        emailCodeBtnText.value = t("auth.forget.actions.retryIn", { seconds: countDown.value });
-      }
-    }, 1000);
+    // 开启Worker日志功能，确保debug消息能发送
+    // 关闭来减少性能开销
+    // timerWorker.postMessage({
+    //   type: "setLogging",
+    //   logging: true
+    // });
+    // 发送消息给 Worker 开始计时
+    timerWorker.postMessage({
+      type: "startTimer",
+      msgId: EMAIL_TIMER_ID,
+      duration: 60 * 1000 // 60秒，单位毫秒
+    });
   } catch (error) {
     console.error("发送邮箱验证码失败: ", error);
   } finally {
     // 重置loading状态
     sendingEmailCode.value = false;
-  }
-};
-
-/**
- * 清除倒计时
- */
-const clearCountDown = () => {
-  if (countDownInterval) {
-    clearInterval(countDownInterval);
-    countDownInterval = null;
-    countDown.value = 0;
   }
 };
 
@@ -350,11 +343,45 @@ const submitNewPassword = async () => {
   }
 };
 
+// 监听 Worker 消息
+timerWorker.onmessage = (e) => {
+  const { type, msgId, remainingTime } = e.data;
+  if (msgId !== EMAIL_TIMER_ID) return;
+  // 邮箱验证码计时器消息处理
+  if (type === "debug") {
+    // 更新倒计时显示
+    const secondsRemaining = Math.ceil(remainingTime / 1000);
+    countDown.value = secondsRemaining;
+    emailCodeBtnText.value = t("auth.forget.actions.retryIn", { seconds: secondsRemaining });
+  } else if (type === "timeout") {
+    // 计时结束
+    sendBtnDisabled.value = false;
+    emailCodeBtnText.value = t("auth.forget.actions.resend");
+  }
+};
+
+// Worker 错误处理
+timerWorker.onerror = () => {
+  // 发生错误时恢复按钮状态
+  sendBtnDisabled.value = false;
+  emailCodeBtnText.value = t("auth.forget.actions.resend");
+  countDown.value = 0;
+};
+
 onMounted(async () => {
   await getCurrentWebviewWindow().show();
 });
 
-onUnmounted(() => clearCountDown());
+onUnmounted(() => {
+  // 清除Web Worker计时器
+  timerWorker.postMessage({
+    type: "clearTimer",
+    msgId: EMAIL_TIMER_ID
+  });
+  // 终止Worker
+  timerWorker.terminate();
+  countDown.value = 0;
+});
 </script>
 
 <style scoped lang="scss">

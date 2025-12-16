@@ -203,10 +203,13 @@ const { t } = useI18nGlobal();
 const settingStore = useSettingStore();
 const { themes } = storeToRefs(settingStore);
 const naiveTheme = computed(() => (themes.value.content === ThemeEnum.DARK ? darkTheme : lightTheme));
+// 验证码倒计时消息ID
+const EMAIL_TIMER_ID = "register_window_email_timer";
+// 倒计时定时器 Worker
+const timerWorker = new Worker(new URL("@/workers/timer.worker.ts", import.meta.url));
 
 // 输入框类型定义
 type InputType = "nickName" | "email" | "password" | "confirmPassword";
-let countdownInterval: any = null;
 // 注册信息
 const info = unref(
   ref<RegisterUserReq>({
@@ -391,24 +394,11 @@ const handleStepAction = async () => {
  */
 const startSendCodeCountdown = () => {
   sendCodeCountDown.value = 60;
-  // TODO: 使用worker线程
-  countdownInterval = setInterval(() => {
-    sendCodeCountDown.value--;
-    if (sendCodeCountDown.value <= 0) {
-      clearCountDown();
-    }
-  }, 1000);
-};
-
-/**
- * 清除倒计时
- */
-const clearCountDown = () => {
-  if (countdownInterval) {
-    clearInterval(countdownInterval);
-    countdownInterval = null;
-    sendCodeCountDown.value = 0;
-  }
+  timerWorker.postMessage({
+    type: "startTimer",
+    msgId: EMAIL_TIMER_ID,
+    duration: 60 * 1000
+  });
 };
 
 /**
@@ -437,11 +427,33 @@ const register = async () => {
   }
 };
 
+timerWorker.onmessage = (e) => {
+  const { type, msgId, remainingTime } = e.data;
+  if (msgId !== EMAIL_TIMER_ID) return;
+
+  if (type === "debug") {
+    sendCodeCountDown.value = Math.max(0, Math.ceil(remainingTime / 1000));
+  } else if (type === "timeout") {
+    sendCodeCountDown.value = 0;
+  }
+};
+
+timerWorker.onerror = () => {
+  sendCodeCountDown.value = 0;
+};
+
 onMounted(async () => {
   await getCurrentWebviewWindow().show();
 });
 
-onUnmounted(() => clearCountDown());
+onUnmounted(() => {
+  timerWorker.postMessage({
+    type: "clearTimer",
+    msgId: EMAIL_TIMER_ID
+  });
+  timerWorker.terminate();
+  sendCodeCountDown.value = 0;
+});
 </script>
 
 <style scoped lang="scss">
