@@ -7,26 +7,26 @@
 </template>
 
 <script setup lang="ts">
+import { listen } from "@tauri-apps/api/event";
 import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
 
 import { StorageKeyEnum, ThemeEnum } from "@/enums";
 import { useSettingStore } from "@/stores/setting";
 import { loadLanguage } from "@/services/i18n";
-import { isMobile, isWindows, isWindows10 } from "@/utils/PlatformUtils";
-import { useFixedScale } from "@/hooks/useFixedScale.ts";
+import { isMobile, isWindows10 } from "@/utils/PlatformUtils";
+import { useTauriListener } from "@/hooks/useTauriListener";
+import { ConnectionState } from "@/services/webSocketRust";
 
 const settingStore = useSettingStore();
+const { addListener } = useTauriListener();
 const { themes, page } = storeToRefs(settingStore);
 const appWindow = WebviewWindow.getCurrent();
+let lastWsConnectionState: string | null = null;
 
-// 创建固定缩放控制器（使用 #app-container 作为目标，避免影响浮层定位）
-const fixedScale = useFixedScale({
-  target: "#app-container",
-  mode: "transform",
-  enableWindowsTextScaleDetection: true
-});
-
-// 禁止拖拽图片及输入框
+/**
+ * 禁止拖拽图片及输入框
+ * @param e 鼠标事件
+ */
 const preventDefault = (e: MouseEvent) => {
   const event = e.target as HTMLElement;
   // 检查目标元素是否是<img>元素
@@ -35,8 +35,38 @@ const preventDefault = (e: MouseEvent) => {
   }
 };
 
-// 禁止右键菜单
+/**
+ * 禁止右键菜单
+ * @param event 鼠标事件
+ */
 const preventGlobalContextMenu = (event: MouseEvent) => event.preventDefault();
+
+/**
+ * 处理websocket事件
+ * @param event 事件对象
+ */
+const handleWebsocketEvent = async (event: any) => {
+  const payload = event.payload;
+  if (!payload || payload.type !== "connectionStateChanged") return;
+  const previousState = (lastWsConnectionState || "").toUpperCase() || null;
+  const nextStateRaw = payload.state;
+  const nextState = typeof nextStateRaw === "string" ? nextStateRaw.toUpperCase() : "";
+  const isReconnectionFlag = payload.is_reconnection;
+  const hasRecoveredFromDrop = Boolean(
+    previousState && previousState !== ConnectionState.CONNECTED && nextState === ConnectionState.CONNECTED
+  );
+  const shouldHandleReconnect = nextState === ConnectionState.CONNECTED && (isReconnectionFlag || hasRecoveredFromDrop);
+  console.log("[WS] state change", {
+    prev: previousState,
+    next: nextState,
+    isReconnectionFlag,
+    hasRecoveredFromDrop,
+    shouldHandleReconnect,
+    raw: payload
+  });
+  lastWsConnectionState = nextState || previousState;
+  if (!shouldHandleReconnect) return;
+};
 
 // 控制阴影
 watch(
@@ -73,10 +103,6 @@ watch(
 );
 
 onMounted(() => {
-  // 仅在windows上使用
-  if (isWindows()) {
-    fixedScale.enable();
-  }
   if (isWindows10()) {
     appWindow.setShadow(false).catch((error) => {
       console.warn("禁用窗口阴影失败:", error);
@@ -89,6 +115,7 @@ onMounted(() => {
   }
   document.documentElement.dataset.theme = themes.value.content;
   window.addEventListener("dragstart", preventDefault);
+  addListener(listen("websocket-event", handleWebsocketEvent), "websocket-event");
   // 开发环境不禁止
   if (process.env.NODE_ENV !== "development") {
     // 禁用浏览器默认的快捷键
@@ -103,9 +130,6 @@ onMounted(() => {
 });
 
 onUnmounted(() => {
-  // 关闭固定缩放，恢复样式与监听
-  fixedScale.disable();
-
   window.removeEventListener("contextmenu", preventGlobalContextMenu, false);
   window.removeEventListener("dragstart", preventDefault);
 });

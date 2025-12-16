@@ -64,7 +64,7 @@ export function useLogin() {
    * @param auto 是否自动登录
    */
   const login = async (deviceType: "PC" | "MOBILE", auto: boolean = settingStore.login.autoLogin) => {
-    //TODO: 测试
+    // TODO: 测试
     // await webSocketRust.initConnect();
     // await openHomeWindow();
     // return;
