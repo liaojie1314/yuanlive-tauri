@@ -4,6 +4,7 @@ mod error;
 mod init;
 mod request_client;
 mod tray;
+pub mod websocket;
 
 use crate::configuration::{get_configuration, BackendSettings};
 use crate::error::CommonError;
@@ -14,6 +15,7 @@ use std::sync::Arc;
 use tauri::async_runtime::Mutex;
 use tauri::{AppHandle, Emitter, Listener, Manager};
 use tauri_plugin_fs::FsExt;
+use tracing::{error, info, warn};
 
 #[derive(Debug)]
 pub struct AppData {
@@ -84,9 +86,9 @@ async fn initialize_app_data(
 /// - 优雅地处理窗口关闭过程中的错误
 #[cfg(desktop)]
 pub async fn handle_logout_windows(app_handle: &AppHandle) {
-    tracing::info!("[LOGOUT] Starting to close windows");
+    info!("[LOGOUT] Starting to close windows");
     let all_windows = app_handle.webview_windows();
-    tracing::info!("[LOGOUT] Found {} windows", all_windows.len());
+    info!("[LOGOUT] Found {} windows", all_windows.len());
     // 收集需要关闭的窗口
     let mut windows_to_close = Vec::new();
 
@@ -94,11 +96,11 @@ pub async fn handle_logout_windows(app_handle: &AppHandle) {
         match label.as_str() {
             // login 和 tray 窗口不处理
             "login" | "tray" => {
-                tracing::info!("[LOGOUT] Skipping window: {}", label);
+                info!("[LOGOUT] Skipping window: {}", label);
             }
             // 其他窗口需要关闭
             _ => {
-                tracing::info!("[LOGOUT] Marking window for closure: {}", label);
+                info!("[LOGOUT] Marking window for closure: {}", label);
                 windows_to_close.push((label, window));
             }
         }
@@ -106,31 +108,30 @@ pub async fn handle_logout_windows(app_handle: &AppHandle) {
 
     // 逐个关闭窗口，添加小延迟以避免并发关闭导致的错误
     for (label, window) in windows_to_close {
-        tracing::info!("[LOGOUT] Closing window: {}", label);
+        info!("[LOGOUT] Closing window: {}", label);
         // 先隐藏窗口，减少用户感知的延迟
         let _ = window.hide();
         match window.destroy() {
             Ok(_) => {
-                tracing::info!("[LOGOUT] Successfully closed window: {}", label);
+                info!("[LOGOUT] Successfully closed window: {}", label);
             }
             Err(error) => {
                 // 检查窗口是否还存在
                 if app_handle.get_webview_window(&label).is_none() {
-                    tracing::info!(
+                    info!(
                         "[LOGOUT] Window {} no longer exists, skipping closure",
                         label
                     );
                 } else {
-                    tracing::warn!(
+                    warn!(
                         "[LOGOUT] Warning when closing window {}: {} (this is usually normal)",
-                        label,
-                        error
+                        label, error
                     );
                 }
             }
         }
     }
-    tracing::info!("[LOGOUT] Logout completed");
+    info!("[LOGOUT] Logout completed");
 }
 
 // 设置登出事件监听器
@@ -163,11 +164,11 @@ fn common_setup(app_handle: AppHandle) -> Result<(), Box<dyn std::error::Error>>
             });
             APP_STATE_READY.store(true, Ordering::SeqCst);
             if let Err(e) = app_handle.emit("app-state-ready", ()) {
-                tracing::warn!("Failed to emit app-state-ready event: {}", e);
+                warn!("Failed to emit app-state-ready event: {}", e);
             }
         }
         Err(e) => {
-            tracing::error!("Failed to initialize application data: {}", e);
+            error!("Failed to initialize application data: {}", e);
             return Err(format!("Failed to initialize app data: {}", e).into());
         }
     }
@@ -187,6 +188,10 @@ fn get_invoke_handlers() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Se
     use crate::command::request_command::{login_command, request_command};
     use crate::command::setting_command::{get_settings, update_settings};
     use crate::command::token_command::remove_token;
+    use crate::websocket::commands::{
+        ws_disconnect, ws_force_reconnect, ws_get_state, ws_init_connection, ws_is_connected,
+        ws_send_message, ws_update_config,
+    };
 
     tauri::generate_handler![
         is_app_state_ready,
@@ -196,6 +201,14 @@ fn get_invoke_handlers() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Se
         ai_message_send_stream,
         login_command,
         request_command,
+        // websocket
+        ws_init_connection,
+        ws_disconnect,
+        ws_force_reconnect,
+        ws_send_message,
+        ws_is_connected,
+        ws_get_state,
+        ws_update_config,
         #[cfg(target_os = "windows")]
         get_windows_scale_info,
     ]

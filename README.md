@@ -48,11 +48,3 @@ pnpm commit
 | [cz-git](https://cz-git.qbb.sh)                        | 交互式方式写规范化的Git提交 |
 | [husky](https://typicode.github.io/husky)              | 管理Git钩子                 |
 | [commitizen](https://github.com/commitizen/cz-cli)     | 交互式提交工具              |
-
-[x] 网络设置页面
-[x] 注册页面窗口
-[x] 忘记密码窗口
-[x] 主界面布局
-[x] settingStore 主题，语言
-[ ] WebSocket
-[x] tray

@@ -84,7 +84,7 @@ impl RequestClient {
         if let Some(body) = body {
             request_builder = request_builder.json(body);
         } else {
-            request_builder = request_builder.json(&serde_json::json!({}));
+            request_builder = request_builder.json(&json!({}));
         }
 
         // 设置查询参数
