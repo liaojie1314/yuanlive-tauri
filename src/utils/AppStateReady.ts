@@ -23,8 +23,8 @@ const waitForReadyEvent = () =>
       }
       pendingPromise = null;
     })
-      .then((unListen) => {
-        cleanup = unListen;
+      .then((unlisten) => {
+        cleanup = unlisten;
       })
       .catch((error) => {
         console.warn("[appStateReady] Failed to register listener:", error);

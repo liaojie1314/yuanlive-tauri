@@ -190,7 +190,7 @@ fn get_invoke_handlers() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Se
     use crate::command::token_command::remove_token;
     use crate::websocket::commands::{
         ws_disconnect, ws_force_reconnect, ws_get_state, ws_init_connection, ws_is_connected,
-        ws_send_message, ws_update_config,
+        ws_send_message,
     };
 
     tauri::generate_handler![
@@ -208,7 +208,6 @@ fn get_invoke_handlers() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Se
         ws_send_message,
         ws_is_connected,
         ws_get_state,
-        ws_update_config,
         #[cfg(target_os = "windows")]
         get_windows_scale_info,
     ]

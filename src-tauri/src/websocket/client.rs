@@ -638,16 +638,6 @@ impl WebSocketClient {
             .await;
     }
 
-    /// 获取当前配置
-    pub async fn get_config(&self) -> WebSocketConfig {
-        self.config.read().await.clone()
-    }
-
-    /// 更新配置
-    pub async fn update_config(&self, new_config: WebSocketConfig) {
-        *self.config.write().await = new_config;
-    }
-
     /// 检查 WebSocket 是否已连接
     pub fn is_connected(&self) -> bool {
         self.is_ws_connected.load(Ordering::SeqCst)

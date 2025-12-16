@@ -185,35 +185,3 @@ pub async fn ws_is_connected(_app_handle: AppHandle) -> Result<bool, String> {
         Ok(false)
     }
 }
-
-/// 更新 WebSocket 配置
-#[tauri::command]
-pub async fn ws_update_config(
-    _app_handle: AppHandle,
-    params: UpdateConfigParams,
-) -> Result<SuccessResponse, String> {
-    let client_container = get_websocket_client_container();
-    let client_guard = client_container.read().await;
-    if let Some(client) = client_guard.as_ref() {
-        // 获取先前配置
-        let mut config = client.get_config().await;
-        if let Some(interval) = params.heartbeat_interval {
-            config.heartbeat_interval = interval;
-        }
-        if let Some(timeout) = params.heartbeat_timeout {
-            config.heartbeat_timeout = timeout;
-        }
-        if let Some(attempts) = params.max_reconnect_attempts {
-            config.max_reconnect_attempts = attempts;
-        }
-        if let Some(delay) = params.reconnect_delay_ms {
-            config.reconnect_delay_ms = delay;
-        }
-        client.update_config(config).await;
-        info!("WebSocket configuration updated successfully");
-        Ok(SuccessResponse::new())
-    } else {
-        error!("WebSocket not initialized");
-        Err("WebSocket 未初始化".to_string())
-    }
-}

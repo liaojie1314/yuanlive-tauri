@@ -117,8 +117,8 @@ const alwaysOnTopStatus = computed(() => {
   return getWindowTop(topWinLabel);
 });
 
-// resized 事件的 unListen 函数
-let unListenResized: (() => void) | null = null;
+// resized 事件的 unlisten 函数
+let unlistenResized: (() => void) | null = null;
 
 watchEffect(() => {
   if (alwaysOnTopStatus.value) {
@@ -174,7 +174,7 @@ onMounted(async () => {
   // 初始化状态
   await updateWindowMaximized();
 
-  unListenResized = await appWindow.onResized?.(() => {
+  unlistenResized = await appWindow.onResized?.(() => {
     updateWindowMaximized();
   });
 
@@ -193,9 +193,9 @@ onMounted(async () => {
 });
 
 onUnmounted(() => {
-  if (unListenResized) {
-    unListenResized();
-    unListenResized = null;
+  if (unlistenResized) {
+    unlistenResized();
+    unlistenResized = null;
   }
 });
 

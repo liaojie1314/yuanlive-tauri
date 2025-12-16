@@ -1,11 +1,12 @@
 import { useNetwork } from "@vueuse/core";
+import { emit } from "@tauri-apps/api/event";
 import { info } from "@tauri-apps/plugin-log";
 import { invoke } from "@tauri-apps/api/core";
+
 import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
-
 import type { UserInfoType } from "@/api/types.ts";
-import { EventEnum, StorageKeyEnum, TauriCommandEnum } from "@/enums";
 
+import { EventEnum, StorageKeyEnum, TauriCommandEnum } from "@/enums";
 import { useUserStore } from "@/stores/user.ts";
 import { useGlobalStore } from "@/stores/global.ts";
 import { useSettingStore } from "@/stores/setting.ts";
@@ -13,8 +14,8 @@ import { useI18nGlobal } from "@/services/i18n.ts";
 import { useWindow } from "@/hooks/useWindow.ts";
 import { ensureAppStateReady } from "@/utils/AppStateReady.ts";
 import { invokeSilently } from "@/utils/TauriInvokeHandler.ts";
+import webSocketRust from "@/services/webSocketRust.ts";
 import { getEnhancedFingerprint } from "@/services/fingerprint.ts";
-import { emit } from "@tauri-apps/api/event";
 
 export function useLogin() {
   const userStore = useUserStore();
@@ -64,6 +65,7 @@ export function useLogin() {
    */
   const login = async (deviceType: "PC" | "MOBILE", auto: boolean = settingStore.login.autoLogin) => {
     //TODO: 测试
+    // await webSocketRust.initConnect();
     // await openHomeWindow();
     // return;
     loading.value = true;
@@ -115,6 +117,7 @@ export function useLogin() {
         loginDisabled.value = true;
         loading.value = false;
         loginText.value = t("auth.status.successRedirect");
+        await webSocketRust.initConnect();
         await openHomeWindow();
       })
       .catch((e) => {
