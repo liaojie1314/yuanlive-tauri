@@ -29,7 +29,29 @@ const getCommonRoutes = (): Array<RouteRecordRaw> => [
   {
     name: "home",
     path: "/home",
-    component: () => import("@/layout/index.vue")
+    component: () => import("@/layout/index.vue"),
+    children: [
+      {
+        name: "index",
+        path: "/index",
+        component: () => import("@/views/homeWindow/index.vue")
+      },
+      {
+        name: "aiChat",
+        path: "/aiChat",
+        component: () => import("@/views/homeWindow/AiChat.vue")
+      },
+      {
+        name: "friends",
+        path: "/friends",
+        component: () => import("@/views/homeWindow/Friends.vue")
+      },
+      {
+        name: "user",
+        path: "/user",
+        component: () => import("@/views/homeWindow/User.vue")
+      }
+    ]
   },
   {
     name: "tray",

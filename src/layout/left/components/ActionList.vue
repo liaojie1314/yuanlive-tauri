@@ -5,7 +5,9 @@
       <div
         v-for="item in menu"
         :key="item.url"
-        class="flex py-10px px-25px gap-10px hover:bg-[--left-item-bg-color] hover:color-[--left-active-text-color] rounded-[8px] items-center justify-start">
+        :class="{ 'bg-[--left-item-bg-color] color-[--left-active-text-color]': item.url === activeUrl }"
+        class="flex py-10px px-25px gap-10px hover:bg-[--left-item-bg-color] hover:color-[--left-active-text-color] rounded-[8px] items-center justify-start"
+        @click="handleClick(item.url)">
         <svg class="size-22px">
           <use :href="`#${item.icon}`"></use>
         </svg>
@@ -62,12 +64,15 @@
 
 <script setup lang="ts">
 import { useI18n } from "vue-i18n";
+import router from "@/router";
 
 const { t } = useI18n();
 
+const activeUrl = ref<string>("index");
+
 const baseMenu: Array<Omit<MenuAction, "title">> = [
   {
-    url: "home",
+    url: "index",
     icon: "home"
   },
   {
@@ -75,7 +80,7 @@ const baseMenu: Array<Omit<MenuAction, "title">> = [
     icon: "robot"
   },
   {
-    url: "friendsList",
+    url: "friends",
     icon: "peoples"
   },
   {
@@ -132,6 +137,11 @@ const helpMenu = computed<BaseMenuItem[]>(() => [
     icon: "help"
   }
 ]);
+
+const handleClick = (url: string) => {
+  activeUrl.value = url;
+  router.push({ name: url });
+};
 </script>
 
 <style scoped lang="scss">
