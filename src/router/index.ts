@@ -35,6 +35,11 @@ const getCommonRoutes = (): Array<RouteRecordRaw> => [
     name: "tray",
     path: "/tray",
     component: () => import("@/views/Tray.vue")
+  },
+  {
+    path: "/modal-remoteLogin",
+    name: "modal-remoteLogin",
+    component: () => import("@/views/loginWindow/RemoteLoginModal.vue")
   }
 ];
 

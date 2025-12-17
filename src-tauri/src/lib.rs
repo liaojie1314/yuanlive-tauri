@@ -186,6 +186,8 @@ fn get_invoke_handlers() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Se
     use crate::command::request_command::{login_command, request_command};
     use crate::command::setting_command::{get_settings, update_settings};
     use crate::command::token_command::remove_token;
+    #[cfg(desktop)]
+    use crate::command::window_payload_command::{get_window_payload, push_window_payload};
     use crate::websocket::commands::{
         ws_disconnect, ws_force_reconnect, ws_get_state, ws_init_connection, ws_is_connected,
         ws_send_message,
@@ -206,5 +208,9 @@ fn get_invoke_handlers() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Se
         ws_send_message,
         ws_is_connected,
         ws_get_state,
+        #[cfg(desktop)]
+        push_window_payload,
+        #[cfg(desktop)]
+        get_window_payload,
     ]
 }

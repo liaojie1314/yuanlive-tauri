@@ -529,11 +529,15 @@ impl WebSocketClient {
         // 提取消息类型
         let message_type = message.get("type").and_then(|t| t.as_str()).unwrap_or("");
         // 提取消息数据
-        let _ = message.get("data");
+        let data = message.get("data").unwrap_or(&serde_json::Value::Null);
         debug!("Processing business message type: {}", message_type);
         // 根据消息类型进行处理并发送对应的事件
         match message_type {
             // TODO:  处理消息类型
+            "remoteLogin" => {
+                warn!("Remote login");
+                let _ = app_handle.emit("ws-remote-login", data);
+            }
             // 未知消息类型
             _ => {
                 warn!("Received unhandled message type: {}", message_type);

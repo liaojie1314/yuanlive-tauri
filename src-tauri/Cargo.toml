@@ -46,6 +46,7 @@ config = { version = "0.15.19", default-features = false, features = ["yaml"] }
 tokio = "1.48.0"
 futures = "0.3"
 chrono = "0.4.42"
+lazy_static = "1.5"
 
 # WebSocket 相关依赖
 tokio-tungstenite = { version = "0.28", features = ["rustls-tls-webpki-roots"] }

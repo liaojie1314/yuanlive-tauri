@@ -10,18 +10,29 @@
 import { listen } from "@tauri-apps/api/event";
 import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
 
-import { StorageKeyEnum, ThemeEnum } from "@/enums";
+import { StorageKeyEnum, ThemeEnum, WsResponseMessageEnum } from "@/enums";
 import { useSettingStore } from "@/stores/setting";
+import { useUserStore } from "@/stores/user";
 import { loadLanguage } from "@/services/i18n";
+import { useI18nGlobal } from "@/services/i18n";
 import { isMobile, isWindows10 } from "@/utils/PlatformUtils";
+import { useMitt } from "@/hooks/useMitt";
+import { useWindow } from "@/hooks/useWindow";
 import { useTauriListener } from "@/hooks/useTauriListener";
 import { ConnectionState } from "@/services/webSocketRust";
+import { logoutApi } from "@/api/auth";
 
 const settingStore = useSettingStore();
+const userStore = useUserStore();
 const { addListener } = useTauriListener();
 const { themes, page } = storeToRefs(settingStore);
 const appWindow = WebviewWindow.getCurrent();
+const { sendWindowPayload } = useWindow();
+const { t } = useI18nGlobal();
+
 let lastWsConnectionState: string | null = null;
+
+const userUid = computed(() => userStore.userInfo!.uid);
 
 /**
  * 禁止拖拽图片及输入框
@@ -67,6 +78,27 @@ const handleWebsocketEvent = async (event: any) => {
   lastWsConnectionState = nextState || previousState;
   if (!shouldHandleReconnect) return;
 };
+
+useMitt.on(WsResponseMessageEnum.REMOTE_LOGIN, async (data: { uid: string; ip: string; client: string }) => {
+  if (Number(userUid.value) === Number(data.uid) && userStore.userInfo!.client === data.client) {
+    const { useLogin } = await import("@/hooks/useLogin");
+    const { logout } = useLogin();
+    if (!isMobile()) {
+      // 桌面端处理：聚焦主窗口并显示远程登录弹窗
+      const home = await WebviewWindow.getByLabel("home");
+      await home?.setFocus();
+      const remoteIp = data.ip || t("auth.remoteLogin.unknownIp");
+      await sendWindowPayload("login", {
+        remoteLogin: {
+          ip: remoteIp,
+          timestamp: Date.now()
+        }
+      });
+      await logoutApi();
+      await logout();
+    }
+  }
+});
 
 // 控制阴影
 watch(

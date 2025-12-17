@@ -5996,6 +5996,7 @@ dependencies = [
  "dotenv",
  "futures",
  "futures-util",
+ "lazy_static",
  "reqwest",
  "serde",
  "serde_json",

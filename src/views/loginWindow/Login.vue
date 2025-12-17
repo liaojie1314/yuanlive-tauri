@@ -3,7 +3,6 @@
   <n-config-provider :theme="naiveTheme" data-tauri-drag-region class="login-box size-full rounded-8px select-none">
     <!--顶部操作栏-->
     <action-bar :max-w="false" proxy />
-
     <!--  手动登录  -->
     <n-flex v-if="uiState === 'manual'" vertical :size="25">
       <!-- 头像 -->
@@ -63,7 +62,7 @@
           :loading="loading"
           :disabled="loginDisabled"
           tertiary
-          @click="login('PC', false)">
+          @click="normalLogin('PC', false)">
           <span>{{ loginText }}</span>
         </n-button>
       </n-flex>
@@ -97,7 +96,7 @@
           :disabled="loginDisabled"
           tertiary
           class="gradient-button w-200px mt-12px mb-40px color-#fff"
-          @click="login('PC', true)">
+          @click="normalLogin('PC', true)">
           <span>{{ loginText }}</span>
         </n-button>
       </n-flex>
@@ -160,16 +159,17 @@ import { useWindow } from "@/hooks/useWindow";
 import { useLogin } from "@/hooks/useLogin";
 import { useI18nGlobal } from "@/services/i18n";
 import { formatBottomText } from "@/utils/FormattingUtils";
+import { isDesktop } from "@/utils/PlatformUtils";
 
 const { t } = useI18nGlobal();
 // 网络连接是否正常
 const { isOnline } = useNetwork();
-const { createWebviewWindow } = useWindow();
-const { userInfo, uiState, loading, loginDisabled, loginText, login } = useLogin();
+const { createWebviewWindow, createModalWindow, getWindowPayload } = useWindow();
+const { userInfo, uiState, loading, loginDisabled, loginText, normalLogin } = useLogin();
 const userStore = useUserStore();
 const globalStore = useGlobalStore();
 const settingStore = useSettingStore();
-const { themes } = storeToRefs(settingStore);
+const { themes, login } = storeToRefs(settingStore);
 const { showTray } = storeToRefs(globalStore);
 const naiveTheme = computed(() => (themes.value.content === ThemeEnum.DARK ? darkTheme : lightTheme));
 
@@ -226,19 +226,71 @@ const closeMenu = (event: MouseEvent) => {
  */
 const enterKey = (event: KeyboardEvent) => {
   if (event.key === "Enter" && !loginDisabled.value) {
-    login("PC", false);
+    normalLogin("PC", false);
   }
 };
 
+/**
+ * 处理登录窗口加载时的异地登录载荷
+ */
+const handlePendingRemoteLoginPayload = async () => {
+  if (!isDesktop()) {
+    return;
+  }
+  try {
+    const payload = await getWindowPayload<{ remoteLogin?: { ip?: string } }>("login");
+    if (payload?.remoteLogin) {
+      await openRemoteLoginModal(payload.remoteLogin.ip);
+    }
+  } catch (error) {
+    console.error("处理异地登录载荷失败:", error);
+  }
+};
+
+/**
+ * 打开异地登录提醒模态窗口
+ * @param ip 异地登录IP地址
+ */
+const openRemoteLoginModal = async (ip?: string) => {
+  if (!isDesktop()) {
+    return;
+  }
+  const payloadIp = ip ?? "未知IP";
+  console.log("打开异地登录提醒模态窗口", payloadIp);
+  await createModalWindow(
+    "异地登录提醒",
+    "modal-remoteLogin",
+    350,
+    310,
+    "login",
+    {
+      ip: payloadIp
+    },
+    {
+      minWidth: 350,
+      minHeight: 310
+    }
+  );
+};
+
 onMounted(async () => {
+  await handlePendingRemoteLoginPayload();
+  // 始终初始化托盘菜单状态为false
   showTray.value = false;
   // 只有在需要登录的情况下才显示登录窗口
   if (!isJumpDirectly.value) {
     await getCurrentWebviewWindow().show();
   }
 
-  // TODO: 自动登录时显示自动登录界面并触发登录
-  uiState.value = "manual";
+  // 自动登录时显示自动登录界面并触发登录
+  if (login.value.autoLogin) {
+    uiState.value = "auto";
+    await normalLogin("PC", true);
+  } else {
+    // 手动登录模式，自动填充第一个历史账号
+    uiState.value = "manual";
+    // TODO: 获取历史登录账号
+  }
 
   window.addEventListener("click", closeMenu, true);
   window.addEventListener("keyup", enterKey);

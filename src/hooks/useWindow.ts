@@ -205,6 +205,7 @@ export const useWindow = () => {
   /**
    * 获取指定窗口的当前载荷（payload），用于初始化窗口时获取传递的数据。
    * @param windowLabel - 要获取载荷的窗口标签。
+   * @param once - 是否仅获取一次载荷，默认值为 true。
    * @returns 返回一个 Promise，解析后为泛型 T，表示窗口中保存的 payload 数据。
    */
   const getWindowPayload = async <T>(windowLabel: string, once: boolean = true) => {

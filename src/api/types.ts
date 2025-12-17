@@ -17,6 +17,8 @@ export type UserInfoType = {
   gender: GenderEnum;
   // 手机号
   phone?: string;
+  // 客户端
+  client: string;
 };
 
 export type RegisterUserReq = {

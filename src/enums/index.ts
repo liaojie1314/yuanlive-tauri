@@ -92,3 +92,8 @@ export enum StorageKeyEnum {
   PROXY_SETTINGS = "proxySettings",
   SETTING = "setting"
 }
+
+/** WebSocket 响应消息类型 */
+export enum WsResponseMessageEnum {
+  REMOTE_LOGIN = "remoteLogin"
+}

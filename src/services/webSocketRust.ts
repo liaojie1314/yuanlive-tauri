@@ -1,6 +1,9 @@
-import { StorageKeyEnum } from "@/enums";
-import { error, info } from "@tauri-apps/plugin-log";
 import { invoke } from "@tauri-apps/api/core";
+import { error, info, warn } from "@tauri-apps/plugin-log";
+import { listen, UnlistenFn } from "@tauri-apps/api/event";
+
+import { StorageKeyEnum, WsResponseMessageEnum } from "@/enums";
+import { useMitt } from "@/hooks/useMitt";
 
 /// WebSocket 连接状态
 export enum ConnectionState {
@@ -11,7 +14,62 @@ export enum ConnectionState {
   ERROR = "ERROR"
 }
 
+class ListenerController {
+  private listeners: Set<UnlistenFn> = new Set();
+  private isAborted = false;
+
+  add(unlisten: UnlistenFn): void {
+    if (this.isAborted) {
+      // 如果已经中止，立即清理新添加的监听器
+      unlisten();
+      return;
+    }
+    this.listeners.add(unlisten);
+  }
+
+  async abort(): Promise<void> {
+    if (this.isAborted) return;
+
+    this.isAborted = true;
+    const cleanupPromises: Promise<void>[] = [];
+
+    // 并行执行所有清理操作
+    for (const unlisten of this.listeners) {
+      cleanupPromises.push(
+        Promise.resolve()
+          .then(() => unlisten())
+          .catch(async (err) => {
+            await error(`[ListenerController] 清理监听器失败: ${err}`);
+          })
+      );
+    }
+
+    // 等待所有清理完成（设置超时防止阻塞）
+    try {
+      await Promise.race([
+        Promise.all(cleanupPromises),
+        new Promise((_, reject) => setTimeout(() => reject(new Error("清理超时")), 5000))
+      ]);
+    } catch (err) {
+      await warn(`[ListenerController] 部分监听器清理可能未完成: ${err}`);
+    }
+
+    this.listeners.clear();
+    await info(`[ListenerController] 已清理所有监听器`);
+  }
+
+  get size(): number {
+    return this.listeners.size;
+  }
+
+  get aborted(): boolean {
+    return this.isAborted;
+  }
+}
+
 class WebSocketRust {
+  private listenerController: ListenerController = new ListenerController();
+
   /**
    * 初始化 WebSocket 连接
    */
@@ -92,6 +150,22 @@ class WebSocketRust {
       await error(`[RustWS] 检查连接状态失败: ${err}`);
       return false;
     }
+  }
+
+  public async setupBusinessMessageListeners(): Promise<void> {
+    this.listenerController.add(
+      await listen("ws-remote-login", async (event: any) => {
+        await info("账号在其他设备登录");
+        useMitt.emit(WsResponseMessageEnum.REMOTE_LOGIN, event.payload);
+      })
+    );
+
+    // 未知消息类型
+    this.listenerController.add(
+      await listen("ws-unknown-message", (event: any) => {
+        info(`接收到未处理类型的消息: ${JSON.stringify(event.payload)}`);
+      })
+    );
   }
 }
 

@@ -34,6 +34,10 @@ svg {
   --tray-bg-color: #fff;
   --tray-hover: #eee;
   --tray-hover-e: #f5dce1;
+  // 弹出框背景样式
+  --bg-popover: #fdfdfd;
+  // hover头像样式
+  --avatar-hover-bg: rgba(255, 255, 255, 0.1);
 }
 
 html[data-theme="dark"] {
@@ -50,6 +54,10 @@ html[data-theme="dark"] {
   --tray-bg-color: #1b1b1b;
   --tray-hover: #3b3b3b;
   --tray-hover-e: #bb8188;
+  // 弹出框背景样式
+  --bg-popover: #303030;
+  // hover头像样式
+  --avatar-hover-bg: rgba(30, 30, 30, 0.6);
 }
 
 /**!修改naive-ui的遮罩层样式*/
