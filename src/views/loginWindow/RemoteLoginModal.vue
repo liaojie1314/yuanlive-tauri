@@ -36,18 +36,18 @@
 </template>
 
 <script setup lang="ts">
+import { useI18n } from "vue-i18n";
 import { darkTheme, lightTheme } from "naive-ui";
 import { getCurrentWebviewWindow, WebviewWindow } from "@tauri-apps/api/webviewWindow";
 
 import { useWindow } from "@/hooks/useWindow.ts";
 import { useSettingStore } from "@/stores/setting";
 import { isMac } from "@/utils/PlatformUtils";
-import { useI18nGlobal } from "@/services/i18n";
 
 const { getWindowPayload } = useWindow();
 const settingStore = useSettingStore();
 const { themes } = storeToRefs(settingStore);
-const { t } = useI18nGlobal();
+const { t } = useI18n();
 
 const naiveTheme = computed(() => (themes.value.content === "dark" ? darkTheme : lightTheme));
 

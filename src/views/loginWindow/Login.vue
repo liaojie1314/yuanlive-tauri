@@ -146,6 +146,7 @@
 </template>
 
 <script setup lang="ts">
+import { useI18n } from "vue-i18n";
 import { darkTheme, lightTheme } from "naive-ui";
 import { useNetwork } from "@vueuse/core";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
@@ -157,11 +158,10 @@ import { useGlobalStore } from "@/stores/global";
 import { useSettingStore } from "@/stores/setting";
 import { useWindow } from "@/hooks/useWindow";
 import { useLogin } from "@/hooks/useLogin";
-import { useI18nGlobal } from "@/services/i18n";
 import { formatBottomText } from "@/utils/FormattingUtils";
 import { isDesktop } from "@/utils/PlatformUtils";
 
-const { t } = useI18nGlobal();
+const { t } = useI18n();
 // 网络连接是否正常
 const { isOnline } = useNetwork();
 const { createWebviewWindow, createModalWindow, getWindowPayload } = useWindow();

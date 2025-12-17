@@ -188,6 +188,7 @@
 
 <script setup lang="ts">
 import dayjs from "dayjs";
+import { useI18n } from "vue-i18n";
 import { darkTheme, type FormInst, lightTheme } from "naive-ui";
 import { getCurrentWebviewWindow, WebviewWindow } from "@tauri-apps/api/webviewWindow";
 
@@ -195,11 +196,10 @@ import { ThemeEnum } from "@/enums";
 import type { RegisterUserReq } from "@/api/types";
 
 import { registerApi, sendEmailCaptchaApi } from "@/api/auth";
-import { useI18nGlobal } from "@/services/i18n";
 import { noSideSpace, validateAlphaNumeric, validateMinLength, validateSpecialChar } from "@/utils/ValidateUtils";
 import { useSettingStore } from "@/stores/setting";
 
-const { t } = useI18nGlobal();
+const { t } = useI18n();
 const settingStore = useSettingStore();
 const { themes } = storeToRefs(settingStore);
 const naiveTheme = computed(() => (themes.value.content === ThemeEnum.DARK ? darkTheme : lightTheme));

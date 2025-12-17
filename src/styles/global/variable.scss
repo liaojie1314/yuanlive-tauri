@@ -1,4 +1,6 @@
+@use "fonts";
 * {
+  font-family: var(--font-family), sans-serif !important;
   caret-color: #13987f !important; /* 改变输入框光标的颜色 */
 }
 html,
@@ -18,12 +20,14 @@ svg {
 :root {
   // 是否启用阴影
   --shadow-enabled: 1;
+  // 字体
+  --font-family: "PingFang";
   // 是否启用透明高斯模糊
   --blur-enabled: 1;
-
-  --left-bg-color: #64a29c;
-  --left-text-color: #e3e3e3;
-  --right-bg-color: #f1f1f1;
+  --home-bg-color: #f9f9fa;
+  --left-item-bg-color: #e4e4e6;
+  --left-text-color: #4e5059;
+  --left-active-text-color: #000;
   // 文字颜色
   --text-color: #18181c;
   --action-bar-icon-color: #404040;
@@ -38,12 +42,16 @@ svg {
   --bg-popover: #fdfdfd;
   // hover头像样式
   --avatar-hover-bg: rgba(255, 255, 255, 0.1);
+  // 右键菜单样式或者需要透明的菜单的样式
+  --bg-menu: linear-gradient(45deg, rgba(255, 255, 255, 0.45) 40%, rgba(255, 255, 255, 0.65) 60%);
+  --bg-menu-hover: rgba(10, 20, 28, 0.1);
 }
 
 html[data-theme="dark"] {
-  --left-bg-color: rgba(62, 101, 100, 0.8);
-  --left-text-color: #ccc;
-  --right-bg-color: #161616;
+  --home-bg-color: #161823;
+  --left-active-item-bg-color: #2d2f38;
+  --left-text-color: #c5c5c8;
+  --left-active-text-color: #fff;
   // 文字颜色
   --text-color: #fff;
   --action-bar-icon-color: #c1c1c1;
@@ -58,6 +66,9 @@ html[data-theme="dark"] {
   --bg-popover: #303030;
   // hover头像样式
   --avatar-hover-bg: rgba(30, 30, 30, 0.6);
+  // 右键菜单样式或者需要透明的菜单的样式
+  --bg-menu: linear-gradient(45deg, rgba(33, 33, 33, 0.65) 60%, rgba(33, 33, 33, 0.95) 90%);
+  --bg-menu-hover: #323232;
 }
 
 /**!修改naive-ui的遮罩层样式*/
@@ -119,4 +130,68 @@ html[data-blur="1"] {
   --n-box-shadow-active: 0 0 0 2px rgba(19, 152, 127, 0.2) !important;
   --n-border-active: 1px solid #13987f !important;
   --n-border-hover: 1px solid #13987f !important;
+}
+
+/**! 通用菜单项目样式 */
+@mixin menu-item-style($position: fixed) {
+  position: $position;
+  background: var(--bg-menu);
+  color: var(--text-color);
+  border-radius: 6px;
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.08),
+    0 2px 2px rgb(0 0 0 / 3%),
+    0 4px 4px rgb(0 0 0 / 4%),
+    0 10px 8px rgb(0 0 0 / 5%),
+    0 15px 15px rgb(0 0 0 / 6%),
+    0 30px 30px rgb(0 0 0 / 7%),
+    0 70px 65px rgb(0 0 0 / 9%);
+  z-index: 999;
+  width: fit-content;
+  font-size: 14px;
+  line-height: 1.8;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+/**! 通用菜单项样式 */
+@mixin menu-list() {
+  padding: 5px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  .menu-item {
+    padding: 2px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    user-select: none;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    svg {
+      width: 16px;
+      height: 16px;
+    }
+    &:hover {
+      background-color: var(--bg-menu-hover);
+      svg {
+        animation: twinkle 0.3s ease-in-out;
+      }
+    }
+  }
+}
+
+// 闪烁动画
+@keyframes twinkle {
+  0% {
+    transform: scale(0);
+  }
+  80% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+  }
 }

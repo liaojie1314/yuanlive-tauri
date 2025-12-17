@@ -71,19 +71,19 @@
 </template>
 
 <script setup lang="ts">
+import { useI18n } from "vue-i18n";
 import { darkTheme, lightTheme } from "naive-ui";
 import { invoke } from "@tauri-apps/api/core";
 
 import router from "@/router";
 import { StorageKeyEnum, TauriCommandEnum, ThemeEnum } from "@/enums";
 import { generateQRCodeApi, checkQRStatusApi } from "@/api/auth";
-import { useI18nGlobal } from "@/services/i18n";
 import { useWindow } from "@/hooks/useWindow";
 import { useGlobalStore } from "@/stores/global";
 import { useSettingStore } from "@/stores/setting";
 import { getEnhancedFingerprint } from "@/services/fingerprint";
 
-const { t } = useI18nGlobal();
+const { t } = useI18n();
 const { createWebviewWindow } = useWindow();
 const globalStore = useGlobalStore();
 const settingStore = useSettingStore();

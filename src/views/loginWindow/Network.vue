@@ -108,17 +108,15 @@
 </template>
 
 <script setup lang="ts">
+import { useI18n } from "vue-i18n";
 import { darkTheme, lightTheme } from "naive-ui";
 
-import type { ProxySettings } from "@/typings/global";
-import { StorageKeyEnum, ThemeEnum } from "@/enums";
-
 import router from "@/router";
-import { useI18nGlobal } from "@/services/i18n";
+import { StorageKeyEnum, ThemeEnum } from "@/enums";
 import { updateSettings } from "@/utils/TauriCommand";
 import { useSettingStore } from "@/stores/setting";
 
-const { t } = useI18nGlobal();
+const { t } = useI18n();
 const settingStore = useSettingStore();
 const { themes } = storeToRefs(settingStore);
 const naiveTheme = computed(() => (themes.value.content === ThemeEnum.DARK ? darkTheme : lightTheme));

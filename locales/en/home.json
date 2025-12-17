@@ -1,0 +1,20 @@
+{
+  "action": {
+    "home": "Home",
+    "aiChat": "AI Chat",
+    "friends": "Friends",
+    "user": "User"
+  },
+  "menu": {
+    "setting": {
+      "general": "General Setting",
+      "signOut": "Sign Out",
+      "update": "Check Update",
+      "privacy": "Privacy Setting"
+    },
+    "help": {
+      "about": "About Us",
+      "feedback": "Feedback"
+    }
+  }
+}

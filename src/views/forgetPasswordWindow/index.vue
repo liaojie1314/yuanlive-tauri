@@ -160,16 +160,16 @@
 </template>
 
 <script setup lang="ts">
+import { useI18n } from "vue-i18n";
 import { darkTheme, FormInst, lightTheme } from "naive-ui";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 
 import { ThemeEnum } from "@/enums";
-import { useI18nGlobal } from "@/services/i18n";
 import { forgetPasswordApi, sendEmailCaptchaApi } from "@/api/auth";
 import { noSideSpace, validateAlphaNumeric, validateMinLength, validateSpecialChar } from "@/utils/ValidateUtils";
 import { useSettingStore } from "@/stores/setting";
 
-const { t } = useI18nGlobal();
+const { t } = useI18n();
 const settingStore = useSettingStore();
 const { themes } = storeToRefs(settingStore);
 const naiveTheme = computed(() => (themes.value.content === ThemeEnum.DARK ? darkTheme : lightTheme));

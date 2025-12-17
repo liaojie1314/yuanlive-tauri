@@ -7,14 +7,16 @@
 </template>
 
 <script setup lang="ts">
+import { computed, watch, onMounted, onUnmounted } from "vue";
+import { useI18n } from "vue-i18n";
 import { listen } from "@tauri-apps/api/event";
 import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
+import { storeToRefs } from "pinia";
 
 import { StorageKeyEnum, ThemeEnum, WsResponseMessageEnum } from "@/enums";
 import { useSettingStore } from "@/stores/setting";
 import { useUserStore } from "@/stores/user";
 import { loadLanguage } from "@/services/i18n";
-import { useI18nGlobal } from "@/services/i18n";
 import { isMobile, isWindows10 } from "@/utils/PlatformUtils";
 import { useMitt } from "@/hooks/useMitt";
 import { useWindow } from "@/hooks/useWindow";
@@ -28,7 +30,7 @@ const { addListener } = useTauriListener();
 const { themes, page } = storeToRefs(settingStore);
 const appWindow = WebviewWindow.getCurrent();
 const { sendWindowPayload } = useWindow();
-const { t } = useI18nGlobal();
+const { t } = useI18n();
 
 let lastWsConnectionState: string | null = null;
 

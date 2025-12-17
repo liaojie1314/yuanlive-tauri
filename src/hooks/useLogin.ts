@@ -1,3 +1,4 @@
+import { useI18n } from "vue-i18n";
 import { useNetwork } from "@vueuse/core";
 import { emit } from "@tauri-apps/api/event";
 import { info } from "@tauri-apps/plugin-log";
@@ -10,7 +11,6 @@ import { EventEnum, StorageKeyEnum, TauriCommandEnum } from "@/enums";
 import { useUserStore } from "@/stores/user.ts";
 import { useGlobalStore } from "@/stores/global.ts";
 import { useSettingStore } from "@/stores/setting.ts";
-import { useI18nGlobal } from "@/services/i18n.ts";
 import { useWindow } from "@/hooks/useWindow.ts";
 import { ensureAppStateReady } from "@/utils/AppStateReady.ts";
 import { invokeSilently } from "@/utils/TauriInvokeHandler.ts";
@@ -22,7 +22,7 @@ export function useLogin() {
   const globalStore = useGlobalStore();
   const settingStore = useSettingStore();
   const { createWebviewWindow, resizeWindow } = useWindow();
-  const { t } = useI18nGlobal();
+  const { t } = useI18n();
   const { showTray } = storeToRefs(globalStore);
 
   // 网络连接是否正常
@@ -52,7 +52,7 @@ export function useLogin() {
         console.warn("关闭注册窗口失败:", error);
       });
     }
-    await createWebviewWindow("YuanLive", "home", 960, 720, "login", true, 330, 480, undefined, false);
+    await createWebviewWindow("YuanLive", "home", 960, 720, "login", true, 780, 480, undefined, false);
     // 只有在成功创建home窗口并且已登录的情况下才显示托盘菜单
     showTray.value = true;
     await resizeWindow("tray", 130, 138);

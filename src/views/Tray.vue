@@ -49,14 +49,14 @@
 </template>
 
 <script setup lang="ts">
+import { useI18n } from "vue-i18n";
 import { exit } from "@tauri-apps/plugin-process";
 import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
 
-import { useI18nGlobal } from "../services/i18n";
 import { useWindow } from "@/hooks/useWindow";
 import { useGlobalStore } from "@/stores/global";
 
-const { t } = useI18nGlobal();
+const { t } = useI18n();
 const { checkWinExist, resizeWindow } = useWindow();
 const globalStore = useGlobalStore();
 const { showTray } = storeToRefs(globalStore);

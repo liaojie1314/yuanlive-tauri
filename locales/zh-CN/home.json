@@ -1,0 +1,20 @@
+{
+  "action": {
+    "home": "首页",
+    "aiChat": "AI 聊天",
+    "friends": "好友",
+    "user": "用户"
+  },
+  "menu": {
+    "setting": {
+      "general": "通用设置",
+      "signOut": "退出登录",
+      "update": "检查更新",
+      "privacy": "隐私设置"
+    },
+    "help": {
+      "about": "关于我们",
+      "feedback": "反馈问题"
+    }
+  }
+}

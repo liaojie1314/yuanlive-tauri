@@ -1,0 +1,11 @@
+@use "@/styles/global/variable.scss" as *;
+
+.bottom-item-left {
+  @include menu-item-style(absolute);
+  @include menu-list();
+}
+
+.bottom-item-right {
+  @include menu-item-style(absolute);
+  @include menu-list();
+}
