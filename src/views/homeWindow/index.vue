@@ -1,5 +1,8 @@
 <template>
   <div class="home-container p-4 h-full overflow-y-auto select-none">
+    <!-- 搜索框 -->
+    <search-box class="mx-auto mb-10px" />
+
     <!-- 分类导航 -->
     <category-nav :categories="categories" :active-category="activeCategory" @category-change="handleCategoryChange" />
 
