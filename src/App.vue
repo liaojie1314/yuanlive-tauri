@@ -7,11 +7,9 @@
 </template>
 
 <script setup lang="ts">
-import { computed, watch, onMounted, onUnmounted } from "vue";
 import { useI18n } from "vue-i18n";
 import { listen } from "@tauri-apps/api/event";
 import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
-import { storeToRefs } from "pinia";
 
 import { StorageKeyEnum, ThemeEnum, WsResponseMessageEnum } from "@/enums";
 import { useSettingStore } from "@/stores/setting";

@@ -8,10 +8,10 @@
         :class="{ 'bg-[--left-item-bg-color] color-[--left-active-text-color]': item.url === activeUrl }"
         class="flex py-10px px-25px gap-10px hover:bg-[--left-item-bg-color] hover:color-[--left-active-text-color] rounded-[8px] items-center justify-start"
         @click="handleClick(item.url)">
-        <svg class="size-22px">
+        <svg class="size-20px">
           <use :href="`#${item.icon}`"></use>
         </svg>
-        <p class="text-[18px] select-none">{{ item.title }}</p>
+        <p class="text-[16px] select-none">{{ item.title }}</p>
       </div>
     </header>
     <!-- 下部分操作栏 -->
@@ -142,6 +142,10 @@ const handleClick = (url: string) => {
   activeUrl.value = url;
   router.push({ name: url });
 };
+
+onMounted(() => {
+  router.push({ name: activeUrl.value });
+});
 </script>
 
 <style scoped lang="scss">

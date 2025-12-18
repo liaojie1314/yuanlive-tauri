@@ -52,7 +52,7 @@ export function useLogin() {
         console.warn("关闭注册窗口失败:", error);
       });
     }
-    await createWebviewWindow("YuanLive", "home", 960, 720, "login", true, 780, 480, undefined, false);
+    await createWebviewWindow("YuanLive", "home", 1024, 720, "login", true, 780, 480, undefined, false);
     // 只有在成功创建home窗口并且已登录的情况下才显示托盘菜单
     showTray.value = true;
     await resizeWindow("tray", 130, 138);
@@ -71,7 +71,7 @@ export function useLogin() {
     loading.value = true;
     loginText.value = t("auth.status.loggingIn");
     loginDisabled.value = true;
-    const hasStoredUserInfo = !!userStore.userInfo && !!userStore.userInfo.account;
+    const hasStoredUserInfo = !!userStore.userInfo?.account;
     if (auto && !hasStoredUserInfo) {
       loading.value = false;
       loginDisabled.value = false;
