@@ -61,7 +61,7 @@
         "skipTaskbar": false,
         "transparent": false,
         "decorations": false,
-        "visible": true
+        "visible": false
       },
       {
         "label": "tray",

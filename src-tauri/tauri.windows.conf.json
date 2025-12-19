@@ -57,7 +57,7 @@
         "height": 448,
         "skipTaskbar": false,
         "transparent": false,
-        "visible": true,
+        "visible": false,
         "decorations": false
       },
       {

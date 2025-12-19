@@ -193,9 +193,6 @@ const removeAccountTitle = computed(() =>
   removeAccountLabel.value !== removeAccountText.value ? removeAccountText.value : undefined
 );
 
-// 是否直接跳转
-const isJumpDirectly = ref(true);
-
 watchEffect(
   () => (loginDisabled.value = !(userInfo.value.account && userInfo.value.password && protocol.value && isOnline.value))
 );
@@ -277,10 +274,8 @@ onMounted(async () => {
   await handlePendingRemoteLoginPayload();
   // 始终初始化托盘菜单状态为false
   showTray.value = false;
-  // 只有在需要登录的情况下才显示登录窗口
-  if (!isJumpDirectly.value) {
-    await getCurrentWebviewWindow().show();
-  }
+
+  await getCurrentWebviewWindow().show();
 
   // 自动登录时显示自动登录界面并触发登录
   if (login.value.autoLogin) {
