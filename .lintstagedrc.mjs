@@ -1,7 +1,7 @@
 import path from "node:path";
 
 function createCommand(prefix, join) {
-  return (filenames) => `${prefix} ${filenames.map((f) => path.relative(process.cwd(), f)).join(` ${join} `)}`;
+  return (filenames) => `${prefix} ${filenames.map((f) => path.relative(process.cwd(), f)).join(join ? ` ${join} ` : " ")}`;
 }
 
 export default {
