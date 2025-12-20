@@ -42,9 +42,9 @@ const getCommonRoutes = (): Array<RouteRecordRaw> => [
         component: () => import("@/views/homeWindow/AiChat.vue")
       },
       {
-        name: "friends",
-        path: "/friends",
-        component: () => import("@/views/homeWindow/Friends.vue")
+        name: "follow",
+        path: "/follow",
+        component: () => import("@/views/homeWindow/Follow.vue")
       },
       {
         name: "user",

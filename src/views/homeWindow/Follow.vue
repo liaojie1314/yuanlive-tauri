@@ -1,5 +1,5 @@
 <template>
-  <div>friends</div>
+  <div>follow</div>
 </template>
 
 <script setup lang="ts"></script>

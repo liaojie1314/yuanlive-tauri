@@ -80,7 +80,7 @@ const baseMenu: Array<Omit<MenuAction, "title">> = [
     icon: "robot"
   },
   {
-    url: "friends",
+    url: "follow",
     icon: "peoples"
   },
   {
@@ -100,7 +100,7 @@ const menu = computed<MenuAction[]>(() => [
   },
   {
     ...baseMenu[2],
-    title: t("home.action.friends")
+    title: t("home.action.follow")
   },
   {
     ...baseMenu[3],
