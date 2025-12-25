@@ -1,4 +1,6 @@
-# YuanLive
+<h1 align="center">YuanLive</h1>
+
+<p align="center">基于tauri2的YuanLive桌面端</p>
 
 ## 启动项目
 
