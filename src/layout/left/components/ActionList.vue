@@ -27,7 +27,7 @@
           <div class="bottom-item-left">
             <div class="menu-list">
               <div v-for="(item, index) in settingMenu" :key="index">
-                <div class="menu-item">
+                <div class="menu-item" @click="() => item.click()">
                   <svg class="size-14px">
                     <use :href="`#${item.icon}`"></use>
                   </svg>
@@ -47,7 +47,7 @@
           <div class="bottom-item-right">
             <div class="menu-list">
               <div v-for="(item, index) in helpMenu" :key="index">
-                <div class="menu-item">
+                <div class="menu-item" @click="() => item.click()">
                   <svg class="size-14px">
                     <use :href="`#${item.icon}`"></use>
                   </svg>
@@ -64,9 +64,14 @@
 
 <script setup lang="ts">
 import { useI18n } from "vue-i18n";
+
 import router from "@/router";
+import { useLogin } from "@/hooks/useLogin";
+import { useWindow } from "@/hooks/useWindow";
 
 const { t } = useI18n();
+const { logout } = useLogin();
+const { createWebviewWindow } = useWindow();
 
 const activeUrl = ref<string>("index");
 
@@ -111,30 +116,53 @@ const menu = computed<MenuAction[]>(() => [
 const settingMenu = computed<BaseMenuItem[]>(() => [
   {
     label: t("home.menu.setting.general"),
-    icon: "settings"
+    icon: "settings",
+    click: async () => {
+      await createWebviewWindow("设置", "setting", 840, 840, "", true, 840, 600);
+    }
   },
   {
     label: t("home.menu.setting.privacy"),
-    icon: "lock"
+    icon: "lock",
+    click: () => {
+      console.log("privacy");
+    }
   },
   {
     label: t("home.menu.setting.update"),
-    icon: "arrow-circle-up"
+    icon: "arrow-circle-up",
+    click: () => {
+      console.log("update");
+    }
   },
   {
     label: t("home.menu.setting.signOut"),
-    icon: "power"
+    icon: "power",
+    click: async () => {
+      try {
+        await logout();
+      } catch (err) {
+        console.error("退出登录失败: ", err);
+        window.$message.error(t("components.window.logoutFail"));
+      }
+    }
   }
 ]);
 
 const helpMenu = computed<BaseMenuItem[]>(() => [
   {
     label: t("home.menu.help.about"),
-    icon: "info"
+    icon: "info",
+    click: async () => {
+      await createWebviewWindow("关于", "about", 360, 480);
+    }
   },
   {
     label: t("home.menu.help.feedback"),
-    icon: "help"
+    icon: "help",
+    click: async () => {
+      await createWebviewWindow("反馈", "feedback", 360, 480);
+    }
   }
 ]);
 

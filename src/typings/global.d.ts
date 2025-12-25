@@ -13,6 +13,7 @@ declare global {
   type BaseMenuItem = {
     label: string;
     icon: string;
+    click: () => void;
   };
 
   type MenuAction = {

@@ -3,18 +3,18 @@ import { useNetwork } from "@vueuse/core";
 import { emit } from "@tauri-apps/api/event";
 import { info } from "@tauri-apps/plugin-log";
 import { invoke } from "@tauri-apps/api/core";
-
 import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
-import type { UserInfoType } from "@/api/types.ts";
 
+import type { UserInfoType } from "@/api/types.ts";
+import webSocketRust from "@/services/webSocketRust.ts";
 import { EventEnum, StorageKeyEnum, TauriCommandEnum } from "@/enums";
+import { logoutApi } from "@/api/auth";
 import { useUserStore } from "@/stores/user.ts";
 import { useGlobalStore } from "@/stores/global.ts";
 import { useSettingStore } from "@/stores/setting.ts";
 import { useWindow } from "@/hooks/useWindow.ts";
 import { ensureAppStateReady } from "@/utils/AppStateReady.ts";
 import { invokeSilently } from "@/utils/TauriInvokeHandler.ts";
-import webSocketRust from "@/services/webSocketRust.ts";
 import { getEnhancedFingerprint } from "@/services/fingerprint.ts";
 
 export function useLogin() {
@@ -147,6 +147,7 @@ export function useLogin() {
    * 登出
    */
   const logout = async () => {
+    await logoutApi();
     showTray.value = false;
     try {
       // 创建登录窗口

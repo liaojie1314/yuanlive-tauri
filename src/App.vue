@@ -20,7 +20,6 @@ import { useMitt } from "@/hooks/useMitt";
 import { useWindow } from "@/hooks/useWindow";
 import { useTauriListener } from "@/hooks/useTauriListener";
 import { ConnectionState } from "@/services/webSocketRust";
-import { logoutApi } from "@/api/auth";
 
 const settingStore = useSettingStore();
 const userStore = useUserStore();
@@ -94,7 +93,6 @@ useMitt.on(WsResponseMessageEnum.REMOTE_LOGIN, async (data: { uid: string; ip: s
           timestamp: Date.now()
         }
       });
-      await logoutApi();
       await logout();
     }
   }

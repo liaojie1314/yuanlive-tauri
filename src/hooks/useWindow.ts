@@ -1,13 +1,15 @@
-import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
-import { LogicalSize } from "@tauri-apps/api/dpi";
-import { UserAttentionType } from "@tauri-apps/api/window";
 import { invoke } from "@tauri-apps/api/core";
+import { LogicalSize } from "@tauri-apps/api/dpi";
+import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
+import { UserAttentionType } from "@tauri-apps/api/window";
 
+import { EventEnum } from "@/enums";
 import { isCompatibility, isDesktop, isWindows, isWindows10 } from "@/utils/PlatformUtils";
-import { EventEnum } from "../enums";
+import { useI18nGlobal } from "@/services/i18n";
 
 // 判断是兼容的系统
 const isCompatibilityMode = computed(() => isCompatibility());
+const { t } = useI18nGlobal();
 
 export const useWindow = () => {
   /**
@@ -168,7 +170,7 @@ export const useWindow = () => {
     // 监听错误事件
     modalWindow.once("tauri://error", async (e) => {
       console.error(`${title}窗口创建失败:`, e);
-      window.$message?.error(`创建${title}窗口失败`);
+      window.$message?.error(t("components.window.createWindowFail", { label: title }));
       await parentWindow?.setEnabled(true);
     });
     modalWindow.once("tauri://destroyed", async () => {

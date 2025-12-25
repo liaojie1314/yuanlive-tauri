@@ -3,6 +3,10 @@
     "confirm": "确定",
     "cancel": "取消"
   },
+  "window": {
+    "logoutFail": "退出登录失败，请重试",
+    "createWindowFail": "创建{label}窗口失败"
+  },
   "actionBar": {
     "alwaysOnTop": {
       "enabled": "取消置顶",

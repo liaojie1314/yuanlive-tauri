@@ -1,5 +1,5 @@
 <template>
-  <div>设置窗口</div>
+  <div>about窗口</div>
 </template>
 
 <script setup lang="ts">

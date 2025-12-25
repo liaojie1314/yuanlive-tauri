@@ -3,6 +3,10 @@
     "confirm": "Confirm",
     "cancel": "Cancel"
   },
+  "window": {
+    "logoutFail": "Logout failed, please try again",
+    "createWindowFail": "Failed to create {label} window"
+  },
   "actionBar": {
     "alwaysOnTop": {
       "enabled": "Disable always-on-top",

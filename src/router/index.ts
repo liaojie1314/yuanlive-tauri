@@ -54,6 +54,21 @@ const getCommonRoutes = (): Array<RouteRecordRaw> => [
     ]
   },
   {
+    name: "setting",
+    path: "/setting",
+    component: () => import("@/views/settingWindow/index.vue")
+  },
+  {
+    name: "about",
+    path: "/about",
+    component: () => import("@/views/aboutWindow/index.vue")
+  },
+  {
+    name: "feedback",
+    path: "/feedback",
+    component: () => import("@/views/feedbackWindow/index.vue")
+  },
+  {
     name: "tray",
     path: "/tray",
     component: () => import("@/views/Tray.vue")
