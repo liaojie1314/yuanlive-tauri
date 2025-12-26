@@ -7,6 +7,7 @@
 [前置要求](https://tauri.app/start/prerequisites)
 
 ```shell
+mv src-tauri/.env.example src-tauri/.env
 pnpm i
 pnpm tauri:dev # 启动桌面端 更多命令查看package.json
 ```
