@@ -35,6 +35,8 @@ export const useWindow = () => {
     resizable = false,
     minWidth = 330,
     minHeight = 495,
+    maxWidth?: number,
+    maxHeight?: number,
     transparent?: boolean,
     visible = false,
     queryParams?: Record<string, string | number | boolean>
@@ -72,6 +74,8 @@ export const useWindow = () => {
       visible,
       minWidth,
       minHeight,
+      maxWidth,
+      maxHeight,
       resizable,
       center: true,
       fullscreen: false,

@@ -84,7 +84,7 @@
     </div>
 
     <!-- 图片卡片网格 -->
-    <div class="text-lg font-medium mb-4 mt-4">更多直播</div>
+    <div v-if="activeCategory === 'all'" class="text-lg font-medium mb-4 mt-4">更多直播</div>
     <div class="grid grid-cols-4 gap-4 mt-4">
       <image-card
         v-for="item in filteredItems"

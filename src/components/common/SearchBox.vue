@@ -1,7 +1,7 @@
 <template>
   <div class="w-[400px] relative">
     <div
-      class="search-input-wrapper flex items-center bg-white rounded-lg border border-gray-200 overflow-hidden w-full max-w-3xl mx-auto">
+      class="relative z-1 flex items-center bg-white rounded-lg border border-gray-200 overflow-hidden w-full max-w-3xl mx-auto">
       <input
         v-model="searchQuery"
         type="text"
@@ -36,9 +36,7 @@
     <div
       v-if="showDropdown"
       class="search-dropdown-container absolute top-full left-1/2 transform -translate-x-1/2 mt-1 z-10 w-full max-w-3xl">
-      <div
-        class="search-dropdown bg-white rounded-lg shadow-lg p-4 overflow-hidden"
-        @mousedown="handleDropdownMousedown">
+      <div class="search-dropdown bg-white rounded-lg p-4 overflow-hidden" @mousedown="handleDropdownMousedown">
         <!-- 搜索历史 -->
         <div v-if="searchHistory.length > 0" class="mb-2">
           <div class="flex justify-between items-center mb-2">
@@ -223,23 +221,12 @@ const clearInput = () => {
 </script>
 
 <style scoped>
-.search-input-wrapper {
-  position: relative;
-  z-index: 1;
-}
-
 .search-dropdown-container {
-  position: absolute;
-  z-index: 100;
   width: 100%;
-  max-height: 520px;
   overflow-y: auto;
 }
 
 .search-dropdown {
-  background: white;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   border: 1px solid #e5e7eb;
   border-top: none;
 }
