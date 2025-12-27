@@ -37,7 +37,7 @@ export function useLogin() {
     account: "",
     password: "",
     avatar: "",
-    userName: "",
+    username: "",
     uid: ""
   });
   const uiState = ref<"manual" | "auto">("manual");
@@ -52,7 +52,7 @@ export function useLogin() {
         console.warn("关闭注册窗口失败:", error);
       });
     }
-    await createWebviewWindow("YuanLive", "home", 1024, 720, "login", true, 780, 480, 2048, void 0, void 0, false);
+    await createWebviewWindow("YuanLive", "home", 1024, 720, "login", true, 780, 480, 1680, void 0, void 0, false);
     // 只有在成功创建home窗口并且已登录的情况下才显示托盘菜单
     showTray.value = true;
     await resizeWindow("tray", 130, 138);
@@ -136,7 +136,7 @@ export function useLogin() {
           if (userStore.userInfo) {
             userInfo.value.account = userStore.userInfo.account || userStore.userInfo.email || "";
             userInfo.value.avatar = userStore.userInfo.avatar;
-            userInfo.value.userName = userStore.userInfo.userName;
+            userInfo.value.username = userStore.userInfo.username;
             userInfo.value.uid = userStore.userInfo.uid;
           }
         }

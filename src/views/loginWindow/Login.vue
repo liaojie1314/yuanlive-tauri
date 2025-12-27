@@ -85,7 +85,7 @@
 
         <n-flex justify="center">
           <n-ellipsis style="max-width: 200px" class="text-(18px [--user-text-color])">
-            {{ userStore.userInfo?.userName || "" }}
+            {{ userStore.userInfo?.username || "" }}
           </n-ellipsis>
         </n-flex>
       </n-flex>

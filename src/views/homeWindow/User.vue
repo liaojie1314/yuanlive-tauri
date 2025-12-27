@@ -15,7 +15,7 @@
 
 <script setup lang="ts">
 import { ref } from "vue";
-import UserInfoCard from "../../components/UserInfoCard.vue";
+import UserInfoCard from "@/components/home/UserInfoCard.vue";
 
 interface UserInfo {
   name: string;

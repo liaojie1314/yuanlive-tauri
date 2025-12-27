@@ -2,8 +2,8 @@
   <div
     :class="[
       'follow-container',
-      isCollapsed ? 'w-[64px]' : 'w-[18%]',
-      'flex flex-col overflow-y-auto select-none overflow-hidden transition-all duration-300'
+      isCollapsed ? 'w-[64px]' : 'w-[20%]',
+      'flex flex-col overflow-y-auto select-none overflow-hidden transition-all duration-300 min-w-[200px]'
     ]">
     <!-- 顶部标题区域 -->
     <div :class="['flex items-center mb-3', isCollapsed ? 'justify-center px-2' : 'justify-between px-4']">

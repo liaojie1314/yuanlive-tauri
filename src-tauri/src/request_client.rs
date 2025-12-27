@@ -26,7 +26,7 @@ impl RequestClient {
 
         // Read basic auth credentials from environment variables
         let credentials = format!(
-            "{}:{}",
+            "Basic {}:{}",
             std::env::var("BASIC_AUTH").unwrap_or("".to_string()),
             std::env::var("BASIC_AUTH_PWD").unwrap_or("".to_string())
         );
@@ -82,7 +82,7 @@ impl RequestClient {
 
         // 设置 token 请求头
         if let Some(token) = &self.token {
-            request_builder = request_builder.header("token", token);
+            request_builder = request_builder.header("token", format!("Bearer {}", token));
         }
 
         // 添加额外的请求头

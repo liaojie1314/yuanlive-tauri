@@ -12,7 +12,7 @@ export type UserInfoType = {
   // 用户头像
   avatar: string;
   // 用户名
-  userName: string;
+  username: string;
   // 性别 1为男性，2为女性
   gender: GenderEnum;
   // 手机号
