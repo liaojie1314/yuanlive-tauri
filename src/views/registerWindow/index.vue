@@ -19,11 +19,11 @@
           <div>
             <n-form-item path="name">
               <n-input
-                :class="[{ 'pr-20px': info.nickName }, { 'pr-16px': showNamePrefix && !info.nickName }]"
+                :class="[{ 'pr-20px': info.nickname }, { 'pr-16px': showNamePrefix && !info.nickname }]"
                 maxlength="8"
                 minlength="1"
                 size="large"
-                v-model:value="info.nickName"
+                v-model:value="info.nickname"
                 type="text"
                 spellCheck="false"
                 autoComplete="off"
@@ -215,7 +215,7 @@ const info = unref(
   ref<RegisterUserReq>({
     email: "",
     password: "",
-    nickName: "",
+    nickname: "",
     code: "",
     confirmPassword: ""
   })
@@ -314,7 +314,7 @@ const isPasswordValid = computed(() => {
 // 检查是否可以发送邮箱验证码
 const canSendCode = computed(() => {
   return (
-    !!info.nickName &&
+    !!info.nickname &&
     isPasswordValid.value &&
     confirmPassword.value === info.password &&
     protocol.value &&
