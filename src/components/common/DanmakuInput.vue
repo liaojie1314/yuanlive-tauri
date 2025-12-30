@@ -1,7 +1,7 @@
 <template>
-  <div class="danmaku-input-container" v-if="isEnabled">
-    <div class="input-wrapper">
-      <div class="danmaku-controls-left">
+  <div class="danmaku-input-container" v-if="isEnabled" ref="containerRef">
+    <div class="input-wrapper" :class="{ 'compact-mode': isCompactMode }">
+      <div class="danmaku-controls-left" v-if="!isCompactMode">
         <div class="danmaku-toggle-btn" :class="{ active: isDanmakuEnabled }" @click="toggleDanmaku">
           弹
           <i-material-symbols-check-circle-outline-rounded v-if="isDanmakuEnabled" class="iconify-icon toggle-icon" />
@@ -22,7 +22,6 @@
               </div>
             </div>
             <div class="settings-content">
-              <!-- 不透明度 -->
               <div class="settings-item">
                 <span class="settings-label">不透明度</span>
                 <n-slider
@@ -35,7 +34,6 @@
                 <span class="settings-value-right">{{ danmakuSettings.opacity }}%</span>
               </div>
 
-              <!-- 显示区域 -->
               <div class="settings-item">
                 <span class="settings-label">显示区域</span>
                 <n-slider
@@ -48,7 +46,6 @@
                 <span class="settings-value-right">{{ displayAreaLabel }}</span>
               </div>
 
-              <!-- 字体大小 -->
               <div class="settings-item">
                 <span class="settings-label">字体大小</span>
                 <n-slider
@@ -61,7 +58,6 @@
                 <span class="settings-value-right">{{ fontSizeLabel }}</span>
               </div>
 
-              <!-- 弹幕速度 -->
               <div class="settings-item">
                 <span class="settings-label">弹幕速度</span>
                 <n-slider
@@ -76,7 +72,6 @@
 
               <div class="settings-divider"></div>
 
-              <!-- 弹幕列表 -->
               <div class="settings-item settings-item-clickable" @click="toggleDanmakuList">
                 <span class="settings-label">弹幕列表</span>
                 <div class="settings-arrow">
@@ -93,13 +88,16 @@
         </div>
         <div class="separator"></div>
       </div>
+
       <input
+        v-if="!isCompactMode"
         v-model="danmakuText"
         type="text"
         placeholder="发一条友好的弹幕吧"
         class="danmaku-input"
         @keyup.enter="handleSend" />
-      <div class="emoji-btn-container">
+
+      <div class="emoji-btn-container" v-if="!isCompactMode">
         <div class="emoji-btn" @mouseenter="showEmojiPickerHover" @mouseleave="hideEmojiPickerHover">
           <i-ph-smiley class="iconify-icon" />
         </div>
@@ -111,6 +109,8 @@
           <EmojiPicker @select-emoji="handleSelectEmoji" />
         </div>
       </div>
+
+      <div v-if="isCompactMode" class="compact-danmaku-btn">弹</div>
     </div>
   </div>
 </template>
@@ -119,13 +119,11 @@
 import EmojiPicker from "./EmojiPicker.vue";
 import { NSlider } from "naive-ui";
 
-// Props
-const { isEnabled, isDanmakuEnabled } = defineProps<{
+const props = defineProps<{
   isEnabled: boolean;
   isDanmakuEnabled: boolean;
 }>();
 
-// Emits
 const emit = defineEmits<{
   (e: "send-danmaku", content: string): void;
   (e: "toggle-danmaku"): void;
@@ -133,7 +131,6 @@ const emit = defineEmits<{
   (e: "toggle-danmaku-list"): void;
 }>();
 
-// 弹幕设置类型
 interface DanmakuSettings {
   opacity: number;
   fontSize: number;
@@ -144,16 +141,16 @@ interface DanmakuSettings {
   enableShield: boolean;
 }
 
-// Refs
 const danmakuText = ref("");
 const showEmojiPicker = ref(false);
 const showDanmakuSettingsPanel = ref(false);
+const containerRef = ref<HTMLDivElement | null>(null);
+const isCompactMode = ref(false);
 
-// 防抖计时器
 let danmakuSettingsHideTimer: number | null = null;
 let emojiPickerHideTimer: number | null = null;
+let resizeObserver: ResizeObserver | null = null;
 
-// 弹幕设置状态
 const danmakuSettings = ref<DanmakuSettings>({
   opacity: 100,
   fontSize: 3,
@@ -164,25 +161,21 @@ const danmakuSettings = ref<DanmakuSettings>({
   enableShield: false
 });
 
-// 字体大小选项映射
 const fontSizeOptions = ["超小", "小号", "适中", "大号", "超大"];
-
-// 弹幕速度选项映射
 const speedOptions = ["较慢", "适中", "较快"];
-
-// 显示区域选项映射
 const displayAreaOptions = ["一行", "两行", "25%", "50%", "80%"];
 
-// 计算属性：字体大小标签
 const fontSizeLabel = computed(() => fontSizeOptions[danmakuSettings.value.fontSize - 1]);
-
-// 计算属性：弹幕速度标签
 const speedLabel = computed(() => speedOptions[danmakuSettings.value.speed - 1]);
-
-// 计算属性：显示区域标签
 const displayAreaLabel = computed(() => displayAreaOptions[danmakuSettings.value.displayArea - 1]);
 
-// Methods
+const checkCompactMode = () => {
+  if (containerRef.value) {
+    const width = containerRef.value.offsetWidth;
+    isCompactMode.value = width < 210;
+  }
+};
+
 const handleSend = () => {
   if (danmakuText.value.trim()) {
     emit("send-danmaku", danmakuText.value.trim());
@@ -290,31 +283,52 @@ const handleSelectEmoji = (emoji: string) => {
   showEmojiPicker.value = false;
 };
 
-onUnmounted(() => {
+onMounted(() => {
+  checkCompactMode();
+  if (containerRef.value) {
+    resizeObserver = new ResizeObserver(() => {
+      checkCompactMode();
+    });
+    resizeObserver.observe(containerRef.value);
+  }
+});
+
+onBeforeUnmount(() => {
   if (danmakuSettingsHideTimer) {
     clearTimeout(danmakuSettingsHideTimer);
   }
   if (emojiPickerHideTimer) {
     clearTimeout(emojiPickerHideTimer);
   }
+  if (resizeObserver) {
+    resizeObserver.disconnect();
+  }
 });
 </script>
 
 <style scoped lang="scss">
 .danmaku-input-container {
-  position: absolute;
-  bottom: 80px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 60%;
-  max-width: 500px;
+  position: relative;
+  width: 100%;
   display: flex;
-  flex-direction: column;
-  gap: 10px;
+  flex-direction: row;
+  align-items: center;
+  gap: 0;
   z-index: 100;
   pointer-events: auto;
   animation: none !important;
   transition: none !important;
+}
+
+.input-wrapper {
+  flex: 1;
+  display: flex;
+  position: relative;
+  min-width: 0;
+}
+
+.input-wrapper.compact-mode {
+  justify-content: start;
 }
 
 .danmaku-settings-container {
@@ -323,11 +337,11 @@ onUnmounted(() => {
 
 .danmaku-settings-panel {
   position: absolute;
-  bottom: calc(100% + 10px);
+  bottom: calc(100% + 8px);
   left: 50%;
   transform: translateX(-50%);
-  width: 320px;
-  background-color: rgba(0, 0, 0, 0.9);
+  width: 280px;
+  background-color: rgba(0, 0, 0, 0.95);
   border-radius: 12px;
   backdrop-filter: blur(12px);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
@@ -428,7 +442,6 @@ onUnmounted(() => {
   text-align: right;
 }
 
-// NaiveUI 组件样式覆盖
 :deep(.n-slider) {
   width: 100px;
   flex: 1;
@@ -489,36 +502,31 @@ onUnmounted(() => {
   z-index: 1000;
 }
 
-.input-wrapper {
-  flex: 1;
-  display: flex;
-  position: relative;
-}
-
 .danmaku-input {
   flex: 1;
-  padding: 12px 50px 12px 100px;
-  border-radius: 25px;
+  padding: 8px 40px 8px 80px;
+  border-radius: 20px;
   border: none;
-  background-color: rgba(0, 0, 0, 0.6);
+  background-color: rgba(255, 255, 255, 0.1);
   color: #fff;
-  font-size: 14px;
+  font-size: 13px;
   outline: none;
   transition: all 0.3s ease;
+  min-width: 0;
 
   &::placeholder {
     color: rgba(255, 255, 255, 0.5);
   }
 
   &:focus {
-    background-color: rgba(0, 0, 0, 0.8);
+    background-color: rgba(255, 255, 255, 0.15);
     box-shadow: 0 0 15px rgba(255, 0, 80, 0.4);
   }
 }
 
 .danmaku-controls-left {
   position: absolute;
-  left: 5px;
+  left: 4px;
   top: 50%;
   transform: translateY(-50%);
   display: flex;
@@ -526,15 +534,15 @@ onUnmounted(() => {
 }
 
 .danmaku-toggle-btn {
-  width: 36px;
-  height: 36px;
+  width: 32px;
+  height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   transition: all 0.3s ease;
   color: #fff;
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 500;
   backdrop-filter: none !important;
   filter: none !important;
@@ -542,25 +550,25 @@ onUnmounted(() => {
   position: relative;
   .toggle-icon {
     position: absolute;
-    bottom: 6px;
-    right: 6px;
-    width: 10px;
-    height: 10px;
+    bottom: 5px;
+    right: 5px;
+    width: 9px;
+    height: 9px;
     color: rgba(255, 255, 255, 0.8);
   }
 }
 
 .separator {
-  width: 2px;
-  height: 24px;
-  background-color: rgba(255, 255, 255, 0.5);
-  margin: 0 8px;
+  width: 1px;
+  height: 20px;
+  background-color: rgba(255, 255, 255, 0.4);
+  margin: 0 6px;
   align-self: center;
 }
 
 .danmaku-settings-btn {
-  width: 36px;
-  height: 36px;
+  width: 32px;
+  height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -571,29 +579,29 @@ onUnmounted(() => {
   box-shadow: none;
   position: relative;
   color: #fff;
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 500;
 
   .settings-icon {
     position: absolute;
-    bottom: 6px;
-    right: 6px;
-    width: 10px;
-    height: 10px;
+    bottom: 5px;
+    right: 5px;
+    width: 9px;
+    height: 9px;
     color: rgba(255, 255, 255, 0.8);
   }
 }
 
 .emoji-btn-container {
   position: absolute;
-  right: 5px;
+  right: 4px;
   top: 50%;
   transform: translateY(-50%);
 }
 
 .emoji-btn {
-  width: 36px;
-  height: 36px;
+  width: 32px;
+  height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -602,9 +610,28 @@ onUnmounted(() => {
   cursor: pointer;
 
   .iconify-icon {
-    width: 20px;
-    height: 20px;
+    width: 18px;
+    height: 18px;
     color: #fff;
+  }
+}
+
+.compact-danmaku-btn {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 500;
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+  transition: all 0.3s ease;
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.2);
   }
 }
 </style>

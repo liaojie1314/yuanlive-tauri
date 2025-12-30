@@ -8,25 +8,17 @@
         v-model:value="currentTime"
         :max="duration"
         :step="0.1"
+        :tooltip="false"
         @update:value="seek"
         class="progress-bar"
         :show-input="false"
         :show-tooltip="false" />
     </div>
 
-    <!-- Danmaku Input -->
-    <DanmakuInput
-      :is-enabled="true"
-      :is-danmaku-enabled="isDanmakuEnabled"
-      @send-danmaku="sendDanmaku"
-      @toggle-danmaku="toggleDanmaku"
-      @danmaku-settings-change="handleDanmakuSettingsChange"
-      @toggle-danmaku-list="toggleDanmakuList" />
-
     <!-- Custom Controls -->
     <div class="custom-controls">
       <!-- Left Controls: Play Button and Progress -->
-      <div class="left-controls">
+      <div class="left-controls" ref="leftControlsRef">
         <!-- Play/Pause Button -->
         <div class="control-item" @click="togglePlay">
           <span class="control-icon play-icon">
@@ -37,8 +29,21 @@
 
         <!-- Playback Progress -->
         <div class="control-item">
-          <span class="progress-text">{{ formatTime(currentTime) }} / {{ formatTime(duration) }}</span>
+          <span class="progress-text">
+            {{ formatTime(currentTime) }}
+            <span v-if="!isLeftControlsCompact">/ {{ formatTime(duration) }}</span>
+          </span>
         </div>
+
+        <!-- Danmaku Input -->
+        <DanmakuInput
+          class="control-item"
+          :is-enabled="true"
+          :is-danmaku-enabled="isDanmakuEnabled"
+          @send-danmaku="sendDanmaku"
+          @toggle-danmaku="toggleDanmaku"
+          @danmaku-settings-change="handleDanmakuSettingsChange"
+          @toggle-danmaku-list="toggleDanmakuList" />
       </div>
 
       <!-- Right Controls: All Other Controls -->
@@ -144,6 +149,7 @@ const emit = defineEmits<{
 // Refs
 const videoContainerRef = ref<HTMLDivElement | null>(null);
 const playerRef = ref<any>(null);
+const leftControlsRef = ref<HTMLDivElement | null>(null);
 
 // States for custom controls
 const isAutoplay = ref(false);
@@ -160,6 +166,7 @@ const isMuted = ref(false);
 const showVolumeSlider = ref(false);
 const currentTime = ref(0);
 const duration = ref(0);
+const isLeftControlsCompact = ref(false);
 
 // Format time from seconds to mm:ss format
 const formatTime = (seconds: number): string => {
@@ -167,6 +174,14 @@ const formatTime = (seconds: number): string => {
   const mins = Math.floor(seconds / 60);
   const secs = Math.floor(seconds % 60);
   return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
+};
+
+const checkLeftControlsWidth = () => {
+  if (leftControlsRef.value) {
+    const width = leftControlsRef.value.offsetWidth;
+    console.log(width);
+    isLeftControlsCompact.value = width < 190;
+  }
 };
 
 // Resolution options
@@ -476,6 +491,17 @@ onMounted(() => {
     console.error("Failed to initialize video player:", error);
     emit("error", error);
   }
+
+  checkLeftControlsWidth();
+  if (leftControlsRef.value) {
+    const resizeObserver = new ResizeObserver(() => {
+      checkLeftControlsWidth();
+    });
+    resizeObserver.observe(leftControlsRef.value);
+    onBeforeUnmount(() => {
+      resizeObserver.disconnect();
+    });
+  }
 });
 
 // Cleanup
@@ -776,66 +802,6 @@ defineExpose({
   --n-slider-handle-background: #fff;
 }
 
-// Danmaku Input
-.danmaku-input-container {
-  position: absolute;
-  bottom: 80px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 85%;
-  max-width: 650px;
-  display: flex;
-  gap: 10px;
-  transition: all 0.3s ease;
-  z-index: 10;
-}
-
-.danmaku-input {
-  flex: 1;
-  padding: 12px 20px;
-  border-radius: 25px;
-  border: none;
-  background-color: rgba(0, 0, 0, 0.6);
-  color: #fff;
-  font-size: 14px;
-  outline: none;
-  transition: all 0.3s ease;
-  backdrop-filter: blur(5px);
-
-  &::placeholder {
-    color: rgba(255, 255, 255, 0.5);
-  }
-
-  &:focus {
-    border-color: #ff0050;
-    background-color: rgba(0, 0, 0, 0.8);
-    box-shadow: 0 0 15px rgba(255, 0, 80, 0.4);
-  }
-}
-
-.danmaku-send-btn {
-  padding: 12px 24px;
-  border-radius: 25px;
-  border: none;
-  background-color: #ff0050;
-  color: #fff;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 2px 10px rgba(255, 0, 80, 0.3);
-
-  &:hover {
-    background-color: #ff3366;
-    transform: scale(1.08);
-    box-shadow: 0 4px 15px rgba(255, 0, 80, 0.5);
-  }
-
-  &:active {
-    transform: scale(0.98);
-  }
-}
-
 // Progress Bar
 .progress-bar-container {
   position: absolute;
@@ -850,10 +816,42 @@ defineExpose({
 
 .progress-bar {
   width: 100% !important;
-  height: 4px;
+  height: 2px;
   margin-bottom: 4px;
   margin-left: 0;
   margin-right: 0;
+  transition: height 0.2s ease;
+
+  &:hover {
+    height: 4px;
+  }
+
+  :deep(.n-slider-rail) {
+    height: 100%;
+    background-color: rgba(255, 255, 255, 0.2);
+    border-radius: 2px;
+  }
+
+  :deep(.n-slider-rail__fill) {
+    background-color: rgba(255, 255, 255, 0.5);
+    border-radius: 2px;
+    transition: background-color 0.2s ease;
+  }
+
+  :deep(.n-slider-handle) {
+    opacity: 0;
+    transition: opacity 0.2s ease;
+  }
+
+  &:hover {
+    :deep(.n-slider-rail__fill) {
+      background-color: #ff0050;
+    }
+
+    :deep(.n-slider-handle) {
+      opacity: 1;
+    }
+  }
 }
 
 // Custom Controls
@@ -880,8 +878,18 @@ defineExpose({
 
 .left-controls {
   display: flex;
-  gap: 8px;
+  gap: 4px;
   align-items: center;
+  flex: 1;
+  min-width: 0;
+  overflow: visible;
+
+  :deep(.danmaku-input-container) {
+    flex: 1;
+    min-width: 40px;
+    max-width: 400px;
+    flex-shrink: 1;
+  }
 }
 
 .right-controls {
@@ -926,6 +934,7 @@ defineExpose({
   transition: all 0.2s ease;
   color: #fff;
   gap: 6px;
+  margin-bottom: 3px;
   padding: 2px 2px;
   border-radius: 18px;
   white-space: nowrap;
