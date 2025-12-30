@@ -1,57 +1,67 @@
 <template>
-  <div
-    :class="[
-      'follow-container',
-      isCollapsed ? 'w-[64px]' : 'w-[20%] min-w-[200px]',
-      'flex flex-col overflow-y-auto select-none overflow-hidden transition-all duration-300'
-    ]">
-    <!-- 顶部标题区域 -->
-    <div :class="['flex items-center mb-3', isCollapsed ? 'justify-center px-2' : 'justify-between px-4']">
-      <div v-show="!isCollapsed" class="font-medium">精选关注人(30)</div>
-      <n-button text type="primary" @click="toggleCollapse">
-        <n-icon>
-          <svg
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round">
-            <line x1="4" y1="12" x2="20" y2="12"></line>
-            <line x1="12" y1="4" x2="12" y2="20"></line>
-          </svg>
-        </n-icon>
-      </n-button>
-    </div>
+  <div class="flex h-full overflow-hidden">
+    <!-- 左侧关注列表 -->
+    <div
+      :class="[
+        'follow-container',
+        isCollapsed ? 'w-[64px]' : 'w-[20%] min-w-[200px]',
+        'flex flex-col overflow-y-auto select-none overflow-hidden transition-all duration-300'
+      ]">
+      <!-- 顶部标题区域 -->
+      <div :class="['flex items-center mb-3', isCollapsed ? 'justify-center px-2' : 'justify-between px-4']">
+        <div v-show="!isCollapsed" class="font-medium">精选关注人(30)</div>
+        <n-button text type="primary" @click="toggleCollapse">
+          <n-icon>
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round">
+              <line x1="4" y1="12" x2="20" y2="12"></line>
+              <line x1="12" y1="4" x2="12" y2="20"></line>
+            </svg>
+          </n-icon>
+        </n-button>
+      </div>
 
-    <!-- 关注列表 -->
-    <div class="flex-1 overflow-hidden">
-      <n-scrollbar class="h-full">
-        <div class="flex flex-col gap-[1px] mr-3">
-          <div
-            v-for="follow in followList"
-            :key="follow.id"
-            class="follow-item flex items-center justify-between py-2 hover:bg-gray-50 rounded-lg cursor-pointer overflow-hidden transition-all duration-300">
-            <div class="flex items-center gap-3 flex-1 min-w-0 overflow-hidden">
-              <!-- 头像区域 -->
-              <div class="ml-2 relative w-10 h-10 flex-shrink-0">
-                <img :src="follow.avatar" :alt="follow.name" class="w-full h-full rounded-full object-cover" />
-              </div>
-              <!-- 名称和未读计数（展开状态下显示） -->
-              <div v-show="!isCollapsed" class="flex-1 min-w-0 overflow-hidden">
-                <div class="text-sm font-medium truncate w-full">{{ follow.name }}</div>
-                <div
-                  v-show="follow.unreadCount > 0"
-                  class="w-fit bg-gray-300 text-gray-700 text-[12px] px-1 py-[2px] rounded-sm truncate">
-                  {{ follow.unreadCount }}个作品未看
+      <!-- 关注列表 -->
+      <div class="flex-1 overflow-hidden">
+        <n-scrollbar class="h-full">
+          <div class="flex flex-col gap-[1px] mr-3">
+            <div
+              v-for="follow in followList"
+              :key="follow.id"
+              class="follow-item flex items-center justify-between py-2 hover:bg-gray-50 rounded-lg cursor-pointer overflow-hidden transition-all duration-300">
+              <div class="flex items-center gap-3 flex-1 min-w-0 overflow-hidden">
+                <!-- 头像区域 -->
+                <div class="ml-2 relative w-10 h-10 flex-shrink-0">
+                  <img :src="follow.avatar" :alt="follow.name" class="w-full h-full rounded-full object-cover" />
+                </div>
+                <!-- 名称和未读计数（展开状态下显示） -->
+                <div v-show="!isCollapsed" class="flex-1 min-w-0 overflow-hidden">
+                  <div class="text-sm font-medium truncate w-full">{{ follow.name }}</div>
+                  <div
+                    v-show="follow.unreadCount > 0"
+                    class="w-fit bg-gray-300 text-gray-700 text-[12px] px-1 py-[2px] rounded-sm truncate">
+                    {{ follow.unreadCount }}个作品未看
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
-      </n-scrollbar>
+        </n-scrollbar>
+      </div>
+    </div>
+
+    <!-- 右侧视频播放区域 -->
+    <div class="flex-1 bg-gray-100 flex flex-col p-4">
+      <div class="flex-1 bg-black rounded-lg overflow-hidden">
+        <video-player src="http://vjs.zencdn.net/v/oceans.mp4" :controls="true" :autoplay="false" :muted="false" />
+      </div>
     </div>
   </div>
 </template>
@@ -59,6 +69,7 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import { NButton, NIcon, NScrollbar } from "naive-ui";
+import VideoPlayer from "@/components/home/VideoPlayer.vue";
 
 // 定义关注列表项的接口
 interface FollowItem {

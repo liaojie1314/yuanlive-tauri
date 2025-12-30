@@ -52,7 +52,7 @@ export function useLogin() {
         console.warn("关闭注册窗口失败:", error);
       });
     }
-    await createWebviewWindow("YuanLive", "home", 1024, 720, "login", true, 780, 480, 1680, void 0, void 0, false);
+    await createWebviewWindow("YuanLive", "home", 1200, 720, "login", true, 900, 480, 1680, void 0, void 0, false);
     // 只有在成功创建home窗口并且已登录的情况下才显示托盘菜单
     showTray.value = true;
     await resizeWindow("tray", 130, 138);

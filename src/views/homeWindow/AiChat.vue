@@ -29,7 +29,7 @@
       <!-- 聊天记录区域 - 自动填充剩余空间 -->
       <div
         class="chat-messages flex-1 overflow-y-auto flex justify-center scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100">
-        <div class="h-full w-full max-w-[800px] p-4">
+        <div class="w-full max-w-[800px] p-4">
           <div
             v-for="(message, index) in messages"
             :key="index"
