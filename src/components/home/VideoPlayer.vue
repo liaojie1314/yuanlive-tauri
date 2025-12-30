@@ -30,9 +30,8 @@
         <!-- Play/Pause Button -->
         <div class="control-item" @click="togglePlay">
           <span class="control-icon play-icon">
-            <Icon
-              :icon="isPlaying ? 'material-symbols:pause-rounded' : 'material-symbols:play-arrow-rounded'"
-              class="iconify-icon" />
+            <i-material-symbols-pause-rounded v-if="isPlaying" class="iconify-icon" />
+            <i-material-symbols-play-arrow-rounded v-else class="iconify-icon" />
           </span>
         </div>
 
@@ -73,7 +72,7 @@
         <!-- Mini Window Toggle -->
         <div class="control-item" @click="toggleMiniWindow">
           <span class="control-icon" :class="{ active: isMiniWindow }">
-            <Icon icon="mdi:dock-window" class="iconify-icon" />
+            <i-mdi-dock-window class="iconify-icon" />
           </span>
         </div>
 
@@ -81,11 +80,9 @@
         <div class="control-item volume-control">
           <div @click="toggleMute" @mouseenter="showVolumeSlider = true" @mouseleave="showVolumeSlider = false">
             <span class="control-icon">
-              <Icon
-                :icon="
-                  isMuted || volume === 0 ? 'ph:speaker-slash' : volume < 0.5 ? 'ph:speaker-low' : 'ph:speaker-high'
-                "
-                class="iconify-icon" />
+              <i-ph-speaker-slash v-if="isMuted || volume === 0" class="iconify-icon" />
+              <i-ph-speaker-low v-else-if="volume < 0.5" class="iconify-icon" />
+              <i-ph-speaker-high v-else class="iconify-icon" />
             </span>
           </div>
           <div
@@ -100,7 +97,8 @@
         <!-- Fullscreen Button -->
         <div class="control-item" @click="toggleFullscreen">
           <span class="control-icon fullscreen-icon">
-            <Icon :icon="isFullscreen ? 'mdi:fullscreen-exit' : 'mdi:fullscreen'" class="iconify-icon" />
+            <i-mdi-fullscreen-exit v-if="isFullscreen" class="iconify-icon" />
+            <i-mdi-fullscreen v-else class="iconify-icon" />
           </span>
         </div>
       </div>
@@ -112,7 +110,6 @@
 import videojs from "video.js";
 import "video.js/dist/video-js.css";
 import { NSwitch, NDropdown, NSlider } from "naive-ui";
-import { Icon } from "@iconify/vue";
 import DanmakuInput from "../common/DanmakuInput.vue";
 
 // Props

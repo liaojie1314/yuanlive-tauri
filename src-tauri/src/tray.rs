@@ -47,7 +47,6 @@ pub fn create_tray<R: Runtime>(app: &tauri::AppHandle<R>) -> tauri::Result<()> {
             .on_menu_event(move |app, event| {
                 let id = event.id();
                 if id == &open_id {
-                    // TODO: bug: linux上无法打开
                     // 打开主面板
                     let windows = app.webview_windows();
 

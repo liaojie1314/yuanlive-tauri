@@ -68,8 +68,8 @@ onMounted(async () => {
   const homeWindow = await WebviewWindow.getByLabel("home");
   if (homeWindow) {
     // 居中
-    homeWindow.center();
-    homeWindow.show();
+    await homeWindow.center();
+    await homeWindow.show();
   }
 });
 </script>

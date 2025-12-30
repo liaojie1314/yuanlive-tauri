@@ -7,6 +7,8 @@ import VueSetupExtend from "vite-plugin-vue-setup-extend";
 import postcsspxtorem from "postcss-pxtorem";
 import AutoImport from "unplugin-auto-import/vite"; // 自动导入
 import Components from "unplugin-vue-components/vite"; // 组件注入
+import Icons from "unplugin-icons/vite"; // 图标本地化
+import IconsResolver from "unplugin-icons/resolver"; // 图标解析器
 import { ConfigEnv, defineConfig, loadEnv } from "vite";
 
 import { NaiveUiResolver } from "unplugin-vue-components/resolvers";
@@ -57,6 +59,10 @@ export default defineConfig(({ mode }: ConfigEnv) => {
       VueSetupExtend(),
       VueJsx(), // 开启jsx功能
       UnoCSS(), // 开启unocss
+      Icons({
+        autoInstall: true,
+        compiler: "vue3"
+      }),
       AutoImport({
         imports: [
           "vue",
@@ -70,7 +76,7 @@ export default defineConfig(({ mode }: ConfigEnv) => {
       }),
       Components({
         dirs: ["src/components/**"],
-        resolvers: [NaiveUiResolver()],
+        resolvers: [NaiveUiResolver(), IconsResolver()],
         dts: "src/typings/components.d.ts"
       })
     ],

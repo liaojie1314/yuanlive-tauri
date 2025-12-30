@@ -4,9 +4,8 @@
       <div class="danmaku-controls-left">
         <div class="danmaku-toggle-btn" :class="{ active: isDanmakuEnabled }" @click="toggleDanmaku">
           弹
-          <Icon
-            :icon="isDanmakuEnabled ? 'material-symbols:check-circle-outline-rounded' : 'mdi:close-circle'"
-            class="iconify-icon toggle-icon" />
+          <i-material-symbols-check-circle-outline-rounded v-if="isDanmakuEnabled" class="iconify-icon toggle-icon" />
+          <i-mdi-close-circle v-else class="iconify-icon toggle-icon" />
         </div>
         <div class="danmaku-settings-container">
           <!-- 弹幕设置面板 -->
@@ -18,7 +17,7 @@
             <div class="settings-header">
               <span class="settings-title">弹幕设置</span>
               <div class="reset-btn" @click="resetSettings">
-                <Icon icon="ph:arrow-counter-clockwise" class="reset-icon" />
+                <i-ph-arrow-counter-clockwise class="reset-icon" />
                 <span>恢复默认</span>
               </div>
             </div>
@@ -81,7 +80,7 @@
               <div class="settings-item settings-item-clickable" @click="toggleDanmakuList">
                 <span class="settings-label">弹幕列表</span>
                 <div class="settings-arrow">
-                  <Icon icon="ph:caret-right" class="arrow-icon" />
+                  <i-ph-caret-right class="arrow-icon" />
                 </div>
               </div>
             </div>
@@ -89,7 +88,7 @@
 
           <div class="danmaku-settings-btn" @mouseenter="showDanmakuSettings" @mouseleave="hideDanmakuSettings">
             弹
-            <Icon :icon="'ph:gear-six'" class="iconify-icon settings-icon" />
+            <i-ph-gear-six class="iconify-icon settings-icon" />
           </div>
         </div>
         <div class="separator"></div>
@@ -102,7 +101,7 @@
         @keyup.enter="handleSend" />
       <div class="emoji-btn-container">
         <div class="emoji-btn" @mouseenter="showEmojiPickerHover" @mouseleave="hideEmojiPickerHover">
-          <Icon :icon="'ph:smiley'" class="iconify-icon" />
+          <i-ph-smiley class="iconify-icon" />
         </div>
         <div
           v-if="showEmojiPicker"
@@ -117,7 +116,6 @@
 </template>
 
 <script setup lang="ts">
-import { Icon } from "@iconify/vue";
 import EmojiPicker from "./EmojiPicker.vue";
 import { NSlider } from "naive-ui";
 
