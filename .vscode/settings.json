@@ -7,5 +7,5 @@
   "i18n-ally.pathMatcher": "{locale}/{namespaces}.{ext}",
   "i18n-ally.sortKeys": true,
   "i18n-ally.enabledParsers": ["json"],
-  "cSpell.words": ["hoverable", "minimizable", "tauri", "unlisten", "yuanlive"]
+  "cSpell.words": ["Danmaku", "hoverable", "minimizable", "tauri", "unlisten", "videojs", "yuanlive"]
 }
