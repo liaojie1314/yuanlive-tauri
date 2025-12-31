@@ -8,7 +8,6 @@
           <i-mdi-close-circle v-else class="iconify-icon toggle-icon" />
         </div>
         <div class="danmaku-settings-container">
-          <!-- 弹幕设置面板 -->
           <div
             class="danmaku-settings-panel"
             v-if="showDanmakuSettingsPanel"
@@ -110,16 +109,137 @@
         </div>
       </div>
 
-      <div v-if="isCompactMode" class="compact-danmaku-btn">弹</div>
+      <div
+        v-if="isCompactMode"
+        class="compact-danmaku-btn"
+        @mouseenter="showDanmakuSettings"
+        @mouseleave="hideDanmakuSettings">
+        弹
+      </div>
+    </div>
+
+    <div
+      v-if="isCompactMode && showDanmakuSettingsPanel"
+      class="compact-settings-panel"
+      @mouseenter="handleSettingsPanelEnter"
+      @mouseleave="handleSettingsPanelLeave">
+      <!-- 当hover emoji图标时，隐藏settings-header -->
+      <div class="settings-header" v-if="!showEmojiSelector">
+        <span class="settings-title">弹幕设置</span>
+        <div class="reset-btn" @click="resetSettings">
+          <i-ph-arrow-counter-clockwise class="reset-icon" />
+          <span>恢复默认</span>
+        </div>
+      </div>
+      <div class="settings-content">
+        <!-- 当hover emoji图标时，显示emoji选择器，隐藏其他设置项 -->
+        <n-scrollbar
+          v-if="showEmojiSelector"
+          class="emoji-selector-scroll"
+          @mouseenter="handleEmojiSelectorEnter"
+          @mouseleave="handleEmojiSelectorLeave">
+          <div class="emoji-selector">
+            <div class="emoji-item" v-for="emoji in commonEmojis" :key="emoji" @click="handleEmojiClick(emoji)">
+              {{ emoji }}
+            </div>
+          </div>
+        </n-scrollbar>
+
+        <!-- 当未hover emoji图标时，显示正常的设置项 -->
+        <template v-else>
+          <div class="settings-item">
+            <span class="settings-label">不透明度</span>
+            <n-slider
+              v-model:value="danmakuSettings.opacity"
+              :min="0"
+              :max="100"
+              :step="1"
+              :tooltip="false"
+              @update:value="handleSettingsChange" />
+            <span class="settings-value-right">{{ danmakuSettings.opacity }}%</span>
+          </div>
+
+          <div class="settings-item">
+            <span class="settings-label">显示区域</span>
+            <n-slider
+              v-model:value="danmakuSettings.displayArea"
+              :min="1"
+              :max="5"
+              :step="1"
+              :tooltip="false"
+              @update:value="handleSettingsChange" />
+            <span class="settings-value-right">{{ displayAreaLabel }}</span>
+          </div>
+
+          <div class="settings-item">
+            <span class="settings-label">字体大小</span>
+            <n-slider
+              v-model:value="danmakuSettings.fontSize"
+              :min="1"
+              :max="5"
+              :step="1"
+              :tooltip="false"
+              @update:value="handleSettingsChange" />
+            <span class="settings-value-right">{{ fontSizeLabel }}</span>
+          </div>
+
+          <div class="settings-item">
+            <span class="settings-label">弹幕速度</span>
+            <n-slider
+              v-model:value="danmakuSettings.speed"
+              :min="1"
+              :max="3"
+              :step="1"
+              :tooltip="false"
+              @update:value="handleSettingsChange" />
+            <span class="settings-value-right">{{ speedLabel }}</span>
+          </div>
+
+          <div class="settings-divider"></div>
+
+          <div class="settings-item settings-item-clickable" @click="toggleDanmakuList">
+            <span class="settings-label">弹幕列表</span>
+            <div class="settings-arrow">
+              <i-ph-caret-right class="arrow-icon" />
+            </div>
+          </div>
+
+          <div class="settings-divider"></div>
+
+          <div class="settings-item">
+            <span class="settings-label">弹幕开关</span>
+            <div class="settings-arrow">
+              <n-switch class="control-switch" :value="isDanmakuEnabled" @update:value="toggleDanmaku" />
+            </div>
+          </div>
+
+          <div class="settings-divider"></div>
+        </template>
+
+        <!-- danmaku-input-section始终显示 -->
+        <div class="danmaku-input-section">
+          <div class="danmaku-input-wrapper">
+            <div class="emoji-btn" @mouseenter="handleEmojiBtnEnter" @mouseleave="handleEmojiBtnLeave">
+              <i-ph-smiley class="iconify-icon emoji-icon" />
+            </div>
+            <input
+              v-model="danmakuText"
+              type="text"
+              placeholder="发一条弹幕吧"
+              class="danmaku-input-field"
+              @keyup.enter="handleSend" />
+            <button class="send-btn" @click="handleSend">发送</button>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import EmojiPicker from "./EmojiPicker.vue";
-import { NSlider } from "naive-ui";
+import { NSlider, NScrollbar } from "naive-ui";
 
-const props = defineProps<{
+defineProps<{
   isEnabled: boolean;
   isDanmakuEnabled: boolean;
 }>();
@@ -144,12 +264,143 @@ interface DanmakuSettings {
 const danmakuText = ref("");
 const showEmojiPicker = ref(false);
 const showDanmakuSettingsPanel = ref(false);
+const showEmojiSelector = ref(false);
 const containerRef = ref<HTMLDivElement | null>(null);
 const isCompactMode = ref(false);
 
 let danmakuSettingsHideTimer: number | null = null;
 let emojiPickerHideTimer: number | null = null;
 let resizeObserver: ResizeObserver | null = null;
+let emojiSelectorHideTimer: number | null = null;
+
+// 常用emoji列表，增加数量以展示滚动效果
+const commonEmojis = [
+  "😀",
+  "😃",
+  "😄",
+  "😁",
+  "😆",
+  "😅",
+  "😂",
+  "🤣",
+  "😊",
+  "😇",
+  "🙂",
+  "🙃",
+  "😉",
+  "😌",
+  "😍",
+  "🥰",
+  "😘",
+  "😗",
+  "😙",
+  "😚",
+  "😋",
+  "😛",
+  "😝",
+  "😜",
+  "🤪",
+  "🤨",
+  "🧐",
+  "🤓",
+  "😎",
+  "🤩",
+  "🥳",
+  "😏",
+  "😒",
+  "😞",
+  "😔",
+  "😟",
+  "😕",
+  "🙁",
+  "☹️",
+  "😣",
+  "😖",
+  "😫",
+  "😩",
+  "🥺",
+  "😢",
+  "😭",
+  "😤",
+  "😠",
+  "😡",
+  "🤬",
+  "🤯",
+  "😳",
+  "🥵",
+  "🥶",
+  "😱",
+  "😨",
+  "😰",
+  "😥",
+  "😓",
+  "🤗",
+  "🤔",
+  "🤭",
+  "🤫",
+  "🤥",
+  "🤐",
+  "🤢",
+  "🤮",
+  "🤧",
+  "😷",
+  "🤒",
+  "🤕",
+  "🤑",
+  "🤠",
+  "😈",
+  "👿",
+  "👹",
+  "👺",
+  "🤡",
+  "💩",
+  "👻"
+];
+
+const handleEmojiClick = (emoji: string) => {
+  danmakuText.value += emoji;
+  showEmojiSelector.value = false;
+};
+
+// 修复hover抽搐问题
+const handleEmojiBtnEnter = () => {
+  if (emojiSelectorHideTimer) {
+    clearTimeout(emojiSelectorHideTimer);
+    emojiSelectorHideTimer = null;
+  }
+  showEmojiSelector.value = true;
+};
+
+const handleEmojiBtnLeave = () => {
+  if (emojiSelectorHideTimer) {
+    clearTimeout(emojiSelectorHideTimer);
+  }
+  // 添加延迟，避免鼠标移动到emoji选择器时闪烁
+  emojiSelectorHideTimer = window.setTimeout(() => {
+    showEmojiSelector.value = false;
+    emojiSelectorHideTimer = null;
+  }, 100);
+};
+
+// 当鼠标进入emoji选择器时，保持显示
+const handleEmojiSelectorEnter = () => {
+  if (emojiSelectorHideTimer) {
+    clearTimeout(emojiSelectorHideTimer);
+    emojiSelectorHideTimer = null;
+  }
+};
+
+// 当鼠标离开emoji选择器时，添加延迟隐藏
+const handleEmojiSelectorLeave = () => {
+  if (emojiSelectorHideTimer) {
+    clearTimeout(emojiSelectorHideTimer);
+  }
+  // 添加延迟，避免鼠标移动到emoji选择器时闪烁
+  emojiSelectorHideTimer = window.setTimeout(() => {
+    showEmojiSelector.value = false;
+    emojiSelectorHideTimer = null;
+  }, 100);
+};
 
 const danmakuSettings = ref<DanmakuSettings>({
   opacity: 100,
@@ -300,6 +551,9 @@ onBeforeUnmount(() => {
   if (emojiPickerHideTimer) {
     clearTimeout(emojiPickerHideTimer);
   }
+  if (emojiSelectorHideTimer) {
+    clearTimeout(emojiSelectorHideTimer);
+  }
   if (resizeObserver) {
     resizeObserver.disconnect();
   }
@@ -347,6 +601,8 @@ onBeforeUnmount(() => {
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
   z-index: 1000;
   animation: slideUp 0.3s ease;
+  min-width: 228px;
+  max-width: min(228px, 95vw);
 }
 
 @keyframes slideUp {
@@ -393,7 +649,6 @@ onBeforeUnmount(() => {
 
 .settings-content {
   padding: 12px 15px;
-  max-height: 400px;
   overflow-y: auto;
   border-top: 1px solid rgba(255, 255, 255, 0.1);
 
@@ -419,8 +674,8 @@ onBeforeUnmount(() => {
 .settings-item {
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin-bottom: 16px;
+  gap: 5px;
+  margin-bottom: 12px;
 
   &:last-child {
     margin-bottom: 0;
@@ -560,7 +815,7 @@ onBeforeUnmount(() => {
 
 .separator {
   width: 1px;
-  height: 20px;
+  height: 15px;
   background-color: rgba(255, 255, 255, 0.4);
   margin: 0 6px;
   align-self: center;
@@ -633,5 +888,141 @@ onBeforeUnmount(() => {
   &:hover {
     background-color: rgba(255, 255, 255, 0.2);
   }
+}
+
+.compact-settings-panel {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  width: 280px;
+  background-color: rgba(0, 0, 0, 0.95);
+  border-radius: 12px;
+  backdrop-filter: blur(12px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+  z-index: 1000;
+  animation: slideUp 0.3s ease;
+  min-width: 228px;
+  max-width: min(228px, 95vw);
+}
+
+.control-switch {
+  transform: scale(0.8);
+  --n-switch-button-color: #fff;
+  --n-switch-button-color-active: #ff0050;
+  --n-switch-background-color: rgba(255, 255, 255, 0.2);
+  --n-switch-background-color-active: rgba(255, 0, 80, 0.8);
+  transition: all 0.3s ease;
+}
+
+.danmaku-input-section {
+  padding: 4px 0;
+}
+
+.danmaku-input-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 18px;
+  padding: 2px 6px;
+}
+
+.emoji-btn {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.15);
+  }
+}
+
+.emoji-icon {
+  width: 16px;
+  height: 16px;
+  color: #fff;
+}
+
+.danmaku-input-field {
+  flex: 1;
+  border: none;
+  background: transparent;
+  color: #fff;
+  font-size: 11px;
+  outline: none;
+  padding: 4px 2px;
+  max-width: 110px;
+
+  &::placeholder {
+    color: rgba(255, 255, 255, 0.5);
+  }
+}
+
+.send-btn {
+  background-color: #ff0050;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  padding: 4px 10px;
+  font-size: 11px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-width: 40px;
+
+  &:hover {
+    background-color: #ff1a60;
+  }
+
+  &:active {
+    transform: scale(0.95);
+  }
+}
+
+:deep(.n-scrollbar) {
+  width: 100%;
+  height: 239px;
+}
+
+.emoji-selector {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 10px;
+  padding: 12px 0;
+  width: 100%;
+}
+
+.emoji-item {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.15);
+    transform: scale(1.2);
+  }
+}
+
+/* 自定义naiveui滚动条样式 */
+:deep(.n-scrollbar) {
+  --n-scrollbar-width: 4px;
+  --n-scrollbar-thumb-background-color: rgba(255, 255, 255, 0.2);
+  --n-scrollbar-thumb-background-color-hover: rgba(255, 255, 255, 0.3);
+  --n-scrollbar-track-background-color: rgba(255, 255, 255, 0.05);
+}
+
+:deep(.n-scrollbar-rail) {
+  background-color: transparent;
 }
 </style>

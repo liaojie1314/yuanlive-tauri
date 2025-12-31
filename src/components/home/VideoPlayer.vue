@@ -1,9 +1,16 @@
 <template>
-  <div class="video-player-container">
+  <div class="video-player-container" @click="handleContainerClick">
     <div ref="videoContainerRef" class="video-container"></div>
 
+    <!-- Center Pause Icon -->
+    <div v-if="showPauseOverlay" class="pause-overlay" @click.stop="togglePlay">
+      <div class="pause-icon-container">
+        <i-material-symbols-play-arrow-rounded class="pause-icon" />
+      </div>
+    </div>
+
     <!-- Progress Bar -->
-    <div class="progress-bar-container">
+    <div class="progress-bar-container" @click.stop>
       <n-slider
         v-model:value="currentTime"
         :max="duration"
@@ -16,7 +23,7 @@
     </div>
 
     <!-- Custom Controls -->
-    <div class="custom-controls">
+    <div class="custom-controls" @click.stop>
       <!-- Left Controls: Play Button and Progress -->
       <div class="left-controls" ref="leftControlsRef">
         <!-- Play/Pause Button -->
@@ -167,6 +174,17 @@ const showVolumeSlider = ref(false);
 const currentTime = ref(0);
 const duration = ref(0);
 const isLeftControlsCompact = ref(false);
+const showPauseOverlay = ref(false);
+
+const handleContainerClick = () => {
+  if (playerRef.value) {
+    if (isPlaying.value) {
+      playerRef.value.pause();
+    } else {
+      playerRef.value.play();
+    }
+  }
+};
 
 // Format time from seconds to mm:ss format
 const formatTime = (seconds: number): string => {
@@ -179,7 +197,6 @@ const formatTime = (seconds: number): string => {
 const checkLeftControlsWidth = () => {
   if (leftControlsRef.value) {
     const width = leftControlsRef.value.offsetWidth;
-    console.log(width);
     isLeftControlsCompact.value = width < 190;
   }
 };
@@ -441,11 +458,13 @@ onMounted(() => {
     // Event listeners
     player.on("play", () => {
       isPlaying.value = true;
+      showPauseOverlay.value = false;
       emit("play");
     });
 
     player.on("pause", () => {
       isPlaying.value = false;
+      showPauseOverlay.value = true;
       emit("pause");
     });
 
@@ -564,6 +583,54 @@ defineExpose({
   position: relative;
   overflow: hidden;
   border-radius: 0;
+}
+
+.pause-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(0, 0, 0, 0.3);
+  z-index: 50;
+  cursor: pointer;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.pause-icon-container {
+  width: 80px;
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(255, 0, 80, 0.9);
+  border-radius: 50%;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 0 30px rgba(255, 0, 80, 0.6);
+  transition: all 0.3s ease;
+
+  &:hover {
+    transform: scale(1.1);
+    box-shadow: 0 0 40px rgba(255, 0, 80, 0.8);
+  }
+}
+
+.pause-icon {
+  width: 40px;
+  height: 40px;
+  color: #fff;
 }
 
 .video-container {

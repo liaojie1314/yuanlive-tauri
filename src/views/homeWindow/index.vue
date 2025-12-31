@@ -53,9 +53,9 @@
       <!-- 我的关注 -->
       <div>
         <div class="text-lg font-medium mb-4">我的关注</div>
-        <div class="bg-white rounded-lg p-4">
-          <n-scrollbar x-scrollable>
-            <div class="flex gap-6 min-w-max">
+        <div class="bg-white rounded-lg h-[110px] flex items-center">
+          <n-scrollbar x-scrollable class="ml-4 h-full">
+            <div class="flex gap-6 min-w-max py-[10px]">
               <div v-for="follow in followList" :key="follow.id" class="flex flex-col items-center">
                 <div class="relative">
                   <img :src="follow.avatar" :alt="follow.name" class="w-14 h-14 rounded-full object-cover" />
@@ -76,7 +76,7 @@
           <div
             v-for="tag in hotTags"
             :key="tag"
-            class="bg-white rounded-lg p-3 text-center text-sm font-medium cursor-pointer hover:bg-gray-100 transition-colors">
+            class="bg-white rounded-lg p-[14px] text-center text-sm font-medium cursor-pointer hover:bg-gray-100 transition-colors">
             {{ tag }}
           </div>
         </div>
