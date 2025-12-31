@@ -116,6 +116,14 @@
       </div>
     </div>
   </div>
+  <DanmakuListDialog
+    v-model:show="showDanmakuListDialog"
+    :danmaku-list="danmakuList"
+    @open-report="openDanmakuReportDialog" />
+  <DanmakuReportDialog
+    v-model:show="showDanmakuReportDialog"
+    :danmaku-index="selectedDanmakuIndex"
+    @submit-report="handleDanmakuReport" />
 </template>
 
 <script setup lang="ts">
@@ -123,6 +131,8 @@ import videojs from "video.js";
 import "video.js/dist/video-js.css";
 import { NSwitch, NDropdown, NSlider } from "naive-ui";
 import DanmakuInput from "../common/DanmakuInput.vue";
+import DanmakuListDialog from "../common/DanmakuListDialog.vue";
+import DanmakuReportDialog from "../common/DanmakuReportDialog.vue";
 
 // Props
 const props = defineProps<{
@@ -167,6 +177,49 @@ const isPlaying = ref(false);
 const isFullscreen = ref(false);
 const playbackRate = ref(1.0);
 const playbackRates = [0.5, 0.75, 1.0, 1.25, 1.5, 2.0];
+
+// Danmaku List Dialog
+const showDanmakuListDialog = ref(false);
+const showDanmakuReportDialog = ref(false);
+const selectedDanmakuIndex = ref(-1);
+const danmakuList = ref([
+  { time: "00:00", content: "快跑 这期有脏东西（云耀欧了）", isLiked: true },
+  { time: "00:00", content: "不对劲还我植物大战僵尸", isLiked: false },
+  { time: "00:01", content: "《关于我开盒自己这件事》", isLiked: true },
+  { time: "00:01", content: "我是不是有什么问题", isLiked: false },
+  { time: "00:02", content: "我都没看出来是你自己", isLiked: false },
+  { time: "00:02", content: "云耀，你在吗云耀", isLiked: true },
+  { time: "00:03", content: "现在知道自己多搞笑了吧", isLiked: false },
+  { time: "00:03", content: "云耀：我炸了", isLiked: true },
+  { time: "00:04", content: "你在教我做事？", isLiked: false },
+  { time: "00:04", content: "云耀的小表情太可爱了", isLiked: true },
+  { time: "00:05", content: "节目效果拉满", isLiked: false },
+  { time: "00:05", content: "我笑出眼泪了", isLiked: true },
+  { time: "00:06", content: "这波操作666", isLiked: false },
+  { time: "00:06", content: "主播反应太真实了", isLiked: true },
+  { time: "00:07", content: "我已经截图了", isLiked: false },
+  { time: "00:07", content: "这个视频我看了10遍", isLiked: true },
+  { time: "00:08", content: "弹幕大军来袭", isLiked: false },
+  { time: "00:08", content: "前方高能预警", isLiked: true },
+  { time: "00:09", content: "我来了我来了", isLiked: false },
+  { time: "00:09", content: "打卡打卡", isLiked: true }
+]);
+
+// Open report dialog
+const openDanmakuReportDialog = (index: number) => {
+  selectedDanmakuIndex.value = index;
+  showDanmakuReportDialog.value = true;
+};
+
+// Handle report submission
+const handleDanmakuReport = (index: number, type: string, description: string) => {
+  console.log("Report submitted:", {
+    danmakuIndex: index,
+    reportType: type,
+    description: description
+  });
+  showDanmakuReportDialog.value = false;
+};
 const playbackRateOptions = playbackRates.map((rate) => ({ label: `${rate}x`, key: rate }));
 const volume = ref(0.8);
 const isMuted = ref(false);
@@ -325,7 +378,7 @@ const handleDanmakuSettingsChange = (settings: any) => {
 
 const toggleDanmakuList = () => {
   console.log("Toggle danmaku list");
-  emit("danmaku-list-toggle");
+  showDanmakuListDialog.value = true;
 };
 
 // Switch resolution

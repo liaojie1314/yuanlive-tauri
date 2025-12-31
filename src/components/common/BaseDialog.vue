@@ -1,10 +1,11 @@
 <template>
   <div
     v-if="show"
-    class="fixed inset-0 bg-black/50 z-1000 flex items-center justify-center animate-fade-in"
+    class="fixed inset-0 bg-black/50 z-1000 flex items-center justify-center"
     @click="handleOverlayClick">
     <div
-      class="bg-white rounded-lg w-[600px] max-w-[90%] max-h-[90vh] overflow-hidden shadow-lg animate-slide-up"
+      :style="{ width: props.width, height: props.height }"
+      class="bg-white rounded-lg max-w-[90%] max-h-[90vh] overflow-hidden shadow-lg"
       @click.stop>
       <div class="px-6 py-0 border-b border-gray-200 relative h-16 flex items-center">
         <slot name="header">
@@ -19,7 +20,7 @@
           </svg>
         </div>
       </div>
-      <div class="p-6">
+      <div class="px-6 pb-6">
         <slot></slot>
       </div>
     </div>
@@ -32,10 +33,14 @@ import { computed } from "vue";
 interface Props {
   show: boolean;
   title?: string;
+  width?: string;
+  height?: string;
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  title: ""
+  title: "",
+  width: "600px",
+  height: "auto"
 });
 
 const emit = defineEmits<{
