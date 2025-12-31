@@ -162,10 +162,6 @@ const handleReport = (index: number) => {
   width: 24px;
   height: 24px;
   border-radius: 50%;
-
-  &:hover {
-    background-color: rgba(148, 163, 184, 0.1);
-  }
 }
 
 .like-btn {

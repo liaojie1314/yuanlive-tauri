@@ -1,6 +1,39 @@
 <template>
-  <div class="video-player-container" @click="handleContainerClick">
+  <div class="video-player-container" :class="{ paused: !isPlaying }" @click="handleContainerClick">
     <div ref="videoContainerRef" class="video-container"></div>
+
+    <!-- Danmaku Container -->
+    <div v-if="isDanmakuEnabled" ref="danmakuContainerRef" class="danmaku-container">
+      <div
+        v-for="danmaku in activeDanmakus"
+        :key="danmaku.id"
+        class="danmaku-item"
+        :class="`danmaku-${danmaku.position}`"
+        :style="{
+          fontSize: `${danmaku.fontSize}px`,
+          opacity: danmaku.opacity / 100,
+          top: `${danmaku.top}px`,
+          '--speed': danmaku.speed
+        }"
+        @mouseenter="showDanmakuActions(danmaku.id)"
+        @mouseleave="hideDanmakuActions()"
+        @click.stop>
+        <span class="danmaku-content">{{ danmaku.content }}</span>
+        <div v-if="hoveredDanmakuId === danmaku.id" class="danmaku-actions">
+          <span
+            class="danmaku-action-btn like-btn"
+            :class="{ liked: danmaku.isLiked }"
+            @click="toggleDanmakuLike(danmaku.id)"
+            title="点赞">
+            <i-material-symbols-favorite v-if="danmaku.isLiked" class="iconify-icon" />
+            <i-material-symbols-favorite-outline v-else class="iconify-icon" />
+          </span>
+          <span class="danmaku-action-btn report-btn" @click="openDanmakuReportDialog(danmaku.id)" title="举报">
+            <i-mdi-alert-outline class="iconify-icon" />
+          </span>
+        </div>
+      </div>
+    </div>
 
     <!-- Center Pause Icon -->
     <div v-if="showPauseOverlay" class="pause-overlay" @click.stop="togglePlay">
@@ -163,10 +196,29 @@ const emit = defineEmits<{
   (e: "danmaku-list-toggle"): void;
 }>();
 
+// Danmaku Types
+interface Danmaku {
+  id: string;
+  time: string;
+  content: string;
+  isLiked: boolean;
+  position: "scroll" | "top" | "bottom";
+  fontSize: number;
+  opacity: number;
+  top: number;
+  color: string;
+  speed: number;
+  createdAt: number;
+  startTime?: number; // Track when the danmaku animation started
+  remainingDuration?: number; // Track remaining animation duration when hovered
+}
+
 // Refs
 const videoContainerRef = ref<HTMLDivElement | null>(null);
+const danmakuContainerRef = ref<HTMLDivElement | null>(null);
 const playerRef = ref<any>(null);
 const leftControlsRef = ref<HTMLDivElement | null>(null);
+const hoveredDanmakuId = ref<string | null>(null);
 
 // States for custom controls
 const isAutoplay = ref(false);
@@ -182,33 +234,295 @@ const playbackRates = [0.5, 0.75, 1.0, 1.25, 1.5, 2.0];
 const showDanmakuListDialog = ref(false);
 const showDanmakuReportDialog = ref(false);
 const selectedDanmakuIndex = ref(-1);
-const danmakuList = ref([
-  { time: "00:00", content: "快跑 这期有脏东西（云耀欧了）", isLiked: true },
-  { time: "00:00", content: "不对劲还我植物大战僵尸", isLiked: false },
-  { time: "00:01", content: "《关于我开盒自己这件事》", isLiked: true },
-  { time: "00:01", content: "我是不是有什么问题", isLiked: false },
-  { time: "00:02", content: "我都没看出来是你自己", isLiked: false },
-  { time: "00:02", content: "云耀，你在吗云耀", isLiked: true },
-  { time: "00:03", content: "现在知道自己多搞笑了吧", isLiked: false },
-  { time: "00:03", content: "云耀：我炸了", isLiked: true },
-  { time: "00:04", content: "你在教我做事？", isLiked: false },
-  { time: "00:04", content: "云耀的小表情太可爱了", isLiked: true },
-  { time: "00:05", content: "节目效果拉满", isLiked: false },
-  { time: "00:05", content: "我笑出眼泪了", isLiked: true },
-  { time: "00:06", content: "这波操作666", isLiked: false },
-  { time: "00:06", content: "主播反应太真实了", isLiked: true },
-  { time: "00:07", content: "我已经截图了", isLiked: false },
-  { time: "00:07", content: "这个视频我看了10遍", isLiked: true },
-  { time: "00:08", content: "弹幕大军来袭", isLiked: false },
-  { time: "00:08", content: "前方高能预警", isLiked: true },
-  { time: "00:09", content: "我来了我来了", isLiked: false },
-  { time: "00:09", content: "打卡打卡", isLiked: true }
+const danmakuList = ref<Danmaku[]>([
+  {
+    id: "1",
+    time: "00:00",
+    content: "快跑 这期有脏东西（云耀欧了）",
+    isLiked: true,
+    position: "scroll",
+    fontSize: 16,
+    opacity: 100,
+    top: 0,
+    color: "#ffffff",
+    speed: 2,
+    createdAt: Date.now()
+  },
+  {
+    id: "2",
+    time: "00:10",
+    content: "不对劲还我植物大战僵尸",
+    isLiked: false,
+    position: "scroll",
+    fontSize: 16,
+    opacity: 100,
+    top: 30,
+    color: "#ffffff",
+    speed: 2,
+    createdAt: Date.now()
+  },
+  {
+    id: "3",
+    time: "00:14",
+    content: "《关于我开盒自己这件事》",
+    isLiked: true,
+    position: "scroll",
+    fontSize: 16,
+    opacity: 100,
+    top: 60,
+    color: "#ffffff",
+    speed: 2,
+    createdAt: Date.now()
+  },
+  {
+    id: "4",
+    time: "00:18",
+    content: "我是不是有什么问题",
+    isLiked: false,
+    position: "scroll",
+    fontSize: 16,
+    opacity: 100,
+    top: 90,
+    color: "#ffffff",
+    speed: 2,
+    createdAt: Date.now()
+  },
+  {
+    id: "5",
+    time: "00:20",
+    content: "我都没看出来是你自己",
+    isLiked: false,
+    position: "scroll",
+    fontSize: 16,
+    opacity: 100,
+    top: 120,
+    color: "#ffffff",
+    speed: 2,
+    createdAt: Date.now()
+  },
+  {
+    id: "6",
+    time: "00:21",
+    content: "云耀，你在吗云耀",
+    isLiked: true,
+    position: "scroll",
+    fontSize: 16,
+    opacity: 100,
+    top: 150,
+    color: "#ffffff",
+    speed: 2,
+    createdAt: Date.now()
+  },
+  {
+    id: "7",
+    time: "00:23",
+    content: "现在知道自己多搞笑了吧",
+    isLiked: false,
+    position: "scroll",
+    fontSize: 16,
+    opacity: 100,
+    top: 180,
+    color: "#ffffff",
+    speed: 2,
+    createdAt: Date.now()
+  },
+  {
+    id: "8",
+    time: "00:25",
+    content: "云耀：我炸了",
+    isLiked: true,
+    position: "scroll",
+    fontSize: 16,
+    opacity: 100,
+    top: 210,
+    color: "#ffffff",
+    speed: 2,
+    createdAt: Date.now()
+  },
+  {
+    id: "9",
+    time: "00:28",
+    content: "你在教我做事？",
+    isLiked: false,
+    position: "scroll",
+    fontSize: 16,
+    opacity: 100,
+    top: 240,
+    color: "#ffffff",
+    speed: 2,
+    createdAt: Date.now()
+  },
+  {
+    id: "10",
+    time: "00:30",
+    content: "云耀的小表情太可爱了",
+    isLiked: true,
+    position: "scroll",
+    fontSize: 16,
+    opacity: 100,
+    top: 270,
+    color: "#ffffff",
+    speed: 2,
+    createdAt: Date.now()
+  },
+  {
+    id: "11",
+    time: "00:32",
+    content: "节目效果拉满",
+    isLiked: false,
+    position: "scroll",
+    fontSize: 16,
+    opacity: 100,
+    top: 0,
+    color: "#ffffff",
+    speed: 2,
+    createdAt: Date.now()
+  },
+  {
+    id: "12",
+    time: "00:35",
+    content: "我笑出眼泪了",
+    isLiked: true,
+    position: "scroll",
+    fontSize: 16,
+    opacity: 100,
+    top: 30,
+    color: "#ffffff",
+    speed: 2,
+    createdAt: Date.now()
+  },
+  {
+    id: "13",
+    time: "00:36",
+    content: "这波操作666",
+    isLiked: false,
+    position: "scroll",
+    fontSize: 16,
+    opacity: 100,
+    top: 60,
+    color: "#ffffff",
+    speed: 2,
+    createdAt: Date.now()
+  },
+  {
+    id: "14",
+    time: "00:36",
+    content: "主播反应太真实了",
+    isLiked: true,
+    position: "scroll",
+    fontSize: 16,
+    opacity: 100,
+    top: 90,
+    color: "#ffffff",
+    speed: 2,
+    createdAt: Date.now()
+  },
+  {
+    id: "15",
+    time: "00:37",
+    content: "我已经截图了",
+    isLiked: false,
+    position: "scroll",
+    fontSize: 16,
+    opacity: 100,
+    top: 120,
+    color: "#ffffff",
+    speed: 2,
+    createdAt: Date.now()
+  },
+  {
+    id: "16",
+    time: "00:40",
+    content: "这个视频我看了10遍",
+    isLiked: true,
+    position: "scroll",
+    fontSize: 16,
+    opacity: 100,
+    top: 150,
+    color: "#ffffff",
+    speed: 2,
+    createdAt: Date.now()
+  },
+  {
+    id: "17",
+    time: "00:41",
+    content: "弹幕大军来袭",
+    isLiked: false,
+    position: "scroll",
+    fontSize: 16,
+    opacity: 100,
+    top: 180,
+    color: "#ffffff",
+    speed: 2,
+    createdAt: Date.now()
+  },
+  {
+    id: "18",
+    time: "00:42",
+    content: "前方高能预警",
+    isLiked: true,
+    position: "scroll",
+    fontSize: 16,
+    opacity: 100,
+    top: 210,
+    color: "#ffffff",
+    speed: 2,
+    createdAt: Date.now()
+  },
+  {
+    id: "19",
+    time: "00:43",
+    content: "我来了我来了",
+    isLiked: false,
+    position: "scroll",
+    fontSize: 16,
+    opacity: 100,
+    top: 240,
+    color: "#ffffff",
+    speed: 2,
+    createdAt: Date.now()
+  },
+  {
+    id: "20",
+    time: "00:45",
+    content: "打卡打卡",
+    isLiked: true,
+    position: "scroll",
+    fontSize: 16,
+    opacity: 100,
+    top: 270,
+    color: "#ffffff",
+    speed: 2,
+    createdAt: Date.now()
+  }
 ]);
 
+// Active Danmakus that are currently displayed
+const activeDanmakus = ref<Danmaku[]>([]);
+
+// Danmaku Settings
+const danmakuSettings = ref({
+  opacity: 100,
+  fontSize: 16,
+  speed: 2,
+  displayArea: 3,
+  enableHighContrast: false
+});
+
 // Open report dialog
-const openDanmakuReportDialog = (index: number) => {
-  selectedDanmakuIndex.value = index;
-  showDanmakuReportDialog.value = true;
+const openDanmakuReportDialog = (arg: number | string) => {
+  if (typeof arg === "number") {
+    // Called with index (from DanmakuListDialog)
+    selectedDanmakuIndex.value = arg;
+    showDanmakuReportDialog.value = true;
+  } else {
+    // Called with danmakuId (string) from video player
+    const index = danmakuList.value.findIndex((d) => d.id === arg);
+    if (index !== -1) {
+      selectedDanmakuIndex.value = index;
+      showDanmakuReportDialog.value = true;
+    }
+  }
 };
 
 // Handle report submission
@@ -219,6 +533,72 @@ const handleDanmakuReport = (index: number, type: string, description: string) =
     description: description
   });
   showDanmakuReportDialog.value = false;
+};
+
+// Refs to track danmaku timers
+const danmakuTimers = new Map<string, NodeJS.Timeout>();
+
+// Show danmaku actions on hover
+const showDanmakuActions = (danmakuId: string) => {
+  hoveredDanmakuId.value = danmakuId;
+
+  // Find the danmaku and calculate remaining duration
+  const danmaku = activeDanmakus.value.find((d) => d.id === danmakuId);
+  if (danmaku && danmaku.startTime) {
+    // Get current timer if exists
+    const timer = danmakuTimers.get(danmakuId);
+    if (timer) {
+      // Clear existing timer
+      clearTimeout(timer);
+      danmakuTimers.delete(danmakuId);
+
+      // Calculate elapsed time and remaining duration
+      const elapsed = Date.now() - danmaku.startTime;
+      const totalDuration = 8000 / danmaku.speed;
+      danmaku.remainingDuration = Math.max(0, totalDuration - elapsed);
+    }
+  }
+};
+
+// Hide danmaku actions when not hovering
+const hideDanmakuActions = () => {
+  const prevHoveredId = hoveredDanmakuId.value;
+  hoveredDanmakuId.value = null;
+
+  // If we were hovering over a danmaku, restart its animation timer
+  if (prevHoveredId) {
+    const danmaku = activeDanmakus.value.find((d) => d.id === prevHoveredId);
+    if (danmaku && danmaku.remainingDuration !== undefined && danmaku.remainingDuration > 0) {
+      // Set a new timer with remaining duration
+      const timer = setTimeout(() => {
+        const index = activeDanmakus.value.findIndex((d) => d.id === prevHoveredId);
+        if (index !== -1) {
+          activeDanmakus.value.splice(index, 1);
+        }
+        danmakuTimers.delete(prevHoveredId);
+      }, danmaku.remainingDuration);
+
+      // Store the timer
+      danmakuTimers.set(prevHoveredId, timer);
+
+      // Reset remaining duration as it's now being used
+      danmaku.remainingDuration = undefined;
+    }
+  }
+};
+
+// Toggle danmaku like status
+const toggleDanmakuLike = (danmakuId: string) => {
+  const danmaku = danmakuList.value.find((d) => d.id === danmakuId);
+  if (danmaku) {
+    danmaku.isLiked = !danmaku.isLiked;
+  }
+
+  // Update active danmakus as well
+  const activeDanmaku = activeDanmakus.value.find((d) => d.id === danmakuId);
+  if (activeDanmaku) {
+    activeDanmaku.isLiked = !activeDanmaku.isLiked;
+  }
 };
 const playbackRateOptions = playbackRates.map((rate) => ({ label: `${rate}x`, key: rate }));
 const volume = ref(0.8);
@@ -373,7 +753,107 @@ const toggleDanmaku = () => {
 
 const handleDanmakuSettingsChange = (settings: any) => {
   console.log("Danmaku settings changed:", settings);
+  danmakuSettings.value = {
+    ...danmakuSettings.value,
+    ...settings
+  };
   emit("danmaku-settings-change", settings);
+};
+
+// Convert time string (mm:ss) to seconds
+const timeStringToSeconds = (timeStr: string): number => {
+  const [minutes, seconds] = timeStr.split(":").map(Number);
+  return minutes * 60 + seconds;
+};
+
+// Generate a new danmaku object with proper properties
+const generateDanmaku = (danmaku: Danmaku): Danmaku => {
+  return {
+    ...danmaku,
+    fontSize: danmakuSettings.value.fontSize,
+    opacity: danmakuSettings.value.opacity,
+    speed: danmakuSettings.value.speed
+  };
+};
+
+// Update active danmakus based on current video time
+const updateActiveDanmakus = () => {
+  if (!playerRef.value || !isDanmakuEnabled.value || playerRef.value.paused()) {
+    return;
+  }
+
+  const currentTime = playerRef.value.currentTime();
+
+  // Process all danmakus to check if they should be displayed now
+  danmakuList.value.forEach((danmaku) => {
+    const danmakuTime = timeStringToSeconds(danmaku.time);
+
+    // Check if this danmaku should be displayed now
+    // The danmaku should be added when current time reaches its time
+    // and it hasn't been added yet
+    const isAlreadyActive = activeDanmakus.value.some((d) => d.id === danmaku.id);
+
+    // Only add if not already active and current time >= danmaku time
+    // We use a small buffer to handle frame rate differences
+    if (!isAlreadyActive && currentTime >= danmakuTime && currentTime - danmakuTime < 1) {
+      const newDanmaku = generateDanmaku(danmaku);
+
+      // Calculate random top position for scrolling danmakus
+      if (newDanmaku.position === "scroll") {
+        const containerHeight = danmakuContainerRef.value?.offsetHeight || 300;
+        const displayAreaHeight = containerHeight * (danmakuSettings.value.displayArea / 5);
+        newDanmaku.top = Math.random() * (displayAreaHeight - 30);
+      } else if (newDanmaku.position === "top") {
+        newDanmaku.top = 10;
+      } else {
+        newDanmaku.top = (danmakuContainerRef.value?.offsetHeight || 300) - 40;
+      }
+
+      // Calculate total animation duration based on speed
+      const animationDuration = 8000 / newDanmaku.speed;
+
+      // Add to active danmakus list
+      activeDanmakus.value.push(newDanmaku);
+
+      // Function to set timer for danmaku removal
+      const setDanmakuTimer = (danmakuId: string, duration: number) => {
+        // Set the start time for this danmaku
+        const danmaku = activeDanmakus.value.find((d) => d.id === danmakuId);
+        if (danmaku) {
+          danmaku.startTime = Date.now();
+        }
+
+        // Set a timer to remove the danmaku after specified duration
+        const timer = setTimeout(() => {
+          // Only remove if not currently hovered
+          if (hoveredDanmakuId.value !== danmakuId) {
+            const index = activeDanmakus.value.findIndex((d) => d.id === danmakuId);
+            if (index !== -1) {
+              activeDanmakus.value.splice(index, 1);
+            }
+            danmakuTimers.delete(danmakuId);
+          }
+        }, duration);
+
+        // Store the timer reference
+        danmakuTimers.set(danmakuId, timer);
+      };
+
+      // Initial timer setup
+      setDanmakuTimer(newDanmaku.id, animationDuration);
+    }
+  });
+
+  // Clean up any danmakus that should not be active anymore
+  // This handles cases where the video is seeked backwards
+  activeDanmakus.value = activeDanmakus.value.filter((danmaku) => {
+    const danmakuTime = timeStringToSeconds(danmaku.time);
+    // Keep danmaku if:
+    // 1. It's within the current playback window, OR
+    // 2. It's currently being hovered
+    // This ensures hovered danmakus are never removed by cleanup logic
+    return currentTime >= danmakuTime || hoveredDanmakuId.value === danmaku.id;
+  });
 };
 
 const toggleDanmakuList = () => {
@@ -513,12 +993,51 @@ onMounted(() => {
       isPlaying.value = true;
       showPauseOverlay.value = false;
       emit("play");
+
+      // Resume all danmaku timers when video plays
+      activeDanmakus.value.forEach((danmaku) => {
+        // Only resume if danmaku has remaining duration (was paused)
+        if (danmaku.remainingDuration !== undefined && danmaku.remainingDuration > 0) {
+          // Set a new timer with remaining duration
+          const timer = setTimeout(() => {
+            // Only remove if not currently hovered
+            if (hoveredDanmakuId.value !== danmaku.id) {
+              const index = activeDanmakus.value.findIndex((d) => d.id === danmaku.id);
+              if (index !== -1) {
+                activeDanmakus.value.splice(index, 1);
+              }
+              danmakuTimers.delete(danmaku.id);
+            }
+          }, danmaku.remainingDuration);
+
+          // Store the timer reference
+          danmakuTimers.set(danmaku.id, timer);
+
+          // Clear remaining duration since timer is now active
+          danmaku.remainingDuration = undefined;
+        }
+      });
     });
 
     player.on("pause", () => {
       isPlaying.value = false;
       showPauseOverlay.value = true;
       emit("pause");
+
+      // Pause all danmaku timers when video pauses
+      danmakuTimers.forEach((timer, danmakuId) => {
+        // Clear the timer
+        clearTimeout(timer);
+        danmakuTimers.delete(danmakuId);
+
+        // Calculate remaining duration
+        const danmaku = activeDanmakus.value.find((d) => d.id === danmakuId);
+        if (danmaku && danmaku.startTime) {
+          const elapsed = Date.now() - danmaku.startTime;
+          const totalDuration = 8000 / danmaku.speed;
+          danmaku.remainingDuration = Math.max(0, totalDuration - elapsed);
+        }
+      });
     });
 
     player.on("ended", () => {
@@ -536,6 +1055,9 @@ onMounted(() => {
       currentTime.value = current;
       duration.value = total;
       emit("timeupdate", current, total);
+
+      // Update active danmakus based on current time
+      updateActiveDanmakus();
     });
 
     player.on("volumechange", () => {
@@ -582,6 +1104,12 @@ onBeforeUnmount(() => {
     playerRef.value.dispose();
     playerRef.value = null;
   }
+
+  // Cleanup all danmaku timers to prevent memory leaks
+  danmakuTimers.forEach((timer) => {
+    clearTimeout(timer);
+  });
+  danmakuTimers.clear();
 });
 
 // Update player when src changes
@@ -1044,6 +1572,141 @@ defineExpose({
   :deep(.n-slider) {
     height: 90% !important;
   }
+}
+
+// Danmaku Styles
+.danmaku-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: calc(100% - 80px);
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 80;
+}
+
+.danmaku-item {
+  position: absolute;
+  white-space: nowrap;
+  font-size: 16px;
+  color: #ffffff;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+  cursor: pointer;
+  pointer-events: auto;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  z-index: 100;
+}
+
+.danmaku-item {
+  animation-play-state: running;
+  transition: animation-play-state 0.1s ease;
+}
+
+.danmaku-item:hover {
+  background-color: rgba(0, 0, 0, 0.3);
+  transform: scale(1.05);
+  z-index: 1000 !important;
+  animation-play-state: paused !important;
+}
+
+.video-player-container.paused .danmaku-item {
+  animation-play-state: paused;
+}
+
+.danmaku-scroll {
+  left: 100%;
+  animation: danmaku-scroll linear forwards;
+  animation-duration: calc(8s / var(--speed, 1));
+  animation-fill-mode: forwards;
+  animation-timing-function: linear;
+}
+
+.danmaku-top,
+.danmaku-bottom {
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: rgba(0, 0, 0, 0.3);
+  padding: 4px 12px;
+  border-radius: 16px;
+}
+
+.danmaku-top {
+  top: 10px;
+}
+
+.danmaku-bottom {
+  bottom: 10px;
+  top: auto;
+}
+
+@keyframes danmaku-scroll {
+  from {
+    left: 100%; /* Start from outside the right edge */
+    transform: translateX(0);
+  }
+  to {
+    left: -100%; /* Move completely outside the left edge */
+    transform: translateX(0);
+  }
+}
+
+.danmaku-content {
+  flex: 1;
+  line-height: 1.4;
+}
+
+.danmaku-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background-color: rgba(0, 0, 0, 0.6);
+  padding: 2px 8px;
+  border-radius: 12px;
+  opacity: 1;
+  transition: opacity 0.2s ease;
+}
+
+.danmaku-action-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  cursor: pointer;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+  color: #ffffff;
+}
+
+.like-btn {
+  color: #ff0050;
+}
+
+.like-btn.liked {
+  color: #ff0050;
+  animation: heartBeat 0.3s ease;
+}
+
+@keyframes heartBeat {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.report-btn {
+  color: #ffcc00;
 }
 
 .control-item {
