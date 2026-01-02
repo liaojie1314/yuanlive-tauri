@@ -296,7 +296,7 @@ impl Request for RequestClient {
             .await?;
 
         if let Some(data) = result.clone() {
-            self.token = Some(data.token.clone());
+            self.token = Some(data.access_token.clone());
             self.refresh_token = Some(data.refresh_token.clone());
         }
 
@@ -316,7 +316,7 @@ impl Request for RequestClient {
             .await?;
 
         if let Some(data) = result.clone() {
-            self.token = Some(data.token.clone());
+            self.token = Some(data.access_token.clone());
             self.refresh_token = Some(data.refresh_token.clone());
         }
 
@@ -330,7 +330,7 @@ pub enum Url {
     RefreshToken,
     Logout,
     ForgetPassword,
-    SendEmailCaptcha,
+    GetCode,
 
     GenerateQRCode,
     CheckQRStatus,
@@ -343,15 +343,15 @@ pub enum Url {
 impl Url {
     pub fn get_url(&self) -> (http::Method, &str) {
         match self {
-            Url::Register => (http::Method::POST, "register"),
-            Url::Login => (http::Method::POST, "login"),
-            Url::RefreshToken => (http::Method::POST, "token/refresh"),
-            Url::Logout => (http::Method::POST, "logout"),
-            Url::ForgetPassword => (http::Method::PUT, "forget/password"),
-            Url::SendEmailCaptcha => (http::Method::POST, "email/captcha"),
+            Url::Register => (http::Method::POST, "user/auth/register"),
+            Url::Login => (http::Method::POST, "user/auth/login"),
+            Url::RefreshToken => (http::Method::POST, "user/user/refreshToken"),
+            Url::Logout => (http::Method::POST, "user/auth/logout"),
+            Url::ForgetPassword => (http::Method::POST, "user/auth/forgetPassword"),
+            Url::GetCode => (http::Method::POST, "user/auth/getCode"),
             // 扫码登录相关
-            Url::GenerateQRCode => (http::Method::GET, "qr/generate"),
-            Url::CheckQRStatus => (http::Method::GET, "qr/status/query"),
+            Url::GenerateQRCode => (http::Method::GET, "user/auth/qrcode/init"),
+            Url::CheckQRStatus => (http::Method::GET, "user/auth/qrcode/check"),
             // 用户信息相关
             Url::GetUserInfoDetail => (http::Method::GET, "user/info"),
             // AI 相关
@@ -366,7 +366,7 @@ impl Url {
             "refreshToken" => Ok(Url::RefreshToken),
             "logout" => Ok(Url::Logout),
             "forgetPassword" => Ok(Url::ForgetPassword),
-            "sendEmailCaptcha" => Ok(Url::SendEmailCaptcha),
+            "getCode" => Ok(Url::GetCode),
             // 扫码登录相关
             "generateQRCode" => Ok(Url::GenerateQRCode),
             "checkQRStatus" => Ok(Url::CheckQRStatus),
@@ -402,8 +402,7 @@ pub struct ApiResult<T> {
 pub struct LoginReq {
     pub account: String,
     pub password: String,
-    pub grant_type: String,
-    pub device_type: String,
+    pub device: String,
     pub client_id: String, // 客户端指纹信息
     #[serde(default)]
     pub is_auto_login: bool,
@@ -414,9 +413,8 @@ pub struct LoginReq {
 #[serde(rename_all = "camelCase")]
 pub struct AuthResp {
     pub uid: String,
-    pub token: String,
+    pub access_token: String,
     pub refresh_token: String,
-    pub expire: String,
 }
 
 #[derive(Serialize, Deserialize, Clone)]
@@ -438,21 +436,34 @@ pub trait Request {
 mod test {
     use serde_json::json;
 
-    use crate::request_client::{AuthResp, LoginReq};
+    use crate::request_client::{AuthResp, LoginReq, Url};
     use crate::request_client::{Request, RequestClient};
 
     #[tokio::test]
     async fn test_login() -> Result<(), anyhow::Error> {
-        let mut request_client = RequestClient::new("http://127.0.0.1:8081".to_string())?;
+        let mut request_client = RequestClient::new("http://127.0.0.1:8080".to_string())?;
         let login_req = json!({
-            "clientId": "testClientId",
             "account": "yuanyuan",
             "password": "123456",
-            "grantType": "PASSWORD",
-            "deviceType": "MOBILE",
+            "device": "desktop",
+            "clientId": "testClientId",
         });
         let login_req: LoginReq = serde_json::from_value(login_req)?;
         let result: Option<AuthResp> = request_client.login(login_req).await?;
+        println!("{:?}", json!(result).to_string());
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_get_code() -> Result<(), anyhow::Error> {
+        let mut request_client = RequestClient::new("http://127.0.0.1:8080".to_string())?;
+        let req = json!({
+            "email": "112233@gmail.com",
+            "operationType": "REGISTER"
+        });
+        let result: Option<String> = request_client
+            .request(Url::GetCode, Some(req), None::<serde_json::Value>)
+            .await?;
         println!("{:?}", json!(result).to_string());
         Ok(())
     }

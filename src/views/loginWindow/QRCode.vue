@@ -158,10 +158,7 @@ const startPolling = () => {
 
     try {
       const res = await checkQRStatusApi({
-        qrId: qrCodeResp.value.qrId,
-        clientId: localStorage.getItem(StorageKeyEnum.CLIENT_ID) as string,
-        deviceHash: qrCodeResp.value.deviceHash,
-        deviceType: "PC"
+        uuid: qrCodeResp.value.uuid
       });
       switch (res.status) {
         case "PENDING":
@@ -232,7 +229,10 @@ const handleConfirmed = async (res: any) => {
 const handleQRCode = async () => {
   try {
     qrCodeResp.value = await generateQRCodeApi();
-    qrCodeValue.value = JSON.stringify({ type: "login", qrId: qrCodeResp.value.qrId });
+    qrCodeValue.value = JSON.stringify({
+      uuid: qrCodeResp.value.uuid,
+      content: qrCodeResp.value.content
+    });
     loadTextKey.value = "scanHint";
     loading.value = false;
     refreshing.value = false;

@@ -165,7 +165,7 @@ import { darkTheme, FormInst, lightTheme } from "naive-ui";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 
 import { ThemeEnum } from "@/enums";
-import { forgetPasswordApi, sendEmailCaptchaApi } from "@/api/auth";
+import { forgetPasswordApi, getCodeApi } from "@/api/auth";
 import { noSideSpace, validateAlphaNumeric, validateMinLength, validateSpecialChar } from "@/utils/ValidateUtils";
 import { useSettingStore } from "@/stores/setting";
 
@@ -269,9 +269,9 @@ const sendEmailCode = async () => {
   sendingEmailCode.value = true;
 
   try {
-    await sendEmailCaptchaApi({
+    await getCodeApi({
       email: formData.value.email,
-      operationType: "FORGET_PASSWORD"
+      operationType: "FORGET"
     });
     window.$message.success(t("auth.forget.messages.codeSent"));
     // 接口成功返回后才开始倒计时

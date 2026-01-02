@@ -36,7 +36,7 @@ export enum UrlEnum {
   // 检测二维码状态
   CHECK_QR_STATUS = "checkQRStatus",
   // 发送邮箱验证码
-  SEND_EMAIL_CAPTCHA = "sendEmailCaptcha"
+  GET_CODE = "getCode"
 }
 
 /** 关闭窗口的行为 */

@@ -19,11 +19,11 @@
           <div>
             <n-form-item path="name">
               <n-input
-                :class="[{ 'pr-20px': info.nickname }, { 'pr-16px': showNamePrefix && !info.nickname }]"
+                :class="[{ 'pr-20px': info.username }, { 'pr-16px': showNamePrefix && !info.username }]"
                 maxlength="8"
                 minlength="1"
                 size="large"
-                v-model:value="info.nickname"
+                v-model:value="info.username"
                 type="text"
                 spellCheck="false"
                 autoComplete="off"
@@ -195,7 +195,7 @@ import { getCurrentWebviewWindow, WebviewWindow } from "@tauri-apps/api/webviewW
 import { ThemeEnum } from "@/enums";
 import type { RegisterUserReq } from "@/api/types";
 
-import { registerApi, sendEmailCaptchaApi } from "@/api/auth";
+import { registerApi, getCodeApi } from "@/api/auth";
 import { noSideSpace, validateAlphaNumeric, validateMinLength, validateSpecialChar } from "@/utils/ValidateUtils";
 import { useSettingStore } from "@/stores/setting";
 
@@ -215,7 +215,7 @@ const info = unref(
   ref<RegisterUserReq>({
     email: "",
     password: "",
-    nickname: "",
+    username: "",
     code: "",
     confirmPassword: ""
   })
@@ -314,7 +314,7 @@ const isPasswordValid = computed(() => {
 // 检查是否可以发送邮箱验证码
 const canSendCode = computed(() => {
   return (
-    !!info.nickname &&
+    !!info.username &&
     isPasswordValid.value &&
     confirmPassword.value === info.password &&
     protocol.value &&
@@ -374,7 +374,7 @@ const handleStepAction = async () => {
     const email = info.email.trim();
     info.email = email;
     // 发送邮箱验证码
-    await sendEmailCaptchaApi({ email, operationType: "REGISTER" });
+    await getCodeApi({ email, operationType: "REGISTER" });
     startSendCodeCountdown();
     window.$message.success(t("auth.register.messages.codeSent"));
     emailCodeModal.value = true;

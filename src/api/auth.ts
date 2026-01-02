@@ -45,12 +45,7 @@ export async function generateQRCodeApi() {
 /**
  * 检查二维码状态
  */
-export async function checkQRStatusApi(params: {
-  qrId: string;
-  clientId: string;
-  deviceHash: string;
-  deviceType: "PC" | "MOBILE";
-}) {
+export async function checkQRStatusApi(params: { uuid: string }) {
   return await request(
     {
       url: UrlEnum.CHECK_QR_STATUS,
@@ -65,9 +60,9 @@ export async function checkQRStatusApi(params: {
 /**
  * 发送邮箱验证码
  */
-export async function sendEmailCaptchaApi(body: { email: string; operationType: "REGISTER" | "FORGET_PASSWORD" }) {
+export async function getCodeApi(body: { email: string; operationType: "REGISTER" | "FORGET" }) {
   return await request({
-    url: UrlEnum.SEND_EMAIL_CAPTCHA,
+    url: UrlEnum.GET_CODE,
     body
   });
 }

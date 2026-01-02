@@ -66,12 +66,12 @@ async fn handle_login_success(
     // 设置用户信息
     let mut user_info = state.user_info.lock().await;
     user_info.uid = login_resp.uid.clone();
-    user_info.token = login_resp.token.clone();
+    user_info.token = login_resp.access_token.clone();
     user_info.refresh_token = login_resp.refresh_token.clone();
 
     // 同时更新request_client的token
     let mut rc = state.rc.lock().await;
-    rc.token = Some(login_resp.token.clone());
+    rc.token = Some(login_resp.access_token.clone());
     rc.refresh_token = Some(login_resp.refresh_token.clone());
 
     info!("handle_login_success, user_info: {:?}", user_info);

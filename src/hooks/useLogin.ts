@@ -60,10 +60,10 @@ export function useLogin() {
 
   /**
    * 登录
-   * @param deviceType 设备类型
+   * @param device 设备类型
    * @param auto 是否自动登录
    */
-  const normalLogin = async (deviceType: "PC" | "MOBILE", auto: boolean = settingStore.login.autoLogin) => {
+  const normalLogin = async (device: "desktop" | "mobile", auto: boolean = settingStore.login.autoLogin) => {
     // TODO: 测试
     // await webSocketRust.initConnect();
     // await openHomeWindow();
@@ -106,9 +106,8 @@ export function useLogin() {
       data: {
         account,
         password,
-        deviceType,
+        device,
         clientId,
-        grantType: "PASSWORD",
         isAutoLogin: auto,
         uid: auto ? userStore.userInfo!.uid : null
       }

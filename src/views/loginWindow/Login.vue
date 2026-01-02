@@ -62,7 +62,7 @@
           :loading="loading"
           :disabled="loginDisabled"
           tertiary
-          @click="normalLogin('PC', false)">
+          @click="normalLogin('desktop', false)">
           <span>{{ loginText }}</span>
         </n-button>
       </n-flex>
@@ -96,7 +96,7 @@
           :disabled="loginDisabled"
           tertiary
           class="gradient-button w-200px mt-12px mb-40px color-#fff"
-          @click="normalLogin('PC', true)">
+          @click="normalLogin('desktop', true)">
           <span>{{ loginText }}</span>
         </n-button>
       </n-flex>
@@ -223,7 +223,7 @@ const closeMenu = (event: MouseEvent) => {
  */
 const enterKey = (event: KeyboardEvent) => {
   if (event.key === "Enter" && !loginDisabled.value) {
-    normalLogin("PC", false);
+    normalLogin("desktop", false);
   }
 };
 
@@ -280,7 +280,7 @@ onMounted(async () => {
   // 自动登录时显示自动登录界面并触发登录
   if (login.value.autoLogin) {
     uiState.value = "auto";
-    await normalLogin("PC", true);
+    await normalLogin("desktop", true);
   } else {
     // 手动登录模式，自动填充第一个历史账号
     uiState.value = "manual";

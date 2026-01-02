@@ -22,8 +22,8 @@ export type UserInfoType = {
 };
 
 export type RegisterUserReq = {
-  // 昵称
-  nickname: string;
+  // 用户名
+  username: string;
   // 邮箱
   email: string;
   // 密码
