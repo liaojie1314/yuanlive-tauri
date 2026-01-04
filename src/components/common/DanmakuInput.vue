@@ -24,19 +24,19 @@
               <div class="settings-item">
                 <span class="settings-label">不透明度</span>
                 <n-slider
-                  v-model:value="danmakuSettings.opacity"
+                  v-model:value="localSettings.opacity"
                   :min="0"
                   :max="100"
                   :step="1"
                   :tooltip="false"
                   @update:value="handleSettingsChange" />
-                <span class="settings-value-right">{{ danmakuSettings.opacity }}%</span>
+                <span class="settings-value-right">{{ localSettings.opacity }}%</span>
               </div>
 
               <div class="settings-item">
                 <span class="settings-label">显示区域</span>
                 <n-slider
-                  v-model:value="danmakuSettings.displayArea"
+                  v-model:value="localSettings.displayArea"
                   :min="1"
                   :max="5"
                   :step="1"
@@ -48,7 +48,7 @@
               <div class="settings-item">
                 <span class="settings-label">字体大小</span>
                 <n-slider
-                  v-model:value="danmakuSettings.fontSize"
+                  v-model:value="localSettings.fontSize"
                   :min="1"
                   :max="5"
                   :step="1"
@@ -60,7 +60,7 @@
               <div class="settings-item">
                 <span class="settings-label">弹幕速度</span>
                 <n-slider
-                  v-model:value="danmakuSettings.speed"
+                  v-model:value="localSettings.speed"
                   :min="1"
                   :max="3"
                   :step="1"
@@ -150,19 +150,19 @@
           <div class="settings-item">
             <span class="settings-label">不透明度</span>
             <n-slider
-              v-model:value="danmakuSettings.opacity"
+              v-model:value="localSettings.opacity"
               :min="0"
               :max="100"
               :step="1"
               :tooltip="false"
               @update:value="handleSettingsChange" />
-            <span class="settings-value-right">{{ danmakuSettings.opacity }}%</span>
+            <span class="settings-value-right">{{ localSettings.opacity }}%</span>
           </div>
 
           <div class="settings-item">
             <span class="settings-label">显示区域</span>
             <n-slider
-              v-model:value="danmakuSettings.displayArea"
+              v-model:value="localSettings.displayArea"
               :min="1"
               :max="5"
               :step="1"
@@ -174,7 +174,7 @@
           <div class="settings-item">
             <span class="settings-label">字体大小</span>
             <n-slider
-              v-model:value="danmakuSettings.fontSize"
+              v-model:value="localSettings.fontSize"
               :min="1"
               :max="5"
               :step="1"
@@ -186,7 +186,7 @@
           <div class="settings-item">
             <span class="settings-label">弹幕速度</span>
             <n-slider
-              v-model:value="danmakuSettings.speed"
+              v-model:value="localSettings.speed"
               :min="1"
               :max="3"
               :step="1"
@@ -238,6 +238,7 @@
 
 <script setup lang="ts">
 import { NSlider, NScrollbar } from "naive-ui";
+import { useDanmakuStore } from "../../stores/danmaku";
 
 defineProps<{
   isEnabled: boolean;
@@ -247,19 +248,10 @@ defineProps<{
 const emit = defineEmits<{
   (e: "send-danmaku", content: string): void;
   (e: "toggle-danmaku"): void;
-  (e: "danmaku-settings-change", settings: DanmakuSettings): void;
   (e: "toggle-danmaku-list"): void;
 }>();
 
-interface DanmakuSettings {
-  opacity: number;
-  fontSize: number;
-  speed: number;
-  position: string;
-  displayArea: number;
-  enableHighContrast: boolean;
-  enableShield: boolean;
-}
+const danmakuStore = useDanmakuStore();
 
 const danmakuText = ref("");
 const showEmojiPicker = ref(false);
@@ -272,6 +264,7 @@ let danmakuSettingsHideTimer: number | null = null;
 let emojiPickerHideTimer: number | null = null;
 let resizeObserver: ResizeObserver | null = null;
 let emojiSelectorHideTimer: number | null = null;
+let settingsChangeDebounceTimer: number | null = null;
 
 // 常用emoji列表，增加数量以展示滚动效果
 const commonEmojis = [
@@ -402,23 +395,43 @@ const handleEmojiSelectorLeave = () => {
   }, 100);
 };
 
-const danmakuSettings = ref<DanmakuSettings>({
-  opacity: 100,
-  fontSize: 3,
-  speed: 2,
-  position: "scroll",
-  displayArea: 3,
-  enableHighContrast: false,
-  enableShield: false
+// 字体大小映射：从实际像素值到滑块值（1-5）
+const fontSizeToSliderMap: Record<number, number> = {
+  12: 1,
+  14: 2,
+  16: 3,
+  18: 4,
+  20: 5
+};
+
+// 从实际像素值获取对应的滑块值
+const getSliderFontSize = (pixelSize: number): number => {
+  return fontSizeToSliderMap[pixelSize] || 3; // 默认返回适中大小
+};
+
+// 本地设置状态，用于滑块交互
+const localSettings = ref({
+  opacity: danmakuStore.opacity,
+  fontSize: getSliderFontSize(danmakuStore.fontSize), // 从store实际像素值映射到滑块值
+  speed: danmakuStore.speed,
+  displayArea: danmakuStore.displayArea
 });
+
+// 监听store变化，更新本地设置
+const updateLocalSettingsFromStore = () => {
+  localSettings.value.opacity = danmakuStore.opacity;
+  localSettings.value.fontSize = getSliderFontSize(danmakuStore.fontSize);
+  localSettings.value.speed = danmakuStore.speed;
+  localSettings.value.displayArea = danmakuStore.displayArea;
+};
 
 const fontSizeOptions = ["超小", "小号", "适中", "大号", "超大"];
 const speedOptions = ["较慢", "适中", "较快"];
 const displayAreaOptions = ["一行", "两行", "25%", "50%", "80%"];
 
-const fontSizeLabel = computed(() => fontSizeOptions[danmakuSettings.value.fontSize - 1]);
-const speedLabel = computed(() => speedOptions[danmakuSettings.value.speed - 1]);
-const displayAreaLabel = computed(() => displayAreaOptions[danmakuSettings.value.displayArea - 1]);
+const fontSizeLabel = computed(() => fontSizeOptions[localSettings.value.fontSize - 1]);
+const speedLabel = computed(() => speedOptions[localSettings.value.speed - 1]);
+const displayAreaLabel = computed(() => displayAreaOptions[localSettings.value.displayArea - 1]);
 
 const checkCompactMode = () => {
   if (containerRef.value) {
@@ -439,6 +452,8 @@ const toggleDanmaku = () => {
 };
 
 const showDanmakuSettings = () => {
+  // 打开设置面板时，从store同步最新设置
+  updateLocalSettingsFromStore();
   showDanmakuSettingsPanel.value = true;
   if (danmakuSettingsHideTimer) {
     clearTimeout(danmakuSettingsHideTimer);
@@ -474,8 +489,38 @@ const hideEmojiPickerHover = () => {
   }, 100);
 };
 
+// 防抖函数，优化设置更新
+const debounce = (func: Function, delay: number) => {
+  return (...args: any[]) => {
+    if (settingsChangeDebounceTimer) {
+      clearTimeout(settingsChangeDebounceTimer);
+    }
+    settingsChangeDebounceTimer = window.setTimeout(() => {
+      func(...args);
+      settingsChangeDebounceTimer = null;
+    }, delay);
+  };
+};
+
+// 防抖处理设置变更
+const debouncedSettingsChange = debounce(() => {
+  // 根据滑块值映射到实际像素值
+  const fontSizeMap: Record<number, number> = {
+    1: 12,
+    2: 14,
+    3: 16,
+    4: 18,
+    5: 20
+  };
+
+  danmakuStore.setFontSize(fontSizeMap[localSettings.value.fontSize]);
+  danmakuStore.setOpacity(localSettings.value.opacity);
+  danmakuStore.setSpeed(localSettings.value.speed);
+  danmakuStore.setDisplayArea(localSettings.value.displayArea);
+}, 300);
+
 const handleSettingsChange = () => {
-  emit("danmaku-settings-change", danmakuSettings.value);
+  debouncedSettingsChange();
 };
 
 const handleSettingsPanelEnter = () => {
@@ -517,22 +562,26 @@ const toggleDanmakuList = () => {
 };
 
 const resetSettings = () => {
-  danmakuSettings.value = {
-    opacity: 100,
-    fontSize: 3,
-    speed: 2,
-    position: "scroll",
-    displayArea: 3,
-    enableHighContrast: false,
-    enableShield: false
-  };
-  emit("danmaku-settings-change", danmakuSettings.value);
+  // 调用store的重置方法
+  danmakuStore.resetSettings();
+  // 更新本地设置
+  updateLocalSettingsFromStore();
+  // 重置滑块值
+  localSettings.value.fontSize = 3;
 };
 
 const handleSelectEmoji = (emoji: string) => {
   danmakuText.value += emoji;
   showEmojiPicker.value = false;
 };
+
+// 监听store中字体大小的变化，实时更新滑块值
+watch(
+  () => danmakuStore.fontSize,
+  (newSize) => {
+    localSettings.value.fontSize = getSliderFontSize(newSize);
+  }
+);
 
 onMounted(() => {
   checkCompactMode();
@@ -553,6 +602,9 @@ onBeforeUnmount(() => {
   }
   if (emojiSelectorHideTimer) {
     clearTimeout(emojiSelectorHideTimer);
+  }
+  if (settingsChangeDebounceTimer) {
+    clearTimeout(settingsChangeDebounceTimer);
   }
   if (resizeObserver) {
     resizeObserver.disconnect();

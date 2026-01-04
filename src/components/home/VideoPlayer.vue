@@ -7,13 +7,13 @@
       <div
         v-for="danmaku in activeDanmakus"
         :key="danmaku.id"
-        class="danmaku-item"
-        :class="`danmaku-${danmaku.position}`"
+        class="danmaku-item danmaku-scroll"
         :style="{
-          fontSize: `${danmaku.fontSize}px`,
-          opacity: danmaku.opacity / 100,
-          top: `${danmaku.top}px`,
-          '--speed': danmaku.speed
+          fontSize: `${danmakuStore.fontSize}px`,
+          opacity: danmakuStore.opacity / 100,
+          '--speed': danmakuStore.speed,
+          top: danmaku.top,
+          marginLeft: danmaku.horizontalOffset ? `${danmaku.horizontalOffset}px` : '0px'
         }"
         @mouseenter="showDanmakuActions(danmaku.id)"
         @mouseleave="hideDanmakuActions()"
@@ -82,7 +82,6 @@
           :is-danmaku-enabled="isDanmakuEnabled"
           @send-danmaku="sendDanmaku"
           @toggle-danmaku="toggleDanmaku"
-          @danmaku-settings-change="handleDanmakuSettingsChange"
           @toggle-danmaku-list="toggleDanmakuList" />
       </div>
 
@@ -166,6 +165,7 @@ import { NSwitch, NDropdown, NSlider } from "naive-ui";
 import DanmakuInput from "../common/DanmakuInput.vue";
 import DanmakuListDialog from "../common/DanmakuListDialog.vue";
 import DanmakuReportDialog from "../common/DanmakuReportDialog.vue";
+import { useDanmakuStore } from "@/stores/danmaku";
 
 // Props
 const props = defineProps<{
@@ -202,21 +202,17 @@ interface Danmaku {
   time: string;
   content: string;
   isLiked: boolean;
-  position: "scroll" | "top" | "bottom";
-  fontSize: number;
-  opacity: number;
-  top: number;
-  color: string;
-  speed: number;
   createdAt: number;
   startTime?: number; // Track when the danmaku animation started
   remainingDuration?: number; // Track remaining animation duration when hovered
+  top?: string; // 固定的垂直位置
+  horizontalOffset?: number; // 水平偏移量，用于避免同时出现的弹幕重叠
 }
 
 // Refs
 const videoContainerRef = ref<HTMLDivElement | null>(null);
-const danmakuContainerRef = ref<HTMLDivElement | null>(null);
 const playerRef = ref<any>(null);
+const danmakuContainerRef = ref<HTMLDivElement | null>(null);
 const leftControlsRef = ref<HTMLDivElement | null>(null);
 const hoveredDanmakuId = ref<string | null>(null);
 
@@ -240,155 +236,83 @@ const danmakuList = ref<Danmaku[]>([
     time: "00:00",
     content: "快跑 这期有脏东西（云耀欧了）",
     isLiked: true,
-    position: "scroll",
-    fontSize: 16,
-    opacity: 100,
-    top: 0,
-    color: "#ffffff",
-    speed: 2,
     createdAt: Date.now()
   },
   {
     id: "2",
-    time: "00:10",
+    time: "00:00",
     content: "不对劲还我植物大战僵尸",
     isLiked: false,
-    position: "scroll",
-    fontSize: 16,
-    opacity: 100,
-    top: 30,
-    color: "#ffffff",
-    speed: 2,
     createdAt: Date.now()
   },
   {
     id: "3",
-    time: "00:14",
+    time: "00:00",
     content: "《关于我开盒自己这件事》",
     isLiked: true,
-    position: "scroll",
-    fontSize: 16,
-    opacity: 100,
-    top: 60,
-    color: "#ffffff",
-    speed: 2,
     createdAt: Date.now()
   },
   {
     id: "4",
-    time: "00:18",
+    time: "00:00",
     content: "我是不是有什么问题",
     isLiked: false,
-    position: "scroll",
-    fontSize: 16,
-    opacity: 100,
-    top: 90,
-    color: "#ffffff",
-    speed: 2,
     createdAt: Date.now()
   },
   {
     id: "5",
-    time: "00:20",
+    time: "00:00",
     content: "我都没看出来是你自己",
     isLiked: false,
-    position: "scroll",
-    fontSize: 16,
-    opacity: 100,
-    top: 120,
-    color: "#ffffff",
-    speed: 2,
     createdAt: Date.now()
   },
   {
     id: "6",
-    time: "00:21",
+    time: "00:02",
     content: "云耀，你在吗云耀",
     isLiked: true,
-    position: "scroll",
-    fontSize: 16,
-    opacity: 100,
-    top: 150,
-    color: "#ffffff",
-    speed: 2,
     createdAt: Date.now()
   },
   {
     id: "7",
-    time: "00:23",
+    time: "00:02",
     content: "现在知道自己多搞笑了吧",
     isLiked: false,
-    position: "scroll",
-    fontSize: 16,
-    opacity: 100,
-    top: 180,
-    color: "#ffffff",
-    speed: 2,
     createdAt: Date.now()
   },
   {
     id: "8",
-    time: "00:25",
+    time: "00:02",
     content: "云耀：我炸了",
     isLiked: true,
-    position: "scroll",
-    fontSize: 16,
-    opacity: 100,
-    top: 210,
-    color: "#ffffff",
-    speed: 2,
     createdAt: Date.now()
   },
   {
     id: "9",
-    time: "00:28",
+    time: "00:02",
     content: "你在教我做事？",
     isLiked: false,
-    position: "scroll",
-    fontSize: 16,
-    opacity: 100,
-    top: 240,
-    color: "#ffffff",
-    speed: 2,
     createdAt: Date.now()
   },
   {
     id: "10",
-    time: "00:30",
+    time: "00:21",
     content: "云耀的小表情太可爱了",
     isLiked: true,
-    position: "scroll",
-    fontSize: 16,
-    opacity: 100,
-    top: 270,
-    color: "#ffffff",
-    speed: 2,
     createdAt: Date.now()
   },
   {
     id: "11",
-    time: "00:32",
+    time: "00:21",
     content: "节目效果拉满",
     isLiked: false,
-    position: "scroll",
-    fontSize: 16,
-    opacity: 100,
-    top: 0,
-    color: "#ffffff",
-    speed: 2,
     createdAt: Date.now()
   },
   {
     id: "12",
-    time: "00:35",
+    time: "00:21",
     content: "我笑出眼泪了",
     isLiked: true,
-    position: "scroll",
-    fontSize: 16,
-    opacity: 100,
-    top: 30,
-    color: "#ffffff",
-    speed: 2,
     createdAt: Date.now()
   },
   {
@@ -396,12 +320,6 @@ const danmakuList = ref<Danmaku[]>([
     time: "00:36",
     content: "这波操作666",
     isLiked: false,
-    position: "scroll",
-    fontSize: 16,
-    opacity: 100,
-    top: 60,
-    color: "#ffffff",
-    speed: 2,
     createdAt: Date.now()
   },
   {
@@ -409,12 +327,6 @@ const danmakuList = ref<Danmaku[]>([
     time: "00:36",
     content: "主播反应太真实了",
     isLiked: true,
-    position: "scroll",
-    fontSize: 16,
-    opacity: 100,
-    top: 90,
-    color: "#ffffff",
-    speed: 2,
     createdAt: Date.now()
   },
   {
@@ -422,12 +334,6 @@ const danmakuList = ref<Danmaku[]>([
     time: "00:37",
     content: "我已经截图了",
     isLiked: false,
-    position: "scroll",
-    fontSize: 16,
-    opacity: 100,
-    top: 120,
-    color: "#ffffff",
-    speed: 2,
     createdAt: Date.now()
   },
   {
@@ -435,12 +341,6 @@ const danmakuList = ref<Danmaku[]>([
     time: "00:40",
     content: "这个视频我看了10遍",
     isLiked: true,
-    position: "scroll",
-    fontSize: 16,
-    opacity: 100,
-    top: 150,
-    color: "#ffffff",
-    speed: 2,
     createdAt: Date.now()
   },
   {
@@ -448,12 +348,6 @@ const danmakuList = ref<Danmaku[]>([
     time: "00:41",
     content: "弹幕大军来袭",
     isLiked: false,
-    position: "scroll",
-    fontSize: 16,
-    opacity: 100,
-    top: 180,
-    color: "#ffffff",
-    speed: 2,
     createdAt: Date.now()
   },
   {
@@ -461,12 +355,6 @@ const danmakuList = ref<Danmaku[]>([
     time: "00:42",
     content: "前方高能预警",
     isLiked: true,
-    position: "scroll",
-    fontSize: 16,
-    opacity: 100,
-    top: 210,
-    color: "#ffffff",
-    speed: 2,
     createdAt: Date.now()
   },
   {
@@ -474,12 +362,6 @@ const danmakuList = ref<Danmaku[]>([
     time: "00:43",
     content: "我来了我来了",
     isLiked: false,
-    position: "scroll",
-    fontSize: 16,
-    opacity: 100,
-    top: 240,
-    color: "#ffffff",
-    speed: 2,
     createdAt: Date.now()
   },
   {
@@ -487,12 +369,6 @@ const danmakuList = ref<Danmaku[]>([
     time: "00:45",
     content: "打卡打卡",
     isLiked: true,
-    position: "scroll",
-    fontSize: 16,
-    opacity: 100,
-    top: 270,
-    color: "#ffffff",
-    speed: 2,
     createdAt: Date.now()
   }
 ]);
@@ -500,14 +376,8 @@ const danmakuList = ref<Danmaku[]>([
 // Active Danmakus that are currently displayed
 const activeDanmakus = ref<Danmaku[]>([]);
 
-// Danmaku Settings
-const danmakuSettings = ref({
-  opacity: 100,
-  fontSize: 16,
-  speed: 2,
-  displayArea: 3,
-  enableHighContrast: false
-});
+// Get danmaku settings from store
+const danmakuStore = useDanmakuStore();
 
 // Open report dialog
 const openDanmakuReportDialog = (arg: number | string) => {
@@ -535,8 +405,9 @@ const handleDanmakuReport = (index: number, type: string, description: string) =
   showDanmakuReportDialog.value = false;
 };
 
-// Refs to track danmaku timers
+// Refs to track danmaku timers and display status
 const danmakuTimers = new Map<string, NodeJS.Timeout>();
+const displayedDanmakuIds = new Set<string>(); // Track which danmakus have been displayed
 
 // Show danmaku actions on hover
 const showDanmakuActions = (danmakuId: string) => {
@@ -554,7 +425,7 @@ const showDanmakuActions = (danmakuId: string) => {
 
       // Calculate elapsed time and remaining duration
       const elapsed = Date.now() - danmaku.startTime;
-      const totalDuration = 8000 / danmaku.speed;
+      const totalDuration = 16000 / danmakuStore.speed;
       danmaku.remainingDuration = Math.max(0, totalDuration - elapsed);
     }
   }
@@ -727,6 +598,20 @@ const togglePlay = () => {
 const seek = (time: number) => {
   if (playerRef.value) {
     playerRef.value.currentTime(time);
+
+    // Reset danmaku state when seeking
+    // Clear displayed danmaku IDs to allow them to be shown again
+    displayedDanmakuIds.clear();
+    // Clear active danmakus
+    activeDanmakus.value = [];
+    // Clear danmaku timers
+    danmakuTimers.forEach((timer) => {
+      clearTimeout(timer);
+    });
+    danmakuTimers.clear();
+    // Reset line management state
+    lineDanmakus.clear();
+    currentLineIndex.value = 0;
   }
 };
 
@@ -751,14 +636,7 @@ const toggleDanmaku = () => {
   emit("danmaku-toggle", isDanmakuEnabled.value);
 };
 
-const handleDanmakuSettingsChange = (settings: any) => {
-  console.log("Danmaku settings changed:", settings);
-  danmakuSettings.value = {
-    ...danmakuSettings.value,
-    ...settings
-  };
-  emit("danmaku-settings-change", settings);
-};
+// Danmaku settings are now managed by the danmakuStore
 
 // Convert time string (mm:ss) to seconds
 const timeStringToSeconds = (timeStr: string): number => {
@@ -766,19 +644,122 @@ const timeStringToSeconds = (timeStr: string): number => {
   return minutes * 60 + seconds;
 };
 
-// Generate a new danmaku object with proper properties
+// 弹幕行管理，使用轮询方式分配行
+const lineHeight = ref<number>(40); // 固定行高，确保足够的垂直间距
+
+// 当前行索引，用于轮询分配行
+const currentLineIndex = ref<number>(0);
+
+// 记录每行的活跃弹幕，用于计算水平偏移
+const lineDanmakus = new Map<number, Danmaku[]>();
+
+// 更新行高，根据当前字体大小
+const updateLineHeight = () => {
+  // 固定行高，确保足够的垂直间距，考虑字体大小和行间距
+  // 增加行高系数，确保垂直方向有足够的间距，避免重叠
+  lineHeight.value = Math.max(45, danmakuStore.fontSize * 3.5);
+};
+
+// 获取当前容器的最大行数
+const getMaxLines = (): number => {
+  const containerHeight = danmakuContainerRef.value?.offsetHeight || 0;
+
+  // 根据displayArea计算最大行数
+  let maxLines: number;
+  switch (danmakuStore.displayArea) {
+    case 1: // 一行
+      maxLines = 1;
+      break;
+    case 2: // 两行
+      maxLines = 2;
+      break;
+    case 3: // 25%
+      maxLines = Math.max(1, Math.floor((containerHeight * 0.25) / lineHeight.value));
+      break;
+    case 4: // 50%
+      maxLines = Math.max(1, Math.floor((containerHeight * 0.5) / lineHeight.value));
+      break;
+    case 5: // 80%
+      maxLines = Math.max(1, Math.floor((containerHeight * 0.8) / lineHeight.value));
+      break;
+    default:
+      maxLines = Math.max(1, Math.floor((containerHeight * 0.5) / lineHeight.value));
+  }
+
+  // 确保最大行数至少为1
+  return Math.max(1, maxLines);
+};
+
+// 使用轮询方式分配行，确保弹幕均匀分布
+const assignLine = (): number => {
+  const maxLines = getMaxLines();
+  const lineIndex = currentLineIndex.value;
+
+  // 递增行索引，循环使用
+  currentLineIndex.value = (currentLineIndex.value + 1) % maxLines;
+
+  return lineIndex;
+};
+
+// 测量弹幕内容的宽度
+const measureDanmakuWidth = (content: string): number => {
+  // 创建一个临时元素来测量文本宽度
+  const tempElement = document.createElement("div");
+  tempElement.textContent = content;
+  tempElement.style.fontSize = `${danmakuStore.fontSize}px`;
+  tempElement.style.position = "absolute";
+  tempElement.style.visibility = "hidden";
+  tempElement.style.whiteSpace = "nowrap";
+  tempElement.style.padding = "4px 8px";
+  document.body.appendChild(tempElement);
+
+  const width = tempElement.offsetWidth;
+  document.body.removeChild(tempElement);
+
+  return width;
+};
+
+// 生成新的弹幕对象，包含固定的垂直位置和水平偏移
 const generateDanmaku = (danmaku: Danmaku): Danmaku => {
+  // 更新行高
+  updateLineHeight();
+
+  // 使用轮询方式分配行
+  const targetLineIndex = assignLine();
+
+  // 计算垂直位置，确保足够的垂直间距
+  const top = `${targetLineIndex * lineHeight.value}px`;
+
+  // 不再使用累积的偏移量，为每个弹幕生成独立的偏移量
+  // 只考虑当前活跃的同一行弹幕，计算水平偏移量
+  const currentLineActiveDanmakus = activeDanmakus.value.filter((d) => {
+    // 获取当前弹幕的top值，与目标行比较
+    const danmakuTop = parseInt(d.top || "0", 10);
+    const targetTop = targetLineIndex * lineHeight.value;
+    return danmakuTop === targetTop;
+  });
+
+  // 计算当前行已占用的总宽度，只考虑当前活跃的弹幕
+  const totalWidth = currentLineActiveDanmakus.reduce((sum, d) => {
+    return sum + (measureDanmakuWidth(d.content) + 20); // 20px作为弹幕之间的间距
+  }, 0);
+
+  // 计算水平偏移量，确保与前一个弹幕有20px的间距
+  const horizontalOffset = totalWidth;
+
+  // 不再使用lineDanmakus存储，避免累积偏移量
+  // 直接使用activeDanmakus来管理当前活跃的弹幕
+
   return {
     ...danmaku,
-    fontSize: danmakuSettings.value.fontSize,
-    opacity: danmakuSettings.value.opacity,
-    speed: danmakuSettings.value.speed
+    top, // 存储固定的垂直位置
+    horizontalOffset // 存储水平偏移量，用于调整初始位置
   };
 };
 
 // Update active danmakus based on current video time
 const updateActiveDanmakus = () => {
-  if (!playerRef.value || !isDanmakuEnabled.value || playerRef.value.paused()) {
+  if (!playerRef.value || !isDanmakuEnabled.value) {
     return;
   }
 
@@ -790,30 +771,27 @@ const updateActiveDanmakus = () => {
 
     // Check if this danmaku should be displayed now
     // The danmaku should be added when current time reaches its time
-    // and it hasn't been added yet
+    // and it hasn't been added yet and hasn't been displayed before
     const isAlreadyActive = activeDanmakus.value.some((d) => d.id === danmaku.id);
+    const hasBeenDisplayed = displayedDanmakuIds.has(danmaku.id);
 
-    // Only add if not already active and current time >= danmaku time
-    // We use a small buffer to handle frame rate differences
-    if (!isAlreadyActive && currentTime >= danmakuTime && currentTime - danmakuTime < 1) {
+    // Only add if not already active, hasn't been displayed, and current time is within a window of danmaku time
+    // Use a 1s window to ensure danmakus appear at the correct time point, increasing tolerance for video playback variations
+    // Special handling for 00:00 danmakus to ensure they are displayed
+    const timeWindow = 1;
+    const isZeroTimeDanmaku = danmakuTime === 0;
+    const isWithinTimeWindow = currentTime >= danmakuTime && currentTime - danmakuTime < timeWindow;
+    const shouldAdd =
+      !isAlreadyActive && !hasBeenDisplayed && (isWithinTimeWindow || (isZeroTimeDanmaku && currentTime < timeWindow));
+    if (shouldAdd) {
       const newDanmaku = generateDanmaku(danmaku);
-
-      // Calculate random top position for scrolling danmakus
-      if (newDanmaku.position === "scroll") {
-        const containerHeight = danmakuContainerRef.value?.offsetHeight || 300;
-        const displayAreaHeight = containerHeight * (danmakuSettings.value.displayArea / 5);
-        newDanmaku.top = Math.random() * (displayAreaHeight - 30);
-      } else if (newDanmaku.position === "top") {
-        newDanmaku.top = 10;
-      } else {
-        newDanmaku.top = (danmakuContainerRef.value?.offsetHeight || 300) - 40;
-      }
-
-      // Calculate total animation duration based on speed
-      const animationDuration = 8000 / newDanmaku.speed;
+      // Calculate animation duration based on speed from store
+      const animationDuration = 12000 / danmakuStore.speed;
 
       // Add to active danmakus list
       activeDanmakus.value.push(newDanmaku);
+      // Mark as displayed to prevent repeat display
+      displayedDanmakuIds.add(danmaku.id);
 
       // Function to set timer for danmaku removal
       const setDanmakuTimer = (danmakuId: string, duration: number) => {
@@ -844,15 +822,14 @@ const updateActiveDanmakus = () => {
     }
   });
 
-  // Clean up any danmakus that should not be active anymore
-  // This handles cases where the video is seeked backwards
+  // No need for cleanup based on time difference anymore
+  // We're only adding danmakus at their correct time points and they'll be removed by their own timers
+  // Only remove hovered danmakus when they're no longer hovered
   activeDanmakus.value = activeDanmakus.value.filter((danmaku) => {
-    const danmakuTime = timeStringToSeconds(danmaku.time);
     // Keep danmaku if:
-    // 1. It's within the current playback window, OR
+    // 1. It has a timer (still active), OR
     // 2. It's currently being hovered
-    // This ensures hovered danmakus are never removed by cleanup logic
-    return currentTime >= danmakuTime || hoveredDanmakuId.value === danmaku.id;
+    return danmakuTimers.has(danmaku.id) || hoveredDanmakuId.value === danmaku.id;
   });
 };
 
@@ -1034,7 +1011,7 @@ onMounted(() => {
         const danmaku = activeDanmakus.value.find((d) => d.id === danmakuId);
         if (danmaku && danmaku.startTime) {
           const elapsed = Date.now() - danmaku.startTime;
-          const totalDuration = 8000 / danmaku.speed;
+          const totalDuration = 12000 / danmakuStore.speed;
           danmaku.remainingDuration = Math.max(0, totalDuration - elapsed);
         }
       });
@@ -1042,6 +1019,20 @@ onMounted(() => {
 
     player.on("ended", () => {
       emit("ended");
+
+      // Reset danmaku state for replaying
+      displayedDanmakuIds.clear();
+      activeDanmakus.value = [];
+
+      // Clear all danmaku timers
+      danmakuTimers.forEach((timer) => {
+        clearTimeout(timer);
+      });
+      danmakuTimers.clear();
+
+      // Reset line management state
+      lineDanmakus.clear();
+      currentLineIndex.value = 0;
     });
 
     player.on("error", (error: any) => {
@@ -1049,12 +1040,38 @@ onMounted(() => {
       emit("error", error);
     });
 
+    // Track if we've already reset the danmaku state for this play session
+    let hasResetThisSession = false;
+
     player.on("timeupdate", () => {
       const current = player.currentTime() || 0;
       const total = player.duration() || 0;
       currentTime.value = current;
       duration.value = total;
       emit("timeupdate", current, total);
+
+      // Reset danmaku state when video starts playing from the beginning, but only once per session
+      if (current < 0.5 && !hasResetThisSession) {
+        displayedDanmakuIds.clear();
+        activeDanmakus.value = [];
+
+        // Clear all danmaku timers
+        danmakuTimers.forEach((timer) => {
+          clearTimeout(timer);
+        });
+        danmakuTimers.clear();
+
+        // Reset line management state
+        lineDanmakus.clear();
+        currentLineIndex.value = 0;
+
+        // Mark as reset for this session
+        hasResetThisSession = true;
+      }
+      // Reset the flag when video is not at the beginning anymore
+      else if (current >= 0.5) {
+        hasResetThisSession = false;
+      }
 
       // Update active danmakus based on current time
       updateActiveDanmakus();
@@ -1072,6 +1089,61 @@ onMounted(() => {
 
     player.on("loadeddata", () => {
       console.log("Video data loaded successfully");
+
+      // Show 00:00 danmakus immediately when video data is loaded
+      // This ensures danmakus appear right when the video starts
+      if (playerRef.value) {
+        // Reset danmaku state first
+        displayedDanmakuIds.clear();
+        activeDanmakus.value = [];
+
+        // Clear danmaku timers
+        danmakuTimers.forEach((timer) => {
+          clearTimeout(timer);
+        });
+        danmakuTimers.clear();
+
+        // Reset line management state
+        lineDanmakus.clear();
+        currentLineIndex.value = 0;
+
+        // Process 00:00 danmakus immediately
+        danmakuList.value.forEach((danmaku) => {
+          const danmakuTime = timeStringToSeconds(danmaku.time);
+          if (danmakuTime === 0) {
+            const isAlreadyActive = activeDanmakus.value.some((d) => d.id === danmaku.id);
+            const hasBeenDisplayed = displayedDanmakuIds.has(danmaku.id);
+            if (!isAlreadyActive && !hasBeenDisplayed) {
+              const newDanmaku = generateDanmaku(danmaku);
+              const animationDuration = 12000 / danmakuStore.speed;
+
+              activeDanmakus.value.push(newDanmaku);
+              displayedDanmakuIds.add(danmaku.id);
+
+              const setDanmakuTimer = (danmakuId: string, duration: number) => {
+                const danmaku = activeDanmakus.value.find((d) => d.id === danmakuId);
+                if (danmaku) {
+                  danmaku.startTime = Date.now();
+                }
+
+                const timer = setTimeout(() => {
+                  if (hoveredDanmakuId.value !== danmakuId) {
+                    const index = activeDanmakus.value.findIndex((d) => d.id === danmakuId);
+                    if (index !== -1) {
+                      activeDanmakus.value.splice(index, 1);
+                    }
+                    danmakuTimers.delete(danmakuId);
+                  }
+                }, duration);
+
+                danmakuTimers.set(danmakuId, timer);
+              };
+
+              setDanmakuTimer(newDanmaku.id, animationDuration);
+            }
+          }
+        });
+      }
     });
 
     player.on("waiting", () => {
@@ -1080,6 +1152,14 @@ onMounted(() => {
 
     player.on("stalled", () => {
       console.log("Video playback stalled");
+    });
+
+    player.on("seeked", () => {
+      console.log("Video seeked to new position");
+
+      // Update active danmakus after seeking completes
+      // This ensures danmakus at the new time position are displayed
+      updateActiveDanmakus();
     });
   } catch (error) {
     console.error("Failed to initialize video player:", error);
@@ -1110,12 +1190,25 @@ onBeforeUnmount(() => {
     clearTimeout(timer);
   });
   danmakuTimers.clear();
+
+  // Clear displayed danmaku IDs to reset for next playback
+  displayedDanmakuIds.clear();
 });
 
 // Update player when src changes
 watch(
   () => props.src,
   (newSrc) => {
+    // Clear displayed danmaku IDs when video source changes
+    displayedDanmakuIds.clear();
+    // Clear active danmakus
+    activeDanmakus.value = [];
+    // Clear all danmaku timers
+    danmakuTimers.forEach((timer) => {
+      clearTimeout(timer);
+    });
+    danmakuTimers.clear();
+
     if (playerRef.value) {
       playerRef.value.src(newSrc);
       playerRef.value.load();
@@ -1601,6 +1694,10 @@ defineExpose({
   align-items: center;
   gap: 8px;
   z-index: 100;
+  margin: 0;
+  line-height: 1.4;
+  box-sizing: border-box;
+  overflow: visible;
 }
 
 .danmaku-item {
@@ -1622,9 +1719,10 @@ defineExpose({
 .danmaku-scroll {
   left: 100%;
   animation: danmaku-scroll linear forwards;
-  animation-duration: calc(8s / var(--speed, 1));
+  animation-duration: calc(12s / var(--speed, 1));
   animation-fill-mode: forwards;
   animation-timing-function: linear;
+  animation-play-state: running;
 }
 
 .danmaku-top,
@@ -1648,11 +1746,9 @@ defineExpose({
 @keyframes danmaku-scroll {
   from {
     left: 100%; /* Start from outside the right edge */
-    transform: translateX(0);
   }
   to {
-    left: -100%; /* Move completely outside the left edge */
-    transform: translateX(0);
+    left: -300%; /* Move completely outside the left edge, using a larger value to ensure even long弹幕 disappear */
   }
 }
 

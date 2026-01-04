@@ -82,7 +82,9 @@ export enum StoresEnum {
   // 用户
   USER = "user",
   // 设置
-  SETTING = "setting"
+  SETTING = "setting",
+  // 弹幕
+  DANMAKU = "danmaku"
 }
 
 /** 本地存储的key */
