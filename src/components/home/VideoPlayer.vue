@@ -3,7 +3,7 @@
     <div ref="videoContainerRef" class="video-container"></div>
 
     <!-- Danmaku Container -->
-    <div v-if="isDanmakuEnabled" ref="danmakuContainerRef" class="danmaku-container">
+    <div v-if="danmakuStore.enabled" ref="danmakuContainerRef" class="danmaku-container">
       <div
         v-for="danmaku in activeDanmakus"
         :key="danmaku.id"
@@ -79,7 +79,7 @@
         <DanmakuInput
           class="control-item"
           :is-enabled="true"
-          :is-danmaku-enabled="isDanmakuEnabled"
+          :is-danmaku-enabled="danmakuStore.enabled"
           @send-danmaku="sendDanmaku"
           @toggle-danmaku="toggleDanmaku"
           @toggle-danmaku-list="toggleDanmakuList" />
@@ -90,26 +90,26 @@
         <!-- Autoplay Toggle -->
         <div class="control-item">
           <span class="control-text">连播</span>
-          <n-switch v-model:value="isAutoplay" @update:value="toggleAutoplay" class="control-switch" />
+          <n-switch v-model:value="videoStore.autoplay" @update:value="toggleAutoplay" class="control-switch" />
         </div>
 
         <!-- Clear Screen Toggle -->
         <div class="control-item">
           <span class="control-text">清屏</span>
-          <n-switch v-model:value="isClearScreen" @update:value="toggleClearScreen" class="control-switch" />
+          <n-switch v-model:value="videoStore.clearScreen" @update:value="toggleClearScreen" class="control-switch" />
         </div>
 
         <!-- Resolution Control -->
         <div class="control-item">
           <n-dropdown :options="resolutionOptions" @select="switchResolution">
-            <div class="control-icon">{{ currentResolution }}</div>
+            <div class="control-icon">{{ videoStore.resolution }}</div>
           </n-dropdown>
         </div>
 
         <!-- Playback Rate Control -->
         <div class="control-item">
           <n-dropdown :options="playbackRateOptions" @select="setPlaybackRate">
-            <div class="control-icon">{{ playbackRate }}x</div>
+            <div class="control-icon">{{ videoStore.playbackRate }}x</div>
           </n-dropdown>
         </div>
 
@@ -124,8 +124,8 @@
         <div class="control-item volume-control">
           <div @click="toggleMute" @mouseenter="showVolumeSlider = true" @mouseleave="showVolumeSlider = false">
             <span class="control-icon">
-              <i-ph-speaker-slash v-if="isMuted || volume === 0" class="iconify-icon" />
-              <i-ph-speaker-low v-else-if="volume < 0.5" class="iconify-icon" />
+              <i-ph-speaker-slash v-if="videoStore.muted || videoStore.volume === 0" class="iconify-icon" />
+              <i-ph-speaker-low v-else-if="videoStore.volume / 100 < 0.5" class="iconify-icon" />
               <i-ph-speaker-high v-else class="iconify-icon" />
             </span>
           </div>
@@ -134,7 +134,7 @@
             v-show="showVolumeSlider"
             @mouseenter="showVolumeSlider = true"
             @mouseleave="showVolumeSlider = false">
-            <n-slider v-model:value="volume" :min="0" :max="1" :step="0.05" @update:value="setVolume" vertical />
+            <n-slider v-model:value="videoStore.volume" :min="0" :max="100" @update:value="setVolume" vertical />
           </div>
         </div>
 
@@ -166,6 +166,7 @@ import DanmakuInput from "../common/DanmakuInput.vue";
 import DanmakuListDialog from "../common/DanmakuListDialog.vue";
 import DanmakuReportDialog from "../common/DanmakuReportDialog.vue";
 import { useDanmakuStore } from "@/stores/danmaku";
+import { useVideoStore } from "@/stores/video";
 
 // Props
 const props = defineProps<{
@@ -217,13 +218,9 @@ const leftControlsRef = ref<HTMLDivElement | null>(null);
 const hoveredDanmakuId = ref<string | null>(null);
 
 // States for custom controls
-const isAutoplay = ref(false);
-const isClearScreen = ref(false);
-const isDanmakuEnabled = ref(true);
 const isMiniWindow = ref(false);
 const isPlaying = ref(false);
 const isFullscreen = ref(false);
-const playbackRate = ref(1.0);
 const playbackRates = [0.5, 0.75, 1.0, 1.25, 1.5, 2.0];
 
 // Danmaku List Dialog
@@ -378,6 +375,7 @@ const activeDanmakus = ref<Danmaku[]>([]);
 
 // Get danmaku settings from store
 const danmakuStore = useDanmakuStore();
+const videoStore = useVideoStore();
 
 // Open report dialog
 const openDanmakuReportDialog = (arg: number | string) => {
@@ -472,8 +470,6 @@ const toggleDanmakuLike = (danmakuId: string) => {
   }
 };
 const playbackRateOptions = playbackRates.map((rate) => ({ label: `${rate}x`, key: rate }));
-const volume = ref(0.8);
-const isMuted = ref(false);
 const showVolumeSlider = ref(false);
 const currentTime = ref(0);
 const duration = ref(0);
@@ -513,7 +509,6 @@ const resolutionOptions = [
   { label: "标清540P", key: "540p" },
   { label: "智能", key: "auto" }
 ];
-const currentResolution = ref(resolutionOptions[4].key); // 默认智能
 
 // 全屏切换
 const toggleFullscreen = () => {
@@ -561,24 +556,23 @@ document.addEventListener("MSFullscreenChange", () => {
 
 // 音量控制
 const setVolume = (newVolume: number) => {
-  volume.value = newVolume;
+  videoStore.setVolume(newVolume);
   if (playerRef.value) {
-    playerRef.value.volume(newVolume);
-    playerRef.value.muted(false);
-    isMuted.value = false;
+    playerRef.value.volume(newVolume / 100);
   }
 };
 
 const toggleMute = () => {
-  isMuted.value = !isMuted.value;
+  videoStore.toggleMute();
   if (playerRef.value) {
-    playerRef.value.muted(isMuted.value);
+    playerRef.value.muted(videoStore.muted);
+    playerRef.value.volume(videoStore.volume / 100);
   }
 };
 
 // 切换播放速度
 const setPlaybackRate = (key: number) => {
-  playbackRate.value = key;
+  videoStore.setPlaybackRate(key);
   if (playerRef.value) {
     playerRef.value.playbackRate(key);
   }
@@ -622,18 +616,21 @@ const sendDanmaku = (content: string, isImage?: boolean) => {
 };
 
 const toggleAutoplay = () => {
-  console.log(isAutoplay.value);
-  emit("autoplay-change", isAutoplay.value);
+  const newValue = !videoStore.autoplay;
+  videoStore.setAutoplay(newValue);
+  emit("autoplay-change", newValue);
 };
 
 const toggleClearScreen = () => {
-  console.log(isClearScreen.value);
-  emit("clear-screen-change", isClearScreen.value);
+  const newValue = !videoStore.clearScreen;
+  videoStore.setClearScreen(newValue);
+  emit("clear-screen-change", newValue);
 };
 
 const toggleDanmaku = () => {
-  isDanmakuEnabled.value = !isDanmakuEnabled.value;
-  emit("danmaku-toggle", isDanmakuEnabled.value);
+  const newState = !danmakuStore.enabled;
+  danmakuStore.setEnabled(newState);
+  emit("danmaku-toggle", newState);
 };
 
 // Danmaku settings are now managed by the danmakuStore
@@ -759,7 +756,7 @@ const generateDanmaku = (danmaku: Danmaku): Danmaku => {
 
 // Update active danmakus based on current video time
 const updateActiveDanmakus = () => {
-  if (!playerRef.value || !isDanmakuEnabled.value) {
+  if (!playerRef.value || !danmakuStore.enabled) {
     return;
   }
 
@@ -840,7 +837,7 @@ const toggleDanmakuList = () => {
 
 // Switch resolution
 const switchResolution = (key: string) => {
-  currentResolution.value = key;
+  videoStore.setResolution(key);
   if (playerRef.value && props.src) {
     // 假设不同分辨率对应不同URL，实际需根据业务逻辑调整
     const newSrc = `${props.src}?resolution=${key}`;
@@ -939,7 +936,7 @@ onMounted(() => {
   const options: any = {
     controls: false, // 隐藏自带控制栏
     autoplay: props.autoplay || false,
-    muted: props.muted || false,
+    muted: videoStore.muted,
     loop: props.loop || false,
     preload: props.preload || "metadata", // 使用metadata预加载以提高性能
     poster: props.poster || "",
@@ -961,6 +958,10 @@ onMounted(() => {
     // Initialize player
     const player = videojs(videoElement, options);
     playerRef.value = player;
+
+    // Set initial volume from videoStore
+    player.volume(videoStore.volume / 100);
+    player.muted(videoStore.muted);
 
     // Emit ready event
     emit("ready", player);
@@ -1078,8 +1079,13 @@ onMounted(() => {
     });
 
     player.on("volumechange", () => {
-      const volume = player.volume() || 0;
-      emit("volumechange", volume);
+      const playerVolume = player.volume() || 0;
+      const volumeValue = Math.round(playerVolume * 100);
+      const isMuted = player.muted();
+      console.log("volumechange", playerVolume, isMuted, videoStore.muted);
+      videoStore.setVolume(volumeValue);
+
+      emit("volumechange", playerVolume);
     });
 
     // 监听视频加载事件

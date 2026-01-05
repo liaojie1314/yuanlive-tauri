@@ -1074,7 +1074,7 @@ onBeforeUnmount(() => {
   --n-scrollbar-track-background-color: rgba(255, 255, 255, 0.05);
 }
 
-:deep(.n-scrollbar-rail) {
-  background-color: transparent;
+:deep(.n-scrollbar-rail__scrollbar) {
+  width: 3px !important;
 }
 </style>

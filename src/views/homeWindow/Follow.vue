@@ -37,9 +37,23 @@
               :key="follow.id"
               class="follow-item flex items-center justify-between py-2 hover:bg-gray-50 rounded-lg cursor-pointer overflow-hidden transition-all duration-300">
               <div class="flex items-center gap-3 flex-1 min-w-0 overflow-hidden">
-                <!-- 头像区域 -->
+                <!-- 头像区域，折叠时hover显示名称 -->
                 <div class="ml-2 relative w-10 h-10 flex-shrink-0">
-                  <img :src="follow.avatar" :alt="follow.name" class="w-full h-full rounded-full object-cover" />
+                  <n-popover trigger="hover" placement="right" :show-arrow="false" :delay="200">
+                    <!-- 头像作为触发元素 -->
+                    <template #trigger>
+                      <img
+                        :src="follow.avatar"
+                        :alt="follow.name"
+                        class="w-full h-full rounded-full object-cover cursor-pointer" />
+                    </template>
+                    <!-- 弹出内容，仅在折叠状态下显示，限制长度 -->
+                    <div
+                      v-show="isCollapsed"
+                      class="px-2 py-1 text-sm rounded max-w-[100px] bg-white text-gray-800 whitespace-nowrap overflow-hidden text-ellipsis">
+                      {{ follow.name }}
+                    </div>
+                  </n-popover>
                 </div>
                 <!-- 名称和未读计数（展开状态下显示） -->
                 <div v-show="!isCollapsed" class="flex-1 min-w-0 overflow-hidden">
@@ -68,7 +82,7 @@
 
 <script setup lang="ts">
 import { ref } from "vue";
-import { NButton, NIcon, NScrollbar } from "naive-ui";
+import { NButton, NIcon, NScrollbar, NPopover } from "naive-ui";
 import VideoPlayer from "@/components/home/VideoPlayer.vue";
 
 // 定义关注列表项的接口

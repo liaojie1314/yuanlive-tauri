@@ -84,7 +84,9 @@ export enum StoresEnum {
   // 设置
   SETTING = "setting",
   // 弹幕
-  DANMAKU = "danmaku"
+  DANMAKU = "danmaku",
+  // 视频
+  VIDEO = "video"
 }
 
 /** 本地存储的key */

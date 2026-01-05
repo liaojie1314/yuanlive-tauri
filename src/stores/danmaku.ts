@@ -1,5 +1,4 @@
 import { defineStore } from "pinia";
-import { ref } from "vue";
 import { StoresEnum } from "../enums";
 
 /**
@@ -23,6 +22,9 @@ export const useDanmakuStore = defineStore(
 
     // 弹幕显示区域，默认3/5
     const displayArea = ref<number>(3);
+
+    // 弹幕开关状态，默认开启
+    const enabled = ref<boolean>(true);
 
     /**
      * 设置弹幕字体大小
@@ -57,6 +59,14 @@ export const useDanmakuStore = defineStore(
     };
 
     /**
+     * 设置弹幕开关状态
+     * @param value 开关状态
+     */
+    const setEnabled = (value: boolean) => {
+      enabled.value = value;
+    };
+
+    /**
      * 重置弹幕设置到默认值
      */
     const resetSettings = () => {
@@ -64,6 +74,7 @@ export const useDanmakuStore = defineStore(
       opacity.value = 100;
       speed.value = 2;
       displayArea.value = 3;
+      enabled.value = true;
     };
 
     return {
@@ -73,12 +84,14 @@ export const useDanmakuStore = defineStore(
       opacity,
       speed,
       displayArea,
+      enabled,
 
       // 方法
       setFontSize,
       setOpacity,
       setSpeed,
       setDisplayArea,
+      setEnabled,
       resetSettings
     };
   },
