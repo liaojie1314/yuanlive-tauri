@@ -65,6 +65,7 @@
     "@biomejs/biome": "2.3.8",
     "@commitlint/cli": "^20.1.0",
     "@commitlint/config-conventional": "^20.0.0",
+    "@iconify-json/fluent": "^1.2.36",
     "@iconify-json/material-symbols": "^1.2.50",
     "@iconify-json/mdi": "^1.2.3",
     "@iconify-json/ph": "^1.2.2",

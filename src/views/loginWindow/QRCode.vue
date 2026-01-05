@@ -148,7 +148,7 @@ const startPolling = () => {
   pollInterval.value = setInterval(async () => {
     // 超时保护：超过 5 分钟自动停止并提示
     if (pollStartAt.value && Date.now() - pollStartAt.value > MAX_POLL_DURATION) {
-      clearPolling;
+      clearPolling();
       handleError("expired");
       return;
     }
@@ -161,7 +161,7 @@ const startPolling = () => {
         uuid: qrCodeResp.value.uuid
       });
       switch (res.status) {
-        case "PENDING":
+        case "WAITING":
           // 等待中
           break;
         case "SCANNED":
@@ -170,9 +170,9 @@ const startPolling = () => {
           break;
         case "CONFIRMED":
           // 已确认
-          handleConfirmed(res);
+          await handleConfirmed(res);
           break;
-        case "EXPIRED":
+        case "TIMEOUT":
           // 已过期
           clearPolling();
           handleError("expired");

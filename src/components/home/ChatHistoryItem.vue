@@ -14,8 +14,7 @@
         :show-arrow="false"
         placement="right-start"
         @select="handleMenuSelect">
-        <button
-          class="w-6 h-6 flex items-center justify-center rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
+        <button class="w-6 h-6 flex items-center justify-center rounded-full">
           <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
             <path
               d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z" />
