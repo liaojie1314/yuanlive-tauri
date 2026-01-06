@@ -3,7 +3,10 @@
  * 格式: { 模块路径片段: chunk 名称 }
  */
 export const manualChunkConfig: Record<string, string> = {
-  "src/router/index.ts": "router"
+  "src/enums/index.ts": "enums",
+  "src/router/index.ts": "router",
+  "src/hooks/useLogin.ts": "login-hook",
+  "src/utils/TauriInvokeHandler.ts": "tauri-invoke"
 };
 
 /**

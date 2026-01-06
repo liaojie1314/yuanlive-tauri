@@ -21,7 +21,7 @@
     "======== 打包桌面应用程序 ========": "",
     "tauri:build": "tauri build",
     "======== 安装依赖前执行 ========": "",
-    "preinstall": "npx only-allow pnpm",
+    "preinstall": "pnpm dlx only-allow pnpm && node scripts/check-all.js",
     "========= 使用commit来进行代码提交 =========": "",
     "commit": "git add . && git-cz",
     "========= 只检查代码问题和格式(不修复) =========": "",
