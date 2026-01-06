@@ -4,7 +4,7 @@
     <div
       :class="[
         'follow-container',
-        isCollapsed ? 'w-[64px]' : 'w-[20%] min-w-[200px]',
+        isCollapsed ? 'w-[64px]' : 'w-[200px]',
         'flex flex-col overflow-y-auto select-none overflow-hidden transition-all duration-300'
       ]">
       <!-- 顶部标题区域 -->

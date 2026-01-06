@@ -4,11 +4,13 @@ import { pinia } from "@/stores";
 import router from "@/router";
 import { createApp } from "vue";
 import { initializePlatform } from "@/utils/PlatformUtils.ts";
+import { startWebVitalObserver } from "@/utils/WebVitalsObserver.ts";
 import { setupI18n } from "@/services/i18n.ts";
 import App from "@/App.vue";
 import { AppException } from "@/common/exception.ts";
 
 initializePlatform();
+startWebVitalObserver();
 const app = createApp(App);
 app.use(router).use(pinia).use(setupI18n).mount("#app");
 app.config.errorHandler = (err) => {
