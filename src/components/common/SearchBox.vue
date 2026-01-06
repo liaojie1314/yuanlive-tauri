@@ -52,13 +52,22 @@
             </div>
           </div>
           <div class="flex flex-wrap gap-2">
-            <span
+            <div
               v-for="(item, index) in searchHistory"
               :key="index"
-              class="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm cursor-pointer hover:bg-gray-200 transition-colors"
-              @click="handleHistoryClick(item)">
-              {{ item }}
-            </span>
+              class="relative px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm cursor-pointer hover:bg-gray-200 transition-colors flex items-center">
+              <span @click="handleHistoryClick(item)">{{ item }}</span>
+              <!-- 删除图标 -->
+              <div
+                class="absolute right-0 top-[2px] transform -translate-y-1/2 w-3 h-3 rounded-full bg-gray-200 hover:text-gray-700 transition-colors cursor-pointer flex items-center justify-center"
+                @click.stop="deleteSearchHistory(index)"
+                @mousedown.stop>
+                <svg class="w-3 h-3" viewBox="0 0 24 24" fill="currentColor">
+                  <path
+                    d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
+                </svg>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -114,7 +123,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
+import { StorageKeyEnum } from "@/enums";
 
 defineOptions({
   name: "SearchBox"
@@ -128,7 +137,12 @@ const showDropdown = ref(false);
 const isDropdownClicked = ref(false);
 
 // 搜索历史记录
-const searchHistory = ref<string[]>(["111"]);
+const getSearchHistory = (): string[] => {
+  const stored = localStorage.getItem(StorageKeyEnum.SEARCH_HISTORY);
+  return stored ? JSON.parse(stored) : [];
+};
+
+const searchHistory = ref<string[]>(getSearchHistory());
 
 // 搜索建议
 const searchSuggestions = ref<string[]>([
@@ -192,6 +206,11 @@ const clearSearchHistory = () => {
   searchHistory.value = [];
 };
 
+// 删除单个搜索历史
+const deleteSearchHistory = (index: number) => {
+  searchHistory.value.splice(index, 1);
+};
+
 // 刷新搜索建议
 const handleRefreshSuggestions = () => {
   // 这里可以添加刷新逻辑，比如从服务器获取新的建议
@@ -218,6 +237,15 @@ const handleDropdownMousedown = () => {
 const clearInput = () => {
   searchQuery.value = "";
 };
+
+// 监听搜索历史变化，自动保存到localStorage
+watch(
+  searchHistory,
+  (newHistory) => {
+    localStorage.setItem(StorageKeyEnum.SEARCH_HISTORY, JSON.stringify(newHistory));
+  },
+  { deep: true }
+);
 </script>
 
 <style scoped>

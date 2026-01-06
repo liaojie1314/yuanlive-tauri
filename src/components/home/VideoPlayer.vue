@@ -615,16 +615,14 @@ const sendDanmaku = (content: string, isImage?: boolean) => {
   }
 };
 
-const toggleAutoplay = () => {
-  const newValue = !videoStore.autoplay;
-  videoStore.setAutoplay(newValue);
-  emit("autoplay-change", newValue);
+const toggleAutoplay = (val: boolean) => {
+  videoStore.setAutoplay(val);
+  emit("autoplay-change", val);
 };
 
-const toggleClearScreen = () => {
-  const newValue = !videoStore.clearScreen;
-  videoStore.setClearScreen(newValue);
-  emit("clear-screen-change", newValue);
+const toggleClearScreen = (val: boolean) => {
+  videoStore.setClearScreen(val);
+  emit("clear-screen-change", val);
 };
 
 const toggleDanmaku = () => {
@@ -1081,10 +1079,7 @@ onMounted(() => {
     player.on("volumechange", () => {
       const playerVolume = player.volume() || 0;
       const volumeValue = Math.round(playerVolume * 100);
-      const isMuted = player.muted();
-      console.log("volumechange", playerVolume, isMuted, videoStore.muted);
       videoStore.setVolume(volumeValue);
-
       emit("volumechange", playerVolume);
     });
 

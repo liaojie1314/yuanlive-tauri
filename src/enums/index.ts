@@ -94,7 +94,8 @@ export enum StorageKeyEnum {
   CLIENT_ID = "clientId",
   DEVICE_FINGERPRINT = "deviceFingerprint",
   PROXY_SETTINGS = "proxySettings",
-  SETTING = "setting"
+  SETTING = "setting",
+  SEARCH_HISTORY = "searchHistory"
 }
 
 /** WebSocket 响应消息类型 */
