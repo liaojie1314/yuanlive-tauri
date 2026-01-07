@@ -14,7 +14,7 @@ static GLOBAL_WS_CLIENT: OnceLock<Arc<RwLock<Option<WebSocketClient>>>> = OnceLo
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct InitWsParams {
-    pub client_id: String,
+    pub device_id: String,
 }
 
 /// WebSocket 消息发送参数
@@ -68,7 +68,7 @@ pub async fn ws_init_connection(
     let rc = state.rc.lock().await;
     let config = WebSocketConfig {
         server_url: state.config.lock().await.ws_url.clone(),
-        client_id: params.client_id,
+        device_id: params.device_id,
         token: rc.token.clone(),
         ..Default::default()
     };

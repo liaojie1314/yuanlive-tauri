@@ -283,8 +283,8 @@ const handleError = (key: ScanStatusTextKey = "generalError") => {
 onMounted(async () => {
   showTray.value = false;
   // 存储此次登陆设备指纹
-  const clientId = await getEnhancedFingerprint();
-  localStorage.setItem(StorageKeyEnum.CLIENT_ID, clientId);
+  const deviceId = await getEnhancedFingerprint();
+  localStorage.setItem(StorageKeyEnum.DEVICE_ID, deviceId);
   await handleQRCode();
 });
 

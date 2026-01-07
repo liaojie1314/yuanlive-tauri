@@ -267,9 +267,9 @@ impl WebSocketClient {
         let mut url = Url::parse(&config.server_url)
             .map_err(|e| anyhow::anyhow!("Invalid WebSocket URL '{}': {}", config.server_url, e))?;
         url.query_pairs_mut()
-            .append_pair("clientId", &config.client_id);
+            .append_pair("deviceID", &config.device_id);
         if let Some(ref token) = config.token {
-            url.query_pairs_mut().append_pair("Token", token);
+            url.query_pairs_mut().append_pair("token", token);
         }
         let url_str = url.as_str();
         info!("Connecting to WebSocket: {}", url_str);

@@ -2,6 +2,7 @@ use std::str::FromStr;
 
 use anyhow::Ok;
 use base64::{prelude::BASE64_STANDARD, Engine};
+use chrono::Utc;
 use reqwest::header;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
@@ -14,6 +15,7 @@ pub struct RequestClient {
     base_url: String,
     pub token: Option<String>,
     pub refresh_token: Option<String>,
+    pub expire: Option<i64>, // access_token过期时间(时间戳)
 }
 
 impl RequestClient {
@@ -50,11 +52,28 @@ impl RequestClient {
             base_url,
             token: None,
             refresh_token: None,
+            expire: None,
         })
     }
 
     pub fn set_base_url(&mut self, base_url: String) {
         self.base_url = base_url;
+    }
+
+    /// 检查token是否过期
+    pub fn check_token_expired(&self) -> bool {
+        match self.expire {
+            Some(expire) => {
+                // 获取当前时间戳
+                let now = Utc::now().timestamp();
+                // 如果当前时间大于过期时间，则token过期
+                now > expire
+            }
+            None => {
+                // 如果没有过期时间，默认为未过期
+                false
+            }
+        }
     }
 
     /// 构建请求的公共方法（不发送请求）
@@ -122,6 +141,12 @@ impl RequestClient {
         const MAX_RETRY_COUNT: u8 = 2;
 
         loop {
+            // 检查token是否过期，如果过期则自动刷新
+            if self.check_token_expired() {
+                info!("🔄 Token expired, automatically refreshing");
+                self.start_refresh_token().await?;
+            }
+
             // 使用 build_request 构建请求
             let request_builder = self.build_request(method.clone(), path, &body, &params, None);
 
@@ -270,6 +295,11 @@ impl RequestClient {
             self.refresh_token = Some(refresh_token.to_owned());
         }
 
+        // 更新token过期时间
+        if let Some(expire) = result.data.clone().unwrap().get("expire").unwrap().as_i64() {
+            self.expire = Some(expire);
+        }
+
         Ok(())
     }
 
@@ -298,6 +328,7 @@ impl Request for RequestClient {
         if let Some(data) = result.clone() {
             self.token = Some(data.access_token.clone());
             self.refresh_token = Some(data.refresh_token.clone());
+            self.expire = Some(data.expire);
         }
 
         Ok(result)
@@ -318,6 +349,7 @@ impl Request for RequestClient {
         if let Some(data) = result.clone() {
             self.token = Some(data.access_token.clone());
             self.refresh_token = Some(data.refresh_token.clone());
+            self.expire = Some(data.expire);
         }
 
         Ok(result)
@@ -403,7 +435,8 @@ pub struct LoginReq {
     pub account: String,
     pub password: String,
     pub device: String,
-    pub client_id: String, // 客户端指纹信息
+    #[serde(rename = "deviceID")]
+    pub device_id: String, // 客户端指纹信息
     #[serde(default)]
     pub is_auto_login: bool,
     pub uid: Option<String>, // 用于自动登录时传递用户ID
@@ -415,6 +448,7 @@ pub struct AuthResp {
     pub uid: String,
     pub access_token: String,
     pub refresh_token: String,
+    pub expire: i64, // 过期时间(时间戳)
 }
 
 #[derive(Serialize, Deserialize, Clone)]
@@ -446,7 +480,7 @@ mod test {
             "account": "yuanyuan",
             "password": "123456",
             "device": "desktop",
-            "clientId": "testClientId",
+            "deviceID": "testClientId",
         });
         let login_req: LoginReq = serde_json::from_value(login_req)?;
         let result: Option<AuthResp> = request_client.login(login_req).await?;

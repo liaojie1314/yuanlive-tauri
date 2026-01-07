@@ -35,7 +35,7 @@ pub enum WsMessage {
 pub struct WebSocketConfig {
     pub server_url: String,
     pub token: Option<String>,
-    pub client_id: String,
+    pub device_id: String,
     pub heartbeat_interval: u64,
     pub heartbeat_timeout: u64,
     pub max_reconnect_attempts: u32,
@@ -48,7 +48,7 @@ impl Default for WebSocketConfig {
         Self {
             server_url: String::new(),
             token: None,
-            client_id: String::new(),
+            device_id: String::new(),
             heartbeat_interval: 9900, // 9.9秒
             heartbeat_timeout: 15000, // 15秒
             // 0 表示无限重连

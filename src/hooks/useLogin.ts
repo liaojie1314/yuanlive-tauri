@@ -97,8 +97,8 @@ export function useLogin() {
     }
 
     // 存储此次登陆设备指纹
-    const clientId = await getEnhancedFingerprint();
-    localStorage.setItem(StorageKeyEnum.CLIENT_ID, clientId);
+    const deviceId = await getEnhancedFingerprint();
+    localStorage.setItem(StorageKeyEnum.DEVICE_ID, deviceId);
 
     await ensureAppStateReady();
 
@@ -107,7 +107,7 @@ export function useLogin() {
         account,
         password,
         device,
-        clientId,
+        deviceID: deviceId,
         isAutoLogin: auto,
         uid: auto ? userStore.userInfo!.uid : null
       }

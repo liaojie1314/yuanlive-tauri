@@ -75,9 +75,9 @@ class WebSocketRust {
    */
   async initConnect() {
     try {
-      const clientId = localStorage.getItem(StorageKeyEnum.CLIENT_ID);
+      const deviceId = localStorage.getItem(StorageKeyEnum.DEVICE_ID);
       const params = {
-        clientId: clientId || ""
+        deviceID: deviceId || ""
       };
       await info(`[RustWS] 初始化连接参数: ${JSON.stringify(params)}`);
       await invoke("ws_init_connection", { params });
