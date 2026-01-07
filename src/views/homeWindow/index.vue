@@ -9,7 +9,9 @@
     <!-- 大图展示区域（仅在全部分类显示） -->
     <div v-if="activeCategory === 'all'" class="grid grid-cols-5 gap-4 mt-4 h-auto">
       <!-- 主要大图 -->
-      <div class="relative col-span-3 rounded-lg overflow-hidden bg-black h-full">
+      <div
+        class="relative col-span-3 rounded-lg overflow-hidden bg-black h-full cursor-pointer hover:opacity-90 transition-opacity"
+        @click="navigateToLive(1)">
         <img src="https://picsum.photos/id/123/800/450" alt="Featured content" class="w-full h-full object-cover" />
         <div class="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 to-transparent text-white">
           <div
@@ -33,7 +35,11 @@
 
       <!-- 右侧小图推荐 -->
       <div class="col-span-2 h-full grid grid-cols-2 grid-rows-2 gap-4">
-        <div v-for="item in sideFeaturedItems" :key="item.id" class="side-featured-item flex flex-col gap-2">
+        <div
+          v-for="item in sideFeaturedItems"
+          :key="item.id"
+          class="side-featured-item flex flex-col gap-2 cursor-pointer hover:opacity-90 transition-opacity"
+          @click="navigateToLive(item.id)">
           <div class="relative flex-1 rounded-lg overflow-hidden bg-black">
             <img :src="item.imageUrl" :alt="item.title" class="w-full h-full object-cover" />
           </div>
@@ -86,22 +92,31 @@
     <!-- 图片卡片网格 -->
     <div v-if="activeCategory === 'all'" class="text-lg font-medium mb-4 mt-4">更多直播</div>
     <div class="grid grid-cols-4 gap-4 mt-4">
-      <image-card
-        v-for="item in filteredItems"
-        :key="item.id"
-        :image-url="item.imageUrl"
-        :title="item.title"
-        :author="item.author"
-        :viewers="item.viewers"
-        :is-live="item.isLive" />
+      <div v-for="item in filteredItems" :key="item.id" class="cursor-pointer" @click="navigateToLive(item.id)">
+        <image-card
+          :image-url="item.imageUrl"
+          :title="item.title"
+          :author="item.author"
+          :viewers="item.viewers"
+          :is-live="item.isLive" />
+      </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
+import { useRouter } from "vue-router";
+
 defineOptions({
   name: "HomeWindow"
 });
+
+const router = useRouter();
+
+// 跳转到直播播放页面
+const navigateToLive = (id: number) => {
+  router.push(`/live/${id}`);
+};
 
 // 分类列表
 const categories = ref([

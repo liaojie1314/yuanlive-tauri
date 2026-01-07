@@ -26,6 +26,12 @@ const getCommonRoutes = (): Array<RouteRecordRaw> => [
     path: "/network",
     component: () => import("@/views/loginWindow/Network.vue")
   },
+  // 直播播放页面，不使用layout布局
+  {
+    name: "livePlay",
+    path: "/live/:id",
+    component: () => import("@/views/homeWindow/LivePlay.vue")
+  },
   {
     name: "home",
     path: "/home",
