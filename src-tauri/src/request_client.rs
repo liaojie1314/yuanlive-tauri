@@ -67,6 +67,7 @@ impl RequestClient {
                 // 获取当前时间戳
                 let now = Utc::now().timestamp();
                 // 如果当前时间大于过期时间，则token过期
+                info!("now: {},Token expired: {}", now, expire);
                 now > expire
             }
             None => {

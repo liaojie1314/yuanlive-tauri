@@ -1,5 +1,5 @@
 import { request } from "@/utils/RequestUtils.ts";
-import { UrlEnum } from "@/enums";
+import { StorageKeyEnum, UrlEnum } from "@/enums";
 import type { ForgetPasswordReq, RegisterUserReq } from "@/api/types.ts";
 
 /**
@@ -38,7 +38,10 @@ export async function forgetPasswordApi(body: ForgetPasswordReq) {
  */
 export async function generateQRCodeApi() {
   return await request({
-    url: UrlEnum.GENERATE_QR_CODE
+    url: UrlEnum.GENERATE_QR_CODE,
+    params: {
+      deviceID: localStorage.getItem(StorageKeyEnum.DEVICE_ID)
+    }
   });
 }
 
