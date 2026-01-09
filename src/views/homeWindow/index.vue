@@ -7,10 +7,10 @@
     <category-nav :categories="categories" :active-category="activeCategory" @category-change="handleCategoryChange" />
 
     <!-- 大图展示区域（仅在全部分类显示） -->
-    <div v-if="activeCategory === 'all'" class="grid grid-cols-5 gap-4 mt-4 h-auto">
+    <div v-if="activeCategory === 'all'" class="grid grid-cols-5 gap-4 mt-4">
       <!-- 主要大图 -->
       <div
-        class="relative col-span-3 rounded-lg overflow-hidden bg-black h-full cursor-pointer hover:opacity-90 transition-opacity"
+        class="relative col-span-3 rounded-lg overflow-hidden bg-black cursor-pointer hover:opacity-90 transition-opacity aspect-[16/9]"
         @click="navigateToLive(1)">
         <img src="https://picsum.photos/id/123/800/450" alt="Featured content" class="w-full h-full object-cover" />
         <div class="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 to-transparent text-white">
@@ -34,13 +34,13 @@
       </div>
 
       <!-- 右侧小图推荐 -->
-      <div class="col-span-2 h-full grid grid-cols-2 grid-rows-2 gap-4">
+      <div class="col-span-2 grid grid-cols-2 grid-rows-2 gap-4">
         <div
           v-for="item in sideFeaturedItems"
           :key="item.id"
           class="side-featured-item flex flex-col gap-2 cursor-pointer hover:opacity-90 transition-opacity"
           @click="navigateToLive(item.id)">
-          <div class="relative flex-1 rounded-lg overflow-hidden bg-black">
+          <div class="relative aspect-video rounded-lg overflow-hidden bg-black">
             <img :src="item.imageUrl" :alt="item.title" class="w-full h-full object-cover" />
           </div>
           <div class="flex flex-col gap-1 min-h-[40px]">
@@ -81,9 +81,10 @@
         <div class="grid grid-cols-3 gap-3">
           <div
             v-for="tag in hotTags"
-            :key="tag"
-            class="bg-white rounded-lg p-[14px] text-center text-sm font-medium cursor-pointer hover:bg-gray-100 transition-colors">
-            {{ tag }}
+            :key="tag.label"
+            class="bg-white rounded-lg p-[14px] text-center text-sm font-medium cursor-pointer hover:bg-gray-100 transition-colors"
+            @click="handleCategoryChange(tag.value)">
+            {{ tag.label }}
           </div>
         </div>
       </div>
@@ -291,8 +292,15 @@ const followList = ref([
   }
 ]);
 
-// 热门标签数据
-const hotTags = ref(["舞蹈", "音乐", "王者荣耀", "和平精英", "无畏契约", "CSGO"]);
+// 热门标签数据，包含显示名称和对应分类值
+const hotTags = ref([
+  { label: "舞蹈", value: "dance" },
+  { label: "音乐", value: "music" },
+  { label: "王者荣耀", value: "game" },
+  { label: "和平精英", value: "game" },
+  { label: "无畏契约", value: "game" },
+  { label: "CSGO", value: "game" }
+]);
 
 // 筛选后的项目
 const filteredItems = computed(() => {

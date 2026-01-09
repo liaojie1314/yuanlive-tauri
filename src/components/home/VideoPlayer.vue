@@ -35,6 +35,185 @@
       </div>
     </div>
 
+    <!-- Right Side Interaction Panel -->
+    <div v-if="!videoStore.clearScreen" class="interaction-panel" @click.stop>
+      <!-- Avatar -->
+      <n-tooltip placement="left" trigger="hover">
+        <template #trigger>
+          <div class="interaction-item avatar-item">
+            <div class="avatar-container">
+              <img src="https://picsum.photos/60/60" alt="Avatar" class="avatar" />
+            </div>
+          </div>
+        </template>
+        <div class="tooltip-content">用户信息</div>
+      </n-tooltip>
+
+      <!-- Like Button -->
+      <n-tooltip placement="left" trigger="hover">
+        <template #trigger>
+          <div class="interaction-item like-item" @click="toggleLike">
+            <div class="interaction-icon like-icon" :class="{ liked: isLiked }">
+              <i-material-symbols-favorite class="iconify-icon" />
+            </div>
+            <div class="interaction-count">{{ likeCount }}</div>
+          </div>
+        </template>
+        <div class="tooltip-content">点赞</div>
+      </n-tooltip>
+
+      <!-- Comment Button -->
+      <n-tooltip placement="left" trigger="hover">
+        <template #trigger>
+          <div class="interaction-item comment-item" @click="toggleComment">
+            <div class="interaction-icon comment-icon">
+              <i-material-symbols-chat-outline class="iconify-icon" />
+            </div>
+            <div class="interaction-count">{{ commentCount }}</div>
+          </div>
+        </template>
+        <div class="tooltip-content">评论</div>
+      </n-tooltip>
+
+      <!-- Favorite Button -->
+      <n-tooltip
+        placement="left"
+        trigger="hover"
+        :raw="true"
+        :show-arrow="false"
+        :show="showCollectionTooltip"
+        @show="showCollectionTooltip = true">
+        <template #trigger>
+          <div class="interaction-item favorite-item" @mouseleave="hideCollectTooltip()" @click="toggleFavorite">
+            <div class="interaction-icon favorite-icon" :class="{ favorited: isFavorited }">
+              <i-material-symbols-star class="iconify-icon" />
+            </div>
+            <div class="interaction-count">{{ favoriteCount }}</div>
+          </div>
+        </template>
+        <div class="collection-tooltip" @mouseenter="showCollectTooltip()" @mouseleave="showCollectionTooltip = false">
+          <div class="collection-header">
+            <span>选择收藏夹</span>
+            <div class="new-folder-btn" @click="onNewFolderClick">+ 新建</div>
+          </div>
+          <div v-if="collectionFolders.length === 0" class="no-collections">
+            <div class="no-collections-icon">
+              <i-material-symbols-folder-outline class="iconify-icon" />
+            </div>
+            <div class="no-collections-text">暂无收藏夹~</div>
+          </div>
+          <div v-else class="collection-list">
+            <div v-for="folder in collectionFolders" :key="folder.id" class="collection-item">
+              <div class="folder-info">
+                <i-material-symbols-folder class="iconify-icon folder-icon" />
+                <div class="folder-name">{{ folder.name }}</div>
+                <div class="folder-count">{{ folder.count }}</div>
+              </div>
+              <n-checkbox
+                v-model:checked="folder.isSelected"
+                @update:checked="updateSelectedFolder(folder.id, $event)" />
+            </div>
+          </div>
+          <div class="collection-footer">
+            <div class="footer-btn only-collect-btn" @click="onlyCollectVideo">仅收藏视频</div>
+            <div class="footer-btn collect-to-folder-btn" @click="collectToFolder">收藏至收藏夹</div>
+          </div>
+        </div>
+      </n-tooltip>
+
+      <!-- Share Button -->
+      <n-tooltip
+        placement="left"
+        trigger="hover"
+        :raw="true"
+        :show-arrow="false"
+        :show="showShareTooltip"
+        @show="showShareTooltip = true">
+        <template #trigger>
+          <div class="interaction-item share-item" @click="toggleShare" @mouseleave="showShareTooltip = false">
+            <div class="interaction-icon share-icon">
+              <i-material-symbols-share-outline class="iconify-icon" />
+            </div>
+            <div class="interaction-count">{{ shareCount }}</div>
+          </div>
+        </template>
+        <div class="share-tooltip" @mouseenter="showShareTooltip = true" @mouseleave="showShareTooltip = false">
+          <div class="share-btn copy-link-btn" @click="copyLink">
+            <i-material-symbols-link class="iconify-icon share-btn-icon" />
+            <span class="share-btn-text">复制链接</span>
+          </div>
+          <div class="share-btn download-btn" @click="downloadVideo">
+            <i-material-symbols-download class="iconify-icon share-btn-icon" />
+          </div>
+          <div class="share-btn qr-code-btn" @click="showQRCode">
+            <i-material-symbols-qr-code class="iconify-icon share-btn-icon" />
+          </div>
+        </div>
+      </n-tooltip>
+
+      <!-- Listen to Video Button -->
+      <n-tooltip placement="left" trigger="hover">
+        <template #trigger>
+          <div class="interaction-item listen-item" @click="toggleShare">
+            <div class="interaction-icon listen-icon">
+              <i-material-symbols-headphones class="iconify-icon" />
+            </div>
+            <div class="interaction-count">听视频</div>
+          </div>
+        </template>
+        <div class="tooltip-content">听视频</div>
+      </n-tooltip>
+
+      <!-- More Icon -->
+      <n-tooltip
+        placement="left-end"
+        trigger="hover"
+        :raw="true"
+        :show-arrow="false"
+        :show="showMoreTooltip"
+        @show="showMoreTooltip = true">
+        <template #trigger>
+          <div class="more-item" @click="toggleMoreOptions" @mouseleave="showMoreTooltip = false">
+            <div class="more-icon">
+              <i-material-symbols-more-horiz class="iconify-icon more-icon" />
+            </div>
+          </div>
+        </template>
+        <div class="more-tooltip" @mouseenter="showMoreTooltip = true" @mouseleave="showMoreTooltip = false">
+          <button class="more-btn recommend-btn" @click="recommendVideo">
+            <div class="more-btn-icon-container">
+              <i-material-symbols-thumb-up class="iconify-icon more-btn-icon" />
+            </div>
+            <span class="more-btn-text">推荐</span>
+          </button>
+          <button class="more-btn dislike-btn" @click="dislikeVideo">
+            <div class="more-btn-icon-container">
+              <i-material-symbols-thumb-down class="iconify-icon more-btn-icon" />
+            </div>
+            <span class="more-btn-text">不感兴趣</span>
+          </button>
+          <button class="more-btn unfollow-btn" @click="unfollowCreator">
+            <div class="more-btn-icon-container">
+              <i-material-symbols-person-remove class="iconify-icon more-btn-icon" />
+            </div>
+            <span class="more-btn-text">取消关注</span>
+          </button>
+          <button class="more-btn report-btn" @click="reportVideo">
+            <div class="more-btn-icon-container">
+              <i-material-symbols-warning class="iconify-icon more-btn-icon" />
+            </div>
+            <span class="more-btn-text">举报</span>
+          </button>
+          <button class="more-btn shortcuts-btn" @click="showShortcuts">
+            <div class="more-btn-icon-container">
+              <i-material-symbols-keyboard class="iconify-icon more-btn-icon" />
+            </div>
+            <span class="more-btn-text">快捷键列表</span>
+          </button>
+        </div>
+      </n-tooltip>
+    </div>
+
     <!-- Center Pause Icon -->
     <div v-if="showPauseOverlay" class="pause-overlay" @click.stop="togglePlay">
       <div class="pause-icon-container">
@@ -156,15 +335,18 @@
     v-model:show="showDanmakuReportDialog"
     :danmaku-index="selectedDanmakuIndex"
     @submit-report="handleDanmakuReport" />
+  <!-- New Collection Folder Dialog -->
+  <CollectionFolderDialog v-model:show="showNewFolderDialog" @create-folder="handleCreateFolder" />
 </template>
 
 <script setup lang="ts">
 import videojs from "video.js";
 import "video.js/dist/video-js.css";
-import { NSwitch, NDropdown, NSlider } from "naive-ui";
+import { NSwitch, NDropdown, NSlider, NTooltip } from "naive-ui";
 import DanmakuInput from "../common/DanmakuInput.vue";
 import DanmakuListDialog from "../common/DanmakuListDialog.vue";
 import DanmakuReportDialog from "../common/DanmakuReportDialog.vue";
+import CollectionFolderDialog from "../common/CollectionFolderDialog.vue";
 import { useDanmakuStore } from "@/stores/danmaku";
 import { useVideoStore } from "@/stores/video";
 
@@ -222,6 +404,27 @@ const isMiniWindow = ref(false);
 const isPlaying = ref(false);
 const isFullscreen = ref(false);
 const playbackRates = [0.5, 0.75, 1.0, 1.25, 1.5, 2.0];
+
+// Interaction Panel States
+const isLiked = ref(false);
+const likeCount = ref(413);
+const commentCount = ref(23);
+const isFavorited = ref(false);
+const favoriteCount = ref(183);
+const shareCount = ref(9);
+
+// Collection Folder States
+let enterCollectionTooltip = false;
+const showCollectionTooltip = ref(false);
+const collectionFolders = ref([{ id: 1, name: "12", count: 0, isSelected: true }]);
+const showNewFolderDialog = ref(false);
+const selectedFolderId = ref<number | null>(1);
+
+// Share Tooltip States
+const showShareTooltip = ref(false);
+
+// More Tooltip States
+const showMoreTooltip = ref(false);
 
 // Danmaku List Dialog
 const showDanmakuListDialog = ref(false);
@@ -576,6 +779,163 @@ const setPlaybackRate = (key: number) => {
   if (playerRef.value) {
     playerRef.value.playbackRate(key);
   }
+};
+
+// Interaction Panel Methods
+const toggleLike = () => {
+  isLiked.value = !isLiked.value;
+  likeCount.value += isLiked.value ? 1 : -1;
+};
+
+const toggleComment = () => {
+  // 打开评论面板逻辑
+  console.log("Toggle comment panel");
+};
+
+const toggleFavorite = () => {
+  isFavorited.value = !isFavorited.value;
+  favoriteCount.value += isFavorited.value ? 1 : -1;
+};
+
+const toggleShare = () => {
+  // 打开分享面板逻辑
+  console.log("Toggle share panel");
+};
+
+// Share Action Methods
+const copyLink = () => {
+  // 复制链接
+  showShareTooltip.value = false;
+  console.log("Copy video link");
+  // 实际应用中这里会实现复制链接到剪贴板的功能
+};
+
+const downloadVideo = () => {
+  // 下载视频
+  showShareTooltip.value = false;
+  console.log("Download video");
+  // 实际应用中这里会实现下载视频的功能
+};
+
+const showQRCode = () => {
+  // 显示二维码
+  showShareTooltip.value = false;
+  console.log("Show QR code for sharing");
+  // 实际应用中这里会实现显示二维码的功能
+};
+
+// More Action Methods
+const toggleMoreOptions = () => {
+  // Toggle more options
+  showMoreTooltip.value = false;
+  console.log("Toggle more options");
+};
+
+const recommendVideo = () => {
+  // 推荐视频
+  showMoreTooltip.value = false;
+  console.log("Recommend video");
+};
+
+const dislikeVideo = () => {
+  // 不感兴趣
+  showMoreTooltip.value = false;
+  console.log("Dislike video");
+};
+
+const unfollowCreator = () => {
+  // 取消关注
+  showMoreTooltip.value = false;
+  console.log("Unfollow creator");
+};
+
+const reportVideo = () => {
+  // 举报
+  showMoreTooltip.value = false;
+  console.log("Report video");
+};
+
+const showShortcuts = () => {
+  // 显示快捷键列表
+  showMoreTooltip.value = false;
+  console.log("Show shortcuts list");
+};
+
+// Collection Folder Methods
+const updateSelectedFolder = (folderId: number, isChecked: boolean) => {
+  // 更新选中的收藏夹（单选逻辑：只能选中一个文件夹）
+  collectionFolders.value.forEach((f) => {
+    if (f.id === folderId) {
+      f.isSelected = isChecked;
+    } else {
+      f.isSelected = false;
+    }
+  });
+
+  // 设置selectedFolderId
+  selectedFolderId.value = isChecked ? folderId : null;
+};
+
+const onlyCollectVideo = () => {
+  // 仅收藏视频
+  isFavorited.value = !isFavorited.value;
+  favoriteCount.value += isFavorited.value ? 1 : -1;
+  showCollectionTooltip.value = false;
+  console.log("Only collect video");
+};
+
+const collectToFolder = () => {
+  // 收藏至收藏夹
+  if (selectedFolderId.value) {
+    const folder = collectionFolders.value.find((f) => f.id === selectedFolderId.value);
+    if (folder) {
+      folder.count++;
+    }
+    isFavorited.value = !isFavorited.value;
+    favoriteCount.value += isFavorited.value ? 1 : -1;
+    showCollectionTooltip.value = false;
+    console.log("Collect to folder", selectedFolderId.value);
+  }
+};
+
+const onNewFolderClick = () => {
+  // 新建收藏夹，隐藏tooltip
+  showCollectionTooltip.value = false;
+  showNewFolderDialog.value = true;
+};
+
+const handleCreateFolder = (name: string, isPublic: boolean) => {
+  // 创建新收藏夹
+  // 生成新的收藏夹ID
+  const newId = Math.max(...collectionFolders.value.map((f) => f.id), 0) + 1;
+  // 添加新收藏夹
+  collectionFolders.value.push({
+    id: newId,
+    name: name,
+    count: 0,
+    isSelected: true
+  });
+  // 选择新收藏夹（保持单选逻辑）
+  collectionFolders.value.forEach((f) => {
+    f.isSelected = f.id === newId;
+  });
+  selectedFolderId.value = newId;
+  console.log("Create new folder", name, isPublic);
+};
+
+const showCollectTooltip = () => {
+  enterCollectionTooltip = true;
+  showCollectionTooltip.value = true;
+};
+
+const hideCollectTooltip = () => {
+  setTimeout(() => {
+    if (!enterCollectionTooltip) {
+      showCollectionTooltip.value = false;
+      return;
+    }
+    enterCollectionTooltip = false;
+  }, 100);
 };
 
 // Custom control methods
@@ -1618,6 +1978,191 @@ defineExpose({
   padding: 0 16px;
 }
 
+// Interaction Panel
+.interaction-panel {
+  position: absolute;
+  right: 10px;
+  bottom: 55px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+  z-index: 80;
+  transition: all 0.3s ease;
+}
+
+.interaction-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.interaction-item:hover {
+  transform: scale(1.1);
+}
+
+// Swing animation on hover
+@keyframes swing {
+  0% {
+    transform: rotate(0deg) scale(1.1);
+  }
+  25% {
+    transform: rotate(10deg) scale(1.1);
+  }
+  50% {
+    transform: rotate(0deg) scale(1.1);
+  }
+  75% {
+    transform: rotate(-10deg) scale(1.1);
+  }
+  100% {
+    transform: rotate(0deg) scale(1.1);
+  }
+}
+
+// Apply swing animation only to icons
+.interaction-icon:hover {
+  animation: swing 0.6s ease-in-out;
+  transform: scale(1.1);
+}
+
+// Avatar
+.avatar-container {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+.avatar-container:hover {
+  border-color: rgba(255, 0, 80, 0.8);
+  box-shadow: 0 0 20px rgba(255, 0, 80, 0.5);
+  transform: scale(1.1);
+}
+
+.avatar {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+// Interaction Icons
+.interaction-icon {
+  font-size: 32px;
+  color: #fff;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.like-icon.liked {
+  color: #ff0050;
+  animation: heartBeat 0.6s ease;
+}
+
+.favorite-icon.favorited {
+  color: #ffcc00;
+  animation: starTwinkle 0.6s ease;
+}
+
+@keyframes heartBeat {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.3);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes starTwinkle {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.3);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+// Interaction Counts
+.interaction-count {
+  font-size: 14px;
+  color: #fff;
+  font-weight: 500;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+  white-space: nowrap;
+}
+
+.more-dots {
+  display: flex;
+  gap: 4px;
+  margin-top: 8px;
+}
+
+.more-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.6);
+  transition: all 0.3s ease;
+}
+
+// More Icon
+.more-icon {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 24px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+// Tooltip content style
+.tooltip-content {
+  padding: 6px;
+  font-size: 16px;
+}
+
+// Responsive Design for small windows
+@media (max-height: 600px) {
+  .interaction-panel {
+    gap: 13px;
+  }
+
+  .interaction-item {
+    gap: 4px;
+  }
+
+  .interaction-icon {
+    width: 24px;
+    height: 24px;
+  }
+
+  .interaction-count {
+    font-size: 10px;
+  }
+
+  .tooltip-content {
+    font-size: 10px;
+  }
+
+  .avatar-container {
+    width: 28px;
+    height: 28px;
+  }
+}
+
 .left-controls {
   display: flex;
   gap: 4px;
@@ -1753,6 +2298,240 @@ defineExpose({
   }
 }
 
+// Collection Tooltip Styles
+.collection-tooltip {
+  width: 200px;
+  background-color: rgba(0, 0, 0, 0.8);
+  border-radius: 8px;
+  padding: 12px;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+}
+
+.collection-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+  margin-bottom: 12px;
+}
+
+.collection-header span {
+  font-size: 14px;
+}
+
+.new-folder-btn {
+  padding: 4px 12px;
+  background-color: transparent;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.new-folder-btn:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.no-collections {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px 0;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.no-collections-icon {
+  font-size: 48px;
+  margin-bottom: 12px;
+  opacity: 0.5;
+}
+
+.no-collections-text {
+  font-size: 14px;
+}
+
+.collection-list {
+  margin-bottom: 12px;
+  max-height: 150px;
+  overflow-y: auto;
+}
+
+.collection-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px;
+  border-radius: 6px;
+  transition: all 0.3s ease;
+  margin-bottom: 6px;
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.folder-info {
+  display: flex;
+  align-items: center;
+  flex: 1;
+}
+
+.folder-icon {
+  width: 12px;
+  height: 12px;
+  margin-right: 6px;
+  color: #fff;
+}
+
+.folder-name {
+  color: #fff;
+  font-size: 12px;
+  margin-right: 6px;
+}
+
+.folder-count {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 10px;
+}
+
+.collection-footer {
+  display: flex;
+  gap: 8px;
+}
+
+.footer-btn {
+  flex: 1;
+  padding: 8px;
+  background-color: rgba(255, 255, 255, 0.05);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  text-align: center;
+}
+
+.only-collect-btn {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.only-collect-btn:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.collect-to-folder-btn {
+  background-color: #ff0050;
+}
+
+.collect-to-folder-btn:hover {
+  background-color: #ff3366;
+}
+
+// Share Tooltip Styles
+.share-tooltip {
+  display: flex;
+  gap: 8px;
+  background-color: rgba(0, 0, 0, 0.8);
+  border-radius: 8px;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+}
+
+.share-btn {
+  display: flex;
+  align-items: center;
+  padding: 10px;
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  color: #fff;
+}
+
+.share-btn-text {
+  font-size: 14px;
+  margin-left: 10px;
+}
+
+.share-btn:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.share-btn-icon {
+  width: 18px !important;
+  height: 18px !important;
+  color: #fff;
+}
+
+// More Tooltip Styles
+.more-tooltip {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background-color: rgba(0, 0, 0, 0.8);
+  border-radius: 8px;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+}
+
+.more-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  color: #fff;
+  background: transparent;
+  border: none;
+  padding: 0;
+}
+
+.more-btn-icon-container {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+
+.more-btn:hover .more-btn-icon-container {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.more-btn-text {
+  font-size: 12px;
+  margin: 0;
+  text-align: center;
+}
+
+.more-btn-icon {
+  width: 20px !important;
+  height: 20px !important;
+  color: #fff;
+}
+
+// 推荐按钮特殊样式
+.recommend-btn .more-btn-icon-container {
+  background-color: #00c853;
+}
+
+.recommend-btn:hover .more-btn-icon-container {
+  background-color: #00e676;
+}
+
 .danmaku-content {
   flex: 1;
   line-height: 1.4;
@@ -1858,7 +2637,7 @@ defineExpose({
   font-size: 24px;
   vertical-align: middle;
   color: currentColor;
-  width: 24px;
-  height: 24px;
+  width: 28px;
+  height: 28px;
 }
 </style>

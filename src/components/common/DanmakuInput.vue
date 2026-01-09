@@ -239,6 +239,7 @@
 <script setup lang="ts">
 import { NSlider, NScrollbar } from "naive-ui";
 import { useDanmakuStore } from "../../stores/danmaku";
+import { useResizeObserver } from "@/hooks/useResizeObserver";
 
 defineProps<{
   isEnabled: boolean;
@@ -262,7 +263,6 @@ const isCompactMode = ref(false);
 
 let danmakuSettingsHideTimer: number | null = null;
 let emojiPickerHideTimer: number | null = null;
-let resizeObserver: ResizeObserver | null = null;
 let emojiSelectorHideTimer: number | null = null;
 let settingsChangeDebounceTimer: number | null = null;
 
@@ -583,14 +583,13 @@ watch(
   }
 );
 
+// 使用ResizeObserver监听容器大小变化
+useResizeObserver(containerRef, () => {
+  checkCompactMode();
+});
+
 onMounted(() => {
   checkCompactMode();
-  if (containerRef.value) {
-    resizeObserver = new ResizeObserver(() => {
-      checkCompactMode();
-    });
-    resizeObserver.observe(containerRef.value);
-  }
 });
 
 onBeforeUnmount(() => {
@@ -605,9 +604,6 @@ onBeforeUnmount(() => {
   }
   if (settingsChangeDebounceTimer) {
     clearTimeout(settingsChangeDebounceTimer);
-  }
-  if (resizeObserver) {
-    resizeObserver.disconnect();
   }
 });
 </script>
@@ -827,7 +823,6 @@ onBeforeUnmount(() => {
 
   &:focus {
     background-color: rgba(255, 255, 255, 0.15);
-    box-shadow: 0 0 15px rgba(255, 0, 80, 0.4);
   }
 }
 
