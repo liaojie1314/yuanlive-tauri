@@ -1,7 +1,7 @@
 <template>
   <div class="live-play-container relative w-full h-full bg-black flex flex-col">
     <!-- 顶部信息栏 固定高度 -->
-    <div class="top-info-bar w-full h-12 bg-black/80 flex items-center justify-between px-4 z-10">
+    <div class="top-info-bar w-full h-12 bg-black/80 flex items-center justify-between px-2 z-999">
       <!-- 返回按钮和主播信息 -->
       <div class="flex items-center gap-3">
         <button
@@ -109,12 +109,13 @@
     </div>
 
     <!-- 送礼区 固定高度 -->
-    <div class="gift-area w-full h-20 bg-gradient-to-t from-black to-transparent flex items-center px-4 z-10">
+    <div class="gift-area w-full h-20 bg-black/90 flex items-center p-2 z-999">
       <!-- 礼物列表 -->
-      <n-scrollbar x-scrollable class="flex-shrink-0 flex-grow">
-        <div class="gift-list flex items-center gap-3 px-2">
+      <div ref="giftListRef" class="gift-list bg-amber flex items-center flex-1 rounded-md">
+        <!-- 礼物容器，用于隐藏溢出的礼物 -->
+        <div class="gifts-container flex items-center overflow-hidden w-full">
           <n-popover
-            v-for="gift in gifts"
+            v-for="(gift, index) in displayGifts"
             :key="gift.id"
             trigger="hover"
             placement="top"
@@ -123,26 +124,40 @@
             v-model:show="popoverVisible[gift.id]">
             <template #trigger>
               <div
-                class="gift-item flex flex-col items-center cursor-pointer hover:scale-110 transition-transform duration-200 px-1">
+                class="gift-item-container flex flex-col items-center cursor-pointer flex-1 h-full relative overflow-visible transition-all duration-300">
+                <!-- 竖线分割 -->
                 <div
-                  class="gift-icon w-12 h-12 rounded-full flex items-center justify-center mb-1 transition-all duration-300 hover:bg-red-500/30">
-                  <svg
-                    :xmlns="gift.icon"
-                    :width="24"
-                    :height="24"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    class="text-white transition-all duration-300 hover:scale-125">
-                    <path :d="gift.path" />
-                  </svg>
+                  v-if="index > 0"
+                  class="gift-divider absolute left-0 top-1/2 transform -translate-y-1/2 h-10 w-[1px] bg-white/20"></div>
+                <div
+                  class="gift-item-content flex flex-col items-center justify-center h-full px-2 transition-all duration-300">
+                  <div class="gift-icon rounded-full flex items-center justify-center mb-1">
+                    <svg
+                      :xmlns="gift.icon"
+                      :width="24"
+                      :height="24"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      class="text-white">
+                      <path :d="gift.path" />
+                    </svg>
+                  </div>
+                  <div class="gift-name text-white text-xs truncate max-w-full text-center transition-all duration-300">
+                    {{ gift.name }}
+                  </div>
+                  <div class="gift-cost text-white text-xs opacity-70">{{ gift.cost }}钻</div>
                 </div>
-                <div
-                  class="gift-name text-white text-xs truncate max-w-[60px] transition-colors duration-300 hover:text-red-400">
-                  {{ gift.name }}
+                <!-- 赠送按钮 -->
+                <div class="gift-send-btn-container transition-all duration-300 opacity-0 transform translate-y-2">
+                  <button
+                    class="gift-send-btn bg-red-500 text-white text-xs font-medium py-1 px-4 rounded-md w-full"
+                    @click="sendGiftWithAmount(gift, 1)">
+                    赠送
+                  </button>
                 </div>
               </div>
             </template>
@@ -152,14 +167,63 @@
                   v-for="amount in amountOptions"
                   :key="amount.value"
                   @click="sendGiftWithAmount(gift, amount.value)"
-                  class="amount-btn px-4 py-2 bg-white/10 hover:bg-red-500/30 text-white rounded-full transition-all duration-200 hover:transform hover:scale-105">
+                  class="amount-btn px-4 py-2 bg-white/10 text-white rounded-full transition-all">
                   {{ amount.label }}
                 </button>
               </div>
             </div>
           </n-popover>
+
+          <!-- 更多按钮 -->
+          <div
+            v-if="showMoreBtn"
+            class="gift-item-container gift-more-container flex flex-col items-center cursor-pointer flex-1 h-full relative">
+            <!-- 竖线分割 -->
+            <div
+              v-if="displayGifts.length > 0"
+              class="gift-divider absolute left-0 top-1/2 transform -translate-y-1/2 h-10 w-[1px] bg-white/20"></div>
+            <div class="gift-item gift-more flex flex-col items-center justify-center h-full px-2">
+              <div class="gift-icon rounded-full flex items-center justify-center mb-1">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  class="text-white">
+                  <path d="M12 5v14M5 12h14" />
+                </svg>
+              </div>
+              <div class="gift-name text-white text-xs truncate text-center">更多</div>
+            </div>
+          </div>
         </div>
-      </n-scrollbar>
+      </div>
+
+      <!-- 充值按钮 -->
+      <div
+        class="cursor-pointer recharge-btn bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-sm px-3 h-full flex flex-col items-center justify-center rounded-md hover:opacity-90 transition-opacity ml-3 mr-5">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          class="mb-1">
+          <path d="M12 2L2 7l10 5 10-5-10-5z" />
+          <path d="M2 17l10 5 10-5" />
+          <path d="M2 12l10 5 10-5" />
+        </svg>
+        充值 &gt;
+      </div>
     </div>
 
     <!-- 礼物动画容器 -->
@@ -170,10 +234,13 @@
 <script setup lang="ts">
 import videojs from "video.js";
 import "video.js/dist/video-js.css";
-import { NScrollbar, NPopover } from "naive-ui";
+import { NPopover } from "naive-ui";
+import { ref, onMounted, onUnmounted, computed } from "vue";
+import { useResizeObserver } from "@/hooks/useResizeObserver";
 
 const router = useRouter();
 const videoRef = ref<HTMLVideoElement | null>(null);
+const giftListRef = ref<HTMLElement | null>(null);
 let player: any = null;
 
 // 跟踪每个popover的显示状态
@@ -185,69 +252,141 @@ const gifts = [
     id: 1,
     name: "爱心",
     icon: "http://www.w3.org/2000/svg",
-    path: "M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"
+    path: "M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z",
+    cost: 1
+  },
+  {
+    id: 2,
+    name: "人气榜",
+    icon: "http://www.w3.org/2000/svg",
+    path: "M16 3.13a4 4 0 0 1 0 7.75 4 4 0 0 1 0-7.75zM9 7a4 4 0 1 0 0 8 4 4 0 0 0 0-8zM5 21v-2a4 4 0 0 1 4-4h8a4 4 0 0 1 4 4v2H5z",
+    cost: 1
   },
   {
     id: 3,
-    name: "雪花",
+    name: "雪落花",
     icon: "http://www.w3.org/2000/svg",
-    path: "M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"
+    path: "M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-5-9h10v2H7z",
+    cost: 99
   },
   {
     id: 4,
+    name: "Thuglife",
+    icon: "http://www.w3.org/2000/svg",
+    path: "M12 2l1.41 1.41L16.83 7H21v10c0 1.1-.9 2-2 2H5c-1.1 0-2-.9-2-2V7h4.17L10.59 3.41L12 2zm0 10c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2z",
+    cost: 99
+  },
+  {
+    id: 5,
     name: "大啤酒",
     icon: "http://www.w3.org/2000/svg",
-    path: "M12 2l1.41 1.41L16.83 7H21v10c0 1.1-.9 2-2 2H5c-1.1 0-2-.9-2-2V7h4.17L10.59 3.41L12 2zm0 10c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2z"
+    path: "M12 2l1.41 1.41L16.83 7H21v10c0 1.1-.9 2-2 2H5c-1.1 0-2-.9-2-2V7h4.17L10.59 3.41L12 2zm0 10c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2z",
+    cost: 2
   },
-  { id: 6, name: "鲜花", icon: "http://www.w3.org/2000/svg", path: "M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" },
+  {
+    id: 6,
+    name: "冬雪之爱",
+    icon: "http://www.w3.org/2000/svg",
+    path: "M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-5-9h10v2H7z",
+    cost: 99
+  },
   {
     id: 7,
-    name: "热气球",
+    name: "加油鸭",
     icon: "http://www.w3.org/2000/svg",
-    path: "M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"
+    path: "M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z",
+    cost: 15
   },
   {
-    id: 8,
-    name: "比心小兔",
+    id: 10,
+    name: "加油鸭",
     icon: "http://www.w3.org/2000/svg",
-    path: "M12 2c5.52 0 10 4.48 10 10s-4.48 10-10 10S2 17.52 2 12 6.48 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"
-  },
-  {
-    id: 9,
-    name: "热球",
-    icon: "http://www.w3.org/2000/svg",
-    path: "M12 2c5.52 0 10 4.48 10 10s-4.48 10-10 10S2 17.52 2 12 6.48 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-5-9h10v2H7z"
+    path: "M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z",
+    cost: 15
   },
   {
     id: 11,
-    name: "闪耀星辰",
+    name: "加油鸭",
     icon: "http://www.w3.org/2000/svg",
-    path: "M12 2c5.52 0 10 4.48 10 10s-4.48 10-10 10S2 17.52 2 12 6.48 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-5-9h10v2H7z"
+    path: "M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z",
+    cost: 15
   },
   {
     id: 12,
-    name: "跑车",
+    name: "加油鸭",
     icon: "http://www.w3.org/2000/svg",
-    path: "M12 2l1.41 1.41L16.83 7H21v10c0 1.1-.9 2-2 2H5c-1.1 0-2-.9-2-2V7h4.17L10.59 3.41L12 2zm0 10c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2z"
+    path: "M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z",
+    cost: 15
   },
   {
     id: 13,
-    name: "爱的纸鹤",
+    name: "加油鸭",
     icon: "http://www.w3.org/2000/svg",
-    path: "M12 2c5.52 0 10 4.48 10 10s-4.48 10-10 10S2 17.52 2 12 6.48 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-5-9h10v2H7z"
+    path: "M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z",
+    cost: 15
+  },
+  {
+    id: 14,
+    name: "加油鸭",
+    icon: "http://www.w3.org/2000/svg",
+    path: "M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z",
+    cost: 15
   },
   {
     id: 15,
-    name: "爱情海",
+    name: "加油鸭",
     icon: "http://www.w3.org/2000/svg",
-    path: "M12 2c5.52 0 10 4.48 10 10s-4.48 10-10 10S2 17.52 2 12 6.48 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-5-9h10v2H7z"
+    path: "M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z",
+    cost: 15
   },
-  { id: 16, name: "送你花", icon: "http://www.w3.org/2000/svg", path: "M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" },
+  {
+    id: 16,
+    name: "加油鸭",
+    icon: "http://www.w3.org/2000/svg",
+    path: "M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z",
+    cost: 15
+  },
   {
     id: 17,
-    name: "玫瑰",
+    name: "加油鸭",
     icon: "http://www.w3.org/2000/svg",
-    path: "M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"
+    path: "M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z",
+    cost: 15
+  },
+  {
+    id: 18,
+    name: "加油鸭",
+    icon: "http://www.w3.org/2000/svg",
+    path: "M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z",
+    cost: 15
+  },
+  {
+    id: 19,
+    name: "加油鸭",
+    icon: "http://www.w3.org/2000/svg",
+    path: "M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z",
+    cost: 15
+  },
+  {
+    id: 20,
+    name: "加油鸭",
+    icon: "http://www.w3.org/2000/svg",
+    path: "M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z",
+    cost: 15
+  },
+  {
+    id: 8,
+    name: "鲜花",
+    icon: "http://www.w3.org/2000/svg",
+    path: "M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z",
+    cost: 10
+  },
+  {
+    id: 9,
+    name: "拯救爱播",
+    icon: "http://www.w3.org/2000/svg",
+    path: "M12 2c5.52 0 10 4.48 10 10s-4.48 10-10 10S2 17.52 2 12 6.48 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-5-9h10v2H7z",
+    cost: 299
   }
 ];
 
@@ -261,6 +400,37 @@ const amountOptions = [
   { label: "999个", value: 999 },
   { label: "1314个", value: 1314 }
 ];
+
+// 可显示的礼物数量
+const visibleGiftCount = ref(4);
+
+// 计算显示的礼物列表
+const displayGifts = computed(() => {
+  return gifts.slice(0, visibleGiftCount.value - 1);
+});
+
+// 是否显示更多按钮
+const showMoreBtn = computed(() => {
+  return gifts.length > visibleGiftCount.value - 1;
+});
+
+// 计算可显示的礼物数量
+const calculateVisibleGiftCount = () => {
+  if (!giftListRef.value) return;
+
+  // 获取礼物列表宽度
+  const giftListWidth = giftListRef.value.clientWidth;
+  // 单个礼物项最小宽度（包含图标、文字和内边距）
+  const minGiftWidth = 80;
+
+  // 计算可显示的礼物数量
+  let count = Math.floor(giftListWidth / minGiftWidth);
+
+  // 确保至少显示2个礼物和1个更多按钮
+  count = Math.max(count, 2);
+
+  visibleGiftCount.value = count;
+};
 
 // 返回上一页
 const handleBack = () => {
@@ -325,6 +495,9 @@ const createGiftAnimation = (gift: any, amount: number) => {
   }, 2000);
 };
 
+// 使用ResizeObserver监听礼物列表宽度变化
+useResizeObserver(giftListRef, calculateVisibleGiftCount);
+
 onMounted(() => {
   // 初始化video.js播放器
   if (videoRef.value) {
@@ -360,6 +533,13 @@ onMounted(() => {
       window.addEventListener("resize", resizePlayer);
     });
   }
+
+  // 初始化礼物列表宽度计算
+  calculateVisibleGiftCount();
+});
+
+onUnmounted(() => {
+  // 清理工作已由useResizeObserver自动处理
 });
 </script>
 
@@ -372,89 +552,154 @@ onMounted(() => {
   position: relative;
 }
 
+/* 送礼区样式 */
 .gift-area {
   flex-shrink: 0;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
-}
-
-.gift-area::-webkit-scrollbar {
-  height: 4px;
-}
-
-.gift-area::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.gift-area::-webkit-scrollbar-thumb {
-  background-color: rgba(255, 255, 255, 0.3);
-  border-radius: 2px;
+  display: flex;
+  align-items: center;
 }
 
 .gift-list {
+  display: flex;
+  align-items: center;
   flex: 1;
   min-width: 0;
-}
-
-.gift-item {
-  transition: all 0.2s ease;
-}
-
-.gift-item:hover {
-  transform: scale(1.1);
-}
-
-/* 主播信息样式 */
-.avatar {
-  overflow: hidden;
-}
-
-.avatar img {
-  width: 100%;
   height: 100%;
-  object-fit: cover;
 }
 
-.host-info {
+/* 礼物容器，用于隐藏溢出的礼物 */
+.gifts-container {
   display: flex;
-  align-items: center;
-  gap: 8px;
+  align-items: flex-start;
+  overflow: visible;
+  flex: 1;
+  min-width: 0;
+  height: 100%;
 }
 
-.host-info-text {
+.recharge-btn {
+  font-weight: 500;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+/* 礼物项容器 */
+.gift-item-container {
   display: flex;
   flex-direction: column;
-  gap: 2px;
-}
-
-.host-name {
-  font-size: 14px;
-  font-weight: 500;
-}
-
-.host-stats {
-  display: flex;
   align-items: center;
-  gap: 4px;
-  font-size: 12px;
-  opacity: 0.7;
+  cursor: pointer;
+  flex: 1;
+  height: 100%;
+  position: relative;
+  overflow: visible;
+  transition: all 0.3s ease;
+  padding: 4px 0;
 }
 
-.follow-btn,
-.group-btn,
-.vip-btn {
-  font-size: 12px;
-  font-weight: 500;
-  padding: 4px 12px;
-  border-radius: 20px;
-  transition: all 0.2s ease;
-}
-
-.more-btn {
-  width: 28px;
+/* 竖线分割 */
+.gift-divider {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
   height: 28px;
-  border-radius: 50%;
+  width: 1px;
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.gift-name {
+  font-size: 10px;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+  margin-top: 2px;
+  transition: all 0.3s ease;
+}
+
+.gift-cost {
+  font-size: 9px;
+  opacity: 0.7;
+  margin-top: 1px;
+}
+
+/* 赠送按钮容器 */
+.gift-send-btn-container {
+  transition: all 0.3s ease;
+  opacity: 0;
+  transform: translateY(2px);
+  margin-top: 4px;
+  width: 100%;
+  pointer-events: none;
+  height: 0;
+  overflow: hidden;
+  padding: 0 8px;
+}
+
+/* 赠送按钮样式 */
+.gift-send-btn {
+  font-size: 10px;
+  font-weight: 500;
+  padding: 4px 0;
+  background-color: #ff0050;
+  color: white;
+  border-radius: 4px;
+  width: 100%;
+  cursor: pointer;
+  border: none;
+  outline: none;
   transition: all 0.2s ease;
+}
+
+/* 悬停效果 */
+.gift-item-container:hover {
+  height: auto;
+  padding: 14px 0 14px 0;
+  background-color: rgba(255, 0, 80, 0.1);
+  border-radius: 4px;
+  margin: -10px 0;
+}
+
+.gift-item-container:hover .gift-name {
+  opacity: 0;
+  height: 0;
+  margin: 0;
+  padding: 0;
+  visibility: hidden;
+}
+
+.gift-item-container:hover .gift-send-btn-container {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+  height: auto;
+}
+
+/* 更多按钮样式 - 固定，不需要动画 */
+.gift-more-container {
+  transition: none !important;
+}
+
+.gift-more-container:hover {
+  height: 100% !important;
+  padding: 4px 0 !important;
+  background-color: transparent !important;
+  border-radius: 0 !important;
+  margin: 0 !important;
+}
+
+.gift-more-container:hover .gift-name {
+  opacity: 1 !important;
+  height: auto !important;
+  margin-top: 2px !important;
+  padding: 0 !important;
+  visibility: visible !important;
+}
+
+.gift-more {
+  transition: none !important;
 }
 
 /* 观众数量样式 */
@@ -563,25 +808,6 @@ onMounted(() => {
 }
 
 /* 自定义naive-ui样式 */
-:deep(.n-scrollbar) {
-  max-width: 100%;
-}
-
-:deep(.n-scrollbar__rail--horizontal) {
-  background: transparent !important;
-  height: 6px !important;
-}
-
-:deep(.n-scrollbar__thumb--horizontal) {
-  background: rgba(255, 255, 255, 0.3) !important;
-  border-radius: 3px !important;
-  height: 6px !important;
-}
-
-:deep(.n-scrollbar__thumb--horizontal:hover) {
-  background: rgba(255, 255, 255, 0.5) !important;
-}
-
 :deep(.n-popover) {
   z-index: 1000 !important;
 }
