@@ -324,7 +324,24 @@ const renderedThinkingContent = computed(() => {
     gfm: true
   }) as string;
 
-  return html;
+  // 处理思考内容的DOM，确保列表正确渲染
+  const tempDiv = document.createElement("div");
+  tempDiv.innerHTML = html;
+
+  // 确保有序列表和无序列表正确渲染
+  const lists = tempDiv.querySelectorAll("ol, ul");
+  lists.forEach((list) => {
+    // 为列表添加明确的样式类
+    list.classList.add("thinking-list");
+
+    // 确保列表项有正确的样式
+    const listItems = list.querySelectorAll("li");
+    listItems.forEach((item) => {
+      item.classList.add("thinking-list-item");
+    });
+  });
+
+  return tempDiv.innerHTML;
 });
 
 // 渲染markdown内容，集成highlight.js用于代码高亮
@@ -463,31 +480,88 @@ const renderedContent = computed(() => {
   backdrop-filter: blur(4px);
 }
 
-/* 思考内容样式 */
+/* 思考内容折叠/展开动画 */
 .thinking-content {
   transition: all 0.3s ease;
 }
 
-/* 思考内容中的文本样式 */
-:deep(.thinking-content p) {
-  margin: 0.5em 0;
-  line-height: 1.4;
-  color: #6b7280;
-  font-size: 0.875em;
+/* 思考内容的列表样式 - 覆盖全局样式干扰 */
+:deep(.thinking-content) {
+  /* 减小思考内容的字体大小 */
+  font-size: 0.8rem;
+
+  /* 有序列表样式 */
+  & ol {
+    list-style-type: decimal;
+    padding-left: 1.5rem;
+    margin: 0.5rem 0;
+  }
+
+  /* 无序列表样式 */
+  & ul {
+    list-style-type: disc;
+    padding-left: 1.5rem;
+    margin: 0.5rem 0;
+  }
+
+  /* 列表项样式 */
+  & li {
+    margin: 0.25rem 0;
+    line-height: 1.4;
+    color: #6b7280;
+  }
+
+  /* 嵌套列表样式 */
+  & ol ol,
+  & ol ul,
+  & ul ol,
+  & ul ul {
+    margin: 0.25rem 0;
+    padding-left: 1rem;
+  }
+
+  /* 确保列表样式不受全局样式影响 */
+  & .thinking-list {
+    list-style-type: revert;
+    padding-left: 1.5rem;
+  }
+
+  & .thinking-list-item {
+    list-style-type: revert;
+    margin: 0.25rem 0;
+  }
 }
 
-/* 思考内容中的列表样式 */
-:deep(.thinking-content ul),
-:deep(.thinking-content ol) {
-  margin: 0.5em 0;
-  padding-left: 1.5em;
-}
+/* 消息内容的列表样式 - 确保消息中的列表正确显示 */
+:deep(.text-message) {
+  /* 有序列表样式 */
+  & ol {
+    list-style-type: decimal;
+    padding-left: 1.5rem;
+    margin: 0.5rem 0;
+  }
 
-:deep(.thinking-content li) {
-  margin: 0.25em 0;
-  line-height: 1.4;
-  color: #6b7280;
-  font-size: 0.875em;
+  /* 无序列表样式 */
+  & ul {
+    list-style-type: disc;
+    padding-left: 1.5rem;
+    margin: 0.5rem 0;
+  }
+
+  /* 列表项样式 */
+  & li {
+    margin: 0.25rem 0;
+    line-height: 1.5;
+  }
+
+  /* 嵌套列表样式 */
+  & ol ol,
+  & ol ul,
+  & ul ol,
+  & ul ul {
+    margin: 0.25rem 0;
+    padding-left: 1rem;
+  }
 }
 
 /* 思考内容中的代码样式 */

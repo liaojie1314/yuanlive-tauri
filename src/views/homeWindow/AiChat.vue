@@ -55,10 +55,6 @@
 </template>
 
 <script setup lang="ts">
-import { ref, nextTick } from "vue";
-import ChatHistoryList from "../../components/home/ChatHistoryList.vue";
-import MessageRender from "../../components/home/MessageRender.vue";
-
 // 混合类型消息的内容结构
 interface MixedContent {
   text: string;
