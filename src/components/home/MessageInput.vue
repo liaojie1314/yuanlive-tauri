@@ -115,9 +115,20 @@ const fileInput = ref<HTMLInputElement | null>(null);
 // 图片输入框引用
 const photoInput = ref<HTMLInputElement | null>(null);
 
+// 混合类型消息的内容结构
+interface MixedContent {
+  text: string;
+  images: string[];
+}
+
 // 定义emit事件
 const emit =
-  defineEmits<(e: "send-message", message: { type: "text" | "image"; content: string | string[] }) => void>();
+  defineEmits<
+    (
+      e: "send-message",
+      message: { type: "text" | "image" | "mixed"; content: string | string[] | MixedContent }
+    ) => void
+  >();
 
 // 处理Enter键
 const handleEnterKey = (e: KeyboardEvent) => {
@@ -153,9 +164,24 @@ const handleMenuClick = (menuItem: string) => {
 // 发送消息
 const sendMessage = () => {
   const trimmedText = messageText.value.trim();
+  const hasText = !!trimmedText;
+  const hasImages = uploadedImages.value.length > 0;
 
-  // 如果有上传的图片，发送图片消息
-  if (uploadedImages.value.length > 0) {
+  // 如果同时有文本和图片，发送混合类型消息
+  if (hasText && hasImages) {
+    emit("send-message", {
+      type: "mixed",
+      content: {
+        text: trimmedText,
+        images: [...uploadedImages.value]
+      }
+    });
+    // 清空输入和图片
+    messageText.value = "";
+    uploadedImages.value = [];
+  }
+  // 如果只有图片，发送图片消息
+  else if (hasImages) {
     emit("send-message", {
       type: "image",
       content: [...uploadedImages.value]
@@ -163,8 +189,8 @@ const sendMessage = () => {
     // 清空上传的图片
     uploadedImages.value = [];
   }
-  // 如果有输入文本，发送文本消息
-  else if (trimmedText) {
+  // 如果只有文本，发送文本消息
+  else if (hasText) {
     emit("send-message", {
       type: "text",
       content: trimmedText

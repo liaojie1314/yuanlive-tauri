@@ -1,13 +1,11 @@
 <template>
-  <div @click="handleImageClick">
+  <div @click="handleImageClick" class="relative inline-block">
     <img
       :src="imageUrl"
       :alt="altText"
-      class="rounded cursor-pointer hover:opacity-90"
-      :class="{
-        'max-w-xs': maxWidth === 'small',
-        'max-w-md': maxWidth === 'medium',
-        'max-w-lg': maxWidth === 'large'
+      class="rounded cursor-pointer hover:opacity-90 w-full max-w-full h-auto"
+      :style="{
+        maxWidth: maxWidth === 'small' ? '120px' : maxWidth === 'medium' ? '200px' : '300px'
       }" />
     <div v-if="showCaption && caption" class="text-xs text-gray-500 mt-1 text-center">{{ caption }}</div>
     <div v-if="showLoading" class="absolute inset-0 bg-black bg-opacity-30 rounded flex items-center justify-center">
