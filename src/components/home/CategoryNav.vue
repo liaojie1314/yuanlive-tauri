@@ -2,7 +2,6 @@
   <n-tabs
     v-model:value="localActiveCategory"
     @update:value="handleCategoryChange"
-    type="line"
     size="small"
     :show-tabbar="false"
     class="category-nav">
@@ -56,8 +55,5 @@ const handleCategoryChange = (category: string) => {
 <style scoped lang="scss">
 :deep(.n-tabs-tab-pad) {
   width: 20px;
-}
-:deep(.n-tabs-nav-scroll-content) {
-  border-bottom: none !important;
 }
 </style>

@@ -13,21 +13,15 @@
       <!-- 清空按钮 -->
       <div
         v-if="searchQuery"
-        class="w-4 h-4 absolute right-25 text-gray-500 bg-gray-300 hover:text-gray-700 transition-colors rounded-[8px]"
+        class="w-4 h-4 absolute right-25 text-gray-500 hover:text-gray-700 transition-colors rounded-[8px]"
         @click="clearInput"
         @mousedown.stop>
-        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-          <path
-            d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
-        </svg>
+        <i-mdi-close-circle-outline class="w-4 h-4" />
       </div>
       <button
         class="bg-black text-white px-4 py-2 flex items-center gap-1 hover:bg-gray-800 transition-colors h-full whitespace-nowrap"
         @click="handleSearch">
-        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
-          <path
-            d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" />
-        </svg>
+        <i-mdi-magnify class="w-5 h-5" />
         <n-text class="text-[16px] color-#fff">搜索</n-text>
       </button>
     </div>
@@ -44,10 +38,7 @@
             <div
               class="text-sm text-gray-500 hover:text-gray-700 flex items-center gap-1 transition-colors"
               @click="clearSearchHistory">
-              <svg class="w-3 h-3" viewBox="0 0 24 24" fill="currentColor">
-                <path
-                  d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
-              </svg>
+              <i-mdi-close-circle-outline class="w-3 h-3" />
               清除记录
             </div>
           </div>
@@ -62,10 +53,7 @@
                 class="absolute right-0 top-[2px] transform -translate-y-1/2 w-3 h-3 rounded-full bg-gray-200 hover:text-gray-700 transition-colors cursor-pointer flex items-center justify-center"
                 @click.stop="deleteSearchHistory(index)"
                 @mousedown.stop>
-                <svg class="w-3 h-3" viewBox="0 0 24 24" fill="currentColor">
-                  <path
-                    d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
-                </svg>
+                <i-mdi-close class="w-3 h-3" />
               </div>
             </div>
           </div>
@@ -78,10 +66,7 @@
             <div
               class="text-sm text-gray-500 hover:text-gray-700 flex items-center gap-1 transition-colors"
               @click="handleRefreshSuggestions">
-              <svg class="w-3 h-3" viewBox="0 0 24 24" fill="currentColor">
-                <path
-                  d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z" />
-              </svg>
+              <i-mdi-refresh class="w-3 h-3" />
               换一换
             </div>
           </div>

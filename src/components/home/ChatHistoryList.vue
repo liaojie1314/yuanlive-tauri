@@ -8,34 +8,26 @@
         @click="handleNewChat"
         class="bg-blue-50 text-blue-600 hover:bg-blue-100 flex-1 mr-2">
         <template #icon>
-          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
-          </svg>
+          <i-mdi-plus class="w-4 h-4" />
         </template>
         新建对话
       </n-button>
       <!-- 折叠图标按钮 -->
       <n-button quaternary circle :bordered="false" @click="emit('toggle-collapse')" class="flex-shrink-0">
-        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z" />
-        </svg>
+        <i-mdi-chevron-right v-if="isCollapsed" class="w-4 h-4" />
+        <i-mdi-chevron-left v-else class="w-4 h-4" />
       </n-button>
     </div>
 
     <!-- 历史对话标题 -->
     <div v-if="!isCollapsed" class="flex items-center justify-between px-3 py-2 border-y border-gray-200">
       <div class="flex items-center gap-2 text-sm font-medium">
-        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-          <path
-            d="M13 3c-4.97 0-9 4.03-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42C8.27 19.99 10.51 21 13 21c4.97 0 9-4.03 9-9s-4.03-9-9-9zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12z" />
-        </svg>
+        <i-mdi-history class="w-4 h-4" />
         <span>历史对话</span>
       </div>
       <n-dropdown trigger="click" placement="bottom-end" :options="clearMenuOptions">
         <n-button quaternary circle :bordered="false">
-          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" />
-          </svg>
+          <i-mdi-delete-outline class="w-4 h-4" />
         </n-button>
       </n-dropdown>
     </div>

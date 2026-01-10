@@ -1,7 +1,7 @@
 <template>
   <div class="flex flex-col max-w-[800px] w-full">
     <!-- 上传的图片展示区域 -->
-    <div v-if="uploadedImages.length > 0" class="uploaded-images flex flex-wrap gap-2 p-2">
+    <div v-if="uploadedImages.length > 0" class="uploaded-images flex flex-wrap gap-2 m-1">
       <div v-for="(image, index) in uploadedImages" :key="index" class="relative w-15 h-15 rounded-lg overflow-hidden">
         <img :src="image" alt="Uploaded image" class="w-full h-full object-cover" />
         <div
@@ -39,10 +39,7 @@
               <button
                 class="flex items-center gap-1 px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-100 rounded-md border border-gray-200"
                 title="Attach file">
-                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-                  <path
-                    d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.61 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z" />
-                </svg>
+                <i-mdi-paperclip class="w-4 h-4" />
                 <span>Attach</span>
               </button>
             </template>
@@ -52,40 +49,28 @@
               <div
                 class="menu-item flex items-center gap-2 px-3 py-2 text-sm hover:bg-gray-100 rounded-md cursor-pointer"
                 @click="handleMenuClick('file')">
-                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-                  <path
-                    d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.61 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z" />
-                </svg>
+                <i-mdi-file-upload-outline class="w-4 h-4" />
                 <span>Upload file</span>
               </div>
               <!-- Upload photo -->
               <div
                 class="menu-item flex items-center gap-2 px-3 py-2 text-sm hover:bg-gray-100 rounded-md cursor-pointer"
                 @click="handleMenuClick('photo')">
-                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-                  <path
-                    d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z" />
-                </svg>
+                <i-mdi-image-outline class="w-4 h-4" />
                 <span>Upload photo</span>
               </div>
               <!-- Take screenshot -->
               <div
                 class="menu-item flex items-center gap-2 px-3 py-2 text-sm hover:bg-gray-100 rounded-md cursor-pointer"
                 @click="handleMenuClick('screenshot')">
-                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-                  <path
-                    d="M21 3H3c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H3V5h18v14zm-5-7H8v-2h8v2z" />
-                </svg>
+                <i-mdi-camera class="w-4 h-4" />
                 <span>Take screenshot</span>
               </div>
               <!-- Take photo -->
               <div
                 class="menu-item flex items-center gap-2 px-3 py-2 text-sm hover:bg-gray-100 rounded-md cursor-pointer"
                 @click="handleMenuClick('camera')">
-                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-                  <path
-                    d="M12 15c1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3 1.34 3 3 3zm0-5c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm0 8c-2.76 0-5 2.24-5 5h10c0-2.76-2.24-5-5-5zm6-11c0-1.1-.9-2-2-2h-1V2c0-.55-.45-1-1-1s-1 .45-1 1v1H9V2c0-.55-.45-1-1-1s-1 .45-1 1v1H7c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2V7zm-8 11H7v-2h3v2zm0-4H7v-2h3v2zm0-4H7V7h3v2zm4 8h-2v-2h2v2zm0-4h-2v-2h2v2zm0-4h-2V7h2v2z" />
-                </svg>
+                <i-mdi-camera-plus class="w-4 h-4" />
                 <span>Take photo</span>
               </div>
             </div>
@@ -99,10 +84,7 @@
             class="flex items-center gap-1 px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-100 rounded-md border border-gray-200"
             title="Search"
             @click="handleSearchClick">
-            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-              <path
-                d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" />
-            </svg>
+            <i-mdi-magnify class="w-4 h-4" />
             <span>Search</span>
           </button>
         </div>
@@ -112,10 +94,7 @@
           class="flex items-center gap-1 px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-100 rounded-md border border-gray-200"
           title="Voice message"
           @click="handleVoiceClick">
-          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-            <path
-              d="M12 14c1.66 0 2.99-1.34 2.99-3L15 5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c3.28-.48 6-3.3 6-6.72h-1.7z" />
-          </svg>
+          <i-mdi-microphone-outline class="w-4 h-4" />
           <span>Voice</span>
         </button>
       </div>
@@ -242,7 +221,7 @@ const handleVoiceClick = () => {
 }
 
 .uploaded-images {
-  width: 100%;
+  width: calc(100% - 16px);
   flex-wrap: wrap;
 }
 </style>
