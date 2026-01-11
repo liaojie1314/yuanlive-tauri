@@ -1,6 +1,7 @@
 export enum ErrorType {
   Network = "Network",
-  Unknown = "Unknown"
+  Unknown = "Unknown",
+  Client = "Client"
 }
 
 export interface ErrorDetails {

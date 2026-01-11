@@ -71,6 +71,8 @@ export enum TauriCommandEnum {
   UPDATE_TOKEN = "update_token",
   // 移除 token
   REMOVE_TOKEN = "remove_token",
+  // 截图
+  SCREENSHOT = "screenshot",
   // AI 消息流式发送
   AI_MESSAGE_SEND_STREAM = "ai_message_send_stream",
   // AI 取消流式消息

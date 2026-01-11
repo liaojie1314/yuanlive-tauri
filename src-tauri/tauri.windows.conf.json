@@ -72,6 +72,17 @@
         "skipTaskbar": true,
         "decorations": false,
         "transparent": true
+      },
+      {
+        "label": "capture",
+        "url": "/capture",
+        "fullscreen": true,
+        "transparent": true,
+        "resizable": false,
+        "skipTaskbar": true,
+        "decorations": false,
+        "visible": false,
+        "hiddenTitle": true
       }
     ],
     "security": {
