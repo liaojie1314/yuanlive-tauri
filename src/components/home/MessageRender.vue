@@ -94,7 +94,42 @@
             </div>
           </div>
         </div>
-        <div class="text-xs text-gray-400 mt-1">{{ message.time }}</div>
+        <!-- 新增：底部按钮和时间区域 -->
+        <div class="flex items-center justify-between mt-1">
+          <!-- 左侧按钮组 -->
+          <div class="flex items-center gap-2">
+            <!-- 分页按钮 -->
+            <div class="flex items-center gap-1">
+              <i-material-symbols-keyboard-arrow-left
+                class="text-gray-400 cursor-pointer text-sm"
+                @click="$emit('prev-message', message.id)" />
+              <span class="text-xs text-gray-400">2/2</span>
+              <i-material-symbols-keyboard-arrow-right
+                class="text-gray-400 cursor-pointer text-sm"
+                @click="$emit('next-message', message.id)" />
+            </div>
+            <!-- 功能按钮组 -->
+            <div class="flex items-center gap-2">
+              <i-material-symbols-content-copy
+                class="text-gray-400 cursor-pointer text-sm"
+                @click="$emit('copy-message', message.id)" />
+              <i-material-symbols-refresh
+                class="text-gray-400 cursor-pointer text-sm"
+                @click="$emit('refresh-message', message.id)" />
+              <i-material-symbols-thumb-up
+                class="text-gray-400 cursor-pointer text-sm"
+                @click="$emit('like-message', message.id)" />
+              <i-material-symbols-thumb-down
+                class="text-gray-400 cursor-pointer text-sm"
+                @click="$emit('dislike-message', message.id)" />
+              <i-material-symbols-share
+                class="text-gray-400 cursor-pointer text-sm"
+                @click="$emit('share-message', message.id)" />
+            </div>
+          </div>
+          <!-- 右侧时间 -->
+          <div class="text-xs text-gray-400">{{ message.time }}</div>
+        </div>
       </div>
     </div>
 
@@ -281,6 +316,13 @@ const props = defineProps<{
 // 定义emit事件
 defineEmits<{
   "image-click": [imageUrl: string];
+  "copy-message": [messageId: number];
+  "refresh-message": [messageId: number];
+  "like-message": [messageId: number];
+  "dislike-message": [messageId: number];
+  "share-message": [messageId: number];
+  "prev-message": [messageId: number];
+  "next-message": [messageId: number];
 }>();
 
 // 思考内容展开状态
@@ -671,6 +713,34 @@ const renderedContent = computed(() => {
   margin-left: 2px;
   animation: blink 1s infinite;
   vertical-align: baseline;
+}
+
+/* 消息操作按钮样式 */
+:deep(.material-symbols-outlined) {
+  font-size: 16px;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+:deep(.material-symbols-outlined:hover) {
+  color: #3b82f6;
+}
+
+/* 分页按钮样式 */
+.pagination-btn {
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.pagination-btn:hover {
+  color: #3b82f6;
+}
+
+/* 消息操作按钮容器 */
+.message-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 /* 文本消息容器，用于定位光标 */

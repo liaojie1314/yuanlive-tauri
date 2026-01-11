@@ -65,12 +65,16 @@ export enum EventEnum {
 
 /** tauri 命令 */
 export enum TauriCommandEnum {
+  // 基础请求命令
+  REQUEST_COMMAND = "request_command",
   // 更新 token
   UPDATE_TOKEN = "update_token",
   // 移除 token
   REMOVE_TOKEN = "remove_token",
   // AI 消息流式发送
-  AI_MESSAGE_SEND_STREAM = "ai_message_send_stream"
+  AI_MESSAGE_SEND_STREAM = "ai_message_send_stream",
+  // AI 取消流式消息
+  AI_MESSAGE_CANCEL_STREAM = "ai_message_cancel_stream"
 }
 
 /** pinia存储的名称 */

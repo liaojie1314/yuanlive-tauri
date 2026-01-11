@@ -36,12 +36,13 @@
           <!-- Attach按钮 -->
           <n-popover class="p-0 bg-transparent select-none" :show-arrow="false" trigger="click">
             <template #trigger>
-              <button
-                class="flex items-center gap-1 px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-100 rounded-md border border-gray-200"
+              <div
+                class="flex items-center gap-1 px-4 py-1.5 text-sm text-gray-600 hover:bg-gray-50 rounded-full cursor-pointer"
+                style="border: 1px solid #d1d5db"
                 title="Attach file">
                 <i-mdi-paperclip class="w-4 h-4" />
                 <span>Attach</span>
-              </button>
+              </div>
             </template>
             <!-- 弹出菜单内容 -->
             <div class="menu-list space-y-1">
@@ -79,24 +80,68 @@
           <input ref="fileInput" type="file" accept="*/*" multiple class="hidden" @change="handleFileChange" />
           <input ref="photoInput" type="file" accept="image/*" multiple class="hidden" @change="handleFileChange" />
 
+          <!-- Think按钮 -->
+          <div
+            class="flex items-center gap-1 px-4 py-1.5 text-sm hover:bg-blue-50 rounded-full cursor-pointer transition-all duration-200"
+            :class="{
+              'text-blue-500 bg-blue-50': isThinkActive,
+              'text-gray-600 bg-white': !isThinkActive
+            }"
+            :style="{
+              border: '1px solid',
+              'border-color': isThinkActive ? '#3b82f6' : '#d1d5db'
+            }"
+            title="Think"
+            @click="handleThinkClick">
+            <i-mdi-lightbulb-outline class="w-4 h-4" />
+            <span>Think</span>
+          </div>
+
           <!-- Search按钮 -->
-          <button
-            class="flex items-center gap-1 px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-100 rounded-md border border-gray-200"
+          <div
+            class="flex items-center gap-1 px-4 py-1.5 text-sm hover:bg-blue-50 rounded-full cursor-pointer transition-all duration-200"
+            :class="{
+              'text-blue-500 bg-blue-50': isSearchActive,
+              'text-gray-600 bg-white': !isSearchActive
+            }"
+            :style="{
+              border: '1px solid',
+              'border-color': isSearchActive ? '#3b82f6' : '#d1d5db'
+            }"
             title="Search"
             @click="handleSearchClick">
             <i-mdi-magnify class="w-4 h-4" />
             <span>Search</span>
-          </button>
+          </div>
         </div>
 
-        <!-- 右侧Voice按钮 - 右对齐 -->
-        <button
-          class="flex items-center gap-1 px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-100 rounded-md border border-gray-200"
-          title="Voice message"
-          @click="handleVoiceClick">
-          <i-mdi-microphone-outline class="w-4 h-4" />
-          <span>Voice</span>
-        </button>
+        <!-- 右侧按钮组 -->
+        <div class="flex items-center gap-3">
+          <!-- Voice按钮 -->
+          <div
+            class="flex items-center justify-center w-8 h-8 text-gray-600 hover:bg-gray-100 rounded-full cursor-pointer"
+            style="border: 1px solid #d1d5db"
+            title="Voice message"
+            @click="handleVoiceClick">
+            <i-mdi-microphone-outline class="w-4 h-4" />
+          </div>
+
+          <!-- 发送按钮 -->
+          <div
+            class="text-white flex items-center justify-center w-8 h-8 rounded-full cursor-pointer transition-all duration-200"
+            :class="{
+              'bg-blue-500': messageText.trim() || uploadedImages.length > 0,
+              'bg-blue-400': !(messageText.trim() || uploadedImages.length > 0)
+            }"
+            :style="{
+              border: '1px solid',
+              'border-color': messageText.trim() || uploadedImages.length > 0 ? '#3b82f6' : '#d1d5db'
+            }"
+            title="Send message"
+            @click="sendMessage">
+            <i-mdi-arrow-up class="w-4 h-4" />
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -114,6 +159,9 @@ const uploadedImages = ref<string[]>([]);
 const fileInput = ref<HTMLInputElement | null>(null);
 // 图片输入框引用
 const photoInput = ref<HTMLInputElement | null>(null);
+// 按钮激活状态管理
+const isThinkActive = ref(false);
+const isSearchActive = ref(false);
 
 // 混合类型消息的内容结构
 interface MixedContent {
@@ -231,7 +279,17 @@ const removeImage = (index: number) => {
 // 处理Search按钮点击
 const handleSearchClick = () => {
   console.log("Search button clicked");
+  // 切换激活状态
+  isSearchActive.value = !isSearchActive.value;
   // 这里可以实现搜索功能
+};
+
+// 处理Think按钮点击
+const handleThinkClick = () => {
+  console.log("Think button clicked");
+  // 切换激活状态
+  isThinkActive.value = !isThinkActive.value;
+  // 这里可以实现深度思考功能
 };
 
 // 处理Voice按钮点击

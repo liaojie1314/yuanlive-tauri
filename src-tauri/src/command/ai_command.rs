@@ -65,7 +65,7 @@ pub async fn ai_message_send_stream(
     // 在后台任务中处理 SSE 事件流
     let request_id_clone = request_id.clone();
 
-    tokio::spawn(async move {
+    let join_handle = tokio::spawn(async move {
         let mut stream = response.bytes_stream();
         let mut full_content = String::new();
         let mut buffer = String::new();
@@ -162,8 +162,27 @@ pub async fn ai_message_send_stream(
         if let Err(e) = on_event.send(done_event) {
             error!("发送 done 事件失败: {}", e);
         }
-
-        info!("SSE 流处理完成")
+        info!("SSE 流处理完成");
     });
+    {
+        let mut tasks = state.stream_tasks.lock().await;
+        tasks.insert(request_id.clone(), join_handle);
+    }
     Ok(())
+}
+
+/// 取消指定请求ID的 AI 流式任务
+#[tauri::command]
+pub async fn ai_message_cancel_stream(
+    state: State<'_, AppData>,
+    request_id: String,
+) -> Result<(), String> {
+    info!("尝试取消 AI 流式任务: {}", request_id);
+    let mut tasks = state.stream_tasks.lock().await;
+    if let Some(handle) = tasks.remove(&request_id) {
+        handle.abort();
+        info!("AI 流式任务已取消: {}", request_id);
+        return Ok(());
+    }
+    Err(format!("Not found task for request id: {}", request_id))
 }

@@ -1,5 +1,5 @@
-import { UrlEnum } from "@/enums";
-import { ErrorType, invokeSilently, invokeWithErrorHandler } from "./TauriInvokeHandler.ts";
+import { TauriCommandEnum, UrlEnum } from "@/enums";
+import { ErrorType, invokeWithErrorHandler } from "./TauriInvokeHandler.ts";
 
 /**
  * 请求参数接口
@@ -55,7 +55,7 @@ export async function request<T = any>(
   // 如果需要重试
   if (retry) {
     const { invokeWithRetry } = await import("./TauriInvokeHandler.ts");
-    return await invokeWithRetry<T>("request_command", args, {
+    return await invokeWithRetry<T>(TauriCommandEnum.REQUEST_COMMAND, args, {
       ...retry,
       showError: invokeOptions.showError,
       customErrorMessage: invokeOptions.customErrorMessage
@@ -63,23 +63,10 @@ export async function request<T = any>(
   }
 
   // 普通调用
-  return await invokeWithErrorHandler<T>("request_command", args, {
+  return await invokeWithErrorHandler<T>(TauriCommandEnum.REQUEST_COMMAND, args, {
     ...invokeOptions,
     errorType: invokeOptions.errorType || ErrorType.Network
   });
-}
-
-/**
- * 静默的请求（不显示错误提示）
- * @param requestParams 请求参数
- */
-export async function requestSilent<T = any>(requestParams: RequestParams): Promise<T | null> {
-  const args = {
-    url: requestParams.url,
-    body: requestParams.body || null,
-    params: requestParams.params || null
-  };
-  return await invokeSilently<T>("request_command", args);
 }
 
 /**
@@ -101,6 +88,11 @@ export interface StreamCallbacks {
   onError?: (error: string) => void;
 }
 
+/**
+ * 发送 AI 流式消息
+ * @param body 请求体
+ * @param callbacks 回调函数
+ */
 export async function messageSendStream(
   body: {
     conversationId: string;
@@ -171,4 +163,13 @@ export async function messageSendStream(
       }
     });
   });
+}
+
+/**
+ * 取消 AI 流式消息
+ * @param requestId 请求 ID
+ */
+export async function messageCancelStream(requestId: string): Promise<void> {
+  const { invoke } = await import("@tauri-apps/api/core");
+  await invoke(TauriCommandEnum.AI_MESSAGE_CANCEL_STREAM, { requestId });
 }

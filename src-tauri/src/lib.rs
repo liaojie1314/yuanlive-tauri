@@ -10,6 +10,7 @@ use crate::configuration::{get_configuration, BackendSettings};
 use crate::error::CommonError;
 use crate::init::CustomInit;
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use tauri::async_runtime::Mutex;
@@ -22,6 +23,8 @@ pub struct AppData {
     user_info: Arc<Mutex<UserInfo>>,
     pub rc: Arc<Mutex<request_client::RequestClient>>,
     pub config: Arc<Mutex<BackendSettings>>,
+    /// 记录正在进行的 AI 流式任务
+    pub stream_tasks: Arc<Mutex<HashMap<String, tokio::task::JoinHandle<()>>>>,
 }
 
 pub(crate) static APP_STATE_READY: AtomicBool = AtomicBool::new(false);
@@ -161,6 +164,7 @@ fn common_setup(app_handle: AppHandle) -> Result<(), Box<dyn std::error::Error>>
                 rc,
                 user_info: user_info.clone(),
                 config: settings,
+                stream_tasks: Arc::new(Mutex::new(HashMap::new())),
             });
             APP_STATE_READY.store(true, Ordering::SeqCst);
             if let Err(e) = app_handle.emit("app-state-ready", ()) {
@@ -181,7 +185,7 @@ fn common_setup(app_handle: AppHandle) -> Result<(), Box<dyn std::error::Error>>
 // 公共的命令处理器函数
 fn get_invoke_handlers() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Send + Sync + 'static
 {
-    use crate::command::ai_command::ai_message_send_stream;
+    use crate::command::ai_command::{ai_message_cancel_stream, ai_message_send_stream};
     use crate::command::app_state_command::is_app_state_ready;
     use crate::command::request_command::{login_command, request_command};
     use crate::command::setting_command::{get_settings, update_settings};
@@ -199,6 +203,7 @@ fn get_invoke_handlers() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Se
         update_settings,
         remove_token,
         ai_message_send_stream,
+        ai_message_cancel_stream,
         login_command,
         request_command,
         // websocket
