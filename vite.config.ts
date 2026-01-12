@@ -1,19 +1,9 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import vue from "@vitejs/plugin-vue";
-import VueJsx from "@vitejs/plugin-vue-jsx";
-import UnoCSS from "@unocss/vite";
-import VueSetupExtend from "vite-plugin-vue-setup-extend";
 import postcsspxtorem from "postcss-pxtorem";
-import AutoImport from "unplugin-auto-import/vite"; // 自动导入
-import Components from "unplugin-vue-components/vite"; // 组件注入
-import Icons from "unplugin-icons/vite"; // 图标本地化
-import IconsResolver from "unplugin-icons/resolver"; // 图标解析器
 import { ConfigEnv, defineConfig, loadEnv } from "vite";
-
-import { NaiveUiResolver } from "unplugin-vue-components/resolvers";
-import { createManualChunks } from "./build/config/chunks";
-import { getSrcPath, getRootPath } from "./build/config/getPath";
+import { root, getSrcPath, getRootPath, createManualChunks, wrapperEnv } from "./build/utils";
+import { getPluginsList } from "./build/plugins";
 
 // 读取 package.json 依赖
 const packageJson = JSON.parse(readFileSync(join(process.cwd(), "package.json"), "utf-8"));
@@ -21,9 +11,7 @@ const dependencies = Object.keys(packageJson.dependencies || {});
 
 // https://vite.dev/config/
 export default defineConfig(({ mode }: ConfigEnv) => {
-  const config = loadEnv(mode, process.cwd(), "");
-
-  console.log(config);
+  const { VITE_CDN, VITE_COMPRESSION } = wrapperEnv(loadEnv(mode, root));
   return {
     resolve: {
       alias: {
@@ -54,32 +42,7 @@ export default defineConfig(({ mode }: ConfigEnv) => {
         ]
       }
     },
-    plugins: [
-      vue(),
-      VueSetupExtend(),
-      VueJsx(), // 开启jsx功能
-      UnoCSS(), // 开启unocss
-      Icons({
-        autoInstall: true,
-        compiler: "vue3"
-      }),
-      AutoImport({
-        imports: [
-          "vue",
-          "vue-router",
-          "pinia",
-          {
-            "naive-ui": ["useDialog", "useMessage", "useNotification", "useLoadingBar", "useModal"]
-          }
-        ],
-        dts: "src/typings/auto-imports.d.ts"
-      }),
-      Components({
-        dirs: ["src/components/**"],
-        resolvers: [NaiveUiResolver(), IconsResolver()],
-        dts: "src/typings/components.d.ts"
-      })
-    ],
+    plugins: getPluginsList(VITE_CDN, VITE_COMPRESSION),
     worker: {
       format: "es" as const
     },
@@ -117,6 +80,10 @@ export default defineConfig(({ mode }: ConfigEnv) => {
       strictPort: true,
       watch: {
         ignored: ["**/src-tauri/**"]
+      },
+      // 预热文件以提前转换和缓存结果，降低启动期间的初始页面加载时长并防止转换瀑布
+      warmup: {
+        clientFiles: ["./index.html", "./src/{views,components}/*"]
       }
     }
   };

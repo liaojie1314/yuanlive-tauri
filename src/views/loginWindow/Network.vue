@@ -121,6 +121,17 @@ const settingStore = useSettingStore();
 const { themes } = storeToRefs(settingStore);
 const naiveTheme = computed(() => (themes.value.content === ThemeEnum.DARK ? darkTheme : lightTheme));
 
+type ProxySettings = {
+  apiType: string;
+  apiIp: string;
+  apiPort: string;
+  apiSuffix: string;
+  wsType: string;
+  wsIp: string;
+  wsPort: string;
+  wsSuffix: string;
+};
+
 const proxy = ref<"api" | "ws">("api");
 const savedProxy = reactive<ProxySettings>({
   apiType: "",

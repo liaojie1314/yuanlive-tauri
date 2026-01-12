@@ -75,6 +75,18 @@ const { createWebviewWindow } = useWindow();
 
 const activeUrl = ref<string>("index");
 
+type BaseMenuItem = {
+  label: string;
+  icon: string;
+  click: () => void;
+};
+
+type MenuAction = {
+  url: string;
+  icon: string;
+  title: string;
+};
+
 const baseMenu: Array<Omit<MenuAction, "title">> = [
   {
     url: "index",

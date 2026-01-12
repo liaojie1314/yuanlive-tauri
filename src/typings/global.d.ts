@@ -1,26 +1,15 @@
 declare global {
-  type ProxySettings = {
-    apiType: string;
-    apiIp: string;
-    apiPort: string;
-    apiSuffix: string;
-    wsType: string;
-    wsIp: string;
-    wsPort: string;
-    wsSuffix: string;
-  };
-
-  type BaseMenuItem = {
-    label: string;
-    icon: string;
-    click: () => void;
-  };
-
-  type MenuAction = {
-    url: string;
-    icon: string;
-    title: string;
-  };
+  /**
+   * 全局自定义环境变量的类型声明
+   */
+  interface ViteEnv {
+    VITE_CDN: boolean;
+    VITE_COMPRESSION: ViteCompression;
+  }
+  /**
+   * 打包压缩格式的类型声明
+   */
+  type ViteCompression = "none" | "gzip" | "brotli" | "both" | "gzip-clear" | "brotli-clear" | "both-clear";
 }
 
 export {};
