@@ -255,7 +255,7 @@
         </div>
 
         <!-- Danmaku Input -->
-        <DanmakuInput
+        <danmaku-input
           class="control-item"
           :is-enabled="true"
           :is-danmaku-enabled="danmakuStore.enabled"
@@ -327,16 +327,16 @@
       </div>
     </div>
   </div>
-  <DanmakuListDialog
+  <danmaku-list-dialog
     v-model:show="showDanmakuListDialog"
     :danmaku-list="danmakuList"
     @open-report="openDanmakuReportDialog" />
-  <DanmakuReportDialog
+  <danmaku-report-dialog
     v-model:show="showDanmakuReportDialog"
     :danmaku-index="selectedDanmakuIndex"
     @submit-report="handleDanmakuReport" />
   <!-- New Collection Folder Dialog -->
-  <CollectionFolderDialog v-model:show="showNewFolderDialog" @create-folder="handleCreateFolder" />
+  <collection-folder-dialog v-model:show="showNewFolderDialog" @create-folder="handleCreateFolder" />
 </template>
 
 <script setup lang="ts">
@@ -626,7 +626,7 @@ const showDanmakuActions = (danmakuId: string) => {
 
       // Calculate elapsed time and remaining duration
       const elapsed = Date.now() - danmaku.startTime;
-      const totalDuration = 16000 / danmakuStore.speed;
+      const totalDuration = 12000 / danmakuStore.speed;
       danmaku.remainingDuration = Math.max(0, totalDuration - elapsed);
     }
   }
@@ -2154,12 +2154,106 @@ defineExpose({
   }
 
   .tooltip-content {
+    padding: 4px;
     font-size: 10px;
   }
 
   .avatar-container {
     width: 28px;
     height: 28px;
+  }
+
+  .collection-tooltip {
+    width: 160px !important;
+    padding: 4px !important;
+    font-size: 12px !important;
+
+    .collection-header {
+      span {
+        font-size: 12px !important;
+      }
+      .new-folder-btn {
+        padding: 3px 8px !important;
+        font-size: 10px !important;
+      }
+    }
+
+    .collection-item {
+      font-size: 10px !important;
+
+      // 减小n-checkbox大小
+      :deep(.n-checkbox) {
+        font-size: 10px !important;
+
+        .n-checkbox-box {
+          width: 14px !important;
+          height: 14px !important;
+
+          .n-checkbox-icon {
+            font-size: 10px !important;
+          }
+        }
+      }
+    }
+    .iconify-icon {
+      width: 14px !important;
+      height: 14px !important;
+    }
+    .no-collections {
+      padding: 12px 0;
+      .no-collections-text {
+        font-size: 11px !important;
+      }
+    }
+
+    .collection-footer {
+      margin-top: 4px !important;
+      .footer-btn {
+        padding: 4px 8px !important;
+        font-size: 10px !important;
+      }
+    }
+  }
+
+  // Share Tooltip Responsive
+  .share-tooltip {
+    padding: 2px;
+    font-size: 12px;
+
+    .share-btn {
+      .share-btn-icon {
+        width: 14px !important;
+        height: 14px !important;
+      }
+
+      .share-btn-text {
+        font-size: 10px;
+      }
+    }
+  }
+
+  // More Tooltip Responsive
+  .more-tooltip {
+    padding: 4px;
+    font-size: 12px;
+
+    .more-btn {
+      gap: 4px;
+
+      .more-btn-icon-container {
+        width: 20px;
+        height: 20px;
+      }
+
+      .more-btn-icon {
+        width: 14px !important;
+        height: 14px !important;
+      }
+
+      .more-btn-text {
+        font-size: 10px;
+      }
+    }
   }
 }
 
@@ -2437,6 +2531,7 @@ defineExpose({
 .share-tooltip {
   display: flex;
   gap: 8px;
+  padding: 8px;
   background-color: rgba(0, 0, 0, 0.8);
   border-radius: 8px;
   backdrop-filter: blur(10px);
@@ -2446,7 +2541,7 @@ defineExpose({
 .share-btn {
   display: flex;
   align-items: center;
-  padding: 10px;
+  padding: 5px;
   background-color: rgba(255, 255, 255, 0.1);
   border-radius: 6px;
   cursor: pointer;
@@ -2455,7 +2550,7 @@ defineExpose({
 }
 
 .share-btn-text {
-  font-size: 14px;
+  font-size: 16px;
   margin-left: 10px;
 }
 
@@ -2464,8 +2559,8 @@ defineExpose({
 }
 
 .share-btn-icon {
-  width: 18px !important;
-  height: 18px !important;
+  width: 24px !important;
+  height: 24px !important;
   color: #fff;
 }
 

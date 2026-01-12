@@ -10,6 +10,7 @@ use tokio::sync::{mpsc, Mutex, MutexGuard, RwLock};
 use tokio::task::JoinHandle;
 use tokio::time::{interval, sleep, Duration};
 use tokio_tungstenite::connect_async;
+use tokio_tungstenite::tungstenite::client::IntoClientRequest;
 use tokio_tungstenite::tungstenite::Message;
 use tracing::{debug, error, info, warn};
 use url::Url;
@@ -268,14 +269,21 @@ impl WebSocketClient {
             .map_err(|e| anyhow::anyhow!("Invalid WebSocket URL '{}': {}", config.server_url, e))?;
         url.query_pairs_mut()
             .append_pair("deviceID", &config.device_id);
-        if let Some(ref token) = config.token {
-            url.query_pairs_mut().append_pair("token", token);
-        }
         let url_str = url.as_str();
         info!("Connecting to WebSocket: {}", url_str);
         self.update_state(ConnectionState::Connecting, false).await;
+
+        // 构建WebSocket请求，添加自定义协议头
+        let mut request = url_str.into_client_request()?;
+        let headers = request.headers_mut();
+
+        // 如果有token，将其添加到Sec-WebSocket-Protocol头中
+        if let Some(ref token) = config.token {
+            headers.insert("Sec-WebSocket-Protocol", token.parse()?);
+        }
+
         // 建立连接
-        let (ws_stream, _) = connect_async(url_str)
+        let (ws_stream, _) = connect_async(request)
             .await
             .map_err(|e| anyhow::anyhow!("Failed to connect to WebSocket '{}': {}", url_str, e))?;
         let (mut ws_sender, mut ws_receiver) = ws_stream.split();
@@ -480,7 +488,7 @@ impl WebSocketClient {
         // 尝试解析心跳响应
         if let Ok(ws_msg) = serde_json::from_str::<WsMessage>(&text) {
             match ws_msg {
-                WsMessage::HeartbeatResponse { timestamp: _ } => {
+                WsMessage::HeartbeatResponse => {
                     let now = Utc::now().timestamp_millis() as u64;
                     last_pong_time.store(now, Ordering::SeqCst);
                     consecutive_failures.store(0, Ordering::SeqCst);

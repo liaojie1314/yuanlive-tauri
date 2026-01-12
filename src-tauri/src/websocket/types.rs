@@ -18,11 +18,11 @@ pub enum ConnectionState {
 #[serde(tag = "type")]
 pub enum WsMessage {
     // 心跳消息 (PING)
-    #[serde(rename = "2")]
+    #[serde(rename = "PING")]
     Heartbeat,
     // 心跳响应 (PONG)
-    #[serde(rename = "3", rename_all = "camelCase")]
-    HeartbeatResponse { timestamp: u64 },
+    #[serde(rename = "PONG")]
+    HeartbeatResponse,
     // 普通消息
     Message {
         #[serde(flatten)]
