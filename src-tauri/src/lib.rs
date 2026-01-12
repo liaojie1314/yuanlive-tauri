@@ -1,5 +1,6 @@
 pub mod command;
 mod configuration;
+pub mod desktop;
 mod error;
 mod init;
 mod request_client;
@@ -40,6 +41,7 @@ pub struct UserInfo {
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_clipboard_manager::init())
         .init_plugin()
         .init_window_event()
         .setup(move |app| {
@@ -86,14 +88,16 @@ async fn initialize_app_data(
 ///
 /// 该函数会：
 /// - 关闭除 login/tray 外的大部分窗口
+/// - 隐藏但保留 capture 窗口
 /// - 优雅地处理窗口关闭过程中的错误
 #[cfg(desktop)]
 pub async fn handle_logout_windows(app_handle: &AppHandle) {
-    info!("[LOGOUT] Starting to close windows");
+    info!("[LOGOUT] Starting to close windows and preserve capture windows");
     let all_windows = app_handle.webview_windows();
     info!("[LOGOUT] Found {} windows", all_windows.len());
     // 收集需要关闭的窗口
     let mut windows_to_close = Vec::new();
+    let mut windows_to_hide = Vec::new();
 
     for (label, window) in all_windows {
         match label.as_str() {
@@ -101,11 +105,24 @@ pub async fn handle_logout_windows(app_handle: &AppHandle) {
             "login" | "tray" => {
                 info!("[LOGOUT] Skipping window: {}", label);
             }
+            // 这些窗口只隐藏，不销毁
+            "capture" => {
+                info!("[LOGOUT] Marking window for preservation: {}", label);
+                windows_to_hide.push((label, window));
+            }
             // 其他窗口需要关闭
             _ => {
                 info!("[LOGOUT] Marking window for closure: {}", label);
                 windows_to_close.push((label, window));
             }
+        }
+    }
+
+    // 先隐藏需要保持的窗口
+    for (label, window) in windows_to_hide {
+        info!("[LOGOUT] Hiding window (preserving): {}", label);
+        if let Err(e) = window.hide() {
+            warn!("[LOGOUT] Failed to hide window {}: {}", label, e);
         }
     }
 
@@ -190,12 +207,14 @@ fn get_invoke_handlers() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Se
     use crate::command::request_command::{login_command, request_command};
     use crate::command::setting_command::{get_settings, update_settings};
     use crate::command::token_command::remove_token;
-    #[cfg(desktop)]
-    use crate::command::window_payload_command::{get_window_payload, push_window_payload};
     use crate::websocket::commands::{
         ws_disconnect, ws_force_reconnect, ws_get_state, ws_init_connection, ws_is_connected,
         ws_send_message,
     };
+    #[cfg(desktop)]
+    use desktop::cmd::screenshot;
+    #[cfg(desktop)]
+    use desktop::window_payload::{get_window_payload, push_window_payload};
 
     tauri::generate_handler![
         is_app_state_ready,
@@ -217,5 +236,7 @@ fn get_invoke_handlers() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Se
         push_window_payload,
         #[cfg(desktop)]
         get_window_payload,
+        #[cfg(desktop)]
+        screenshot,
     ]
 }

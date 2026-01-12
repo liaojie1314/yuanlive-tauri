@@ -80,6 +80,11 @@ const getCommonRoutes = (): Array<RouteRecordRaw> => [
     component: () => import("@/views/Tray.vue")
   },
   {
+    path: "/capture",
+    name: "capture",
+    component: () => import("@/views/Capture.vue")
+  },
+  {
     path: "/modal-remoteLogin",
     name: "modal-remoteLogin",
     component: () => import("@/views/loginWindow/RemoteLoginModal.vue")

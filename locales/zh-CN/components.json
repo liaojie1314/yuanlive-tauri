@@ -3,6 +3,21 @@
     "confirm": "确定",
     "cancel": "取消"
   },
+  "screenshot": {
+    "borderRadius": "圆角",
+    "redo": "重做",
+    "undo": "撤回",
+    "confirm": "确定",
+    "cancel": "取消",
+    "toolRect": "矩形",
+    "toolCircle": "圆形",
+    "toolArrow": "箭头",
+    "toolMosaic": "马赛克",
+    "tooltipDrag": "拖动调整选区",
+    "tooltipResize": "拖拽控制点调整大小",
+    "saveSuccess": "截图已复制到剪贴板",
+    "saveFailed": "截图失败，请稍后重试"
+  },
   "window": {
     "logoutFail": "退出登录失败，请重试",
     "createWindowFail": "创建{label}窗口失败"

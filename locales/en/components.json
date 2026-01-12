@@ -3,6 +3,21 @@
     "confirm": "Confirm",
     "cancel": "Cancel"
   },
+  "screenshot": {
+    "borderRadius": "Radius",
+    "redo": "Redo",
+    "undo": "Undo",
+    "confirm": "Confirm",
+    "cancel": "Cancel",
+    "toolRect": "Rectangle",
+    "toolCircle": "Circle",
+    "toolArrow": "Arrow",
+    "toolMosaic": "Mosaic",
+    "tooltipDrag": "Drag to adjust selection",
+    "tooltipResize": "Drag handles to resize",
+    "saveSuccess": "Screenshot copied to clipboard",
+    "saveFailed": "Screenshot failed, please retry"
+  },
   "window": {
     "logoutFail": "Logout failed, please try again",
     "createWindowFail": "Failed to create {label} window"
