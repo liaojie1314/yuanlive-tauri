@@ -74,7 +74,7 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import UserInfoCard from "@/components/home/UserInfoCard.vue";
-import CollectionFolderDialog from "@/components/common/CollectionFolderDialog.vue";
+import CollectionFolderDialog from "@/components/home/CollectionFolderDialog.vue";
 
 interface UserInfo {
   name: string;

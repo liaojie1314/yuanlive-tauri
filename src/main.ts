@@ -8,9 +8,13 @@ import { startWebVitalObserver } from "@/utils/WebVitalsObserver.ts";
 import { setupI18n } from "@/services/i18n.ts";
 import App from "@/App.vue";
 import { AppException } from "@/common/exception.ts";
+import { getMemoryMonitor } from "@/utils/MemoryMonitor.ts";
 
 initializePlatform();
 startWebVitalObserver();
+// Initialize memory monitor
+const memoryMonitor = getMemoryMonitor();
+memoryMonitor.start();
 
 if (process.env.NODE_ENV === "development") {
   import("@/utils/Console.ts").then((module) => {

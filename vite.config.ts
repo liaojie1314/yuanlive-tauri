@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import postcsspxtorem from "postcss-pxtorem";
 import { ConfigEnv, defineConfig, loadEnv } from "vite";
-import { root, getSrcPath, getRootPath, createManualChunks, wrapperEnv } from "./build/utils";
+import { root, getSrcPath, createManualChunks, wrapperEnv } from "./build/utils";
 import { getPluginsList } from "./build/plugins";
 
 // 读取 package.json 依赖
@@ -18,7 +18,7 @@ export default defineConfig(({ mode }: ConfigEnv) => {
         // 配置主路径别名@
         "@": getSrcPath(),
         // 配置路径别名~(根路径)
-        "~": getRootPath()
+        "~": root
       }
     },
     css: {

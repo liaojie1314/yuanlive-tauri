@@ -1,15 +1,7 @@
-import path from "node:path";
+import { readdir, stat } from "node:fs";
 
 // 启动`node`进程时所在工作目录的绝对路径
 const root: string = process.cwd();
-
-/**
- * 获取项目根路径
- * @returns 项目根目录,末尾不带斜杠
- */
-const getRootPath = () => {
-  return path.resolve(__dirname, process.cwd());
-};
 
 /**
  * 获取项目主路径
@@ -17,8 +9,7 @@ const getRootPath = () => {
  * @returns 主目录路径,末尾不带斜杠
  */
 const getSrcPath = (mainName = "src") => {
-  const rootPath = getRootPath();
-  return `${rootPath}/${mainName}`;
+  return `${root}/${mainName}`;
 };
 
 /**
@@ -85,4 +76,62 @@ const wrapperEnv = (envConf: Recordable): ViteEnv => {
   return ret;
 };
 
-export { root, getRootPath, getSrcPath, createManualChunks, wrapperEnv };
+const fileListTotal: number[] = [];
+
+/**
+ * @description 求数字类型组成数组中的和
+ * @param list 数字类型组成数组
+ * @returns 求和值
+ */
+const sum = (arr: number[]) => arr.reduce((acc, cur) => acc + cur, 0);
+
+/**
+ * @description 将字节单位智能转化成 `Bytes` 、 `KB` 、 `MB` 、 `GB` 、 `TB` 、 `PB` 、 `EB` 、 `ZB` 、 `YB` 其中的一种
+ * @param byte 字节
+ * @param digits 四舍五入保留几位小数（默认四舍五入保留两位小数）
+ * @returns 智能转化字节单位后的值
+ */
+const formatBytes = (byte: number, digits = 2) => {
+  const units = ["Bytes", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"];
+  let index = 0;
+  while (byte >= 1024 && index < units.length - 1) {
+    byte /= 1024;
+    index++;
+  }
+  return `${byte.toFixed(digits)} ${units[index]}`;
+};
+
+/**
+ * @description 获取指定文件夹中所有文件的总大小
+ * @param options 选项
+ * @param options.folder 文件夹路径（默认值：`dist`）
+ * @param options.callback 回调函数，参数为文件夹中所有文件的总大小（默认单位：字节）
+ * @param options.format 是否格式化字节单位（默认值：`true`）
+ */
+const getPackageSize = (options) => {
+  const { folder = "dist", callback, format = true } = options;
+  readdir(folder, (err, files: string[]) => {
+    if (err) throw err;
+    let count = 0;
+    const checkEnd = () => {
+      ++count === files.length && callback(format ? formatBytes(sum(fileListTotal)) : sum(fileListTotal));
+    };
+    files.forEach((item: string) => {
+      stat(`${folder}/${item}`, async (err, stats) => {
+        if (err) throw err;
+        if (stats.isFile()) {
+          fileListTotal.push(stats.size);
+          checkEnd();
+        } else if (stats.isDirectory()) {
+          getPackageSize({
+            folder: `${folder}/${item}/`,
+            callback: checkEnd
+          });
+        }
+      });
+    });
+    files.length === 0 && callback(0);
+  });
+};
+
+export { root, getSrcPath, createManualChunks, wrapperEnv, getPackageSize };

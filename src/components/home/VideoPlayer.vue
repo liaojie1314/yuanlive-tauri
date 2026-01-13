@@ -344,11 +344,12 @@ import videojs from "video.js";
 import "video.js/dist/video-js.css";
 import { NSwitch, NDropdown, NSlider, NTooltip } from "naive-ui";
 import DanmakuInput from "../common/DanmakuInput.vue";
-import DanmakuListDialog from "../common/DanmakuListDialog.vue";
-import DanmakuReportDialog from "../common/DanmakuReportDialog.vue";
-import CollectionFolderDialog from "../common/CollectionFolderDialog.vue";
+import DanmakuListDialog from "./DanmakuListDialog.vue";
+import DanmakuReportDialog from "./DanmakuReportDialog.vue";
+import CollectionFolderDialog from "./CollectionFolderDialog.vue";
 import { useDanmakuStore } from "@/stores/danmaku";
 import { useVideoStore } from "@/stores/video";
+import { getMemoryMonitor, cleanupMemory, type CleanupResource } from "@/utils/MemoryMonitor.ts";
 
 // Props
 const props = defineProps<{
@@ -609,6 +610,27 @@ const handleDanmakuReport = (index: number, type: string, description: string) =
 // Refs to track danmaku timers and display status
 const danmakuTimers = new Map<string, NodeJS.Timeout>();
 const displayedDanmakuIds = new Set<string>(); // Track which danmakus have been displayed
+const eventListeners = new Map<string, Function>(); // Track all event listeners for cleanup
+
+// Shared function to set danmaku timer
+const setDanmakuTimer = (danmakuId: string, duration: number) => {
+  const danmaku = activeDanmakus.value.find((d) => d.id === danmakuId);
+  if (danmaku) {
+    danmaku.startTime = Date.now();
+  }
+
+  const timer = setTimeout(() => {
+    if (hoveredDanmakuId.value !== danmakuId) {
+      const index = activeDanmakus.value.findIndex((d) => d.id === danmakuId);
+      if (index !== -1) {
+        activeDanmakus.value.splice(index, 1);
+      }
+      danmakuTimers.delete(danmakuId);
+    }
+  }, duration);
+
+  danmakuTimers.set(danmakuId, timer);
+};
 
 // Show danmaku actions on hover
 const showDanmakuActions = (danmakuId: string) => {
@@ -1148,31 +1170,6 @@ const updateActiveDanmakus = () => {
       // Mark as displayed to prevent repeat display
       displayedDanmakuIds.add(danmaku.id);
 
-      // Function to set timer for danmaku removal
-      const setDanmakuTimer = (danmakuId: string, duration: number) => {
-        // Set the start time for this danmaku
-        const danmaku = activeDanmakus.value.find((d) => d.id === danmakuId);
-        if (danmaku) {
-          danmaku.startTime = Date.now();
-        }
-
-        // Set a timer to remove the danmaku after specified duration
-        const timer = setTimeout(() => {
-          // Only remove if not currently hovered
-          if (hoveredDanmakuId.value !== danmakuId) {
-            const index = activeDanmakus.value.findIndex((d) => d.id === danmakuId);
-            if (index !== -1) {
-              activeDanmakus.value.splice(index, 1);
-            }
-            danmakuTimers.delete(danmakuId);
-          }
-        }, duration);
-
-        // Store the timer reference
-        danmakuTimers.set(danmakuId, timer);
-      };
-
-      // Initial timer setup
       setDanmakuTimer(newDanmaku.id, animationDuration);
     }
   });
@@ -1324,8 +1321,8 @@ onMounted(() => {
     // Emit ready event
     emit("ready", player);
 
-    // Event listeners
-    player.on("play", () => {
+    // Event listeners with proper cleanup tracking
+    const playHandler = () => {
       isPlaying.value = true;
       showPauseOverlay.value = false;
       emit("play");
@@ -1353,9 +1350,11 @@ onMounted(() => {
           danmaku.remainingDuration = undefined;
         }
       });
-    });
+    };
+    player.on("play", playHandler);
+    eventListeners.set("play", playHandler);
 
-    player.on("pause", () => {
+    const pauseHandler = () => {
       isPlaying.value = false;
       showPauseOverlay.value = true;
       emit("pause");
@@ -1374,9 +1373,11 @@ onMounted(() => {
           danmaku.remainingDuration = Math.max(0, totalDuration - elapsed);
         }
       });
-    });
+    };
+    player.on("pause", pauseHandler);
+    eventListeners.set("pause", pauseHandler);
 
-    player.on("ended", () => {
+    const endedHandler = () => {
       emit("ended");
 
       // Reset danmaku state for replaying
@@ -1392,17 +1393,21 @@ onMounted(() => {
       // Reset line management state
       lineDanmakus.clear();
       currentLineIndex.value = 0;
-    });
+    };
+    player.on("ended", endedHandler);
+    eventListeners.set("ended", endedHandler);
 
-    player.on("error", (error: any) => {
+    const errorHandler = (error: any) => {
       console.error("Video player error:", error);
       emit("error", error);
-    });
+    };
+    player.on("error", errorHandler);
+    eventListeners.set("error", errorHandler);
 
     // Track if we've already reset the danmaku state for this play session
     let hasResetThisSession = false;
 
-    player.on("timeupdate", () => {
+    const timeupdateHandler = () => {
       const current = player.currentTime() || 0;
       const total = player.duration() || 0;
       currentTime.value = current;
@@ -1431,24 +1436,37 @@ onMounted(() => {
       else if (current >= 0.5) {
         hasResetThisSession = false;
       }
+      // Limit the size of displayedDanmakuIds to prevent memory leak
+      else if (displayedDanmakuIds.size > 1000) {
+        // Keep only the most recent 500 danmaku IDs
+        const idsToKeep = Array.from(displayedDanmakuIds).slice(-500);
+        displayedDanmakuIds.clear();
+        idsToKeep.forEach((id) => displayedDanmakuIds.add(id));
+      }
 
       // Update active danmakus based on current time
       updateActiveDanmakus();
-    });
+    };
+    player.on("timeupdate", timeupdateHandler);
+    eventListeners.set("timeupdate", timeupdateHandler);
 
-    player.on("volumechange", () => {
+    const volumechangeHandler = () => {
       const playerVolume = player.volume() || 0;
       const volumeValue = Math.round(playerVolume * 100);
       videoStore.setVolume(volumeValue);
       emit("volumechange", playerVolume);
-    });
+    };
+    player.on("volumechange", volumechangeHandler);
+    eventListeners.set("volumechange", volumechangeHandler);
 
     // 监听视频加载事件
-    player.on("loadedmetadata", () => {
+    const loadedmetadataHandler = () => {
       console.log("Video metadata loaded successfully");
-    });
+    };
+    player.on("loadedmetadata", loadedmetadataHandler);
+    eventListeners.set("loadedmetadata", loadedmetadataHandler);
 
-    player.on("loadeddata", () => {
+    const loadeddataHandler = () => {
       console.log("Video data loaded successfully");
 
       // Show 00:00 danmakus immediately when video data is loaded
@@ -1481,47 +1499,36 @@ onMounted(() => {
               activeDanmakus.value.push(newDanmaku);
               displayedDanmakuIds.add(danmaku.id);
 
-              const setDanmakuTimer = (danmakuId: string, duration: number) => {
-                const danmaku = activeDanmakus.value.find((d) => d.id === danmakuId);
-                if (danmaku) {
-                  danmaku.startTime = Date.now();
-                }
-
-                const timer = setTimeout(() => {
-                  if (hoveredDanmakuId.value !== danmakuId) {
-                    const index = activeDanmakus.value.findIndex((d) => d.id === danmakuId);
-                    if (index !== -1) {
-                      activeDanmakus.value.splice(index, 1);
-                    }
-                    danmakuTimers.delete(danmakuId);
-                  }
-                }, duration);
-
-                danmakuTimers.set(danmakuId, timer);
-              };
-
               setDanmakuTimer(newDanmaku.id, animationDuration);
             }
           }
         });
       }
-    });
+    };
+    player.on("loadeddata", loadeddataHandler);
+    eventListeners.set("loadeddata", loadeddataHandler);
 
-    player.on("waiting", () => {
+    const waitingHandler = () => {
       console.log("Video waiting for data");
-    });
+    };
+    player.on("waiting", waitingHandler);
+    eventListeners.set("waiting", waitingHandler);
 
-    player.on("stalled", () => {
+    const stalledHandler = () => {
       console.log("Video playback stalled");
-    });
+    };
+    player.on("stalled", stalledHandler);
+    eventListeners.set("stalled", stalledHandler);
 
-    player.on("seeked", () => {
+    const seekedHandler = () => {
       console.log("Video seeked to new position");
 
       // Update active danmakus after seeking completes
       // This ensures danmakus at the new time position are displayed
       updateActiveDanmakus();
-    });
+    };
+    player.on("seeked", seekedHandler);
+    eventListeners.set("seeked", seekedHandler);
   } catch (error) {
     console.error("Failed to initialize video player:", error);
     emit("error", error);
@@ -1541,19 +1548,53 @@ onMounted(() => {
 
 // Cleanup
 onBeforeUnmount(() => {
+  const cleanupResources: CleanupResource[] = [];
+
   if (playerRef.value) {
+    // Prepare event listeners for cleanup
+    eventListeners.forEach((handler, eventName) => {
+      cleanupResources.push({
+        type: "eventListener",
+        reference: {
+          target: playerRef.value!,
+          eventName,
+          handler
+        }
+      });
+      playerRef.value!.off(eventName, handler);
+    });
+    eventListeners.clear();
+
     playerRef.value.dispose();
     playerRef.value = null;
   }
 
-  // Cleanup all danmaku timers to prevent memory leaks
+  // Prepare danmaku timers for cleanup
   danmakuTimers.forEach((timer) => {
+    cleanupResources.push({
+      type: "timer",
+      reference: timer
+    });
     clearTimeout(timer);
   });
   danmakuTimers.clear();
 
   // Clear displayed danmaku IDs to reset for next playback
   displayedDanmakuIds.clear();
+
+  // Clear active danmakus array to release memory
+  activeDanmakus.value = [];
+
+  // Reset line management state
+  lineDanmakus.clear();
+  currentLineIndex.value = 0;
+
+  // Use the new cleanupMemory function with resources array
+  cleanupMemory("VideoPlayer", cleanupResources);
+
+  // Trigger manual memory check
+  const memoryMonitor = getMemoryMonitor();
+  memoryMonitor.manualCheck();
 });
 
 // Update player when src changes

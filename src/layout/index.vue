@@ -36,28 +36,29 @@ const { overlayVisible, markAsyncLoaded } = useOverlayController({
   minDisplayMs: 600
 });
 
-// 修改异步组件的加载配置
+// 修改异步组件的加载配置 - 优化加载性能
 const AsyncLeft = defineAsyncComponent({
   loader: async () => {
     loadingText.value = "正在加载左侧面板...";
     const comp = await import("./left/index.vue");
     loadingPercentage.value = 50;
     markAsyncLoaded();
-    await new Promise((resolve) => setTimeout(resolve, 600));
     return comp;
-  }
+  },
+  delay: 0, // 立即显示加载状态
+  timeout: 3000 // 3秒超时
 });
 
 const AsyncRight = defineAsyncComponent({
   loader: async () => {
-    await import("./left/index.vue");
     loadingText.value = "正在加载右侧面板...";
     const comp = await import("./right/index.vue");
     loadingPercentage.value = 100;
     markAsyncLoaded();
-    await new Promise((resolve) => setTimeout(resolve, 600));
     return comp;
-  }
+  },
+  delay: 0, // 立即显示加载状态
+  timeout: 3000 // 3秒超时
 });
 
 listen("reLogin", async () => {

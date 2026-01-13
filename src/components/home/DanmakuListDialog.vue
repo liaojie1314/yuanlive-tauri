@@ -28,7 +28,7 @@
 
 <script setup lang="ts">
 import { NScrollbar } from "naive-ui";
-import BaseDialog from "./BaseDialog.vue";
+import BaseDialog from "../common/BaseDialog.vue";
 
 interface Danmaku {
   time: string;
