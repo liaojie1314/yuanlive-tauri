@@ -18,6 +18,14 @@
     "saveSuccess": "截图已复制到剪贴板",
     "saveFailed": "截图失败，请稍后重试"
   },
+  "avatarCropper": {
+    "title": "裁剪头像",
+    "preview": {
+      "round": "圆形预览",
+      "square": "矩形预览"
+    },
+    "uploading": "上传中..."
+  },
   "window": {
     "logoutFail": "退出登录失败，请重试",
     "createWindowFail": "创建{label}窗口失败"

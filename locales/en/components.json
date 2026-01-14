@@ -18,6 +18,14 @@
     "saveSuccess": "Screenshot copied to clipboard",
     "saveFailed": "Screenshot failed, please retry"
   },
+  "avatarCropper": {
+    "title": "Crop Avatar",
+    "preview": {
+      "round": "Round preview",
+      "square": "Rounded-square preview"
+    },
+    "uploading": "Uploading..."
+  },
   "window": {
     "logoutFail": "Logout failed, please try again",
     "createWindowFail": "Failed to create {label} window"
