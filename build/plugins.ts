@@ -13,8 +13,10 @@ import { NaiveUiResolver } from "unplugin-vue-components/resolvers";
 import { codeInspectorPlugin } from "code-inspector-plugin";
 
 import { viteBuildInfo } from "./info";
+import { cdn } from "./cdn";
+import { configCompressPlugin } from "./compress";
 
-export function getPluginsList(_VITE_CDN: boolean, _VITE_COMPRESSION: ViteCompression): PluginOption[] {
+export function getPluginsList(VITE_CDN: boolean, VITE_COMPRESSION: ViteCompression): PluginOption[] {
   const lifecycle = process.env.npm_lifecycle_event;
   return [
     vue(),
@@ -58,6 +60,8 @@ export function getPluginsList(_VITE_CDN: boolean, _VITE_COMPRESSION: ViteCompre
      * vite-plugin-router-warn只在开发环境下启用，只处理vue-router文件并且只在服务启动或重启时运行一次，性能消耗可忽略不计
      */
     removeNoMatch(),
+    VITE_CDN ? cdn : null,
+    configCompressPlugin(VITE_COMPRESSION),
     // 打包分析
     lifecycle === "report" ? visualizer({ open: true, brotliSize: true, filename: "report.html" }) : (null as any)
   ];

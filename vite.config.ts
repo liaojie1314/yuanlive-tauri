@@ -4,6 +4,7 @@ import postcsspxtorem from "postcss-pxtorem";
 import { ConfigEnv, defineConfig, loadEnv } from "vite";
 import { root, getSrcPath, createManualChunks, wrapperEnv } from "./build/utils";
 import { getPluginsList } from "./build/plugins";
+import { include, exclude } from "./build/optimize";
 
 // 读取 package.json 依赖
 const packageJson = JSON.parse(readFileSync(join(process.cwd(), "package.json"), "utf-8"));
@@ -45,6 +46,10 @@ export default defineConfig(({ mode }: ConfigEnv) => {
     plugins: getPluginsList(VITE_CDN, VITE_COMPRESSION),
     worker: {
       format: "es" as const
+    },
+    optimizeDeps: {
+      include,
+      exclude
     },
     build: {
       // 设置兼容低版本浏览器的目标
