@@ -15,7 +15,7 @@
     </div>
 
     <!-- 整体包裹容器 -->
-    <div class="input-container flex flex-col bg-white rounded-lg p-2 m-1">
+    <div ref="inputContainerRef" class="input-container flex flex-col bg-white rounded-lg p-2 m-1">
       <!-- 输入框 -->
       <n-input
         v-model:value="messageText"
@@ -41,7 +41,7 @@
                 style="border: 1px solid #d1d5db"
                 title="Attach file">
                 <i-mdi-paperclip class="w-4 h-4" />
-                <span>Attach</span>
+                <span v-if="showButtonText">Attach</span>
               </div>
             </template>
             <!-- 弹出菜单内容 -->
@@ -80,6 +80,17 @@
           <input ref="fileInput" type="file" accept="*/*" multiple class="hidden" @change="handleFileChange" />
           <input ref="photoInput" type="file" accept="image/*" multiple class="hidden" @change="handleFileChange" />
 
+          <!-- 模型选择器 -->
+          <div class="relative">
+            <n-select
+              v-model:value="selectedModel"
+              :options="modelOptions"
+              placeholder="auto"
+              class="w-32"
+              @update:value="handleModelChange"
+              :render-label="renderLabel" />
+          </div>
+
           <!-- Think按钮 -->
           <div
             class="flex items-center gap-1 px-4 py-1.5 text-sm hover:bg-blue-50 rounded-full cursor-pointer transition-all duration-200"
@@ -94,7 +105,7 @@
             title="Think"
             @click="handleThinkClick">
             <i-mdi-lightbulb-outline class="w-4 h-4" />
-            <span>Think</span>
+            <span v-if="showButtonText">Think</span>
           </div>
 
           <!-- Search按钮 -->
@@ -111,7 +122,7 @@
             title="Search"
             @click="handleSearchClick">
             <i-mdi-magnify class="w-4 h-4" />
-            <span>Search</span>
+            <span v-if="showButtonText">Search</span>
           </div>
         </div>
 
@@ -148,8 +159,10 @@
 </template>
 
 <script setup lang="ts">
-// 定义组件名称
-// defineOptions({ name: 'MessageInput' });
+import { type SelectOption, NEllipsis } from "naive-ui";
+import { useResizeObserver } from "@/hooks/useResizeObserver";
+
+defineOptions({ name: "MessageInput" });
 
 // 输入的文本
 const messageText = ref("");
@@ -159,9 +172,65 @@ const uploadedImages = ref<string[]>([]);
 const fileInput = ref<HTMLInputElement | null>(null);
 // 图片输入框引用
 const photoInput = ref<HTMLInputElement | null>(null);
+// 输入框容器ref
+const inputContainerRef = ref<HTMLElement | null>(null);
 // 按钮激活状态管理
 const isThinkActive = ref(false);
 const isSearchActive = ref(false);
+// 控制按钮文字显示状态
+const showButtonText = ref(true);
+
+// 模型选择相关
+const selectedModel = ref("auto");
+
+// 模型数据结构
+const modelOptions = [
+  { label: "auto", value: "auto" },
+  {
+    type: "group",
+    label: "文字",
+    key: "text-models",
+    children: [
+      { label: "gpt-4", value: "gpt-4" },
+      { label: "gpt-3.5-turbo", value: "gpt-3.5-turbo" },
+      { label: "claude-3-opus", value: "claude-3-opus" },
+      { label: "claude-3-sonnet", value: "claude-3-sonnet" }
+    ]
+  },
+  {
+    type: "group",
+    label: "图片",
+    key: "image-models",
+    children: [
+      { label: "dall-e-3", value: "dall-e-3" },
+      { label: "midjourney", value: "midjourney" },
+      { label: "stable-diffusion", value: "stable-diffusion" }
+    ]
+  },
+  {
+    type: "group",
+    label: "音频",
+    key: "audio-models",
+    children: [
+      { label: "whisper-1", value: "whisper-1" },
+      { label: "elevenlabs", value: "elevenlabs" }
+    ]
+  },
+  {
+    type: "group",
+    label: "视频",
+    key: "video-models",
+    children: [
+      { label: "runway-gen-3", value: "runway-gen-3" },
+      { label: "pika-labs", value: "pika-labs" }
+    ]
+  },
+  {
+    label: "前往设置添加模型",
+    value: "settings",
+    disabled: true
+  }
+];
 
 // 混合类型消息的内容结构
 interface MixedContent {
@@ -177,6 +246,27 @@ const emit =
       message: { type: "text" | "image" | "mixed"; content: string | string[] | MixedContent }
     ) => void
   >();
+
+const renderLabel = (option: SelectOption) => {
+  return h(
+    NEllipsis,
+    {
+      tooltip: {
+        keepAliveOnHover: false
+      },
+      style: {
+        maxWidth: "100%"
+      }
+    },
+    { default: () => option.label as string }
+  );
+};
+
+// 处理模型选择变化
+const handleModelChange = (value: string) => {
+  console.log("Selected model:", value);
+  selectedModel.value = value;
+};
 
 // 处理Enter键
 const handleEnterKey = (e: KeyboardEvent) => {
@@ -297,6 +387,17 @@ const handleVoiceClick = () => {
   console.log("Voice button clicked");
   // 这里可以实现语音消息功能
 };
+
+// 监听容器宽度变化的回调函数
+const handleResize = () => {
+  if (inputContainerRef.value) {
+    const width = inputContainerRef.value.offsetWidth;
+    showButtonText.value = width >= 570;
+  }
+};
+
+// 使用ResizeObserver监听容器宽度变化
+useResizeObserver(inputContainerRef, handleResize);
 </script>
 
 <style scoped>
