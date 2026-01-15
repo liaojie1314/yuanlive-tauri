@@ -60,7 +60,9 @@ const wrapperEnv = (envConf: Recordable): ViteEnv => {
   // 默认值
   const ret: ViteEnv = {
     VITE_CDN: false,
-    VITE_COMPRESSION: "none"
+    VITE_COMPRESSION: "none",
+    VITE_CRYPTO_SECRET_KEY: "",
+    VITE_CRYPTO_SECRET_IV: ""
   };
 
   for (const envName of Object.keys(envConf)) {
