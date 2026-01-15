@@ -9,9 +9,7 @@ export const formatBottomText = (text: string, maxLength = 6, omission = "...") 
   if (hasChinese || pureText.length <= maxLength) {
     return text;
   }
-
   const nonSpaceIndexes = compact(Array.from(text).map((char, idx) => (char.trim().length > 0 ? idx : undefined)));
   const cutIndex = nonSpaceIndexes[maxLength - 1] ?? text.length - 1;
-
   return `${text.slice(0, cutIndex + 1).trimEnd()}${omission}`;
 };

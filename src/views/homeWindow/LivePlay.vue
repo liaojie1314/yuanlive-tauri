@@ -1,15 +1,18 @@
 <template>
-  <div class="live-play-container relative w-full h-full bg-black flex flex-col">
+  <div
+    data-tauri-drag-region
+    class="live-play-container relative w-full h-full bg-black flex flex-col"
+    :class="{ 'more-gifts-open': moreGiftsVisible }">
     <!-- 顶部信息栏 固定高度 -->
     <div class="top-info-bar w-full h-12 bg-black/80 flex items-center justify-between px-2 z-999">
       <!-- 返回按钮和主播信息 -->
       <div class="flex items-center gap-3">
-        <button
+        <div
           @click="handleBack"
           class="w-10 h-10 rounded-full bg-black/50 flex items-center justify-center text-white hover:bg-black/80 transition-colors"
           aria-label="返回">
           <i-mdi-arrow-left class="w-6 h-6" />
-        </button>
+        </div>
 
         <!-- 主播信息 -->
         <div class="host-info flex items-center gap-3 bg-black/50 backdrop-blur-sm px-2 py-1 rounded-full">
@@ -23,19 +26,19 @@
               <span>2.9万</span>
             </div>
           </div>
-          <button
+          <div
             class="follow-btn bg-red-500 text-white text-xs px-3 py-1 rounded-full hover:bg-red-600 transition-colors">
             关注
-          </button>
-          <button
+          </div>
+          <div
             class="group-btn bg-green-500 text-white text-xs px-3 py-1 rounded-full hover:bg-green-600 transition-colors">
             加粉丝团
-          </button>
-          <button
+          </div>
+          <div
             class="vip-btn bg-purple-500 text-white text-xs px-3 py-1 rounded-full hover:bg-purple-600 transition-colors">
             加会员
-          </button>
-          <button
+          </div>
+          <div
             class="more-btn w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-white/20 transition-colors">
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -51,7 +54,7 @@
               <circle cx="19" cy="12" r="1" />
               <circle cx="5" cy="12" r="1" />
             </svg>
-          </button>
+          </div>
         </div>
       </div>
 
@@ -79,8 +82,13 @@
 
     <!-- 视频播放器区域 自适应剩余高度 -->
     <div class="player-container relative w-full flex-grow overflow-hidden">
-      <video ref="videoRef" class="video-js vjs-big-play-centered object-contain" autoplay playsinline preload="auto">
-        <source src="https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8" type="application/x-mpegURL" />
+      <video
+        ref="videoRef"
+        class="video-js vjs-big-play-centered object-contain"
+        autoplay
+        playsinline
+        preload="auto"
+        :controls="false">
         您的浏览器不支持视频播放。
       </video>
     </div>
@@ -129,24 +137,25 @@
                   <div class="gift-cost text-white text-xs opacity-70">{{ gift.cost }}钻</div>
                 </div>
                 <!-- 赠送按钮 -->
-                <div class="gift-send-btn-container transition-all duration-300 opacity-0 transform translate-y-2">
-                  <button
-                    class="gift-send-btn bg-red-500 text-white text-xs font-medium py-1 px-4 rounded-md w-full"
+                <div
+                  class="gift-send-btn-container transition-all duration-300 opacity-0 transform translate-y-2 flex justify-center">
+                  <div
+                    class="gift-send-btn bg-red-500 text-white text-xs font-medium py-1 px-4 rounded-md cursor-pointer text-center"
                     @click="sendGiftWithAmount(gift, 1)">
                     赠送
-                  </button>
+                  </div>
                 </div>
               </div>
             </template>
             <div class="gift-amount-popover bg-black/90 backdrop-blur-sm p-3 rounded-lg border border-white/10">
               <div class="gift-amount-grid grid grid-cols-4 gap-2">
-                <button
+                <div
                   v-for="amount in amountOptions"
                   :key="amount.value"
                   @click="sendGiftWithAmount(gift, amount.value)"
-                  class="amount-btn px-4 py-2 bg-white/10 text-white rounded-full transition-all">
+                  class="amount-btn cursor-pointer px-4 py-2 bg-white/10 text-white rounded-full transition-all">
                   {{ amount.label }}
-                </button>
+                </div>
               </div>
             </div>
           </n-popover>
@@ -154,7 +163,8 @@
           <!-- 更多按钮 -->
           <div
             v-if="showMoreBtn"
-            class="gift-item-container gift-more-container flex flex-col items-center cursor-pointer flex-1 h-full relative">
+            class="gift-item-container gift-more-container flex flex-col items-center cursor-pointer flex-1 h-full relative"
+            @click="toggleMoreGifts">
             <!-- 竖线分割 -->
             <div
               v-if="displayGifts.length > 0"
@@ -205,13 +215,103 @@
 
     <!-- 礼物动画容器 -->
     <div class="gift-animation-container absolute inset-0 pointer-events-none overflow-hidden z-20"></div>
+
+    <!-- 更多礼物弹窗 -->
+    <div
+      v-if="moreGiftsVisible"
+      class="more-gifts-popup absolute bottom-25 right-0 bg-black/95 backdrop-blur-sm rounded-lg border border-white/10 z-1000"
+      style="width: 320px; max-height: 400px">
+      <!-- 弹窗头部 -->
+      <div class="more-gifts-header flex items-center justify-between px-4 py-3 border-b border-white/10">
+        <h3 class="text-white font-medium">更多礼物</h3>
+        <div
+          @click="closeMoreGifts"
+          class="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-white/20 transition-colors cursor-pointer"
+          aria-label="关闭">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18" />
+            <line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
+        </div>
+      </div>
+
+      <!-- 礼物列表 -->
+      <div class="more-gifts-content p-2">
+        <n-scrollbar height="340px" style="border-radius: 4px">
+          <div class="more-gifts-grid grid grid-cols-4 gap-2">
+            <n-popover
+              v-for="gift in remainingGifts"
+              :key="gift.id"
+              trigger="hover"
+              placement="top"
+              :show-arrow="false"
+              :raw="true"
+              v-model:show="popoverVisible[gift.id]">
+              <template #trigger>
+                <div
+                  class="gift-item-container flex flex-col items-center cursor-pointer p-2 bg-white/5 rounded-md hover:bg-white/10">
+                  <div class="gift-icon rounded-full flex items-center justify-center my-1">
+                    <svg
+                      :xmlns="gift.icon"
+                      width="24"
+                      height="24"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      class="text-white">
+                      <path :d="gift.path" />
+                    </svg>
+                  </div>
+                  <div class="gift-name text-white text-xs truncate max-w-full text-center">
+                    {{ gift.name }}
+                  </div>
+                  <div class="gift-cost text-white text-xs opacity-70">{{ gift.cost }}钻</div>
+                  <!-- 赠送按钮 -->
+                  <div class="gift-send-btn-container mt-2">
+                    <div
+                      class="gift-send-btn bg-red-500 text-white text-xs font-medium py-1 px-4 rounded-md w-full cursor-pointer hover:bg-red-600 transition-colors text-center"
+                      @click="sendGiftWithAmount(gift, 1)">
+                      赠送
+                    </div>
+                  </div>
+                </div>
+              </template>
+              <div class="gift-amount-popover bg-black/90 backdrop-blur-sm p-3 rounded-lg border border-white/10">
+                <div class="gift-amount-grid grid grid-cols-4 gap-2">
+                  <div
+                    v-for="amount in amountOptions"
+                    :key="amount.value"
+                    @click="sendGiftWithAmount(gift, amount.value)"
+                    class="amount-btn px-4 py-2 bg-white/10 text-white rounded-full transition-all cursor-pointer hover:bg-white/20">
+                    {{ amount.label }}
+                  </div>
+                </div>
+              </div>
+            </n-popover>
+          </div>
+        </n-scrollbar>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import videojs from "video.js";
 import "video.js/dist/video-js.css";
-import { NPopover } from "naive-ui";
+import "@videojs/http-streaming";
+import { NPopover, NScrollbar } from "naive-ui";
 import { ref, onMounted, onUnmounted, computed } from "vue";
 import { useResizeObserver } from "@/hooks/useResizeObserver";
 
@@ -222,6 +322,24 @@ let player: any = null;
 
 // 跟踪每个popover的显示状态
 const popoverVisible = ref<Record<number, boolean>>({});
+
+// 控制更多礼物弹窗的显示状态
+const moreGiftsVisible = ref(false);
+
+// 计算剩余未显示的礼物列表
+const remainingGifts = computed(() => {
+  return gifts.slice(visibleGiftCount.value - 1);
+});
+
+// 切换更多礼物弹窗
+const toggleMoreGifts = () => {
+  moreGiftsVisible.value = !moreGiftsVisible.value;
+};
+
+// 关闭更多礼物弹窗
+const closeMoreGifts = () => {
+  moreGiftsVisible.value = false;
+};
 
 // 礼物数据
 const gifts = [
@@ -479,17 +597,31 @@ onMounted(() => {
   // 初始化video.js播放器
   if (videoRef.value) {
     player = videojs(videoRef.value, {
-      controls: true,
+      controls: false,
       autoplay: true,
       preload: "auto",
       responsive: true,
       fluid: false,
-      bigPlayButton: true,
-      controlBar: {
-        volumePanel: {
-          inline: false
-        },
-        playbackRateMenuButton: true
+      bigPlayButton: false,
+      controlBar: false,
+      loadingSpinner: false,
+      posterImage: false,
+      textTrackDisplay: false,
+      errorDisplay: false,
+      pictureInPictureToggle: false,
+      fullscreenToggle: false,
+      // 添加FLV支持配置
+      sources: [
+        {
+          src: "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8",
+          type: "application/x-mpegURL"
+        }
+      ],
+      html5: {
+        vhs: {
+          enableLowInitialPlaylist: true,
+          smoothQualityChange: true
+        }
       }
     });
 
@@ -513,6 +645,28 @@ onMounted(() => {
 
   // 初始化礼物列表宽度计算
   calculateVisibleGiftCount();
+
+  // 添加点击外部关闭更多礼物弹窗的事件监听
+  const handleClickOutside = (event: MouseEvent) => {
+    const moreGiftsPopup = document.querySelector(".more-gifts-popup");
+    const moreBtn = document.querySelector(".gift-more-container");
+    if (
+      moreGiftsVisible.value &&
+      moreGiftsPopup &&
+      !moreGiftsPopup.contains(event.target as Node) &&
+      moreBtn &&
+      !moreBtn.contains(event.target as Node)
+    ) {
+      closeMoreGifts();
+    }
+  };
+
+  document.addEventListener("click", handleClickOutside);
+
+  // 清理事件监听
+  onUnmounted(() => {
+    document.removeEventListener("click", handleClickOutside);
+  });
 });
 
 onUnmounted(() => {
@@ -525,31 +679,18 @@ onUnmounted(() => {
   overflow: hidden;
 }
 
-.player-container {
-  position: relative;
-}
-
 /* 送礼区样式 */
 .gift-area {
   flex-shrink: 0;
-  display: flex;
-  align-items: center;
 }
 
 .gift-list {
-  display: flex;
-  align-items: center;
-  flex: 1;
   min-width: 0;
   height: 100%;
 }
 
 /* 礼物容器，用于隐藏溢出的礼物 */
 .gifts-container {
-  display: flex;
-  align-items: flex-start;
-  overflow: visible;
-  flex: 1;
   min-width: 0;
   height: 100%;
 }
@@ -562,10 +703,6 @@ onUnmounted(() => {
 
 /* 礼物项容器 */
 .gift-item-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  cursor: pointer;
   flex: 1;
   height: 100%;
   position: relative;
@@ -687,21 +824,16 @@ onUnmounted(() => {
 
 /* 礼物动画样式 */
 .gift-animation-container {
-  position: absolute;
-  inset: 0;
   pointer-events: none;
   overflow: hidden;
   z-index: 20;
 }
 
 .gift-animation-item {
-  position: absolute;
   z-index: 100;
 }
 
 .gift-animation-content {
-  display: flex;
-  align-items: center;
   gap: 8px;
   background: rgba(0, 0, 0, 0.5);
   backdrop-filter: blur(10px);
@@ -715,9 +847,6 @@ onUnmounted(() => {
   height: 24px;
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.1);
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 
 .gift-animation-content .gift-name {
@@ -802,8 +931,66 @@ onUnmounted(() => {
 }
 
 .gift-amount-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
   gap: 8px;
+}
+
+/* 更多礼物弹窗样式 */
+.more-gifts-popup {
+  transition: all 0.3s ease;
+  box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.5);
+}
+
+/* 更多礼物弹窗头部样式 */
+.more-gifts-header {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* 更多礼物网格布局 */
+.more-gifts-grid {
+  gap: 8px;
+}
+
+/* 弹窗打开时，调整视频容器布局 */
+.live-play-container.more-gifts-open .player-container {
+  margin-right: 320px; /* 与弹窗宽度一致 */
+  transition: margin-right 0.3s ease;
+}
+
+/* 弹窗礼物项基础样式 - 固定高度并添加上下间距 */
+.more-gifts-grid .gift-item-container {
+  height: 80px !important;
+  border-radius: 4px !important;
+  transition: background-color 0.2s ease !important;
+}
+
+/* 弹窗礼物项hover效果 - 保持固定高度 */
+.more-gifts-grid .gift-item-container:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  padding: 2px !important;
+  margin: 2px 0 !important;
+  border-radius: 4px !important;
+}
+
+/* 确保弹窗礼物项的名称在hover时隐藏 */
+.more-gifts-grid .gift-item-container:hover .gift-name {
+  opacity: 0 !important;
+  height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  visibility: hidden !important;
+}
+
+/* 确保弹窗礼物项的赠送按钮容器样式正确 */
+.more-gifts-grid .gift-item-container:hover .gift-send-btn-container {
+  opacity: 1 !important;
+  transform: none !important;
+  pointer-events: auto !important;
+  height: auto !important;
+  margin-top: 2px !important;
+}
+
+/* 确保弹窗内的礼物数量弹窗层级更高 */
+.more-gifts-popup :deep(.n-popover) {
+  z-index: 1001 !important;
 }
 </style>
