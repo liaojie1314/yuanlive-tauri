@@ -1,0 +1,17 @@
+{
+  "justNow": "Just now",
+  "minutes": "{count} minutes ago",
+  "hours": "{count} hours ago",
+  "days": "{count} days ago",
+  "months": "{count} months ago",
+  "years": "{count} years ago",
+  "weekday": {
+    "sun": "Sunday",
+    "mon": "Monday",
+    "tue": "Tuesday",
+    "wed": "Wednesday",
+    "thu": "Thursday",
+    "fri": "Friday",
+    "sat": "Saturday"
+  }
+}
