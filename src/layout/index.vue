@@ -1,12 +1,8 @@
 <template>
   <div id="layout" class="relative flex min-w-310px bg-[--home-bg-color] h-full">
     <div class="flex flex-1 min-h-0">
-      <keep-alive>
-        <AsyncLeft />
-      </keep-alive>
-      <keep-alive>
-        <AsyncRight />
-      </keep-alive>
+      <AsyncLeft />
+      <AsyncRight />
     </div>
     <div v-if="overlayVisible" class="absolute inset-0 z-10 flex items-center justify-center bg-[--right-bg-color]">
       <LoadingSpinner :percentage="loadingPercentage" :loading-text="loadingText" />

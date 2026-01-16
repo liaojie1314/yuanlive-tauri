@@ -610,7 +610,7 @@ const handleDanmakuReport = (index: number, type: string, description: string) =
 // Refs to track danmaku timers and display status
 const danmakuTimers = new Map<string, NodeJS.Timeout>();
 const displayedDanmakuIds = new Set<string>(); // Track which danmakus have been displayed
-const eventListeners = new Map<string, Function>(); // Track all event listeners for cleanup
+const eventListeners = new Map<string, (event: Event) => void>(); // Track all event listeners for cleanup
 
 // Shared function to set danmaku timer
 const setDanmakuTimer = (danmakuId: string, duration: number) => {

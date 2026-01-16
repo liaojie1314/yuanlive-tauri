@@ -109,7 +109,7 @@
 import { useRouter } from "vue-router";
 
 defineOptions({
-  name: "HomeWindow"
+  name: "Index"
 });
 
 const router = useRouter();

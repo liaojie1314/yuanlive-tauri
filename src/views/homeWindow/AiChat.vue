@@ -55,6 +55,10 @@
 </template>
 
 <script setup lang="ts">
+defineOptions({
+  name: "AiChat"
+});
+
 // 混合类型消息的内容结构
 interface MixedContent {
   text: string;

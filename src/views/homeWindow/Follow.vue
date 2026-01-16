@@ -88,6 +88,10 @@
 import { NButton, NIcon, NScrollbar, NPopover } from "naive-ui";
 import VideoPlayer from "@/components/home/VideoPlayer.vue";
 
+defineOptions({
+  name: "Follow"
+});
+
 // 定义关注列表项的接口
 interface FollowItem {
   id: number;

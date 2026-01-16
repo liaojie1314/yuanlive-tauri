@@ -490,7 +490,7 @@ const hideEmojiPickerHover = () => {
 };
 
 // 防抖函数，优化设置更新
-const debounce = (func: Function, delay: number) => {
+const debounce = (func: (...args: any[]) => void, delay: number) => {
   return (...args: any[]) => {
     if (settingsChangeDebounceTimer) {
       clearTimeout(settingsChangeDebounceTimer);
