@@ -102,7 +102,7 @@ export function useLogin() {
 
     await ensureAppStateReady();
 
-    invoke("login_command", {
+    invoke(TauriCommandEnum.LOGIN_COMMAND, {
       data: {
         account,
         password,

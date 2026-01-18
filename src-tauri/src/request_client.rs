@@ -21,10 +21,6 @@ pub struct RequestClient {
 impl RequestClient {
     pub fn new(base_url: String) -> Result<Self, anyhow::Error> {
         let mut headers = header::HeaderMap::new();
-        headers.insert(
-            header::CONTENT_TYPE,
-            header::HeaderValue::from_static("application/json"),
-        );
 
         // Read basic auth credentials from environment variables
         let credentials = format!(
@@ -77,6 +73,36 @@ impl RequestClient {
         }
     }
 
+    /// 构建请求的基础方法（处理公共逻辑）
+    ///
+    /// 处理 URL 构建、日志记录、token 设置和额外请求头等公共逻辑
+    ///
+    /// # 参数
+    /// - `method`: HTTP 方法
+    /// - `path`: API 路径
+    /// - `extra_headers`: 额外的请求头（可选）
+    fn build_request_base(
+        &self,
+        method: http::Method,
+        path: &str,
+        extra_headers: Option<Vec<(&str, &str)>>,
+    ) -> reqwest::RequestBuilder {
+        let url = format!("{}/{}", self.base_url, path);
+        info!("📡 Request URL: {}, Method: {}", &url, method);
+        let mut request_builder = self.client.request(method, &url);
+        // 设置 token 请求头
+        if let Some(token) = &self.token {
+            request_builder = request_builder.header("token", format!("Bearer {}", token));
+        }
+        // 添加额外的请求头
+        if let Some(headers) = extra_headers {
+            for (key, value) in headers {
+                request_builder = request_builder.header(key, value);
+            }
+        }
+        request_builder
+    }
+
     /// 构建请求的公共方法（不发送请求）
     ///
     /// 提取了 URL 构建、token 添加、body/params 处理等公共逻辑
@@ -95,28 +121,13 @@ impl RequestClient {
         params: &Option<C>,
         extra_headers: Option<Vec<(&str, &str)>>,
     ) -> reqwest::RequestBuilder {
-        let url = format!("{}/{}", self.base_url, path);
-        info!("📡 Request URL: {}, Method: {}", &url, method);
+        let mut request_builder = self.build_request_base(method, path, extra_headers);
 
-        let mut request_builder = self.client.request(method, &url);
-
-        // 设置 token 请求头
-        if let Some(token) = &self.token {
-            request_builder = request_builder.header("token", format!("Bearer {}", token));
-        }
-
-        // 添加额外的请求头
-        if let Some(headers) = extra_headers {
-            for (key, value) in headers {
-                request_builder = request_builder.header(key, value);
-            }
-        }
-
-        // 设置请求体
+        // 设置请求体和 Content-Type
         if let Some(body) = body {
             request_builder = request_builder.json(body);
-        } else {
-            request_builder = request_builder.json(&json!({}));
+            // 显式设置 Content-Type 为 application/json
+            request_builder = request_builder.header(header::CONTENT_TYPE, "application/json");
         }
 
         // 设置查询参数
@@ -125,6 +136,77 @@ impl RequestClient {
         }
 
         request_builder
+    }
+
+    /// 上传单个分片
+    pub async fn upload_chunk(
+        &mut self,
+        file_hash: &str,
+        file_name: &str,
+        chunk_index: u32,
+        total_chunks: u32,
+        scene: &str,
+        chunk_data: &[u8],
+    ) -> Result<ApiResult<serde_json::Value>, anyhow::Error> {
+        let (method, path) = Url::UploadChunk.get_url();
+
+        // 使用 build_request_base 处理公共请求头逻辑
+        let request_builder = self.build_request_base(method, path, None);
+
+        // 创建表单数据
+        let mut form = reqwest::multipart::Form::new();
+        form = form.text("fileHash", file_hash.to_string());
+        form = form.text("fileName", file_name.to_string());
+        form = form.text("chunkIndex", chunk_index.to_string());
+        form = form.text("totalChunks", total_chunks.to_string());
+        form = form.text("scene", scene.to_string());
+        form = form.part(
+            "file",
+            reqwest::multipart::Part::bytes(chunk_data.to_vec())
+                .file_name(format!("{}.chunk{}", file_name, chunk_index)),
+        );
+
+        // 发送请求
+        let response = request_builder.multipart(form).send().await?;
+        let result: ApiResult<serde_json::Value> = response.json().await?;
+
+        Ok(result)
+    }
+
+    /// 检查已上传的分片
+    pub async fn check_uploaded_chunks(
+        &mut self,
+        file_hash: &str,
+        file_name: &str,
+        scene: &str,
+    ) -> Result<ApiResult<serde_json::Value>, anyhow::Error> {
+        let (method, path) = Url::CheckUploadedChunks.get_url();
+        let params = Some(
+            serde_json::json!({ "fileHash": file_hash, "fileName": file_name, "scene": scene }),
+        );
+
+        self.base_request(method, path, None::<serde_json::Value>, params)
+            .await
+    }
+
+    /// 合并分片
+    pub async fn merge_chunks(
+        &mut self,
+        file_hash: &str,
+        file_name: &str,
+        total_chunks: u32,
+        scene: &str,
+    ) -> Result<ApiResult<serde_json::Value>, anyhow::Error> {
+        let (method, path) = Url::MergeChunks.get_url();
+        let body = Some(serde_json::json!({
+            "fileHash": file_hash,
+            "fileName": file_name,
+            "totalChunks": total_chunks,
+            "scene": scene
+        }));
+
+        self.base_request(method, path, body, None::<serde_json::Value>)
+            .await
     }
 
     pub async fn base_request<
@@ -371,6 +453,11 @@ pub enum Url {
     GetUserInfoDetail,
 
     MessageSendStream,
+
+    // 文件上传相关
+    UploadChunk,
+    CheckUploadedChunks,
+    MergeChunks,
 }
 
 impl Url {
@@ -389,6 +476,10 @@ impl Url {
             Url::GetUserInfoDetail => (http::Method::GET, "user/info"),
             // AI 相关
             Url::MessageSendStream => (http::Method::POST, "ai/chat/stream"),
+            // 文件上传相关
+            Url::UploadChunk => (http::Method::POST, "api/upload/chunk"),
+            Url::CheckUploadedChunks => (http::Method::GET, "api/upload/check"),
+            Url::MergeChunks => (http::Method::POST, "api/upload/merge"),
         }
     }
 
@@ -407,6 +498,10 @@ impl Url {
             "getUserInfoDetail" => Ok(Url::GetUserInfoDetail),
             // AI 相关
             "messageSendStream" => Ok(Url::MessageSendStream),
+            // 文件上传相关
+            "uploadChunk" => Ok(Url::UploadChunk),
+            "checkUploadedChunks" => Ok(Url::CheckUploadedChunks),
+            "mergeChunks" => Ok(Url::MergeChunks),
             // 未匹配的字符串
             _ => Err(anyhow::anyhow!("未知的URL类型: {}", s)),
         }

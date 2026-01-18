@@ -41,6 +41,7 @@ pub struct UserInfo {
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_global_shortcut::Builder::new().build())
         .plugin(tauri_plugin_clipboard_manager::init())
         .init_plugin()
         .init_window_event()
@@ -207,6 +208,9 @@ fn get_invoke_handlers() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Se
     use crate::command::request_command::{login_command, request_command};
     use crate::command::setting_command::{get_settings, update_settings};
     use crate::command::token_command::remove_token;
+    use crate::command::upload_command::{
+        check_uploaded_chunks_command, merge_chunks_command, upload_chunk_command,
+    };
     use crate::websocket::commands::{
         ws_disconnect, ws_force_reconnect, ws_get_state, ws_init_connection, ws_is_connected,
         ws_send_message,
@@ -225,6 +229,10 @@ fn get_invoke_handlers() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Se
         ai_message_cancel_stream,
         login_command,
         request_command,
+        // 文件上传相关
+        upload_chunk_command,
+        check_uploaded_chunks_command,
+        merge_chunks_command,
         // websocket
         ws_init_connection,
         ws_disconnect,

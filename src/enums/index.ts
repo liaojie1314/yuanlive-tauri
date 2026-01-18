@@ -8,6 +8,16 @@ export enum GenderEnum {
   WOMAN = 2
 }
 
+/** 上传场景 */
+export enum UploadSceneEnum {
+  /** 聊天 */
+  CHAT = "chat",
+  /** 头像 */
+  AVATAR = "avatar",
+  /** 视频 */
+  VIDEO = "video"
+}
+
 /** 事件key */
 export enum MittEnum {}
 
@@ -67,6 +77,14 @@ export enum EventEnum {
 export enum TauriCommandEnum {
   // 基础请求命令
   REQUEST_COMMAND = "request_command",
+  // 登录
+  LOGIN_COMMAND = "login_command",
+  // 上传分片
+  UPLOAD_CHUNK_COMMAND = "upload_chunk_command",
+  // 检查已上传分片
+  CHECK_UPLOADED_CHUNKS_COMMAND = "check_uploaded_chunks_command",
+  // 合并分片
+  MERGE_CHUNKS_COMMAND = "merge_chunks_command",
   // 更新 token
   UPDATE_TOKEN = "update_token",
   // 移除 token
