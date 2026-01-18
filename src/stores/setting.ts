@@ -1,4 +1,14 @@
-import { StoresEnum, ThemeEnum } from "../enums";
+import { isMac } from "@/utils/PlatformUtils";
+import { StoresEnum, ThemeEnum } from "@/enums";
+
+// 获取平台对应的默认快捷键
+const getDefaultShortcuts = () => {
+  return {
+    screenshot: isMac() ? "Cmd+Ctrl+H" : "Ctrl+Alt+H",
+    openMainPanel: isMac() ? "Cmd+Ctrl+P" : "Ctrl+Alt+P",
+    globalEnabled: false // 默认关闭全局快捷键
+  };
+};
 
 export const useSettingStore = defineStore(
   StoresEnum.SETTING,
@@ -21,8 +31,13 @@ export const useSettingStore = defineStore(
       // 自动启动
       autoStartup: false
     });
-    // TODO: 快捷键
-    const shortcuts = ref();
+    // 快捷键
+    const shortcuts = reactive(getDefaultShortcuts());
+    // 截图设置
+    const screenshot = reactive({
+      // 截图时是否隐藏窗口
+      isConceal: false
+    });
     // TODO: 自动更新
     const autoUpdate = ref(false);
 
@@ -84,6 +99,7 @@ export const useSettingStore = defineStore(
       themes,
       login,
       shortcuts,
+      screenshot,
       autoUpdate,
       initTheme,
       toggleTheme,

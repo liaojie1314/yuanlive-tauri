@@ -170,7 +170,7 @@ const userStore = useUserStore();
 const globalStore = useGlobalStore();
 const settingStore = useSettingStore();
 const { themes, login } = storeToRefs(settingStore);
-const { showTray } = storeToRefs(globalStore);
+const { showTray, firstEnter } = storeToRefs(globalStore);
 const naiveTheme = computed(() => (themes.value.content === ThemeEnum.DARK ? darkTheme : lightTheme));
 
 // 输入框占位符
@@ -271,6 +271,7 @@ const openRemoteLoginModal = async (ip?: string) => {
 };
 
 onMounted(async () => {
+  firstEnter.value = true;
   await handlePendingRemoteLoginPayload();
   // 始终初始化托盘菜单状态为false
   showTray.value = false;

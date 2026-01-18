@@ -15,15 +15,18 @@ import { StorageKeyEnum, ThemeEnum, WsResponseMessageEnum } from "@/enums";
 import { useSettingStore } from "@/stores/setting";
 import { useUserStore } from "@/stores/user";
 import { loadLanguage } from "@/services/i18n";
-import { isMobile, isWindows10 } from "@/utils/PlatformUtils";
+import { ConnectionState } from "@/services/webSocketRust";
+import { isDesktop, isMobile, isWindows10 } from "@/utils/PlatformUtils";
 import { useMitt } from "@/hooks/useMitt";
 import { useWindow } from "@/hooks/useWindow";
 import { useTauriListener } from "@/hooks/useTauriListener";
-import { ConnectionState } from "@/services/webSocketRust";
+import { useGlobalShortcut } from "@/hooks/useGlobalShortcut";
 
 const settingStore = useSettingStore();
 const userStore = useUserStore();
 const { addListener } = useTauriListener();
+// 全局快捷键管理
+const { initializeGlobalShortcut, cleanupGlobalShortcut } = useGlobalShortcut();
 const { themes, page } = storeToRefs(settingStore);
 const appWindow = WebviewWindow.getCurrent();
 const { sendWindowPayload } = useWindow();
@@ -146,6 +149,10 @@ onMounted(() => {
   document.documentElement.dataset.theme = themes.value.content;
   window.addEventListener("dragstart", preventDefault);
   addListener(listen("websocket-event", handleWebsocketEvent), "websocket-event");
+  // 只在桌面端的主窗口(home)中初始化全局快捷键
+  if (isDesktop() && appWindow.label === "home") {
+    initializeGlobalShortcut();
+  }
   // 开发环境不禁止
   if (process.env.NODE_ENV !== "development") {
     // 禁用浏览器默认的快捷键
@@ -159,9 +166,13 @@ onMounted(() => {
   }
 });
 
-onUnmounted(() => {
+onUnmounted(async () => {
   window.removeEventListener("contextmenu", preventGlobalContextMenu, false);
   window.removeEventListener("dragstart", preventDefault);
+  // 清理全局快捷键
+  if (isDesktop() && appWindow.label === "home") {
+    await cleanupGlobalShortcut();
+  }
 });
 </script>
 

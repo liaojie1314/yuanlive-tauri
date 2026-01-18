@@ -345,6 +345,7 @@ const initCanvas = async () => {
     height: `${canvasHeight}`
   };
 
+  // TODO: 有拓展屏幕时会出现无效的宽度参数问题
   const screenshotData = await invokeWithErrorHandler(TauriCommandEnum.SCREENSHOT, config, {
     customErrorMessage: "截图失败",
     errorType: ErrorType.Client

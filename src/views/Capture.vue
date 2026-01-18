@@ -1,5 +1,5 @@
 <template>
-  <Screenshot :is-capturing="isCapturing" />
+  <screenshot :is-capturing="isCapturing" />
 </template>
 <script setup lang="ts">
 import { WebviewWindow } from "@tauri-apps/api/webviewWindow";

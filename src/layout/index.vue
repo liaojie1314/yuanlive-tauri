@@ -5,7 +5,7 @@
       <AsyncRight />
     </div>
     <div v-if="overlayVisible" class="absolute inset-0 z-10 flex items-center justify-center bg-[--right-bg-color]">
-      <LoadingSpinner :percentage="loadingPercentage" :loading-text="loadingText" />
+      <loading-spinner :percentage="loadingPercentage" :loading-text="loadingText" />
     </div>
   </div>
 </template>
@@ -14,17 +14,20 @@
 import { listen } from "@tauri-apps/api/event";
 import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
 
-import { useOverlayController } from "@/hooks/useOverlayController";
 import { useLogin } from "@/hooks/useLogin";
+import { useOverlayController } from "@/hooks/useOverlayController";
+import { useGlobalStore } from "@/stores/global";
 
 const { logout } = useLogin();
+const globalStore = useGlobalStore();
+const { firstEnter } = storeToRefs(globalStore);
 
 // 是否需要阻塞首屏
 const requiresInitialSync = ref(true);
 const loadingPercentage = ref(10);
 const loadingText = ref("正在加载应用...");
-// TODO: 记录首次登录状态，避免重复阻塞首屏
-const shouldBlockInitialRender = computed(() => requiresInitialSync.value);
+// 记录首次登录状态，避免重复阻塞首屏
+const shouldBlockInitialRender = computed(() => requiresInitialSync.value && firstEnter.value);
 const { overlayVisible, markAsyncLoaded } = useOverlayController({
   isInitialSync: shouldBlockInitialRender,
   progress: loadingPercentage,
@@ -65,7 +68,10 @@ onMounted(async () => {
   const homeWindow = await WebviewWindow.getByLabel("home");
   if (homeWindow) {
     // 居中
-    await homeWindow.center();
+    if (firstEnter.value) {
+      await homeWindow.center();
+      firstEnter.value = false;
+    }
     await homeWindow.show();
   }
 });

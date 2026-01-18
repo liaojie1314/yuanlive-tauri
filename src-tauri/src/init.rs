@@ -11,14 +11,11 @@ pub trait CustomInit {
 
 impl<R: Runtime> CustomInit for tauri::Builder<R> {
     fn init_plugin(self) -> Self {
-        let builder = self
-            .plugin(tauri_plugin_process::init())
-            .plugin(tauri_plugin_os::init())
-            .plugin(tauri_plugin_fs::init())
-            .plugin(tauri_plugin_http::init())
-            .plugin(tauri_plugin_opener::init());
-        // 添加日志插件
-        builder.plugin(build_log_plugin())
+        let builder = init_common_plugins(self);
+        // 桌面端特有的插件
+        #[cfg(desktop)]
+        let builder = builder.plugin(tauri_plugin_global_shortcut::Builder::new().build());
+        builder
     }
 
     fn init_window_event(self) -> Self {
@@ -58,6 +55,19 @@ impl<R: Runtime> CustomInit for tauri::Builder<R> {
             _ => (),
         })
     }
+}
+
+/// 初始化公共插件（所有平台通用）
+pub fn init_common_plugins<R: Runtime>(builder: tauri::Builder<R>) -> tauri::Builder<R> {
+    let builder = builder
+        .plugin(tauri_plugin_process::init())
+        .plugin(tauri_plugin_os::init())
+        .plugin(tauri_plugin_fs::init())
+        .plugin(tauri_plugin_http::init())
+        .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_clipboard_manager::init());
+    // 添加日志插件
+    builder.plugin(build_log_plugin())
 }
 
 /// 构建平台特定的日志插件

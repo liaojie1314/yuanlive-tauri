@@ -23,6 +23,7 @@
     "core:window:allow-set-focus",
     "core:window:allow-unmaximize",
     "core:window:allow-unminimize",
+    "core:window:allow-set-position",
     "core:window:allow-set-enabled",
     "core:window:allow-start-dragging",
     "core:webview:allow-create-webview-window",
@@ -48,6 +49,16 @@
     },
     "os:default",
     "process:default",
-    "clipboard-manager:default"
+    "clipboard-manager:allow-clear",
+    "clipboard-manager:allow-read-image",
+    "clipboard-manager:allow-read-text",
+    "clipboard-manager:allow-write-html",
+    "clipboard-manager:allow-write-image",
+    "clipboard-manager:allow-write-text",
+    "global-shortcut:allow-is-registered",
+    "global-shortcut:allow-register",
+    "global-shortcut:allow-register-all",
+    "global-shortcut:allow-unregister",
+    "global-shortcut:allow-unregister-all"
   ]
 }
