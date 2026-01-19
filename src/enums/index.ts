@@ -103,6 +103,8 @@ export enum StoresEnum {
   ALWAYS_ON_TOP = "alwaysOnTop",
   // 全局
   GLOBAL = "global",
+  // 引导
+  GUIDE = "guide",
   // 用户
   USER = "user",
   // 设置
@@ -110,7 +112,9 @@ export enum StoresEnum {
   // 弹幕
   DANMAKU = "danmaku",
   // 视频
-  VIDEO = "video"
+  VIDEO = "video",
+  // 图片查看器
+  IMAGE_VIEWER = "imageViewer"
 }
 
 /** 本地存储的key */

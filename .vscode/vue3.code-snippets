@@ -1,0 +1,15 @@
+{
+  "Vue3快速生成模板": {
+    "scope": "vue",
+    "prefix": "vue3",
+    "body": [
+      "<template>",
+      "  <div>test</div>",
+      "</template>\n",
+      "<script setup lang=\"ts\"></script>\n",
+      "<style scoped lang=\"scss\"></style>",
+      "$2"
+    ],
+    "description": "Vue3快速生成模板"
+  }
+}
