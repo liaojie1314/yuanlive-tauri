@@ -8,7 +8,9 @@
             v-model="folderName"
             placeholder="请输入收藏夹的名称（15个字以内）"
             class="folder-name-input"
-            maxlength="15" />
+            maxlength="15"
+            @input="handleInput" />
+          <div v-if="!isFormValid" class="error-message">请输入收藏夹名称</div>
         </div>
         <div class="switch-group">
           <div class="switch-label">
@@ -22,14 +24,13 @@
       </div>
       <div class="dialog-footer">
         <button class="cancel-btn" @click="handleCancel">取消</button>
-        <button class="confirm-btn" @click="handleConfirm">确认</button>
+        <button class="confirm-btn" @click="handleConfirm" :disabled="!isFormValid">确认</button>
       </div>
     </div>
   </BaseDialog>
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from "vue";
 import { NSwitch } from "naive-ui";
 import BaseDialog from "../common/BaseDialog.vue";
 
@@ -54,6 +55,23 @@ const dialogVisible = computed({
 const folderName = ref("");
 // 是否公开
 const isPublicFolder = ref(false);
+// 输入防抖定时器
+let inputTimer: number | null = null;
+
+// 计算属性：表单是否有效
+const isFormValid = computed(() => {
+  return folderName.value.trim().length > 0 && folderName.value.trim().length <= 15;
+});
+
+// 输入处理（带防抖）
+const handleInput = () => {
+  if (inputTimer) {
+    clearTimeout(inputTimer);
+  }
+  inputTimer = window.setTimeout(() => {
+    // 可以在这里添加额外的输入验证逻辑
+  }, 300);
+};
 
 // 取消按钮处理
 const handleCancel = () => {
@@ -63,7 +81,7 @@ const handleCancel = () => {
 
 // 确认按钮处理
 const handleConfirm = () => {
-  if (folderName.value.trim()) {
+  if (isFormValid.value) {
     emit("create-folder", folderName.value.trim(), isPublicFolder.value);
     dialogVisible.value = false;
     resetForm();
@@ -75,6 +93,14 @@ const resetForm = () => {
   folderName.value = "";
   isPublicFolder.value = false;
 };
+
+// 清理函数
+onUnmounted(() => {
+  if (inputTimer) {
+    clearTimeout(inputTimer);
+    inputTimer = null;
+  }
+});
 </script>
 
 <style scoped lang="scss">
@@ -133,6 +159,18 @@ const resetForm = () => {
 
 .public-switch {
   --n-switch-on-color: #ff0050;
+}
+
+.error-message {
+  margin-top: 8px;
+  font-size: 12px;
+  color: #ff4757;
+}
+
+.confirm-btn:disabled {
+  background-color: #ff94a6;
+  cursor: not-allowed;
+  transform: none;
 }
 
 .dialog-footer {

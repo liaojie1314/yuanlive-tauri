@@ -1,14 +1,14 @@
 <template>
   <div class="p-0 m-0 select-none h-full overflow-hidden flex flex-col">
     <user-info-card
-      :name="userInfo.name"
-      :avatar="userInfo.avatar"
-      :verified="userInfo.verified"
+      :name="formattedUserInfo.name"
+      :avatar="formattedUserInfo.avatar"
+      :verified="formattedUserInfo.verified"
       :following="userInfo.following"
       :followers="userInfo.followers"
       :likes="userInfo.likes"
       :live-users="userInfo.liveUsers"
-      :yuanlive-id="userInfo.yuanliveId"
+      :yuanlive-id="formattedUserInfo.yuanliveId"
       v-model:save-login-info="saveLoginInfo" />
 
     <!-- 功能按钮区域 -->
@@ -155,6 +155,24 @@ const folders = ref<CollectionFolder[]>([]);
 // 新建收藏夹对话框显示状态
 const showCreateDialog = ref(false);
 
+// 计算属性：格式化关注数等数据
+const formattedUserInfo = computed(() => {
+  const formatNumber = (num: number): string => {
+    if (num >= 10000) {
+      return (num / 10000).toFixed(1) + "万";
+    }
+    return num.toString();
+  };
+
+  return {
+    ...userInfo.value,
+    following: formatNumber(userInfo.value.following),
+    followers: formatNumber(userInfo.value.followers),
+    likes: formatNumber(userInfo.value.likes),
+    liveUsers: formatNumber(userInfo.value.liveUsers)
+  };
+});
+
 // 处理创建收藏夹
 const handleCreateFolder = (name: string, isPublic: boolean) => {
   const newFolder: CollectionFolder = {
@@ -166,4 +184,10 @@ const handleCreateFolder = (name: string, isPublic: boolean) => {
   folders.value.push(newFolder);
   console.log("创建收藏夹:", newFolder);
 };
+
+// 清理函数
+onUnmounted(() => {
+  // 清理引用
+  folders.value = [];
+});
 </script>

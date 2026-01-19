@@ -12,7 +12,11 @@
       <div
         class="relative col-span-3 rounded-lg overflow-hidden bg-black cursor-pointer hover:opacity-90 transition-opacity aspect-[16/9]"
         @click="navigateToLive(1)">
-        <img src="https://picsum.photos/id/123/800/450" alt="Featured content" class="w-full h-full object-cover" />
+        <img
+          src="https://picsum.photos/id/123/800/450"
+          alt="Featured content"
+          class="w-full h-full object-cover"
+          loading="lazy" />
         <div class="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 to-transparent text-white">
           <div
             class="inline-flex items-center gap-1 bg-red-500 text-white px-2 py-0.5 rounded-full text-xs font-medium mb-2">
@@ -41,7 +45,7 @@
           class="side-featured-item flex flex-col gap-2 cursor-pointer hover:opacity-90 transition-opacity"
           @click="navigateToLive(item.id)">
           <div class="relative aspect-video rounded-lg overflow-hidden bg-black">
-            <img :src="item.imageUrl" :alt="item.title" class="w-full h-full object-cover" />
+            <img :src="item.imageUrl" :alt="item.title" class="w-full h-full object-cover" loading="lazy" />
           </div>
           <div class="flex flex-col gap-1 min-h-[40px]">
             <h4 class="text-sm font-medium truncate">{{ item.title }}</h4>
@@ -64,7 +68,11 @@
             <div class="flex gap-6 min-w-max py-[10px]">
               <div v-for="follow in followList" :key="follow.id" class="flex flex-col items-center">
                 <div class="relative">
-                  <img :src="follow.avatar" :alt="follow.name" class="w-14 h-14 rounded-full object-cover" />
+                  <img
+                    :src="follow.avatar"
+                    :alt="follow.name"
+                    class="w-14 h-14 rounded-full object-cover"
+                    loading="lazy" />
                   <div class="absolute bottom-0 right-0 w-3 h-3 bg-red-500 rounded-full border-2 border-white"></div>
                 </div>
                 <div class="mt-1 text-center">
@@ -106,8 +114,6 @@
 </template>
 
 <script setup lang="ts">
-import { useRouter } from "vue-router";
-
 defineOptions({
   name: "Index"
 });

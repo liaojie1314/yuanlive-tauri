@@ -136,22 +136,30 @@ const typingEffect = (messageId: number, fullText: string, delay: number = 30, t
     message.isThinkingTyping = true;
 
     let thinkingIndex = 0;
+    let lastTime = 0;
 
-    const thinkingInterval = setInterval(() => {
-      if (thinkingIndex < thinkingText.length) {
-        // 逐字添加思考内容
-        message.thinkingContent = thinkingText.substring(0, thinkingIndex + 1);
-        thinkingIndex++;
-        // 每次更新内容后滚动到底部
-        scrollToBottom();
+    const thinkingAnimation = (timestamp: number) => {
+      if (!lastTime || timestamp - lastTime >= delay) {
+        if (thinkingIndex < thinkingText.length) {
+          // 逐字添加思考内容
+          message.thinkingContent = thinkingText.substring(0, thinkingIndex + 1);
+          thinkingIndex++;
+          lastTime = timestamp;
+          // 每次更新内容后滚动到底部
+          scrollToBottom();
+          requestAnimationFrame(thinkingAnimation);
+        } else {
+          // 思考内容打字结束
+          message.isThinkingTyping = false;
+          // 思考内容渲染完成后，开始渲染消息内容
+          renderMessageContent();
+        }
       } else {
-        // 思考内容打字结束
-        clearInterval(thinkingInterval);
-        message.isThinkingTyping = false;
-        // 思考内容渲染完成后，开始渲染消息内容
-        renderMessageContent();
+        requestAnimationFrame(thinkingAnimation);
       }
-    }, delay);
+    };
+
+    requestAnimationFrame(thinkingAnimation);
   };
 
   // 2. 处理消息内容的打字机效果
@@ -161,21 +169,30 @@ const typingEffect = (messageId: number, fullText: string, delay: number = 30, t
     message.content = "";
     message.isTyping = true;
 
-    const typingInterval = setInterval(() => {
-      if (currentIndex < fullText.length) {
-        // 逐字添加消息内容
-        message.content = fullText.substring(0, currentIndex + 1);
-        currentIndex++;
-        // 每次更新内容后滚动到底部
-        scrollToBottom();
+    let lastTime = 0;
+
+    const messageAnimation = (timestamp: number) => {
+      if (!lastTime || timestamp - lastTime >= delay) {
+        if (currentIndex < fullText.length) {
+          // 逐字添加消息内容
+          message.content = fullText.substring(0, currentIndex + 1);
+          currentIndex++;
+          lastTime = timestamp;
+          // 每次更新内容后滚动到底部
+          scrollToBottom();
+          requestAnimationFrame(messageAnimation);
+        } else {
+          // 消息内容打字结束
+          message.isTyping = false;
+          // 打字结束后滚动到底部
+          scrollToBottom();
+        }
       } else {
-        // 消息内容打字结束
-        clearInterval(typingInterval);
-        message.isTyping = false;
-        // 打字结束后滚动到底部
-        scrollToBottom();
+        requestAnimationFrame(messageAnimation);
       }
-    }, delay);
+    };
+
+    requestAnimationFrame(messageAnimation);
   };
 
   // 开始渲染思考内容

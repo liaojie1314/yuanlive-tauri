@@ -342,7 +342,7 @@
 <script setup lang="ts">
 import videojs from "video.js";
 import "video.js/dist/video-js.css";
-import { NSwitch, NDropdown, NSlider, NTooltip } from "naive-ui";
+import { NSwitch, NDropdown, NSlider, NTooltip, NCheckbox } from "naive-ui";
 import DanmakuInput from "../common/DanmakuInput.vue";
 import DanmakuListDialog from "./DanmakuListDialog.vue";
 import DanmakuReportDialog from "./DanmakuReportDialog.vue";
@@ -1546,6 +1546,9 @@ onMounted(() => {
   }
 });
 
+// Animation frame IDs for cleanup
+let animationFrameIds: number[] = [];
+
 // Cleanup
 onBeforeUnmount(() => {
   const cleanupResources: CleanupResource[] = [];
@@ -1578,6 +1581,12 @@ onBeforeUnmount(() => {
     clearTimeout(timer);
   });
   danmakuTimers.clear();
+
+  // Clear animation frames
+  animationFrameIds.forEach((id) => {
+    cancelAnimationFrame(id);
+  });
+  animationFrameIds = [];
 
   // Clear displayed danmaku IDs to reset for next playback
   displayedDanmakuIds.clear();

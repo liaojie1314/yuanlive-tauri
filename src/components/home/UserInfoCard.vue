@@ -5,7 +5,8 @@
         <img
           :src="avatar"
           :alt="`${name}的头像`"
-          class="w-24 h-24 rounded-full border-3 border-white shadow-lg object-cover" />
+          class="w-24 h-24 rounded-full border-3 border-white shadow-lg object-cover"
+          loading="lazy" />
       </div>
       <div class="flex flex-col gap-2 flex-1">
         <div class="flex items-center gap-2">
@@ -21,25 +22,25 @@
             class="cursor-pointer transition-colors duration-200 hover:text-blue-500"
             @click="openFollowDialog('following')">
             关注
-            <span class="text-gray-800 font-medium">{{ following }}</span>
+            <span class="text-gray-800 font-medium">{{ formattedFollowing }}</span>
           </span>
           <span class="text-gray-200 mx-1">|</span>
           <span
             v-if="liveUsers > 0"
             class="cursor-pointer transition-colors duration-200 hover:text-blue-500 text-red-500">
-            {{ liveUsers }}人正在直播
+            {{ formattedLiveUsers }}人正在直播
           </span>
           <span v-if="liveUsers > 0" class="text-gray-200 mx-1">|</span>
           <span
             class="cursor-pointer transition-colors duration-200 hover:text-blue-500"
             @click="openFollowDialog('followers')">
             粉丝
-            <span class="text-gray-800 font-medium">{{ followers }}</span>
+            <span class="text-gray-800 font-medium">{{ formattedFollowers }}</span>
           </span>
           <span class="text-gray-200 mx-1">|</span>
           <span class="cursor-pointer transition-colors duration-200 hover:text-blue-500">
             获赞
-            <span class="text-gray-800 font-medium">{{ likes }}</span>
+            <span class="text-gray-800 font-medium">{{ formattedLikes }}</span>
           </span>
         </div>
         <div class="text-sm text-gray-600">
@@ -68,7 +69,6 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from "vue";
 import { NSwitch } from "naive-ui";
 import FollowListDialog from "./FollowListDialog.vue";
 import EditProfileDialog from "./EditProfileDialog.vue";
@@ -105,12 +105,34 @@ const emit = defineEmits<{
 // 使用本地ref来处理双向绑定
 const localSaveLoginInfo = ref(props.saveLoginInfo);
 
+// 对话框状态
+const dialogVisible = ref(false);
+const activeTab = ref<"following" | "followers">("following");
+
+// 编辑资料对话框状态
+const editDialogVisible = ref(false);
+
+// 计算属性：格式化数字
+const formatNumber = (num: number): string => {
+  if (num >= 10000) {
+    return (num / 10000).toFixed(1) + "万";
+  }
+  return num.toString();
+};
+
+// 格式化后的数字
+const formattedFollowing = computed(() => formatNumber(props.following));
+const formattedFollowers = computed(() => formatNumber(props.followers));
+const formattedLikes = computed(() => formatNumber(props.likes));
+const formattedLiveUsers = computed(() => formatNumber(props.liveUsers));
+
 // 监听props变化，更新本地ref
 watch(
   () => props.saveLoginInfo,
   (newVal) => {
     localSaveLoginInfo.value = newVal;
-  }
+  },
+  { immediate: true }
 );
 
 // 处理开关变化，发射事件
@@ -118,13 +140,6 @@ const handleSaveLoginInfoChange = (value: boolean) => {
   localSaveLoginInfo.value = value;
   emit("update:saveLoginInfo", value);
 };
-
-// 对话框状态
-const dialogVisible = ref(false);
-const activeTab = ref<"following" | "followers">("following");
-
-// 编辑资料对话框状态
-const editDialogVisible = ref(false);
 
 // 打开关注/粉丝对话框
 const openFollowDialog = (tab: "following" | "followers") => {
@@ -205,4 +220,11 @@ const followersList = ref<User[]>([
     isFollowing: false
   }
 ]);
+
+// 清理函数
+onUnmounted(() => {
+  // 清理引用
+  followingList.value = [];
+  followersList.value = [];
+});
 </script>
