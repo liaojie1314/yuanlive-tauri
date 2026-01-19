@@ -1,5 +1,4 @@
-import { defineStore } from "pinia";
-import { StoresEnum } from "../enums";
+import { StoresEnum } from "@/enums";
 
 /**
  * 弹幕设置Store
