@@ -40,7 +40,7 @@ export const useTauriListener = () => {
         const unlisten = await listener;
         safeUnlisten(unlisten);
       } catch (e) {
-        await error(`[跟踪] 取消新监听器失败:${listenerId}, 错误:${e}`);
+        error(`[跟踪] 取消新监听器失败:${listenerId}, 错误:${e}`);
       }
     } else {
       // 添加新的监听器
@@ -65,7 +65,7 @@ export const useTauriListener = () => {
     // 只有当存在监听器时才打印日志和执行清理
     if (listeners.length > 0) {
       const componentName = instance?.type?.name || instance?.type?.__name || "未知组件";
-      await info(`[useTauriListener]清除组件[${componentName}]的Tauri 监听器，监听器数量:[${listeners.length}]`);
+      info(`[useTauriListener]清除组件[${componentName}]的Tauri 监听器，监听器数量:[${listeners.length}]`);
       try {
         // 等待所有的 unlisten 函数 resolve
         const unlistenFns = await Promise.all(listeners);
@@ -101,7 +101,7 @@ export const useTauriListener = () => {
     const windowListeners = globalListeners.get(windowLabel);
     if (!windowListeners) return;
 
-    await info(`[useTauriListener]清除窗口[${windowLabel}]的所有Tauri监听器，监听器数量:[${windowListeners.length}]`);
+    info(`[useTauriListener]清除窗口[${windowLabel}]的所有Tauri监听器，监听器数量:[${windowListeners.length}]`);
     try {
       // 等待所有的 unlisten 函数 resolve
       const unlistenFns = await Promise.all(windowListeners);
@@ -137,9 +137,9 @@ export const useTauriListener = () => {
 
       // 监听窗口关闭请求事件
       if (currentWindowLabel !== "home") {
-        await info(`[useTauriListener] 当前窗口标签设置关闭监听: ${currentWindowLabel}`);
+        info(`[useTauriListener] 当前窗口标签设置关闭监听: ${currentWindowLabel}`);
         const closeUnlisten = await appWindow.onCloseRequested(async () => {
-          await info(`[useTauriListener] 监听[${currentWindowLabel}]窗口关闭事件-清理所有监听器`);
+          info(`[useTauriListener] 监听[${currentWindowLabel}]窗口关闭事件-清理所有监听器`);
           // 清理该窗口的所有监听器
           await cleanupAllListenersForWindow(currentWindowLabel);
           // 清理窗口关闭监听器

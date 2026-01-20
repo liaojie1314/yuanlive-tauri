@@ -78,7 +78,7 @@ export function useLogin() {
       loginText.value = isOnline.value ? t("auth.button.login.default") : t("auth.button.login.networkError");
       uiState.value = "manual";
       settingStore.setAutoLogin(false);
-      await info("自动登录信息已失效，请手动登录");
+      info("自动登录信息已失效，请手动登录");
       return;
     }
     const loginInfo = auto && userStore.userInfo ? (userStore.userInfo as UserInfoType) : userInfo.value;
@@ -92,7 +92,7 @@ export function useLogin() {
         uiState.value = "manual";
         settingStore.setAutoLogin(false);
       }
-      await info("账号信息缺失，请重新输入");
+      info("账号信息缺失，请重新输入");
       return;
     }
 

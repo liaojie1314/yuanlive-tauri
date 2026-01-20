@@ -3,7 +3,7 @@ import { LogicalSize } from "@tauri-apps/api/dpi";
 import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { UserAttentionType } from "@tauri-apps/api/window";
 
-import { EventEnum } from "@/enums";
+import { EventEnum, TauriCommandEnum } from "@/enums";
 import { isCompatibility, isDesktop, isWindows, isWindows10 } from "@/utils/PlatformUtils";
 import { useI18nGlobal } from "@/services/i18n";
 
@@ -201,7 +201,7 @@ export const useWindow = () => {
       return Promise.resolve();
     }
     console.log("新窗口的载荷：", payload);
-    return invoke<void>("push_window_payload", {
+    return invoke<void>(TauriCommandEnum.PUSH_WINDOW_PAYLOAD, {
       label: windowLabel,
       // 这个payload只要是json就能传，不限制字段
       payload
@@ -219,7 +219,7 @@ export const useWindow = () => {
     if (!isDesktop()) {
       return Promise.resolve({} as T);
     }
-    return await invoke<T>("get_window_payload", { label: windowLabel, once });
+    return await invoke<T>(TauriCommandEnum.GET_WINDOW_PAYLOAD, { label: windowLabel, once });
   };
 
   /**

@@ -89,12 +89,25 @@ export enum TauriCommandEnum {
   UPDATE_TOKEN = "update_token",
   // 移除 token
   REMOVE_TOKEN = "remove_token",
-  // 截图
-  SCREENSHOT = "screenshot",
   // AI 消息流式发送
   AI_MESSAGE_SEND_STREAM = "ai_message_send_stream",
   // AI 取消流式消息
-  AI_MESSAGE_CANCEL_STREAM = "ai_message_cancel_stream"
+  AI_MESSAGE_CANCEL_STREAM = "ai_message_cancel_stream",
+  /** desktop专属 */
+  // 推送窗口数据
+  PUSH_WINDOW_PAYLOAD = "push_window_payload",
+  // 获取窗口数据
+  GET_WINDOW_PAYLOAD = "get_window_payload",
+  // 截图
+  SCREENSHOT = "screenshot",
+  // 检查ffmpeg是否安装
+  CHECK_FFMPEG_INSTALLED = "check_ffmpeg_installed",
+  // 启动流管道
+  START_STREAM_PIPE = "start_stream_pipe",
+  // 推送流数据
+  PUSH_STREAM_CHUNK = "push_stream_chunk",
+  // 停止流管道
+  STOP_STREAM_PIPE = "stop_stream_pipe"
 }
 
 /** pinia存储的名称 */

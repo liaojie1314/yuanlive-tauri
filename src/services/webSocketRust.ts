@@ -38,8 +38,8 @@ class ListenerController {
       cleanupPromises.push(
         Promise.resolve()
           .then(() => unlisten())
-          .catch(async (err) => {
-            await error(`[ListenerController] 清理监听器失败: ${err}`);
+          .catch((err) => {
+            error(`[ListenerController] 清理监听器失败: ${err}`);
           })
       );
     }
@@ -51,11 +51,11 @@ class ListenerController {
         new Promise((_, reject) => setTimeout(() => reject(new Error("清理超时")), 5000))
       ]);
     } catch (err) {
-      await warn(`[ListenerController] 部分监听器清理可能未完成: ${err}`);
+      warn(`[ListenerController] 部分监听器清理可能未完成: ${err}`);
     }
 
     this.listeners.clear();
-    await info(`[ListenerController] 已清理所有监听器`);
+    info(`[ListenerController] 已清理所有监听器`);
   }
 
   get size(): number {
@@ -79,11 +79,11 @@ class WebSocketRust {
       const params = {
         deviceId: deviceId || ""
       };
-      await info(`[RustWS] 初始化连接参数: ${JSON.stringify(params)}`);
+      info(`[RustWS] 初始化连接参数: ${JSON.stringify(params)}`);
       await invoke("ws_init_connection", { params });
-      await info("[RustWS] 连接初始化成功");
+      info("[RustWS] 连接初始化成功");
     } catch (e) {
-      await error(`[RustWS] 连接初始化错误: ${e}`);
+      error(`[RustWS] 连接初始化错误: ${e}`);
       throw e;
     }
   }
@@ -94,9 +94,9 @@ class WebSocketRust {
   async disconnect() {
     try {
       await invoke("ws_disconnect");
-      await info("[RustWS] 断开连接成功");
+      info("[RustWS] 断开连接成功");
     } catch (e) {
-      await error(`[RustWS] 断开连接失败: ${e}`);
+      error(`[RustWS] 断开连接失败: ${e}`);
       throw e;
     }
   }
@@ -108,9 +108,9 @@ class WebSocketRust {
   async sendMessage(data: any) {
     try {
       await invoke("ws_send_message", { params: { data } });
-      await info(`[RustWS] 发送消息: ${data}`);
+      info(`[RustWS] 发送消息: ${data}`);
     } catch (e) {
-      await error(`[RustWS] 发送消息错误: ${e}`);
+      error(`[RustWS] 发送消息错误: ${e}`);
       throw e;
     }
   }
@@ -122,7 +122,7 @@ class WebSocketRust {
     try {
       return await invoke<ConnectionState>("ws_get_state");
     } catch (err) {
-      await error(`[RustWS] 获取连接状态失败: ${err}`);
+      error(`[RustWS] 获取连接状态失败: ${err}`);
       return ConnectionState.ERROR;
     }
   }
@@ -133,9 +133,9 @@ class WebSocketRust {
   async forceReconnect(): Promise<void> {
     try {
       await invoke("ws_force_reconnect");
-      await info("[RustWS] 强制重连成功");
+      info("[RustWS] 强制重连成功");
     } catch (err) {
-      await error(`[RustWS] 强制重连失败: ${err}`);
+      error(`[RustWS] 强制重连失败: ${err}`);
       throw err;
     }
   }
@@ -147,7 +147,7 @@ class WebSocketRust {
     try {
       return await invoke<boolean>("ws_is_connected");
     } catch (err) {
-      await error(`[RustWS] 检查连接状态失败: ${err}`);
+      error(`[RustWS] 检查连接状态失败: ${err}`);
       return false;
     }
   }
@@ -155,7 +155,7 @@ class WebSocketRust {
   public async setupBusinessMessageListeners(): Promise<void> {
     this.listenerController.add(
       await listen("ws-remote-login", async (event: any) => {
-        await info("账号在其他设备登录");
+        info("账号在其他设备登录");
         useMitt.emit(WsResponseMessageEnum.REMOTE_LOGIN, event.payload);
       })
     );
