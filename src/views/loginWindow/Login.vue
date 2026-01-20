@@ -8,7 +8,7 @@
       <!-- 头像 -->
       <n-flex justify="center" class="w-full pt-35px" data-tauri-drag-region>
         <n-avatar
-          class="size-80px rounded-50% border-(2px solid #fff) dark:border-(2px solid #606060)"
+          class="welcome size-80px rounded-50% border-(2px solid #fff) dark:border-(2px solid #606060)"
           :color="themes.content === ThemeEnum.DARK ? '#282828' : '#fff'"
           fallback-src="/vite.svg"
           src="/vite.svg" />
@@ -138,6 +138,13 @@
               @click="createWebviewWindow('忘记密码', 'forgetPassword', 600, 600)">
               {{ t("auth.option.items.forget") }}
             </div>
+            <div
+              v-if="!isCompatibility()"
+              @click="router.push('/network')"
+              :class="{ network: isMac() }"
+              class="text-14px cursor-pointer hover:bg-#90909030 hover:rounded-6px p-8px">
+              {{ t("auth.option.items.networkSetting") }}
+            </div>
           </n-flex>
         </n-popover>
       </div>
@@ -154,12 +161,14 @@ import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 import router from "@/router";
 import { ThemeEnum } from "@/enums";
 import { useUserStore } from "@/stores/user";
+import { useGuideStore } from "@/stores/guide";
 import { useGlobalStore } from "@/stores/global";
 import { useSettingStore } from "@/stores/setting";
 import { useWindow } from "@/hooks/useWindow";
 import { useLogin } from "@/hooks/useLogin";
+import { type DriverStepConfig, useDriver } from "@/hooks/useDriver";
 import { formatBottomText } from "@/utils/FormattingUtils";
-import { isDesktop } from "@/utils/PlatformUtils";
+import { isCompatibility, isDesktop, isMac } from "@/utils/PlatformUtils";
 
 const { t } = useI18n();
 // 网络连接是否正常
@@ -167,11 +176,65 @@ const { isOnline } = useNetwork();
 const { createWebviewWindow, createModalWindow, getWindowPayload } = useWindow();
 const { userInfo, uiState, loading, loginDisabled, loginText, normalLogin } = useLogin();
 const userStore = useUserStore();
+const guideStore = useGuideStore();
 const globalStore = useGlobalStore();
 const settingStore = useSettingStore();
+const { isGuideCompleted } = storeToRefs(guideStore);
 const { themes, login } = storeToRefs(settingStore);
 const { showTray, firstEnter } = storeToRefs(globalStore);
 const naiveTheme = computed(() => (themes.value.content === ThemeEnum.DARK ? darkTheme : lightTheme));
+
+const driverSteps = computed<DriverStepConfig[]>(() => [
+  {
+    element: ".welcome",
+    popover: {
+      title: t("auth.guide.welcome.title"),
+      description: t("auth.guide.welcome.desc"),
+      side: "bottom",
+      align: "center"
+    }
+  },
+  {
+    element: ".agreement",
+    popover: {
+      title: t("auth.guide.privacy.title"),
+      description: t("auth.guide.privacy.desc"),
+      onNextClick: () => {
+        if (isMac()) {
+          moreShow.value = true;
+        }
+      }
+    }
+  },
+  {
+    element: ".network",
+    popover: {
+      title: t("auth.guide.network.title"),
+      description: t("auth.guide.network.desc"),
+      onNextClick: () => {
+        moreShow.value = true;
+      }
+    }
+  },
+  {
+    element: ".register",
+    popover: {
+      title: t("auth.guide.register.title"),
+      description: t("auth.guide.register.desc")
+    }
+  }
+]);
+
+const driverConfig = computed(() => ({
+  nextBtnText: t("auth.guide.actions.next"),
+  prevBtnText: t("auth.guide.actions.prev"),
+  doneBtnText: t("auth.guide.actions.done"),
+  progressText: t("auth.guide.actions.progress", {
+    current: "{{current}}",
+    total: "{{total}}"
+  })
+}));
+const { startTour, reinitialize } = useDriver(driverSteps.value, driverConfig.value);
 
 // 输入框占位符
 const accountPH = ref(t("auth.input.account.placeholder"));
@@ -196,6 +259,10 @@ const removeAccountTitle = computed(() =>
 watchEffect(
   () => (loginDisabled.value = !(userInfo.value.account && userInfo.value.password && protocol.value && isOnline.value))
 );
+
+watch([driverSteps, driverConfig], ([steps, config]) => {
+  reinitialize(steps, config);
+});
 
 // 网络连接状态变化时，更新登录按钮状态
 watch(
@@ -271,6 +338,10 @@ const openRemoteLoginModal = async (ip?: string) => {
 };
 
 onMounted(async () => {
+  // 检查引导状态，只有未完成时才启动引导
+  if (!isGuideCompleted.value) {
+    startTour();
+  }
   firstEnter.value = true;
   await handlePendingRemoteLoginPayload();
   // 始终初始化托盘菜单状态为false
