@@ -12,6 +12,7 @@ use crate::error::CommonError;
 use crate::init::CustomInit;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use std::process::Child;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use tauri::async_runtime::Mutex;
@@ -21,11 +22,16 @@ use tracing::{error, info, warn};
 
 #[derive(Debug)]
 pub struct AppData {
-    user_info: Arc<Mutex<UserInfo>>,
+    pub user_info: Arc<Mutex<UserInfo>>,
     pub rc: Arc<Mutex<request_client::RequestClient>>,
     pub config: Arc<Mutex<BackendSettings>>,
     /// 记录正在进行的 AI 流式任务
     pub stream_tasks: Arc<Mutex<HashMap<String, tokio::task::JoinHandle<()>>>>,
+}
+
+/// Ffmpeg状态管理
+pub struct FfmpegState {
+    child: std::sync::Mutex<Option<Child>>,
 }
 
 pub(crate) static APP_STATE_READY: AtomicBool = AtomicBool::new(false);
@@ -41,6 +47,9 @@ pub struct UserInfo {
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        .manage(FfmpegState {
+            child: std::sync::Mutex::new(None),
+        })
         .init_plugin()
         .init_window_event()
         .setup(move |app| {
@@ -216,6 +225,10 @@ fn get_invoke_handlers() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Se
     #[cfg(desktop)]
     use desktop::cmd::screenshot;
     #[cfg(desktop)]
+    use desktop::live_stream::{
+        check_ffmpeg_installed, push_stream_chunk, start_stream_pipe, stop_stream_pipe,
+    };
+    #[cfg(desktop)]
     use desktop::window_payload::{get_window_payload, push_window_payload};
 
     tauri::generate_handler![
@@ -244,5 +257,13 @@ fn get_invoke_handlers() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Se
         get_window_payload,
         #[cfg(desktop)]
         screenshot,
+        #[cfg(desktop)]
+        check_ffmpeg_installed,
+        #[cfg(desktop)]
+        start_stream_pipe,
+        #[cfg(desktop)]
+        stop_stream_pipe,
+        #[cfg(desktop)]
+        push_stream_chunk,
     ]
 }

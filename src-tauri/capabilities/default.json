@@ -59,6 +59,18 @@
     "global-shortcut:allow-register",
     "global-shortcut:allow-register-all",
     "global-shortcut:allow-unregister",
-    "global-shortcut:allow-unregister-all"
+    "global-shortcut:allow-unregister-all",
+    "shell:default",
+    "shell:allow-open",
+    {
+      "identifier": "shell:allow-spawn",
+      "allow": [
+        {
+          "name": "ffmpeg",
+          "cmd": "ffmpeg",
+          "args": true
+        }
+      ]
+    }
   ]
 }

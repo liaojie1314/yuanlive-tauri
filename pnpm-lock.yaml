@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      '@breezystack/lamejs':
+        specifier: ^1.2.7
+        version: 1.2.7
       '@fingerprintjs/fingerprintjs':
         specifier: ^5.0.1
         version: 5.0.1
@@ -38,6 +41,9 @@ importers:
       '@tauri-apps/plugin-process':
         specifier: ~2.3.1
         version: 2.3.1
+      '@tauri-apps/plugin-shell':
+        specifier: ~2
+        version: 2.3.4
       '@types/crypto-js':
         specifier: ^4.2.2
         version: 4.2.2
@@ -426,6 +432,9 @@ packages:
     engines: {node: '>=14.21.3'}
     cpu: [x64]
     os: [win32]
+
+  '@breezystack/lamejs@1.2.7':
+    resolution: {integrity: sha512-6wc7ck65ctA75Hq7FYHTtTvGnYs6msgdxiSUICQ+A01nVOWg6rqouZB8IdyteRlfpYYiFovkf67dIeOgWIUzTA==}
 
   '@code-inspector/core@1.3.4':
     resolution: {integrity: sha512-AUFtDH/hngBHrNVwW1z44ogZkaGhfmFQJZjyQrSCp+mERVQqa4QNGQpRqiIEWVCwJ2e3GCuwxeAr/k48r1nscA==}
@@ -1195,6 +1204,9 @@ packages:
 
   '@tauri-apps/plugin-process@2.3.1':
     resolution: {integrity: sha512-nCa4fGVaDL/B9ai03VyPOjfAHRHSBz5v6F/ObsB73r/dA3MHHhZtldaDMIc0V/pnUw9ehzr2iEG+XkSEyC0JJA==}
+
+  '@tauri-apps/plugin-shell@2.3.4':
+    resolution: {integrity: sha512-ktsRWf8wHLD17aZEyqE8c5x98eNAuTizR1FSX475zQ4TxaiJnhwksLygQz+AGwckJL5bfEP13nWrlTNQJUpKpA==}
 
   '@tootallnate/quickjs-emscripten@0.23.0':
     resolution: {integrity: sha512-C5Mc6rdnsaJDjO3UpGW/CQTHtCKaYlScZTly4JIu97Jxo/odCiH0ITnDXSJPTOrEKk/ycSZ0AOgTmkDtkOsvIA==}
@@ -3897,6 +3909,8 @@ snapshots:
   '@biomejs/cli-win32-x64@2.3.8':
     optional: true
 
+  '@breezystack/lamejs@1.2.7': {}
+
   '@code-inspector/core@1.3.4':
     dependencies:
       '@vue/compiler-dom': 3.5.24
@@ -4553,6 +4567,10 @@ snapshots:
       '@tauri-apps/api': 2.9.0
 
   '@tauri-apps/plugin-process@2.3.1':
+    dependencies:
+      '@tauri-apps/api': 2.9.0
+
+  '@tauri-apps/plugin-shell@2.3.4':
     dependencies:
       '@tauri-apps/api': 2.9.0
 
