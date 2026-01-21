@@ -46,7 +46,13 @@ export enum UrlEnum {
   // 检测二维码状态
   CHECK_QR_STATUS = "checkQRStatus",
   // 发送邮箱验证码
-  GET_CODE = "getCode"
+  GET_CODE = "getCode",
+  // 地图坐标转换
+  MAP_COORD_TRANSLATE = "mapCoordTranslate",
+  // 地图逆地理编码
+  MAP_REVERSE_GEOCODE = "mapReverseGeocode",
+  // 地图静态图
+  MAP_STATIC = "mapStatic"
 }
 
 /** 关闭窗口的行为 */
@@ -127,7 +133,9 @@ export enum StoresEnum {
   // 视频
   VIDEO = "video",
   // 图片查看器
-  IMAGE_VIEWER = "imageViewer"
+  IMAGE_VIEWER = "imageViewer",
+  // 视频查看器
+  VIDEO_VIEWER = "videoViewer"
 }
 
 /** 本地存储的key */

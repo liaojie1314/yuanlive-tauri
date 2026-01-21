@@ -446,14 +446,14 @@ pub enum Url {
     Logout,
     ForgetPassword,
     GetCode,
-
     GenerateQRCode,
     CheckQRStatus,
-
     GetUserInfoDetail,
-
     MessageSendStream,
-
+    // 地图相关
+    MapCoordTranslate,
+    MapReverseGeocode,
+    MapStatic,
     // 文件上传相关
     UploadChunk,
     CheckUploadedChunks,
@@ -476,6 +476,10 @@ impl Url {
             Url::GetUserInfoDetail => (http::Method::GET, "user/info"),
             // AI 相关
             Url::MessageSendStream => (http::Method::POST, "ai/chat/stream"),
+            // 地图相关
+            Url::MapCoordTranslate => (http::Method::GET, "map/coord/translate"),
+            Url::MapReverseGeocode => (http::Method::GET, "map/geocode/reverse"),
+            Url::MapStatic => (http::Method::GET, "map/static"),
             // 文件上传相关
             Url::UploadChunk => (http::Method::POST, "api/upload/chunk"),
             Url::CheckUploadedChunks => (http::Method::GET, "api/upload/check"),
@@ -498,6 +502,10 @@ impl Url {
             "getUserInfoDetail" => Ok(Url::GetUserInfoDetail),
             // AI 相关
             "messageSendStream" => Ok(Url::MessageSendStream),
+            // 地图相关
+            "mapCoordTranslate" => Ok(Url::MapCoordTranslate),
+            "mapReverseGeocode" => Ok(Url::MapReverseGeocode),
+            "mapStatic" => Ok(Url::MapStatic),
             // 文件上传相关
             "uploadChunk" => Ok(Url::UploadChunk),
             "checkUploadedChunks" => Ok(Url::CheckUploadedChunks),
