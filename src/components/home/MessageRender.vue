@@ -134,7 +134,7 @@
     </div>
 
     <!-- 自己消息 -->
-    <div v-else class="flex gap-2 max-w-[80%] ml-auto">
+    <div v-else class="flex gap-2 max-w-[80%]">
       <div class="flex-grow min-w-0">
         <div class="bg-blue-500 text-white rounded-lg p-3 shadow-sm">
           <!-- 文本消息 -->
@@ -204,6 +204,7 @@
 import { marked } from "marked";
 import hljs from "highlight.js";
 import "highlight.js/styles/github.css";
+import { writeText } from "@tauri-apps/plugin-clipboard-manager";
 
 // 语言映射表，用于将常见的语言别名映射到正确的语言
 const languageMap: Record<string, string> = {
@@ -454,36 +455,27 @@ const renderedContent = computed(() => {
         const copyBtn = document.createElement("button");
         copyBtn.className = "code-action-btn";
         copyBtn.innerHTML = "📋 复制";
-        copyBtn.setAttribute("data-clipboard-text", codeElement.textContent || "");
-        copyBtn.addEventListener("click", () => {
-          navigator.clipboard
-            .writeText(codeElement.textContent || "")
-            .then(() => {
-              // 可以添加复制成功的提示
-              console.log("代码已复制到剪贴板");
-            })
-            .catch((err) => {
-              console.error("复制失败:", err);
-            });
-        });
+        copyBtn.setAttribute("data-action", "copy");
+        actionsDiv.appendChild(copyBtn);
 
         // 添加下载按钮
         const downloadBtn = document.createElement("button");
         downloadBtn.className = "code-action-btn";
         downloadBtn.innerHTML = "💾 下载";
-        downloadBtn.addEventListener("click", () => {
-          const blob = new Blob([codeElement.textContent || ""], { type: "text/plain" });
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement("a");
-          a.href = url;
-          a.download = `code.${lang}`;
-          a.click();
-          URL.revokeObjectURL(url);
-        });
-
-        // 组装header
-        actionsDiv.appendChild(copyBtn);
+        downloadBtn.setAttribute("data-action", "download");
         actionsDiv.appendChild(downloadBtn);
+
+        // 添加运行按钮（仅对完整HTML代码显示）
+        const codeContent = codeElement.textContent || "";
+        const isCompleteHtml =
+          lang === "html" && codeContent.includes("<!DOCTYPE html>") && codeContent.includes("</html>");
+        if (isCompleteHtml) {
+          const runBtn = document.createElement("button");
+          runBtn.className = "code-action-btn";
+          runBtn.innerHTML = "▶️ 运行";
+          runBtn.setAttribute("data-action", "run");
+          actionsDiv.appendChild(runBtn);
+        }
         header.appendChild(langSpan);
         header.appendChild(actionsDiv);
 
@@ -500,6 +492,56 @@ const renderedContent = computed(() => {
   });
 
   return tempDiv.innerHTML;
+});
+
+const handleGlobalClick = async (event: MouseEvent) => {
+  const target = event.target as HTMLElement;
+  // 检查是否点击了我们的代码按钮（查找最近的带有 code-action-btn 类的元素）
+  const btn = target.closest(".code-action-btn") as HTMLElement;
+  // 如果没点到按钮，直接退出，不消耗性能
+  if (!btn) return;
+  event.preventDefault();
+  event.stopImmediatePropagation();
+  // 获取按钮的动作类型
+  const action = btn.getAttribute("data-action");
+  // 找到对应的代码内容
+  // 结构：header -> container -> pre -> code
+  const container = btn.closest(".code-block-container");
+  if (!container) {
+    console.error("找不到代码容器");
+    return;
+  }
+  // 获取 code 标签中的纯文本
+  const codeEl = container.querySelector("code");
+  if (!codeEl) return;
+  const content = codeEl.textContent || "";
+  console.log(`触发操作: ${action}`);
+  // 复制逻辑
+  if (action === "copy") {
+    try {
+      await writeText(content);
+      const originalText = btn.innerHTML;
+      btn.innerHTML = "✅ 已复制";
+      setTimeout(() => (btn.innerHTML = originalText), 2000);
+    } catch (err) {
+      console.error("复制失败:", err);
+      btn.innerHTML = "❌ 失败";
+    }
+  }
+  // TODO: 下载逻辑
+  else if (action === "download") {
+  }
+  // TODO: 运行逻辑
+  else if (action === "run") {
+  }
+};
+
+onMounted(() => {
+  document.addEventListener("click", handleGlobalClick);
+});
+
+onUnmounted(() => {
+  document.removeEventListener("click", handleGlobalClick);
 });
 </script>
 
@@ -676,6 +718,9 @@ const renderedContent = computed(() => {
   white-space: pre-wrap;
   word-break: break-word;
   overflow-wrap: break-word;
+  overflow-x: auto;
+  max-width: 100%;
+  white-space: pre;
 }
 
 /* 确保code标签内容不会溢出 */
@@ -746,14 +791,19 @@ const renderedContent = computed(() => {
 /* 文本消息容器，用于定位光标 */
 .text-message {
   position: relative;
-  display: inline-block;
+  display: block; /* 或者 flow-root */
   width: 100%;
+  min-width: 0; /* 再次确保能够收缩 */
 }
 
 /* Markdown 渲染样式 - 通用 */
 :deep(.prose) {
   margin: 0;
   padding: 0;
+  width: 100%; /* 明确宽度 */
+  max-width: 100%;
+  min-width: 0; /* 允许收缩 */
+  overflow-x: hidden;
 }
 
 :deep(.prose p) {
@@ -787,6 +837,11 @@ const renderedContent = computed(() => {
   line-height: 1.5;
   border: 1px solid #e1e4e8;
   position: relative;
+  max-width: 100%;
+  overflow-x: auto;
+  white-space: pre;
+  display: grid;
+  overflow-x: auto;
 }
 
 :deep(.prose pre code) {
@@ -796,8 +851,9 @@ const renderedContent = computed(() => {
   border-radius: 0;
   font-family: "Monaco", "Menlo", "Ubuntu Mono", monospace;
   display: block;
-  white-space: pre;
   overflow-x: auto;
+  overflow-wrap: normal;
+  white-space: pre;
 }
 
 :deep(.prose code) {
@@ -847,6 +903,10 @@ const renderedContent = computed(() => {
   border-radius: 6px;
   overflow: hidden;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  display: grid;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
 }
 
 /* 代码块吸顶header样式 */
@@ -927,5 +987,18 @@ const renderedContent = computed(() => {
 
 :deep(.bg-blue-500 .code-block-container pre) {
   background-color: rgba(255, 255, 255, 0.05);
+}
+
+:deep(.code-actions) {
+  z-index: 50 !important;
+  position: relative;
+}
+
+:deep(.code-action-btn) {
+  pointer-events: auto !important; /* 确保能响应鼠标事件 */
+  cursor: pointer !important;
+  user-select: none; /* 按钮文字不可选，但按钮本身可点 */
+  position: relative;
+  z-index: 51;
 }
 </style>

@@ -392,7 +392,7 @@ const handleVoiceClick = () => {
 const handleResize = () => {
   if (inputContainerRef.value) {
     const width = inputContainerRef.value.offsetWidth;
-    showButtonText.value = width >= 570;
+    showButtonText.value = width >= 588;
   }
 };
 

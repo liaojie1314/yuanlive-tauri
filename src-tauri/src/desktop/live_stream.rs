@@ -26,7 +26,7 @@ pub fn start_stream_pipe(
     }
     // 拼接 RTMP 地址 (支持 SRS/Nginx-RTMP/Go2RTC)
     // 拼接带 Token 的 RTMP 地址
-    let rtmp_url = format!("rtmp://localhost/live/{}?token={}", room_id, token);
+    let rtmp_url = format!("rtmp://localhost:1935/live/{}?token={}", room_id, token);
     println!("Ffmpeg Mode: Pushing to {}", rtmp_url);
     let child = Command::new("ffmpeg")
         .args(&[

@@ -25,7 +25,7 @@
         <i-mdi-history class="w-4 h-4" />
         <span>历史对话</span>
       </div>
-      <n-dropdown trigger="click" placement="bottom-end" :options="clearMenuOptions">
+      <n-dropdown trigger="click" placement="bottom-end" :options="clearMenuOptions" @select="handleMenuSelect">
         <n-button quaternary circle :bordered="false">
           <i-mdi-delete-outline class="w-4 h-4" />
         </n-button>
@@ -44,7 +44,7 @@
             :title="item.title"
             :active="item.id === activeChatId"
             @click="handleChatClick(item.id)"
-            @rename="handleRename(item.id)"
+            @rename="handleRename(item.id, $event)"
             @share="handleShare(item.id)"
             @delete="handleDelete(item.id)" />
         </div>
@@ -54,9 +54,6 @@
 </template>
 
 <script setup lang="ts">
-import ChatHistoryItem from "./ChatHistoryItem.vue";
-import { NButton, NDropdown, NScrollbar } from "naive-ui";
-
 // 定义对话项类型
 interface ChatItem {
   id: string;
@@ -83,7 +80,7 @@ const { activeChatId } = props;
 const emit = defineEmits<{
   "new-chat": [];
   "select-chat": [id: string];
-  "rename-chat": [id: string];
+  "rename-chat": [id: string, newTitle: string];
   "share-chat": [id: string];
   "delete-chat": [id: string];
   "clear-all": [];
@@ -127,8 +124,15 @@ const handleChatClick = (id: string) => {
 };
 
 // 处理重命名对话
-const handleRename = (id: string) => {
-  emit("rename-chat", id);
+const handleRename = (id: string, newTitle: string) => {
+  // 本地更新对话标题
+  historyGroups.value.forEach((group) => {
+    const item = group.items.find((item) => item.id === id);
+    if (item) {
+      item.title = newTitle;
+    }
+  });
+  emit("rename-chat", id, newTitle);
 };
 
 // 处理分享对话
@@ -136,22 +140,56 @@ const handleShare = (id: string) => {
   emit("share-chat", id);
 };
 
+// 处理菜单选择（用于清空历史）
+const handleMenuSelect = (key: string) => {
+  if (key === "clear") {
+    handleClearAll();
+  }
+};
+
 // 处理删除对话
 const handleDelete = (id: string) => {
-  emit("delete-chat", id);
+  window.$dialog.warning({
+    content: "确认删除该对话吗？",
+    positiveText: "确认",
+    negativeText: "取消",
+    onPositiveClick: () => {
+      // 本地删除对话
+      historyGroups.value = historyGroups.value
+        .map((group) => {
+          const newItems = group.items.filter((item) => item.id !== id);
+          return {
+            ...group,
+            items: newItems
+          };
+        })
+        .filter((group) => group.items.length > 0); // 过滤掉空分组
+      console.log("对话已删除:", id);
+      emit("delete-chat", id);
+    }
+  });
 };
 
 // 处理清空所有历史
 const handleClearAll = () => {
-  emit("clear-all");
+  window.$dialog.warning({
+    content: "确认清空所有历史对话吗？",
+    positiveText: "确认",
+    negativeText: "取消",
+    onPositiveClick: () => {
+      // 本地清空所有历史
+      historyGroups.value = [];
+      console.log("所有历史对话已清空");
+      emit("clear-all");
+    }
+  });
 };
 
 // 清空历史下拉菜单选项
 const clearMenuOptions = [
   {
     label: "清空所有历史",
-    key: "clear",
-    onClick: handleClearAll
+    key: "clear"
   }
 ];
 </script>

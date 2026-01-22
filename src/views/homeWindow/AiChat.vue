@@ -1,5 +1,5 @@
 <template>
-  <div class="h-[calc(100%-24px)] flex flex-row bg-gray-50">
+  <div class="h-[calc(100%-24px)] flex flex-row bg-gray-50 w-full overflow-auto">
     <!-- 左侧面板 -->
     <div
       :class="[
@@ -23,7 +23,7 @@
     <!-- 中间聊天区域 -->
     <div
       :class="[
-        'w-[80%] lg:w-[60%] flex flex-col transition-all duration-300 ease-in-out',
+        'w-[80%] lg:w-[60%] flex flex-col transition-all duration-300 ease-in-out min-w-0',
         isHistoryCollapsed ? 'w-[calc(100%-55px)] lg:w-[calc(100%-55px)]' : ''
       ]">
       <!-- 聊天记录区域 - 自动填充剩余空间 -->
@@ -289,8 +289,62 @@ function processImage(imageUrl) {
 - 列表项
 - 代码块
 
-\`\`\`javascript
-console.log("Hello, World!");
+下面是一个完整的HTML示例，你可以点击运行按钮查看效果：
+
+\`\`\`html
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>测试运行按钮</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        p {
+            font-size: 16px;
+            line-height: 1.6;
+            color: #666;
+        }
+        .button {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            margin-top: 20px;
+        }
+        .button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>测试运行按钮功能</h1>
+        <p>这是一个完整的HTML页面，用于测试运行按钮功能。</p>
+        <p>如果您看到此页面，说明运行按钮工作正常！</p>
+        <a href="#" class="button">点击我</a>
+    </div>
+</body>
+</html>
 \`\`\``;
 
       aiContent = "";
@@ -355,8 +409,8 @@ const handleSelectChat = (id: string) => {
 };
 
 // 处理重命名对话
-const handleRenameChat = (id: string) => {
-  console.log("Rename chat:", id);
+const handleRenameChat = (id: string, newTitle: string) => {
+  console.log("Rename chat:", id, "to", newTitle);
   // 后续可以实现重命名对话的逻辑
 };
 

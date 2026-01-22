@@ -110,6 +110,7 @@
                 <div class="folder-count">{{ folder.count }}</div>
               </div>
               <n-checkbox
+                class="square-checkbox"
                 v-model:checked="folder.isSelected"
                 @update:checked="updateSelectedFolder(folder.id, $event)" />
             </div>
@@ -342,13 +343,9 @@
 <script setup lang="ts">
 import videojs from "video.js";
 import "video.js/dist/video-js.css";
-import { NSwitch, NDropdown, NSlider, NTooltip, NCheckbox } from "naive-ui";
-import DanmakuInput from "../common/DanmakuInput.vue";
-import DanmakuListDialog from "./DanmakuListDialog.vue";
-import DanmakuReportDialog from "./DanmakuReportDialog.vue";
-import CollectionFolderDialog from "./CollectionFolderDialog.vue";
-import { useDanmakuStore } from "@/stores/danmaku";
+
 import { useVideoStore } from "@/stores/video";
+import { useDanmakuStore } from "@/stores/danmaku";
 import { getMemoryMonitor, cleanupMemory, type CleanupResource } from "@/utils/MemoryMonitor.ts";
 
 // Props
@@ -2784,5 +2781,10 @@ defineExpose({
   color: currentColor;
   width: 28px;
   height: 28px;
+}
+
+// 修改全局样式
+:deep(.square-checkbox.n-checkbox .n-checkbox-box) {
+  border-radius: 2px;
 }
 </style>
