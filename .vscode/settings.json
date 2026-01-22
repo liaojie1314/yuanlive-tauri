@@ -19,20 +19,24 @@
     "Geolocation",
     "HKLM",
     "hoverable",
+    "libx",
     "longtask",
     "minimizable",
     "persistedstate",
     "reqwest",
+    "RTMP",
     "rustc",
     "rustup",
     "tauri",
     "TTFB",
     "txyewy",
+    "ultrafast",
     "unlisten",
     "unminimize",
     "unocss",
     "videojs",
     "vueuse",
-    "yuanlive"
+    "yuanlive",
+    "zerolatency"
   ]
 }

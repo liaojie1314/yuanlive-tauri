@@ -4,7 +4,6 @@ function isSameCalendarWeek(date1: Date, date2: Date): boolean {
   const getStartOfWeek = (date: Date): Date => {
     const start = new Date(date);
     const day = start.getDay(); // 0 星期日 1 星期一 ... 6 星期六
-
     // 如果是周日，减去6就回调到上周一
     // 否则减去1，就回调到本周一
     const diff = start.getDate() - (day === 0 ? 6 : day - 1);
@@ -25,13 +24,13 @@ function formatTimeOnly(date: Date): string {
 
 function getWeekDay(date: Date, t: any): string {
   const weekDays = [
-    t("time.weekday.sun"),
-    t("time.weekday.mon"),
-    t("time.weekday.tue"),
-    t("time.weekday.wed"),
-    t("time.weekday.thu"),
-    t("time.weekday.fri"),
-    t("time.weekday.sat")
+    t("hook.time.weekday.sun"),
+    t("hook.time.weekday.mon"),
+    t("hook.time.weekday.tue"),
+    t("hook.time.weekday.wed"),
+    t("hook.time.weekday.thu"),
+    t("hook.time.weekday.fri"),
+    t("hook.time.weekday.sat")
   ];
   return weekDays[date.getDay()];
 }
@@ -71,9 +70,9 @@ function formatTimeAgoCore(targetDate: Date, nowDate: Date, t: any, locale: stri
   // 一小时以内
   if (hours < 1) {
     if (minutes < 5) {
-      return t("time.justNow");
+      return t("hook.time.justNow");
     }
-    return t("time.minutes", { count: minutes });
+    return t("hook.time.minutes", { count: minutes });
   }
   // 一小时到一天以内 (同一天)
   else if (isSameDay) {

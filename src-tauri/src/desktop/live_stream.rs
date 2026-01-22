@@ -7,7 +7,7 @@ use tauri::State;
 #[tauri::command]
 pub fn check_ffmpeg_installed() -> bool {
     // 通过ffmpeg --version测试
-    match Command::new("ffmpeg").arg("--version").output() {
+    match Command::new("ffmpeg").arg("-version").output() {
         Ok(output) => output.status.success(),
         Err(_) => false,
     }
@@ -24,28 +24,37 @@ pub fn start_stream_pipe(
     if child_guard.is_some() {
         return Ok("Already streaming".into());
     }
+    // 拼接 RTMP 地址 (支持 SRS/Nginx-RTMP/Go2RTC)
     // 拼接带 Token 的 RTMP 地址
     let rtmp_url = format!("rtmp://localhost/live/{}?token={}", room_id, token);
     println!("Ffmpeg Mode: Pushing to {}", rtmp_url);
     let child = Command::new("ffmpeg")
         .args(&[
             "-f",
-            "webm",
+            "webm", // 输入格式: WebM (浏览器 MediaRecorder 标准输出)
             "-i",
-            "-",
+            "-", // 输入源: 标准输入 (Stdin)
             "-c:v",
-            "libx264",
+            "libx264", // 视频编码: H.264
             "-preset",
-            "ultrafast",
+            "ultrafast", // 极速编码 (低延迟核心)
             "-tune",
-            "zerolatency",
+            "zerolatency", // 零延迟调优
+            "-g",
+            "60", // 关键帧间隔 2秒 (30fps * 2)
             "-c:a",
-            "aac",
+            "aac", // 音频编码: AAC
+            "-ar",
+            "44100", // 采样率
+            "-b:a",
+            "128k", // 音频码率
             "-f",
-            "flv",
+            "flv", // 输出格式: FLV (RTMP 标准)
             &rtmp_url,
         ])
-        .stdin(Stdio::piped())
+        .stdin(Stdio::piped()) // 开启输入管道
+        .stdout(Stdio::null()) // 忽略输出，避免阻塞
+        .stderr(Stdio::inherit()) // 错误日志输出到控制台
         .spawn()
         .map_err(|e| format!("Start Ffmpeg failed: {}", e))?;
     *child_guard = Some(child);
@@ -73,7 +82,8 @@ pub fn push_stream_chunk(data: Vec<u8>, state: State<FfmpegState>) -> Result<(),
 pub fn stop_stream_pipe(state: State<FfmpegState>) -> Result<(), String> {
     let mut child_guard = state.child.lock().unwrap();
     if let Some(mut child) = child_guard.take() {
-        let _ = child.kill(); // 强制结束进程
+        let _ = child.kill(); // 强杀进程
+        let _ = child.wait(); // 回收资源，防止僵尸进程
     }
     Ok(())
 }

@@ -1,5 +1,6 @@
 import "uno.css";
 import "@unocss/reset/eric-meyer.css"; // unocss提供的浏览器默认样式重置
+import "@/styles/global/global.scss";
 import { pinia } from "@/stores";
 import router from "@/router";
 import { createApp } from "vue";
