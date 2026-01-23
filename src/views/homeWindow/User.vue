@@ -15,6 +15,7 @@
     <div class="bg-white p-4 rounded-lg shadow-sm mb-4">
       <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-5">
         <!-- 发布视频按钮 -->
+        <!-- TODO: 测试 -->
         <div
           class="flex flex-col items-center justify-center p-3 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
           <i-mdi-video-plus class="text-xl text-blue-500 mb-1"></i-mdi-video-plus>
@@ -34,7 +35,8 @@
         </div>
         <!-- 开直播按钮 -->
         <div
-          class="flex flex-col items-center justify-center p-3 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
+          class="flex flex-col items-center justify-center p-3 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
+          @click="createWebviewWindow('直播', 'record', 1200, 720, '', true, 800, 500)">
           <i-mdi-camcorder class="text-xl text-red-500 mb-1"></i-mdi-camcorder>
           <span class="text-sm text-gray-700">开直播</span>
         </div>
@@ -108,8 +110,9 @@
 </template>
 
 <script setup lang="ts">
-import UserInfoCard from "@/components/home/UserInfoCard.vue";
-import CollectionFolderDialog from "@/components/home/CollectionFolderDialog.vue";
+import { useWindow } from "@/hooks/useWindow";
+
+const { createWebviewWindow } = useWindow();
 
 defineOptions({
   name: "User"

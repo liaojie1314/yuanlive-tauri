@@ -1,15 +1,1007 @@
 <template>
-  <main class="size-full select-none">
-    <action-bar :max-w="false" />
+  <main
+    class="size-full select-none bg-gradient-to-br from-[#1a1a1a] to-[#2d2d2d] text-white overflow-hidden flex flex-col">
+    <action-bar />
+    <div
+      data-tauri-drag-region
+      class="h-50px flex-none flex items-center justify-between px-20px bg-black/20 backdrop-blur-md border-b border-white/5 z-50">
+      <span class="ml-4 text-(14px #e0e0e0) font-bold">直播工作台</span>
+      <n-tag :type="statusType" size="small" round :bordered="false">
+        {{ statusText }}
+        <template #icon v-if="isStreaming">
+          <div class="size-6px rounded-full bg-current animate-pulse"></div>
+        </template>
+      </n-tag>
+    </div>
+
+    <div class="flex-1 flex p-20px gap-20px overflow-hidden h-full">
+      <div class="flex-1 flex flex-col gap-4 min-w-0 h-full">
+        <div
+          class="flex-1 min-h-0 relative bg-black/40 rounded-12px border border-white/10 overflow-hidden shadow-2xl group">
+          <canvas
+            ref="canvasEl"
+            class="size-full object-contain cursor-auto"
+            :class="{ 'cursor-pointer': enableCamera && (isStreaming || isPreviewing) }"
+            @click="handleCanvasClick"></canvas>
+
+          <div
+            v-if="!isStreaming && !isPreviewing"
+            class="absolute inset-0 flex flex-col items-center justify-center bg-black/60 backdrop-blur-sm z-10">
+            <span class="text-(24px #fff) font-bold tracking-widest opacity-80">WAITING FOR SIGNAL</span>
+            <span class="text-(12px #888) mt-2">请配置参数并开始推流</span>
+          </div>
+
+          <Transition name="fade">
+            <div
+              v-if="showStatusToast"
+              class="absolute bottom-4 right-4 px-3 py-1 bg-black/50 rounded-full text-(10px #aaa) backdrop-blur-md border border-white/5 pointer-events-none select-none">
+              {{
+                currentMode === "FFmpeg"
+                  ? "🚀 FFmpeg Accelerated"
+                  : currentMode === "WebRTC"
+                    ? "⚡ WebRTC Native"
+                    : "IDLE"
+              }}
+            </div>
+          </Transition>
+        </div>
+
+        <div class="h-auto flex-none bg-black/20 rounded-12px p-16px border border-white/5 flex gap-8 items-center">
+          <div class="flex-1">
+            <div class="flex justify-between text-(12px #aaa) mb-1">
+              <span>系统音量 (屏幕)</span>
+              <span>{{ (sysVolume * 100).toFixed(0) }}%</span>
+            </div>
+            <n-slider
+              v-model:value="sysVolume"
+              :step="0.1"
+              :max="1.5"
+              :format-tooltip="(v: number) => `${(v * 100).toFixed(0)}%`" />
+          </div>
+          <div class="flex-1">
+            <div class="flex justify-between text-(12px #aaa) mb-1">
+              <span>麦克风增强</span>
+              <span>{{ (micVolume * 100).toFixed(0) }}%</span>
+            </div>
+            <n-slider
+              v-model:value="micVolume"
+              :step="0.1"
+              :max="2.0"
+              :format-tooltip="(v: number) => `${(v * 100).toFixed(0)}%`" />
+          </div>
+        </div>
+      </div>
+
+      <div
+        class="w-320px flex flex-col bg-white/5 rounded-12px border border-white/5 backdrop-blur-md overflow-hidden h-full">
+        <div class="flex-none p-20px pb-10px">
+          <div class="text-(16px #fff) font-bold flex items-center gap-2">
+            <span class="i-carbon-settings"></span>
+            推流配置
+          </div>
+        </div>
+        <div class="flex-1 min-h-0">
+          <n-scrollbar content-class="p-20px pt-0">
+            <n-flex vertical :size="16">
+              <div class="bg-black/20 p-12px rounded-8px mt-2">
+                <span class="text-(12px #888) block mb-1">推流房间号</span>
+                <n-input
+                  v-model:value="roomId"
+                  placeholder="room-001"
+                  :disabled="isStreaming || isPreviewing"
+                  class="!bg-transparent" />
+              </div>
+
+              <n-divider class="!my-0 bg-white/10" />
+
+              <n-flex vertical :size="12">
+                <div class="flex items-center justify-between">
+                  <span class="text-(14px #ddd) font-bold">画面合成 & 美颜</span>
+                  <n-switch v-model:value="beautyConfig.enable" size="small">
+                    <template #checked>ON</template>
+                    <template #unchecked>OFF</template>
+                  </n-switch>
+                </div>
+
+                <n-collapse-transition :show="beautyConfig.enable">
+                  <div class="bg-black/20 p-3 rounded-8px flex flex-col gap-4 border border-white/5">
+                    <div class="flex items-center gap-2">
+                      <span class="text-(12px #aaa) w-8 text-right">磨皮</span>
+                      <n-slider v-model:value="beautyConfig.smooth" :step="0.1" :min="0" :max="2" class="flex-1" />
+                    </div>
+                    <div class="flex items-center gap-2">
+                      <span class="text-(12px #aaa) w-8 text-right">美白</span>
+                      <n-slider v-model:value="beautyConfig.whiten" :step="0.05" :min="1.0" :max="1.5" class="flex-1" />
+                    </div>
+                    <div class="flex items-center gap-2">
+                      <span class="text-(12px #aaa) w-8 text-right">红润</span>
+                      <n-slider v-model:value="beautyConfig.rosy" :step="0.05" :min="1.0" :max="2.0" class="flex-1" />
+                    </div>
+                  </div>
+                </n-collapse-transition>
+
+                <div class="flex items-center justify-between bg-white/5 p-10px rounded-8px border border-white/5">
+                  <span class="text-(13px #ccc)">画中画摄像头</span>
+                  <n-switch v-model:value="enableCamera" :disabled="isStreaming" size="small" />
+                </div>
+              </n-flex>
+
+              <n-divider class="!my-2 bg-white/10" />
+
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-(14px #ddd) font-bold">✨ 趣味滤镜</span>
+              </div>
+
+              <n-select v-model:value="effectConfig.mode" :options="effectOptions" size="small" class="mb-3" />
+
+              <div v-if="effectConfig.mode === 'bulge'" class="bg-black/20 p-2 rounded-8px mb-2">
+                <div class="flex items-center gap-2">
+                  <span class="text-(10px #888)">变形程度</span>
+                  <n-slider v-model:value="effectConfig.bulgeStrength" :step="0.1" :min="-1" :max="1" class="flex-1" />
+                </div>
+              </div>
+
+              <div v-if="effectConfig.mode === 'mosaic'" class="bg-black/20 p-2 rounded-8px mb-2">
+                <div class="flex items-center gap-2">
+                  <span class="text-(10px #888)">格子大小</span>
+                  <n-slider v-model:value="effectConfig.mosaicScale" :step="1" :min="5" :max="50" class="flex-1" />
+                </div>
+              </div>
+
+              <div class="flex items-center gap-2">
+                <span class="text-(12px #aaa) w-8 text-right">暗角</span>
+                <n-slider v-model:value="effectConfig.vignette" :step="0.05" :min="0" :max="0.8" class="flex-1" />
+              </div>
+
+              <n-divider class="!my-2 bg-white/10" />
+
+              <div class="flex items-center justify-between">
+                <span class="text-(12px #ddd) font-bold">🟢 绿幕抠图</span>
+                <n-switch v-model:value="beautyConfig.greenScreen" size="small" />
+              </div>
+
+              <n-collapse-transition :show="beautyConfig.greenScreen">
+                <div class="bg-black/20 p-2 rounded-8px mt-2 flex flex-col gap-2 border border-white/5">
+                  <div class="flex items-center gap-2">
+                    <span class="text-(10px #888) w-8 text-right">容差</span>
+                    <n-slider
+                      v-model:value="beautyConfig.greenSimilarity"
+                      :step="0.01"
+                      :min="0"
+                      :max="0.6"
+                      class="flex-1" />
+                  </div>
+
+                  <div class="flex items-center gap-2">
+                    <span class="text-(10px #888) w-8 text-right">平滑</span>
+                    <n-slider
+                      v-model:value="beautyConfig.greenSmoothness"
+                      :step="0.01"
+                      :min="0"
+                      :max="0.4"
+                      class="flex-1" />
+                  </div>
+
+                  <div class="text-(10px #666) px-1">* 提示: 请保证光线均匀，避免阴影</div>
+                </div>
+              </n-collapse-transition>
+
+              <n-divider class="!my-2 bg-white/10" />
+              <div class="flex items-center justify-between">
+                <span class="text-(12px #ddd) font-bold">🤖 AI 虚拟背景</span>
+                <n-switch v-model:value="beautyConfig.virtualBg" size="small" />
+              </div>
+              <n-collapse-transition :show="beautyConfig.virtualBg">
+                <div class="bg-black/20 p-2 mt-2 rounded flex flex-col gap-2">
+                  <span class="text-xs text-gray-400">背景模式</span>
+                  <n-radio-group v-model:value="beautyConfig.bgType" name="bgType" size="small">
+                    <n-radio-button value="green">生成绿幕</n-radio-button>
+                    <n-radio-button value="blur">背景虚化</n-radio-button>
+                    <n-radio-button value="image">自定义图</n-radio-button>
+                  </n-radio-group>
+                </div>
+              </n-collapse-transition>
+            </n-flex>
+          </n-scrollbar>
+        </div>
+
+        <div class="flex-none p-20px pt-10px bg-gradient-to-t from-black/20 to-transparent">
+          <n-button
+            block
+            class="!h-44px !text-16px !font-bold shadow-lg"
+            :loading="loading"
+            :type="isStreaming ? 'error' : 'primary'"
+            @click="handleStreamToggle">
+            {{ isStreaming ? "停止直播" : "开始直播" }}
+          </n-button>
+
+          <div class="mt-3 text-center text-(11px #666)">
+            当前环境: {{ ffmpegInstalled ? "已检测到 FFmpeg" : "未检测到 FFmpeg (WebRTC)" }}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="hidden">
+      <video ref="screenVideo" autoplay muted playsinline></video>
+      <video ref="cameraVideo" autoplay muted playsinline></video>
+    </div>
   </main>
 </template>
 
 <script setup lang="ts">
+import * as fx from "glfx";
+import { invoke } from "@tauri-apps/api/core";
+import { fetch } from "@tauri-apps/plugin-http";
+import { error } from "@tauri-apps/plugin-log";
+import { SelfieSegmentation } from "@mediapipe/selfie_segmentation";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
+
+import { TauriCommandEnum } from "@/enums";
+
+type SignalingProtocol = "srs-json" | "whip";
+const CANVAS_W = 1920;
+const CANVAS_H = 1080;
+const PIP_W = 480;
+const PIP_H = 270;
+// 计算画中画的左上角坐标 (内部坐标系)
+const PIP_X = CANVAS_W - PIP_W - 40;
+const PIP_Y = CANVAS_H - PIP_H - 40;
+const message = useMessage();
+const roomId = ref("room1");
+const token = ref("123456");
+const isStreaming = ref(false);
+const isPreviewing = ref(false);
+const loading = ref(false);
+const ffmpegInstalled = ref(false);
+const enableCamera = ref(true);
+const currentMode = ref<"FFmpeg" | "WebRTC" | "">("");
+// 控制是否交换画面
+const isSwapped = ref(false);
+// 音量控制
+const sysVolume = ref(0.8);
+const micVolume = ref(1.2);
+
+// DOM 引用
+const canvasEl = ref<HTMLCanvasElement | null>(null);
+const screenVideo = ref<HTMLVideoElement | null>(null);
+const cameraVideo = ref<HTMLVideoElement | null>(null);
+
+// 媒体对象
+let screenStream: MediaStream | null = null;
+let cameraStream: MediaStream | null = null;
+let micStream: MediaStream | null = null;
+let audioContext: AudioContext | null = null;
+let sysGain: GainNode | null = null;
+let micGain: GainNode | null = null;
+let mediaDest: MediaStreamAudioDestinationNode | null = null;
+
+let drawTimer: number = 0;
+let mediaRecorder: MediaRecorder | null = null; // FFmpeg 用
+let pc: RTCPeerConnection | null = null; // WebRTC 用
+
+const beautyConfig = reactive({
+  enable: true, // 总开关
+  smooth: 0.5, // 磨皮 (Blur): 0 ~ 2
+  whiten: 1.1, // 美白 (Brightness): 1.0 ~ 1.5
+  rosy: 1.1, // 红润 (Saturate): 1.0 ~ 2.0
+  vignette: 0, // 暗角强度 (0 ~ 1)
+  greenScreen: false, // 绿幕开关
+  greenSimilarity: 0.4, // 容差
+  greenSmoothness: 0.08, // 平滑度
+  virtualBg: false, // 虚拟背景开关
+  bgType: "green" // 'green' | 'blur' | 'image'
+});
+
+// --- 特效配置 ---
+const effectConfig = reactive({
+  vignette: 0, // 暗角强度 0~1
+  // 当前选择的特效模式
+  // 'none' | 'bulge' (哈哈镜) | 'mosaic' (马赛克) | 'ink' (水墨) | 'retro' (复古)
+  mode: "none",
+  // 哈哈镜参数
+  bulgeStrength: 0.5, // -1 (挤压) ~ 1 (膨胀)
+  // 马赛克参数
+  mosaicScale: 20 // 格子大小
+});
+
+// 特效选项 (用于 Select 组件)
+const effectOptions = [
+  { label: "无特效", value: "none" },
+  { label: "🤪 哈哈镜", value: "bulge" },
+  { label: "🧩 蜂巢马赛克", value: "mosaic" },
+  { label: "✒️ 水墨素描", value: "ink" },
+  { label: "🎞️ 复古旧电影", value: "retro" }
+];
+
+// 临时 Canvas，用于 CPU 绿幕处理
+const tmpCanvas = document.createElement("canvas");
+const tmpCtx = tmpCanvas.getContext("2d", { willReadFrequently: true }); // 优化读取性能
+
+const showStatusToast = ref(false);
+let toastTimer: ReturnType<typeof setTimeout> | null = null;
+
+// fxCanvas: 用于处理美颜的离屏 WebGL 画布
+let fxCanvas: any = null;
+// fxTexture: 用于接收摄像头画面的纹理
+let fxTexture: any = null;
+
+// AI 分割实例
+let selfieSegmentation: SelfieSegmentation | null = null;
+// 虚拟背景图片 (如果是纯色背景，这个可以不用)
+const bgImage = new Image();
+bgImage.src = "/bg.jpg"; // 确保你在 public 下放了一张 bg.jpg，或者不需要也可以
+
+// 监听模式变化
+watch(
+  currentMode,
+  () => {
+    // 只要模式变化（或者是特定的非空模式），就显示提示
+    showStatusToast.value = true;
+    // 清除上一次的计时器（防止频繁切换时闪烁）draw
+    if (toastTimer) clearTimeout(toastTimer);
+    // 5秒后隐藏
+    toastTimer = setTimeout(() => {
+      showStatusToast.value = false;
+    }, 5000);
+  },
+  { immediate: true }
+);
+
+// 计算最终的滤镜字符串
+const currentFilter = computed(() => {
+  if (!beautyConfig.enable) return "none";
+  // 磨皮用 blur，美白用 brightness，红润用 saturate
+  // contrast(0.95) 是为了配合美白，防止过曝，让光线更柔和
+  return `blur(${beautyConfig.smooth}px) brightness(${beautyConfig.whiten * 100}%) saturate(${beautyConfig.rosy * 100}%) contrast(95%)`;
+});
+
+const statusText = computed(() => {
+  if (isStreaming.value) return "LIVE ON AIR";
+  if (loading.value) return "INITIALIZING...";
+  return "READY";
+});
+
+const statusType = computed(() => {
+  if (isStreaming.value) return "error";
+  if (loading.value) return "warning";
+  return "success";
+});
+
+// --- 核心逻辑：开关直播 ---
+const handleStreamToggle = async () => {
+  if (isStreaming.value) {
+    await stopEverything();
+  } else {
+    await startEverything();
+  }
+};
+
+const startEverything = async () => {
+  if (!roomId.value) return message.warning("请输入房间号");
+  loading.value = true;
+
+  try {
+    // 1. 获取屏幕流
+    screenStream = await navigator.mediaDevices.getDisplayMedia({
+      video: { width: 1920, height: 1080, frameRate: 30 },
+      audio: true
+    });
+
+    if (screenVideo.value) {
+      screenVideo.value.srcObject = screenStream;
+      await screenVideo.value.play().catch((e) => console.error("屏幕视频播放失败:", e));
+    }
+
+    // 2. 获取麦克风
+    micStream = await navigator.mediaDevices.getUserMedia({
+      audio: { echoCancellation: true, noiseSuppression: true },
+      video: false
+    });
+
+    // 3. 按需获取摄像头
+    if (enableCamera.value) {
+      cameraStream = await navigator.mediaDevices.getUserMedia({
+        video: { width: 640, height: 360 },
+        audio: false
+      });
+      if (cameraVideo.value) {
+        cameraVideo.value.srcObject = cameraStream;
+        await cameraVideo.value.play().catch((e) => console.error("摄像头播放失败:", e));
+      }
+    }
+
+    // 4. 启动混音器
+    initAudioMixer();
+
+    isPreviewing.value = true;
+    isStreaming.value = true; // 预设为 true，防止循环刚开始就退出
+    // 5. 启动 Canvas 渲染循环
+    startCanvasLoop();
+
+    // 6. 生成最终混合流
+    // 画面来自 Canvas，声音来自 AudioContext
+    const canvasStream = canvasEl.value!.captureStream(30);
+    if (canvasStream.getVideoTracks().length === 0) {
+      error("Canvas 捕获流失败");
+    }
+    const finalStream = new MediaStream([canvasStream.getVideoTracks()[0], mediaDest!.stream.getAudioTracks()[0]]);
+
+    isPreviewing.value = true;
+
+    // 7. 智能分流 (FFmpeg vs WebRTC)
+    if (ffmpegInstalled.value) {
+      await startFfmpegMode(finalStream);
+    } else {
+      await startWebRTCMode(finalStream);
+    }
+
+    // 8. 监听屏幕分享的原生停止按钮
+    screenStream.getVideoTracks()[0].onended = () => {
+      message.info("屏幕分享已结束");
+      stopEverything();
+    };
+
+    isStreaming.value = true;
+  } catch (err: any) {
+    console.error(err);
+    message.error(`启动失败: ${err.message || "未知错误"}`);
+    await stopEverything();
+  } finally {
+    loading.value = false;
+  }
+};
+
+const stopEverything = async () => {
+  loading.value = true;
+
+  // 停止 Canvas
+  cancelAnimationFrame(drawTimer);
+
+  // 停止推流后端
+  if (currentMode.value === "FFmpeg") {
+    if (mediaRecorder && mediaRecorder.state !== "inactive") mediaRecorder.stop();
+    await invoke(TauriCommandEnum.STOP_STREAM_PIPE).catch(() => {});
+  } else if (currentMode.value === "WebRTC") {
+    if (pc) pc.close();
+  }
+
+  // 停止所有媒体流
+  [screenStream, cameraStream, micStream].forEach((stream) => {
+    stream?.getTracks().forEach((t) => t.stop());
+  });
+
+  // 关闭 AudioContext
+  if (audioContext && audioContext.state !== "closed") {
+    await audioContext.close();
+  }
+
+  // 重置状态
+  screenStream = null;
+  cameraStream = null;
+  micStream = null;
+  audioContext = null;
+  mediaRecorder = null;
+  pc = null;
+
+  if (screenVideo.value) screenVideo.value.srcObject = null;
+  if (cameraVideo.value) cameraVideo.value.srcObject = null;
+
+  isStreaming.value = false;
+  isPreviewing.value = false;
+  currentMode.value = "";
+  loading.value = false;
+};
+
+// --- 模式 A: FFmpeg 推流 ---
+const startFfmpegMode = async (stream: MediaStream) => {
+  currentMode.value = "FFmpeg";
+
+  // 启动 Rust 子进程
+  await invoke(TauriCommandEnum.START_STREAM_PIPE, {
+    roomId: roomId.value,
+    token: token.value
+  });
+
+  // 使用 MediaRecorder 切片
+  const options = { mimeType: "video/webm; codecs=h264" }; // 优先尝试 H264
+  // 兼容性处理：如果不支持 h264，回退 vp9
+  if (!MediaRecorder.isTypeSupported(options.mimeType)) {
+    options.mimeType = "video/webm; codecs=vp9";
+  }
+
+  mediaRecorder = new MediaRecorder(stream, options);
+
+  mediaRecorder.ondataavailable = async (e) => {
+    if (e.data.size > 0) {
+      const buffer = await e.data.arrayBuffer();
+      // 发送二进制数据给 Rust
+      invoke(TauriCommandEnum.PUSH_STREAM_CHUNK, {
+        data: Array.from(new Uint8Array(buffer))
+      }).catch(() => {}); // 忽略传输过程中的轻微丢包
+    }
+  };
+
+  mediaRecorder.start(100); // 100ms 切片频率
+};
+
+// --- 模式 B: WebRTC 推流 ---
+const startWebRTCMode = async (stream: MediaStream) => {
+  // 在这里切换协议： 'whip' (推荐) 或 'srs-json' (旧版兼容)
+  const protocol: SignalingProtocol = "whip" as SignalingProtocol;
+
+  currentMode.value = "WebRTC";
+
+  pc = new RTCPeerConnection();
+
+  // 添加轨道
+  stream.getTracks().forEach((track) => {
+    pc!.addTrack(track, stream);
+  });
+
+  const offer = await pc.createOffer();
+  await pc.setLocalDescription(offer);
+
+  // SRS 服务器地址 (如果是 Docker 部署，确保 1985 端口已映射)
+  const srsHost = "localhost";
+  const srsPort = 1985;
+
+  let remoteSdp = "";
+
+  try {
+    if (protocol === "srs-json") {
+      // =================================================
+      // 方案 A: SRS 私有 JSON 协议 (旧版兼容性好)
+      // =================================================
+      console.log("正在使用 SRS JSON 协议握手...");
+      const apiUrl = `http://${srsHost}:${srsPort}/rtc/v1/publish/`;
+      const streamUrl = `webrtc://${srsHost}/live/${roomId.value}?token=${token.value}`;
+
+      const response = await fetch(apiUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          streamurl: streamUrl,
+          sdp: offer.sdp
+        })
+      });
+
+      const data = await response.json();
+      if (data.code !== 0) error(`SRS JSON Error: ${data.code}`);
+      remoteSdp = data.sdp;
+    } else {
+      // =================================================
+      // 方案 B: 标准 WHIP 协议 (推荐，通用性强)
+      // =================================================
+      console.log("正在使用标准 WHIP 协议握手...");
+
+      // SRS v5/v6 的标准 WHIP 接口地址
+      // 注意：SRS 的 WHIP 鉴权通常把参数拼接在 URL 后
+      const whipUrl = `http://${srsHost}:${srsPort}/whip/v1/publish?app=live&stream=${roomId.value}&token=${token.value}`;
+
+      const response = await fetch(whipUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/sdp" // WHIP 核心特征
+        },
+        body: offer.sdp // 直接发送 SDP 文本
+      });
+
+      if (!response.ok) error(`WHIP Error: ${response.status}`);
+
+      // WHIP 返回的是纯文本 SDP
+      remoteSdp = await response.text();
+    }
+
+    // 设置远端描述 (握手完成)
+    await pc.setRemoteDescription(
+      new RTCSessionDescription({
+        type: "answer",
+        sdp: remoteSdp
+      })
+    );
+
+    console.log(`WebRTC (${protocol}) 推流成功!`);
+  } catch (e) {
+    console.error("WebRTC Signaling Failed:", e);
+    throw e;
+  }
+};
+
+// --- 音频混音引擎 (AudioContext) ---
+const initAudioMixer = () => {
+  const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
+  audioContext = new AudioContext();
+  mediaDest = audioContext.createMediaStreamDestination();
+
+  // 1. 系统音频链路
+  if (screenStream?.getAudioTracks().length) {
+    const src = audioContext.createMediaStreamSource(screenStream);
+    sysGain = audioContext.createGain();
+    sysGain.gain.value = sysVolume.value; // 初始音量
+    src.connect(sysGain).connect(mediaDest);
+  }
+
+  // 2. 麦克风链路
+  if (micStream?.getAudioTracks().length) {
+    const src = audioContext.createMediaStreamSource(micStream);
+    micGain = audioContext.createGain();
+    micGain.gain.value = micVolume.value; // 初始音量
+    src.connect(micGain).connect(mediaDest);
+  }
+};
+
+// 监听音量滑块变化
+watch(sysVolume, (v) => {
+  if (sysGain) sysGain.gain.value = v;
+});
+watch(micVolume, (v) => {
+  if (micGain) micGain.gain.value = v;
+});
+
+const handleCanvasClick = (e: MouseEvent) => {
+  // 如果没开启摄像头，或者没在推流/预览，不处理
+  if (!enableCamera.value || (!isStreaming.value && !isPreviewing.value)) return;
+  if (!canvasEl.value) return;
+
+  // 1. 获取 Canvas 在屏幕上的显示尺寸
+  const rect = canvasEl.value.getBoundingClientRect();
+  const domW = rect.width;
+  const domH = rect.height;
+
+  // 2. 计算 object-contain 带来的偏移量和缩放比
+  // Canvas 内部比例 (16:9)
+  const canvasRatio = CANVAS_W / CANVAS_H;
+  // 当前 DOM 元素比例
+  const domRatio = domW / domH;
+
+  let scale: number;
+  let offsetX = 0;
+  let offsetY = 0;
+
+  if (domRatio > canvasRatio) {
+    // 窗口太宽，左右有黑边，高度占满
+    const actualW = domH * canvasRatio;
+    scale = CANVAS_H / domH; // 或者 CANVAS_W / actualW
+    offsetX = (domW - actualW) / 2;
+  } else {
+    // 窗口太高，上下有黑边，宽度占满
+    const actualH = domW / canvasRatio;
+    scale = CANVAS_W / domW;
+    offsetY = (domH - actualH) / 2;
+  }
+
+  // 3. 将鼠标点击坐标映射回 1920x1080 的内部坐标系
+  const internalX = (e.offsetX - offsetX) * scale;
+  const internalY = (e.offsetY - offsetY) * scale;
+
+  // 4. 碰撞检测：判断是否点击在画中画区域内
+  // 画中画区域是固定的 PIP_X, PIP_Y, PIP_W, PIP_H
+  if (internalX >= PIP_X && internalX <= PIP_X + PIP_W && internalY >= PIP_Y && internalY <= PIP_Y + PIP_H) {
+    // 切换状态
+    isSwapped.value = !isSwapped.value;
+  }
+};
+
+// --- Canvas 渲染引擎 (集成 AI 虚拟背景 & 绿幕) ---
+const startCanvasLoop = () => {
+  if (!canvasEl.value) return;
+  const ctx = canvasEl.value.getContext("2d", { alpha: false });
+  if (!ctx) return;
+
+  canvasEl.value.width = 1920;
+  canvasEl.value.height = 1080;
+
+  const PIP_W = 480;
+  const PIP_H = 270;
+  const PIP_X = 1920 - PIP_W - 40;
+  const PIP_Y = 1080 - PIP_H - 40;
+
+  // 1. 初始化 WebGL (glfx) 并清理旧资源
+  try {
+    if (fxTexture) {
+      try {
+        fxTexture.destroy();
+      } catch (e) {}
+      fxTexture = null;
+    }
+    fxCanvas = fx.canvas();
+  } catch (e) {
+    console.error("WebGL 不支持:", e);
+    fxCanvas = null;
+  }
+
+  // 2. 初始化离屏 Canvas
+  const aiCanvas = document.createElement("canvas");
+  const aiCtx = aiCanvas.getContext("2d", { willReadFrequently: true });
+
+  // Bridge Canvas (过桥画布)
+  const bridgeCanvas = document.createElement("canvas");
+  const bridgeCtx = bridgeCanvas.getContext("2d", { willReadFrequently: true });
+
+  // --- AI 结果处理回调 ---
+  const handleAIResults = (results: any) => {
+    if (!aiCtx) return;
+
+    if (aiCanvas.width !== results.image.width) aiCanvas.width = results.image.width;
+    if (aiCanvas.height !== results.image.height) aiCanvas.height = results.image.height;
+
+    const w = aiCanvas.width;
+    const h = aiCanvas.height;
+
+    aiCtx.clearRect(0, 0, w, h);
+    aiCtx.drawImage(results.segmentationMask, 0, 0, w, h);
+    aiCtx.globalCompositeOperation = "source-in";
+    aiCtx.drawImage(results.image, 0, 0, w, h);
+    aiCtx.globalCompositeOperation = "destination-over";
+
+    if (beautyConfig.bgType === "green") {
+      aiCtx.fillStyle = "#00FF00";
+      aiCtx.fillRect(0, 0, w, h);
+    } else if (beautyConfig.bgType === "image") {
+      if (bgImage && bgImage.complete) {
+        aiCtx.drawImage(bgImage, 0, 0, w, h);
+      } else {
+        aiCtx.fillStyle = "#111";
+        aiCtx.fillRect(0, 0, w, h);
+      }
+    } else if (beautyConfig.bgType === "blur") {
+      aiCtx.fillStyle = "#333";
+      aiCtx.fillRect(0, 0, w, h);
+    }
+
+    aiCtx.globalCompositeOperation = "source-over";
+  };
+
+  if (selfieSegmentation) {
+    selfieSegmentation.onResults(handleAIResults);
+  }
+
+  // --- CPU 绿幕 (Fallback) ---
+  const processChromaKeyCPU = (source: CanvasImageSource, width: number, height: number) => {
+    if (!tmpCtx) return source;
+    if (tmpCanvas.width !== width) tmpCanvas.width = width;
+    if (tmpCanvas.height !== height) tmpCanvas.height = height;
+
+    tmpCtx.clearRect(0, 0, width, height);
+    tmpCtx.drawImage(source, 0, 0, width, height);
+
+    const frameData = tmpCtx.getImageData(0, 0, width, height);
+    const l = frameData.data.length / 4;
+    const data = frameData.data;
+    const similarity = beautyConfig.greenSimilarity;
+    const threshold = 150 - similarity * 80;
+
+    for (let i = 0; i < l; i++) {
+      const offset = i * 4;
+      const r = data[offset];
+      const g = data[offset + 1];
+      const b = data[offset + 2];
+      if (g < r || g < b) continue;
+      const rbMax = Math.max(r, b);
+      if (g - rbMax > threshold) data[offset + 3] = 0;
+    }
+    tmpCtx.putImageData(frameData, 0, 0);
+    return tmpCanvas;
+  };
+
+  let lastSendTime = 0;
+
+  const draw = async () => {
+    if (!isStreaming.value && !isPreviewing.value) return;
+
+    try {
+      const videoEl = cameraVideo.value;
+
+      // 阶段一：WebGL 预处理 (glfx)
+      let processedCameraSource: any = videoEl; // 默认为原视频
+
+      const isCameraReady = enableCamera.value && videoEl && videoEl.readyState >= 2 && videoEl.videoWidth > 0;
+      const needWebGL =
+        fxCanvas && isCameraReady && (beautyConfig.enable || effectConfig.mode !== "none" || effectConfig.vignette > 0);
+
+      if (needWebGL && videoEl) {
+        try {
+          if (!fxTexture) {
+            fxTexture = fxCanvas.texture(videoEl);
+          }
+          fxTexture.loadContentsOf(videoEl);
+
+          const chain = fxCanvas.draw(fxTexture);
+
+          if (beautyConfig.enable) {
+            chain
+              .denoise(beautyConfig.smooth * 20)
+              .brightnessContrast(beautyConfig.whiten - 1, 0)
+              .hueSaturation(0, (beautyConfig.rosy - 1) * 0.4);
+          }
+          const w = videoEl.videoWidth || 640;
+          const h = videoEl.videoHeight || 360;
+
+          switch (effectConfig.mode) {
+            case "bulge":
+              chain.bulgePinch(w / 2, h / 2, h * 0.6, effectConfig.bulgeStrength);
+              break;
+            case "mosaic":
+              chain.hexagonalPixelate(w / 2, h / 2, effectConfig.mosaicScale);
+              break;
+            case "ink":
+              chain.ink(0.25);
+              break;
+            case "retro":
+              chain.sepia(1).noise(0.1).vignette(0.4, 0.6);
+              break;
+          }
+          if (effectConfig.vignette > 0 && effectConfig.mode !== "retro") {
+            chain.vignette(0.5, effectConfig.vignette);
+          }
+
+          chain.update();
+
+          if (bridgeCtx) {
+            if (bridgeCanvas.width !== w) bridgeCanvas.width = w;
+            if (bridgeCanvas.height !== h) bridgeCanvas.height = h;
+
+            bridgeCtx.clearRect(0, 0, w, h);
+            bridgeCtx.drawImage(fxCanvas, 0, 0, w, h);
+
+            // 将处理源指向这个“安全”的 2D 画布
+            processedCameraSource = bridgeCanvas;
+          }
+        } catch (e) {
+          console.warn("WebGL 渲染异常 (自动降级):", e);
+          processedCameraSource = videoEl;
+          try {
+            if (fxTexture) fxTexture.destroy();
+            fxTexture = null;
+          } catch (err) {}
+        }
+      }
+
+      // 阶段二：背景处理 (AI > CPU绿幕)
+      if (isCameraReady && videoEl) {
+        const w = videoEl.videoWidth || 640;
+        const h = videoEl.videoHeight || 360;
+
+        // 选项 A: AI 虚拟背景
+        if (beautyConfig.virtualBg && selfieSegmentation) {
+          const now = performance.now();
+          if (now - lastSendTime > 30) {
+            lastSendTime = now;
+            await selfieSegmentation.send({ image: processedCameraSource });
+          }
+          if (aiCanvas.width > 0) {
+            processedCameraSource = aiCanvas;
+          }
+        }
+        // 选项 B: CPU 绿幕
+        else if (beautyConfig.greenScreen) {
+          processedCameraSource = processChromaKeyCPU(processedCameraSource, w, h);
+        }
+      }
+
+      // 阶段三：图层分配与合成
+      let bgSource = isSwapped.value ? processedCameraSource : screenVideo.value;
+      let pipSource = isSwapped.value ? screenVideo.value : processedCameraSource;
+
+      if (!enableCamera.value) {
+        bgSource = screenVideo.value;
+        pipSource = null;
+      }
+
+      ctx.clearRect(0, 0, CANVAS_W, CANVAS_H);
+
+      // --- 绘制背景 ---
+      const isBgRawVideo = bgSource === videoEl;
+      const shouldApplyCssToBg =
+        isBgRawVideo && beautyConfig.enable && !beautyConfig.greenScreen && !beautyConfig.virtualBg && !needWebGL;
+
+      ctx.filter = shouldApplyCssToBg ? currentFilter.value : "none";
+
+      if (bgSource && (bgSource instanceof HTMLCanvasElement || bgSource.readyState >= 2)) {
+        ctx.drawImage(bgSource, 0, 0, CANVAS_W, CANVAS_H);
+      } else {
+        ctx.filter = "none";
+        ctx.fillStyle = "#111";
+        ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
+      }
+
+      // --- 绘制画中画 ---
+      if (enableCamera.value && pipSource && (pipSource instanceof HTMLCanvasElement || pipSource.readyState >= 2)) {
+        const isPipRawVideo = pipSource === videoEl;
+        const shouldApplyCssToPip =
+          isPipRawVideo && beautyConfig.enable && !beautyConfig.greenScreen && !beautyConfig.virtualBg && !needWebGL;
+
+        ctx.filter = shouldApplyCssToPip ? currentFilter.value : "none";
+
+        ctx.drawImage(pipSource, PIP_X, PIP_Y, PIP_W, PIP_H);
+
+        // 边框
+        ctx.filter = "none";
+        ctx.strokeStyle = "white";
+        ctx.lineWidth = 4;
+        ctx.strokeRect(PIP_X, PIP_Y, PIP_W, PIP_H);
+      }
+    } catch (e) {
+      console.warn("Draw loop error:", e);
+    }
+    drawTimer = requestAnimationFrame(draw);
+  };
+
+  draw();
+};
+
+// 这里的 results 包含：image (原图), segmentationMask (蒙版)
+const onSegmentationResults = (results: any) => {
+  if (!canvasEl.value) return;
+  const ctx = canvasEl.value.getContext("2d");
+  if (!ctx) return;
+
+  const width = canvasEl.value.width;
+  const height = canvasEl.value.height;
+
+  // 1. 清空画布
+  ctx.clearRect(0, 0, width, height);
+
+  // 2. 先把蒙版画上去
+  // 蒙版里：人是主要内容，背景是透明/黑色
+  ctx.drawImage(results.segmentationMask, 0, 0, width, height);
+
+  // 3. 关键步骤：设置混合模式 'source-in'
+  // 意思：只保留"画布上已有内容(蒙版)"和"新画内容(原图)"重叠的部分
+  // 也就是：只保留人像区域
+  ctx.globalCompositeOperation = "source-in";
+  ctx.drawImage(results.image, 0, 0, width, height);
+
+  // 4. 绘制背景
+  // 设置混合模式 'destination-over'
+  // 意思：把新内容画在现有内容(人像)的"后面"
+  ctx.globalCompositeOperation = "destination-over";
+
+  if (beautyConfig.bgType === "green") {
+    // A. 填充纯绿色 (这就实现了你想要的"给背景添加绿幕")
+    ctx.fillStyle = "#00FF00";
+    ctx.fillRect(0, 0, width, height);
+  } else if (beautyConfig.bgType === "image") {
+    // B. 绘制自定义图片
+    ctx.drawImage(bgImage, 0, 0, width, height);
+  } else {
+    // C. 背景虚化 (稍微复杂点，需要再画一次原图并加模糊，这里简化为黑色)
+    ctx.fillStyle = "#111";
+    ctx.fillRect(0, 0, width, height);
+  }
+
+  // 5. 恢复混合模式，以免影响后续绘制
+  ctx.globalCompositeOperation = "source-over";
+};
 
 onMounted(async () => {
   await getCurrentWebviewWindow().show();
+  try {
+    ffmpegInstalled.value = await invoke(TauriCommandEnum.CHECK_FFMPEG_INSTALLED);
+    console.log("[Env] FFmpeg:", ffmpegInstalled.value);
+  } catch (e) {
+    console.error("Environment check failed", e);
+  }
+  // 初始化人像分割模型
+  selfieSegmentation = new SelfieSegmentation({
+    locateFile: (file) => {
+      // 指向本地 public 目录
+      return `/selfie_segmentation/${file}`;
+    }
+  });
+
+  selfieSegmentation.setOptions({
+    modelSelection: 1 // 1 = Landscape(横屏模式，精度高), 0 = General(通用，速度快)
+  });
+
+  // 当 AI 处理完一帧后的回调
+  selfieSegmentation.onResults(onSegmentationResults);
+});
+
+onUnmounted(() => {
+  stopEverything();
 });
 </script>
 
-<style scoped lang="scss"></style>
+<style scoped></style>
