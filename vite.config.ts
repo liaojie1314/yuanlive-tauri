@@ -1,5 +1,5 @@
-import { readFileSync } from "node:fs";
 import { join } from "node:path";
+import { readFileSync } from "node:fs";
 import postcsspxtorem from "postcss-pxtorem";
 import { ConfigEnv, defineConfig, loadEnv } from "vite";
 import { root, getSrcPath, createManualChunks, wrapperEnv } from "./build/utils";

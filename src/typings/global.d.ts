@@ -12,6 +12,17 @@ declare global {
    * 打包压缩格式的类型声明
    */
   type ViteCompression = "none" | "gzip" | "brotli" | "both" | "gzip-clear" | "brotli-clear" | "both-clear";
+
+  /**
+   * 文件元数据的类型声明
+   */
+  export type FilesMeta = {
+    name: string;
+    path: string;
+    file_type: string;
+    mime_type: string;
+    exists: boolean;
+  }[];
 }
 
 export {};
