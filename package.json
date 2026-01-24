@@ -19,7 +19,7 @@
     "======== 生成打包报告 ========": "",
     "report": "rimraf dist && vite build",
     "======== 清除缓存 ========": "",
-    "clean:cache": "rimraf pnpm-lock.yaml && rimraf node_modules && pnpm store prune && pnpm install",
+    "clean:cache": "rimraf src-tauri/target && rimraf dist && rimraf pnpm-lock.yaml && rimraf node_modules && pnpm store prune && pnpm install",
     "======== 启动桌面应用程序 ========": "",
     "tauri:dev": "tauri dev",
     "======== 打包桌面应用程序 ========": "",
@@ -48,6 +48,7 @@
   "dependencies": {
     "@breezystack/lamejs": "^1.2.7",
     "@fingerprintjs/fingerprintjs": "^5.0.1",
+    "@guolao/vue-monaco-editor": "^1.6.0",
     "@mediapipe/selfie_segmentation": "^0.1.1675465747",
     "@tauri-apps/api": "^2",
     "@tauri-apps/plugin-clipboard-manager": "~2",

@@ -17,7 +17,8 @@
         <!-- 发布视频按钮 -->
         <!-- TODO: 测试 -->
         <div
-          class="flex flex-col items-center justify-center p-3 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
+          class="flex flex-col items-center justify-center p-3 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
+          @click="createWebviewWindow('预览代码', 'previewCode', 1200, 720, '', true, 800, 500)">
           <i-mdi-video-plus class="text-xl text-blue-500 mb-1"></i-mdi-video-plus>
           <span class="text-sm text-gray-700">发布视频</span>
         </div>
