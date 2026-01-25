@@ -7,7 +7,6 @@
     <main
       class="left min-w-150px h-[calc(100%-40px)] p-[0_6px_40px] box-border flex-col-center select-none"
       data-tauri-drag-region>
-      <!-- 头像 -->
       <!-- 导航 -->
       <action-list />
     </main>

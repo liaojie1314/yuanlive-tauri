@@ -1,4 +1,10 @@
 {
+  "about": {
+    "version": "Version: {version} ({arch})",
+    "device": "Device: {type}{version}",
+    "copyright": "Copyright © {start}-{end} YuanLive",
+    "rights": "All Rights Reserved."
+  },
   "action": {
     "home": "Home",
     "aiChat": "AI Chat",
