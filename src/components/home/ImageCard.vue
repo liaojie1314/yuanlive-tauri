@@ -34,8 +34,6 @@
 </template>
 
 <script setup lang="ts">
-import { NCard, NBadge, NIcon, NText } from "naive-ui";
-
 defineOptions({
   name: "ImageCard"
 });

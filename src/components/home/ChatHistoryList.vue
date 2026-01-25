@@ -54,7 +54,6 @@
 </template>
 
 <script setup lang="ts">
-// 定义对话项类型
 interface ChatItem {
   id: string;
   title: string;

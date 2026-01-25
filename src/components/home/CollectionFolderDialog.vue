@@ -1,5 +1,5 @@
 <template>
-  <BaseDialog v-model:show="dialogVisible" title="新建收藏夹" width="400px">
+  <base-dialog v-model:show="dialogVisible" title="新建收藏夹" width="400px">
     <div class="new-folder-dialog">
       <div class="dialog-content">
         <div class="input-group">
@@ -27,13 +27,10 @@
         <button class="confirm-btn" @click="handleConfirm" :disabled="!isFormValid">确认</button>
       </div>
     </div>
-  </BaseDialog>
+  </base-dialog>
 </template>
 
 <script setup lang="ts">
-import { NSwitch } from "naive-ui";
-import BaseDialog from "../common/BaseDialog.vue";
-
 interface Props {
   show: boolean;
 }

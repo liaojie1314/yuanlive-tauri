@@ -1,5 +1,5 @@
 <template>
-  <BaseDialog v-model:show="dialogVisible" title="弹幕列表">
+  <base-dialog v-model:show="dialogVisible" title="弹幕列表">
     <div class="danmaku-list-container">
       <div class="danmaku-header">
         <div class="header-item">时间</div>
@@ -23,13 +23,10 @@
         </div>
       </n-scrollbar>
     </div>
-  </BaseDialog>
+  </base-dialog>
 </template>
 
 <script setup lang="ts">
-import { NScrollbar } from "naive-ui";
-import BaseDialog from "../common/BaseDialog.vue";
-
 interface Danmaku {
   time: string;
   content: string;

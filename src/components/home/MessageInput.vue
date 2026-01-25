@@ -160,9 +160,12 @@
 
 <script setup lang="ts">
 import { type SelectOption, NEllipsis } from "naive-ui";
+import { useGlobalShortcut } from "@/hooks/useGlobalShortcut";
 import { useResizeObserver } from "@/hooks/useResizeObserver";
 
 defineOptions({ name: "MessageInput" });
+
+const { handleScreenshot } = useGlobalShortcut();
 
 // 输入的文本
 const messageText = ref("");
@@ -289,8 +292,7 @@ const handleMenuClick = (menuItem: string) => {
       photoInput.value?.click();
       break;
     case "screenshot":
-      console.log("Take screenshot");
-      // 这里可以添加截图功能
+      handleScreenshot();
       break;
     case "camera":
       console.log("Take photo");

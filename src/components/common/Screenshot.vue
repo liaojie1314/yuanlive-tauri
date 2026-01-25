@@ -335,8 +335,8 @@ const initCanvas = async () => {
   isDragging.value = false;
   isResizing.value = false;
 
-  const canvasWidth = screen.width * window.devicePixelRatio;
-  const canvasHeight = screen.height * window.devicePixelRatio;
+  const canvasWidth = Math.round(screen.width * window.devicePixelRatio);
+  const canvasHeight = Math.round(screen.height * window.devicePixelRatio);
 
   const config = {
     x: "0",
@@ -345,7 +345,6 @@ const initCanvas = async () => {
     height: `${canvasHeight}`
   };
 
-  // TODO: 有拓展屏幕时会出现无效的宽度参数问题
   const screenshotData = await invokeWithErrorHandler(TauriCommandEnum.SCREENSHOT, config, {
     customErrorMessage: "截图失败",
     errorType: ErrorType.Client

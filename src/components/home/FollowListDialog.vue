@@ -1,5 +1,5 @@
 <template>
-  <BaseDialog v-model:show="dialogVisible">
+  <base-dialog v-model:show="dialogVisible">
     <template #header>
       <n-tabs v-model:value="activeTab" type="line" class="h-12 leading-12 mb-[-1px] w-full">
         <n-tab-pane name="following" :tab="`关注 (${followingCount})`" />
@@ -62,14 +62,10 @@
         </div>
       </n-scrollbar>
     </div>
-  </BaseDialog>
+  </base-dialog>
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from "vue";
-import { NTabs, NTabPane, NInput, NButton, NDropdown, NEmpty, NIcon, NScrollbar } from "naive-ui";
-import BaseDialog from "../common/BaseDialog.vue";
-
 interface User {
   id: string;
   name: string;

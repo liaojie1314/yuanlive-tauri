@@ -69,10 +69,6 @@
 </template>
 
 <script setup lang="ts">
-import { NSwitch } from "naive-ui";
-import FollowListDialog from "./FollowListDialog.vue";
-import EditProfileDialog from "./EditProfileDialog.vue";
-
 interface Props {
   name: string;
   avatar: string;

@@ -10,6 +10,7 @@
   "i18n-ally.enabledParsers": ["json"],
   "cSpell.words": [
     "adcode",
+    "breezystack",
     "canvasbox",
     "Danmaku",
     "Danmakus",
@@ -21,6 +22,8 @@
     "glfx",
     "HKLM",
     "hoverable",
+    "kbps",
+    "lamejs",
     "libx",
     "longtask",
     "mediapipe",

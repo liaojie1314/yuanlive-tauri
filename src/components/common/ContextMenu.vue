@@ -1,0 +1,445 @@
+<template>
+  <div ref="ContextMenuRef">
+    <slot></slot>
+    <Teleport to="body">
+      <transition-group @beforeEnter="handleBeforeEnter" @enter="handleEnter">
+        <div
+          v-if="!isMobile() && showMenu"
+          class="context-menu select-none"
+          :style="{
+            left: `${pos.posX}px`,
+            top: `${pos.posY}px`
+          }">
+          <div
+            v-resize="handleSize"
+            v-if="(visibleMenu && visibleMenu.length > 0) || (visibleSpecialMenu && visibleSpecialMenu.length > 0)"
+            class="menu-list">
+            <div v-for="(item, index) in visibleMenu" :key="index">
+              <!-- 禁止的菜单选项需要禁止点击事件  -->
+              <div class="menu-item-disabled" v-if="item.disabled" @click.prevent="$event.preventDefault()">
+                <div class="menu-item-content">
+                  <svg><use :href="`#${getMenuItemProp(item, 'icon')}`"></use></svg>
+                  <p class="h-24px">{{ getMenuItemProp(item, "label") }}</p>
+                </div>
+              </div>
+              <div
+                class="menu-item"
+                :class="{ 'menu-item-danger': isDangerousItem(item) }"
+                v-else
+                @click="handleClick(item)"
+                @mouseenter="handleMouseEnter(item, index)"
+                @mouseleave="handleMouseLeave">
+                <div class="menu-item-content">
+                  <svg><use :href="`#${getMenuItemProp(item, 'icon')}`"></use></svg>
+                  <p class="h-24px">{{ getMenuItemProp(item, "label") }}</p>
+                  <svg v-if="shouldShowArrow(item)" class="arrow-icon">
+                    <use href="#right"></use>
+                  </svg>
+                </div>
+              </div>
+            </div>
+            <!-- 判断是否有特别的菜单项才需要分割线 -->
+            <div v-if="visibleSpecialMenu.length > 0" class="flex-col-y-center gap-6px">
+              <!-- 分割线（只有当常规菜单存在时才显示） -->
+              <div v-if="visibleMenu && visibleMenu.length > 0" class="h-1px bg-[--line-color] m-[2px_8px]"></div>
+              <div
+                @click="handleClick(item)"
+                class="menu-item"
+                :class="{ 'menu-item-danger': isDangerousItem(item) }"
+                v-for="item in visibleSpecialMenu"
+                :key="item.label">
+                <svg><use :href="`#${getMenuItemProp(item, 'icon')}`"></use></svg>
+                <p class="h-24px">{{ getMenuItemProp(item, "label") }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 二级菜单 -->
+        <div v-if="showSubmenu && activeSubmenu" class="context-submenu" :style="submenuPosition">
+          <div class="menu-list">
+            <div
+              v-for="(subItem, subIndex) in activeSubmenu"
+              :key="subIndex"
+              class="menu-item"
+              :class="{ 'menu-item-danger': isDangerousItem(subItem) }">
+              <div class="menu-item-content" @click="handleSubItemClick(subItem)">
+                <svg class="check-icon">
+                  <use :href="`#${getMenuItemProp(subItem, 'icon')}`"></use>
+                </svg>
+                <p class="h-24px">{{ getMenuItemProp(subItem, "label") }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </transition-group>
+    </Teleport>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { isMobile } from "@/utils/PlatformUtils";
+import { useViewport } from "@/hooks/useViewport.ts";
+import { useContextMenu } from "@/hooks/useContextMenu.ts";
+
+type Props = {
+  content?: Record<string, any>;
+  menu?: any[];
+  specialMenu?: any[];
+};
+
+const props = withDefaults(defineProps<Props>(), {
+  content: () => ({}),
+  menu: () => [],
+  specialMenu: () => []
+});
+
+// 使用计算属性过滤显示的菜单项
+const visibleMenu = computed(() => {
+  // 检查是否有 visible 属性并作为函数调用
+  return props.menu?.filter((item: any) => {
+    if (typeof item.visible === "function") {
+      return item.visible(props.content); // 如果 visible 是函数，则调用它
+    }
+    // 如果没有 visible 属性，则默认显示
+    return true;
+  });
+});
+
+// 添加 specialMenu 的过滤功能
+const visibleSpecialMenu = computed(() => {
+  return props.specialMenu?.filter((item: any) => {
+    if (typeof item.visible === "function") {
+      return item.visible(props.content);
+    }
+    return true;
+  });
+});
+
+/** 判断是否传入了menu */
+const isNull = computed(() => props.menu === void 0);
+const ContextMenuRef = useTemplateRef("ContextMenuRef");
+const emit = defineEmits(["select", "menu-show"]);
+/** 获取鼠标位置和是否显示右键菜单 */
+const { x, y, showMenu } = useContextMenu(ContextMenuRef, isNull);
+
+// 监听showMenu状态变化并向父组件发送事件
+watch(
+  () => showMenu.value,
+  (newVal) => {
+    emit("menu-show", newVal);
+  },
+  { immediate: true }
+);
+/** 获取视口的宽高 */
+const { vw, vh } = useViewport();
+/** 定义右键菜单尺寸 */
+const w = ref(0);
+const h = ref(0);
+// 二级菜单状态
+const showSubmenu = ref(false);
+const activeSubmenu = ref<any[]>([]);
+const submenuPosition = ref({
+  left: "0px",
+  top: "0px"
+});
+/** 计算右键菜单的位置 */
+const pos = computed(() => {
+  let posX = x.value;
+  let posY = y.value;
+  // x坐标
+  if (x.value > vw.value - w.value) {
+    posX -= w.value;
+  }
+  // y坐标
+  if (y.value > vh.value - h.value) {
+    posY -= y.value - vh.value + h.value;
+  }
+  return {
+    posX,
+    posY
+  };
+});
+
+// 添加 watch 监听主菜单显示状态
+watch(
+  () => showMenu.value,
+  (newVal) => {
+    if (!newVal) {
+      // 主菜单隐藏时,同时隐藏二级菜单
+      showSubmenu.value = false;
+      activeSubmenu.value = [];
+    }
+  }
+);
+
+const handleSize = ({ width, height }: any) => {
+  w.value = width;
+  h.value = height;
+};
+
+/** 处理右键主菜单点击事件 */
+const handleClick = (item: string) => {
+  nextTick(() => {
+    showMenu.value = false;
+    emit("select", item);
+  });
+};
+
+// 处理子菜单项点击
+const handleSubItemClick = (item: any) => {
+  if (typeof item.click === "function") {
+    item.click(props.content);
+  }
+  showSubmenu.value = false;
+};
+
+const handleBeforeEnter = (el: any) => {
+  el.style.height = 0;
+};
+
+const handleEnter = (el: any) => {
+  el.style.height = "auto";
+  const h = el.clientHeight;
+  el.style.height = 0;
+  requestAnimationFrame(() => {
+    el.style.height = `${h}px`;
+  });
+};
+
+/**
+ * 获取菜单项的属性值（处理函数式和静态值）
+ * @param item 菜单项
+ * @param prop 属性名 ('icon' | 'label')
+ */
+const getMenuItemProp = (item: any, prop: "icon" | "label") => {
+  return typeof item[prop] === "function" ? item[prop](props.content) : item[prop];
+};
+
+/**
+ * 判断菜单项是否需要危险样式
+ * @param item 菜单项
+ */
+const isDangerousItem = (item: any) => {
+  const icon = getMenuItemProp(item, "icon");
+  return ["logout", "forbid"].includes(icon);
+};
+
+// 修改 handleMouseEnter 函数
+const handleMouseEnter = (item: any, index: number) => {
+  // 检查是否有子菜单（包括函数形式的 children）
+  const hasChildren = typeof item.children === "function" ? true : Array.isArray(item.children);
+  if (!hasChildren) {
+    showSubmenu.value = false;
+    return;
+  }
+
+  // 获取子菜单内容
+  const children = typeof item.children === "function" ? item.children(props.content) : item.children;
+  if (!children || children.length === 0) {
+    showSubmenu.value = false;
+    return;
+  }
+
+  // 获取当前菜单项的位置
+  const menuItem = document.querySelectorAll(".menu-item")[index];
+  const rect = menuItem.getBoundingClientRect();
+
+  // 计算子菜单的预期宽度和高度
+  const submenuWidth = 120; // 子菜单的最小宽度
+  const submenuHeight = children.length * 30; // 预估每项高度
+
+  let left = rect.right + 5;
+  let top = rect.top;
+
+  // 判断右侧空间是否足够
+  if (rect.right + submenuWidth > vw.value) {
+    // 右侧空间不足，改为显示在下方
+    left = rect.left;
+    top = rect.bottom + 5; // 添加一点间距
+
+    // 检查下方空间是否足够，不够则向上显示
+    if (top + submenuHeight > vh.value) {
+      top = rect.top - submenuHeight - 5;
+    }
+  } else {
+    // 右侧空间足够，但需要检查垂直方向
+    if (rect.top + submenuHeight > vh.value) {
+      // 如果超出视口底部，向上偏移
+      top = vh.value - submenuHeight - 10;
+    }
+  }
+
+  submenuPosition.value = {
+    left: `${left}px`,
+    top: `${top}px`
+  };
+
+  activeSubmenu.value = children;
+  showSubmenu.value = true;
+};
+
+// 修改鼠标离开处理函数
+const handleMouseLeave = (e: MouseEvent) => {
+  // 增加一个状态来跟踪鼠标移动
+  const relatedTarget = e.relatedTarget as HTMLElement;
+
+  // 如果鼠标是移动到子菜单或者子菜单的子元素上，则不关闭菜单
+  if (relatedTarget?.closest(".context-submenu")) {
+    return;
+  }
+
+  // 如果既不在主菜单也不在子菜单内，则关闭子菜单
+  setTimeout(() => {
+    if (!isMouseInSubmenu(e) && !isMouseInMainMenu(e)) {
+      showSubmenu.value = false;
+    }
+  }, 100);
+};
+
+// 修改检查鼠标是否在子菜单内的函数
+const isMouseInSubmenu = (e: MouseEvent) => {
+  const submenu = document.querySelector(".context-submenu");
+  if (!submenu) return false;
+
+  // 使用 document.elementFromPoint 来检查鼠标下的元素
+  const elementsUnderMouse = document.elementsFromPoint(e?.clientX || 0, e?.clientY || 0);
+
+  return elementsUnderMouse.some((el) => el.closest(".context-submenu"));
+};
+
+// 修改检查鼠标是否在主菜单内的函数
+const isMouseInMainMenu = (e: MouseEvent) => {
+  const mainMenu = document.querySelector(".context-menu");
+  if (!mainMenu) return false;
+
+  const elementsUnderMouse = document.elementsFromPoint(e.clientX, e.clientY);
+  return elementsUnderMouse.some((el) => el.closest(".context-menu"));
+};
+
+// 添加判断是否显示箭头的函数
+const shouldShowArrow = (item: any) => {
+  // 如果 children 是函数，先获取结果
+  const children = typeof item.children === "function" ? item.children(props.content) : item.children;
+
+  // 检查是否有有效的子菜单内容
+  return Array.isArray(children) && children.length > 0;
+};
+</script>
+
+<style scoped lang="scss">
+@use "@/styles/global/variable.scss" as *;
+
+// 通用的menu-item样式
+@mixin menu-item {
+  padding: 2px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  user-select: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  svg {
+    width: 16px;
+    height: 16px;
+  }
+  .menu-item-content {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+}
+
+// menu-list通用样式
+@mixin menu-list {
+  -webkit-backdrop-filter: blur(10px);
+  padding: 5px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  .menu-item {
+    @include menu-item();
+    display: flex;
+    align-items: center;
+    &:hover {
+      background-color: var(--bg-menu-hover);
+      svg {
+        animation: twinkle 0.3s ease-in-out;
+      }
+    }
+  }
+}
+
+.context-menu {
+  @include menu-item-style();
+  .menu-list {
+    @include menu-list();
+    width: max-content;
+    .menu-item-disabled {
+      @include menu-item();
+      color: var(--disabled-color);
+      svg {
+        color: var(--disabled-color);
+      }
+    }
+    .menu-item-danger {
+      color: #d03553;
+      svg {
+        color: #d03553;
+      }
+    }
+  }
+}
+
+.context-submenu {
+  position: fixed;
+  z-index: 1000;
+  @include menu-item-style();
+
+  .menu-list {
+    @include menu-list();
+    min-width: 120px;
+    .menu-item-danger {
+      color: #d03553;
+      svg {
+        color: #d03553;
+      }
+    }
+  }
+}
+
+.menu-item {
+  .menu-item-content {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    column-gap: 12px;
+    width: max-content;
+    position: relative;
+    svg {
+      flex-shrink: 0;
+      min-width: 16px;
+    }
+    p {
+      min-width: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .arrow-icon {
+      position: static;
+      justify-self: end;
+      width: 12px;
+      height: 12px;
+      color: var(--text-color);
+    }
+
+    .check-icon {
+      width: 14px;
+      height: 14px;
+    }
+  }
+}
+</style>

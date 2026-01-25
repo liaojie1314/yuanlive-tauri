@@ -105,7 +105,7 @@
           class="emoji-picker-wrapper"
           @mouseenter="handleEmojiPickerEnter"
           @mouseleave="handleEmojiPickerLeave">
-          <EmojiPicker @select-emoji="handleSelectEmoji" />
+          <emoji-picker @select-emoji="handleSelectEmoji" />
         </div>
       </div>
 
@@ -237,8 +237,7 @@
 </template>
 
 <script setup lang="ts">
-import { NSlider, NScrollbar } from "naive-ui";
-import { useDanmakuStore } from "../../stores/danmaku";
+import { useDanmakuStore } from "@/stores/danmaku";
 import { useResizeObserver } from "@/hooks/useResizeObserver";
 
 defineProps<{

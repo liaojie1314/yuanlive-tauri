@@ -1,5 +1,5 @@
 <template>
-  <BaseDialog v-model:show="dialogVisible" title="编辑资料">
+  <base-dialog v-model:show="dialogVisible" title="编辑资料">
     <div class="space-y-6">
       <!-- 头像上传区域 -->
       <div class="flex flex-col items-center gap-2">
@@ -12,10 +12,7 @@
             class="absolute inset-0 bg-black/30 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
             @click="triggerFileInput">
             <n-icon size="28" color="white">
-              <svg viewBox="0 0 24 24" fill="currentColor">
-                <path
-                  d="M12 15c1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3 1.34 3 3 3zm0-5c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm0 13c-1.1 0-2-.9-2-2h4c0 1.1-.9 2-2 2zm8-7h-3v2h3v3h2v-3h3v-2h-3v-3h-2v3zm-1-9H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V5h14v14z" />
-              </svg>
+              <i-mdi-camera />
             </n-icon>
           </div>
         </div>
@@ -49,14 +46,17 @@
         <n-button type="primary" @click="saveProfile" class="w-24" color="#ff6b6b">保存</n-button>
       </div>
     </div>
-  </BaseDialog>
+  </base-dialog>
+
+  <!-- 头像裁剪组件 -->
+  <avatar-cropper
+    v-model:show="showCropper"
+    :image-url="cropperImageUrl"
+    @update:show="showCropper = $event"
+    @crop="handleCrop" />
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from "vue";
-import { NInput, NButton, NIcon } from "naive-ui";
-import BaseDialog from "../common/BaseDialog.vue";
-
 interface Props {
   show: boolean;
   name: string;
@@ -86,6 +86,10 @@ const description = ref(props.description);
 const avatar = ref(props.avatar);
 const fileInput = ref<HTMLInputElement | null>(null);
 
+// 头像裁剪相关
+const showCropper = ref(false);
+const cropperImageUrl = ref("");
+
 // 关闭对话框
 const closeDialog = () => {
   dialogVisible.value = false;
@@ -103,10 +107,21 @@ const handleAvatarChange = (event: Event) => {
     const file = input.files[0];
     const reader = new FileReader();
     reader.onload = (e) => {
-      avatar.value = e.target?.result as string;
+      cropperImageUrl.value = e.target?.result as string;
+      showCropper.value = true;
     };
     reader.readAsDataURL(file);
   }
+};
+
+// 处理裁剪完成
+const handleCrop = (blob: Blob) => {
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    avatar.value = e.target?.result as string;
+  };
+  // TODO: 上传头像到服务器
+  reader.readAsDataURL(blob);
 };
 
 // 保存资料

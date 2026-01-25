@@ -14,8 +14,6 @@
 </template>
 
 <script setup lang="ts">
-import { NTabs, NTabPane } from "naive-ui";
-
 defineOptions({
   name: "CategoryNav"
 });

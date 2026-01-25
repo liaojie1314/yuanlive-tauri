@@ -1,5 +1,10 @@
 <template>
-  <BaseDialog v-model:show="dialogVisible" title="举报弹幕" :close-on-overlay-click="true" height="400px" width="420px">
+  <base-dialog
+    v-model:show="dialogVisible"
+    title="举报弹幕"
+    :close-on-overlay-click="true"
+    height="400px"
+    width="420px">
     <template #default>
       <div class="danmaku-report-container max-w-[400px] mx-auto">
         <!-- 举报类型选择 -->
@@ -33,13 +38,10 @@
         </div>
       </div>
     </template>
-  </BaseDialog>
+  </base-dialog>
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from "vue";
-import BaseDialog from "../common/BaseDialog.vue";
-
 interface Props {
   show: boolean;
   danmakuIndex?: number;

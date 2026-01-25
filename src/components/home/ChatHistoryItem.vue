@@ -33,7 +33,6 @@
 </template>
 
 <script setup lang="ts">
-// 定义组件属性
 const props = defineProps<{
   title: string;
   id?: string;
