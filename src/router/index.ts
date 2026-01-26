@@ -80,6 +80,11 @@ const getCommonRoutes = (): Array<RouteRecordRaw> => [
     component: () => import("@/views/feedbackWindow/index.vue")
   },
   {
+    name: "live2d",
+    path: "/live2d",
+    component: () => import("@/views/live2dWindow/index.vue")
+  },
+  {
     name: "previewCode",
     path: "/previewCode",
     component: () => import("@/views/previewCodeWindow/index.vue")
