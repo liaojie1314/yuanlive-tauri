@@ -34,6 +34,12 @@
     "alwaysOnTop": {
       "enabled": "取消置顶",
       "disabled": "置顶"
+    },
+    "closePrompt": {
+      "title": "最小化还是直接退出程序?",
+      "hideToTray": "最小化到系统托盘",
+      "exitApp": "直接退出程序",
+      "noPrompt": "下次不出现此提示"
     }
   },
   "tray": {

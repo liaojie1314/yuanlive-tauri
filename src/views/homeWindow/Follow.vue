@@ -11,20 +11,8 @@
       <div :class="['flex items-center mb-3', isCollapsed ? 'justify-center px-2' : 'justify-between px-4']">
         <div v-show="!isCollapsed" class="font-medium">精选关注人(30)</div>
         <n-button text type="primary" @click="toggleCollapse">
-          <n-icon>
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round">
-              <line x1="4" y1="12" x2="20" y2="12"></line>
-              <line x1="12" y1="4" x2="12" y2="20"></line>
-            </svg>
-          </n-icon>
+          <i-mdi-chevron-left v-if="!isCollapsed" class="w-5 h-5" />
+          <i-mdi-chevron-right v-else class="w-5 h-5" />
         </n-button>
       </div>
 
@@ -85,9 +73,6 @@
 </template>
 
 <script setup lang="ts">
-import { NButton, NIcon, NScrollbar, NPopover } from "naive-ui";
-import VideoPlayer from "@/components/home/VideoPlayer.vue";
-
 defineOptions({
   name: "Follow"
 });

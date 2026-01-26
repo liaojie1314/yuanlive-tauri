@@ -34,6 +34,12 @@
     "alwaysOnTop": {
       "enabled": "Disable always-on-top",
       "disabled": "Pin to top"
+    },
+    "closePrompt": {
+      "title": "Minimize to tray or exit the app?",
+      "hideToTray": "Minimize to system tray",
+      "exitApp": "Exit application",
+      "noPrompt": "Don't show this again"
     }
   },
   "tray": {

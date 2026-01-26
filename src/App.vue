@@ -9,9 +9,10 @@
 <script setup lang="ts">
 import { useI18n } from "vue-i18n";
 import { listen } from "@tauri-apps/api/event";
+import { exit } from "@tauri-apps/plugin-process";
 import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
 
-import { StorageKeyEnum, ThemeEnum, WsResponseMessageEnum } from "@/enums";
+import { EventEnum, StorageKeyEnum, ThemeEnum, WsResponseMessageEnum } from "@/enums";
 import { useSettingStore } from "@/stores/setting";
 import { useUserStore } from "@/stores/user";
 import { loadLanguage } from "@/services/i18n";
@@ -124,6 +125,15 @@ watch(
   { immediate: true }
 );
 
+// 控制字体样式
+watch(
+  () => page.value.fonts,
+  (val) => {
+    document.documentElement.style.setProperty("--font-family", val);
+  },
+  { immediate: true }
+);
+
 // 监听语言变化
 watch(
   () => page.value.lang,
@@ -163,6 +173,14 @@ onMounted(() => {
     });
     // 禁止右键菜单
     window.addEventListener("contextmenu", preventGlobalContextMenu, false);
+  }
+  if (isDesktop()) {
+    addListener(
+      appWindow.listen(EventEnum.EXIT, async () => {
+        await exit(0);
+      }),
+      "app-exit"
+    );
   }
 });
 

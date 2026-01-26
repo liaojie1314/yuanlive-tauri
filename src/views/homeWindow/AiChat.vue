@@ -26,7 +26,7 @@
         'w-[80%] lg:w-[60%] flex flex-col transition-all duration-300 ease-in-out min-w-0',
         isHistoryCollapsed ? 'w-[calc(100%-55px)] lg:w-[calc(100%-55px)]' : ''
       ]">
-      <!-- 聊天记录区域 - 自动填充剩余空间 -->
+      <!-- 聊天记录区域 -->
       <div
         ref="chatMessagesRef"
         class="chat-messages flex-1 overflow-y-auto flex justify-center scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100">
@@ -87,13 +87,10 @@ interface Message {
 
 // 激活的聊天ID
 const activeChatId = ref<string>("1");
-
 // 历史记录是否折叠
 const isHistoryCollapsed = ref<boolean>(false);
-
 // 模拟聊天消息数据
 const messages = ref<Message[]>([]);
-
 // 聊天消息区域引用，用于自动滚动
 const chatMessagesRef = ref<HTMLElement | null>(null);
 

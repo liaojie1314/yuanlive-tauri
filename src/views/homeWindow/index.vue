@@ -2,10 +2,8 @@
   <div class="home-container p-4 h-full overflow-y-auto select-none">
     <!-- 搜索框 -->
     <search-box class="mx-auto mb-10px" />
-
     <!-- 分类导航 -->
     <category-nav :categories="categories" :active-category="activeCategory" @category-change="handleCategoryChange" />
-
     <!-- 大图展示区域（仅在全部分类显示） -->
     <div v-if="activeCategory === 'all'" class="grid grid-cols-5 gap-4 mt-4">
       <!-- 主要大图 -->
@@ -58,7 +56,7 @@
       </div>
     </div>
 
-    <!-- 我的关注和热门标签区域（仅在全部分类显示，位于大图下方） -->
+    <!-- 我的关注和热门标签区域 -->
     <div v-if="activeCategory === 'all'" class="grid grid-cols-2 gap-6 mt-8">
       <!-- 我的关注 -->
       <div>

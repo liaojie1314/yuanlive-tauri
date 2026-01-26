@@ -67,7 +67,7 @@
           </div>
 
           <!-- 在线观众数 -->
-          <div class="flex items-center gap-2 bg-black/50 backdrop-blur-sm px-3 py-1 rounded-full">
+          <div v-if="chatCollapsed" class="flex items-center gap-2 bg-black/50 backdrop-blur-sm px-3 py-1 rounded-full">
             <span class="audience-count text-white font-medium">{{ audienceCount }}</span>
           </div>
 
@@ -645,7 +645,7 @@
             class="emoji-picker-wrapper"
             @mouseenter="handleEmojiPickerEnter"
             @mouseleave="handleEmojiPickerLeave">
-            <EmojiPicker @select-emoji="handleSelectEmoji" />
+            <emoji-picker @select-emoji="handleSelectEmoji" />
           </div>
         </div>
       </div>

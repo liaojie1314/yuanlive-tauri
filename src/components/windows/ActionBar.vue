@@ -70,18 +70,60 @@
         </svg>
       </div>
     </template>
+    <template v-else>
+      <div class="h-24px w-full flex items-center justify-end pr-8px select-none" data-tauri-drag-region>
+        <div class="drag-fill" data-tauri-drag-region></div>
+        <div class="flex items-center gap-10px">
+          <slot></slot>
+        </div>
+      </div>
+    </template>
+    <!-- 是否退到托盘提示框 -->
+    <n-modal v-if="!tips.notTips" v-model:show="tipsRef.show" class="rounded-8px">
+      <div class="bg-[--bg-popover] w-290px h-full p-6px box-border flex flex-col">
+        <svg @click="tipsRef.show = false" class="size-12px ml-a cursor-pointer select-none">
+          <use href="#close"></use>
+        </svg>
+        <n-flex vertical :size="20" class="p-[22px_10px_10px_22px] select-none">
+          <span class="text-16px">{{ t("components.actionBar.closePrompt.title") }}</span>
+          <label class="text-(14px #707070) flex gap-6px lh-16px items-center">
+            <n-radio :checked="tipsRef.type === CloseBxEnum.HIDE" @change="tipsRef.type = CloseBxEnum.HIDE" />
+            <span>{{ t("components.actionBar.closePrompt.hideToTray") }}</span>
+          </label>
+          <label class="text-(14px #707070) flex gap-6px lh-16px items-center">
+            <n-radio :checked="tipsRef.type === CloseBxEnum.CLOSE" @change="tipsRef.type = CloseBxEnum.CLOSE" />
+            <span>{{ t("components.actionBar.closePrompt.exitApp") }}</span>
+          </label>
+          <label class="text-(12px #909090) flex gap-6px justify-end items-center">
+            <n-checkbox size="small" v-model:checked="tipsRef.notTips" />
+            <span>{{ t("components.actionBar.closePrompt.noPrompt") }}</span>
+          </label>
+
+          <n-flex justify="end">
+            <n-button @click="handleConfirm" class="w-78px" color="#13987f">
+              {{ t("components.common.confirm") }}
+            </n-button>
+            <n-button @click="tipsRef.show = false" class="w-78px" secondary>
+              {{ t("components.common.cancel") }}
+            </n-button>
+          </n-flex>
+        </n-flex>
+      </div>
+    </n-modal>
   </div>
 </template>
 
 <script setup lang="ts">
+import { useI18n } from "vue-i18n";
 import { emit } from "@tauri-apps/api/event";
 import { info } from "@tauri-apps/plugin-log";
 import { exit } from "@tauri-apps/plugin-process";
 import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
 
 import router from "@/router";
-import { EventEnum } from "@/enums";
+import { CloseBxEnum, EventEnum } from "@/enums";
 import { useMitt } from "@/hooks/useMitt.ts";
+import { useSettingStore } from "@/stores/setting.ts";
 import { useAlwaysOnTopStore } from "@/stores/alwaysOnTop.ts";
 import { isCompatibility, isMac, isWindows } from "@/utils/PlatformUtils.ts";
 
@@ -108,7 +150,17 @@ const {
   isDrag?: boolean;
   iconColor?: string;
 }>();
+
+const { t } = useI18n();
+
 const { getWindowTop, setWindowTop } = useAlwaysOnTopStore();
+const settingStore = useSettingStore();
+const { tips, escClose } = storeToRefs(settingStore);
+const tipsRef = reactive({
+  type: tips.value.type,
+  notTips: tips.value.notTips,
+  show: false
+});
 // 窗口是否最大化状态
 const windowMaximized = ref(false);
 // 窗口是否置顶状态
@@ -119,10 +171,28 @@ const alwaysOnTopStatus = computed(() => {
 
 // resized 事件的 unlisten 函数
 let unlistenResized: (() => void) | null = null;
+// 是否是程序内部触发的关闭操作
+let isProgrammaticClose = false;
 
-watchEffect(() => {
+/** 处理ESC关闭窗口事件 */
+const handleEscKeyDown = (event: KeyboardEvent) => {
+  if (event.key === "Escape" && escClose.value) {
+    handleCloseWin();
+  }
+};
+
+watchEffect((onCleanup) => {
+  tipsRef.type = tips.value.type;
   if (alwaysOnTopStatus.value) {
     appWindow.setAlwaysOnTop(alwaysOnTopStatus.value as boolean);
+  }
+  if (escClose.value && isWindows()) {
+    window.addEventListener("keydown", handleEscKeyDown);
+    onCleanup(() => {
+      window.removeEventListener("keydown", handleEscKeyDown);
+    });
+  } else {
+    window.removeEventListener("keydown", handleEscKeyDown);
   }
 });
 
@@ -144,7 +214,7 @@ const handleAlwaysOnTop = async () => {
   }
 };
 
-/** 统一更新窗口放大状态 */
+// 统一更新窗口放大状态（仅 macOS 视为“最大化或全屏”；其他平台仅“最大化”）
 const updateWindowMaximized = async () => {
   const maximized = await appWindow.isMaximized();
   if (isMac()) {
@@ -158,13 +228,44 @@ const updateWindowMaximized = async () => {
 /** 处理关闭窗口事件 */
 const handleCloseWin = async () => {
   if (appWindow.label === "home") {
-    // TODO: 退出程序或者隐藏
-    await exit(0);
+    if (!tips.value.notTips) {
+      tipsRef.show = true;
+    } else {
+      if (tips.value.type === CloseBxEnum.CLOSE) {
+        await emit(EventEnum.EXIT);
+      } else {
+        await nextTick(() => {
+          appWindow.hide();
+        });
+      }
+    }
   } else if (appWindow.label === "login") {
     await exit(0);
   } else {
+    if (appWindow.label.includes("modal-")) {
+      const webviews = await WebviewWindow.getAll();
+      const need = webviews.find((item) => item.label === "home" || item.label === "login");
+      await need?.setEnabled(true);
+      await need?.setFocus();
+    }
     await emit(EventEnum.WIN_CLOSE, appWindow.label);
     await appWindow.close();
+  }
+};
+
+/** 点击确定时 */
+const handleConfirm = async () => {
+  tips.value.type = tipsRef.type;
+  tips.value.notTips = tipsRef.notTips;
+  tipsRef.show = false;
+  if (tips.value.type === CloseBxEnum.CLOSE) {
+    // 设置程序内部关闭标志
+    isProgrammaticClose = true;
+    await emit(EventEnum.EXIT);
+  } else {
+    await nextTick(() => {
+      appWindow.hide();
+    });
   }
 };
 
@@ -180,19 +281,23 @@ onMounted(async () => {
 
   // 监听 home 窗口的关闭事件
   if (appWindow.label === "home") {
-    appWindow
-      .onCloseRequested((event) => {
-        info("[ActionBar]阻止[home]窗口关闭事件");
-        event.preventDefault();
-        appWindow.hide();
-      })
-      .then(() => {
-        info("[ActionBar]监听[home]窗口关闭事件完成");
-      });
+    appWindow.onCloseRequested((event) => {
+      info("[ActionBar]阻止[home]窗口关闭事件");
+      if (isProgrammaticClose) {
+        // 清理监听器
+        info("[ActionBar]清理[home]窗口的监听器");
+        exit(0);
+      }
+      info("[ActionBar]阻止[home]窗口关闭事件");
+      event.preventDefault();
+      appWindow.hide();
+    });
   }
 });
 
 onUnmounted(() => {
+  window.removeEventListener("keydown", handleEscKeyDown);
+
   if (unlistenResized) {
     unlistenResized();
     unlistenResized = null;
@@ -212,5 +317,10 @@ defineExpose({
 
 .action-close {
   @apply w-28px h-24px flex-center cursor-pointer hover:bg-#c22b1c svg:hover:color-[#fff];
+}
+
+.n-modal {
+  align-self: start;
+  margin: 60px auto;
 }
 </style>

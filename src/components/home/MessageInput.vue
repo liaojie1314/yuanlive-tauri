@@ -29,9 +29,7 @@
         :bordered="false"
         :show-count="false" />
 
-      <!-- 按钮区域 - 下方 -->
       <div class="flex justify-between items-center mt-3 pt-2 border-t border-gray-200">
-        <!-- 左侧按钮组 - 左对齐 -->
         <div class="flex items-center gap-3">
           <!-- Attach按钮 -->
           <n-popover class="p-0 bg-transparent select-none" :show-arrow="false" trigger="click">
@@ -46,28 +44,24 @@
             </template>
             <!-- 弹出菜单内容 -->
             <div class="menu-list space-y-1">
-              <!-- Upload file -->
               <div
                 class="menu-item flex items-center gap-2 px-3 py-2 text-sm hover:bg-gray-100 rounded-md cursor-pointer"
                 @click="handleMenuClick('file')">
                 <i-mdi-file-upload-outline class="w-4 h-4" />
                 <span>Upload file</span>
               </div>
-              <!-- Upload photo -->
               <div
                 class="menu-item flex items-center gap-2 px-3 py-2 text-sm hover:bg-gray-100 rounded-md cursor-pointer"
                 @click="handleMenuClick('photo')">
                 <i-mdi-image-outline class="w-4 h-4" />
                 <span>Upload photo</span>
               </div>
-              <!-- Take screenshot -->
               <div
                 class="menu-item flex items-center gap-2 px-3 py-2 text-sm hover:bg-gray-100 rounded-md cursor-pointer"
                 @click="handleMenuClick('screenshot')">
                 <i-mdi-camera class="w-4 h-4" />
                 <span>Take screenshot</span>
               </div>
-              <!-- Take photo -->
               <div
                 class="menu-item flex items-center gap-2 px-3 py-2 text-sm hover:bg-gray-100 rounded-md cursor-pointer"
                 @click="handleMenuClick('camera')">
@@ -162,9 +156,10 @@
 import { type SelectOption, NEllipsis } from "naive-ui";
 import { useGlobalShortcut } from "@/hooks/useGlobalShortcut";
 import { useResizeObserver } from "@/hooks/useResizeObserver";
+import { useSettingStore } from "@/stores/setting";
 
 defineOptions({ name: "MessageInput" });
-
+const settingStore = useSettingStore();
 const { handleScreenshot } = useGlobalShortcut();
 
 // 输入的文本
@@ -273,13 +268,11 @@ const handleModelChange = (value: string) => {
 
 // 处理Enter键
 const handleEnterKey = (e: KeyboardEvent) => {
-  // 如果按下了Shift键，则换行
-  if (e.shiftKey) {
-    return;
+  const sendKey = settingStore.chat.sendKey;
+  if ((sendKey === "Enter" && !e.shiftKey) || (sendKey === "Shift+Enter" && e.shiftKey)) {
+    e.preventDefault();
+    sendMessage();
   }
-  // 否则发送消息
-  e.preventDefault();
-  sendMessage();
 };
 
 // 处理菜单点击事件
