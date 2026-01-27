@@ -1,0 +1,86 @@
+{
+  "common": {
+    "providerLabel": "提供者",
+    "providerName": "YuanLive"
+  },
+  "general": {
+    "title": "通用",
+    "appearance": {
+      "title": "外观",
+      "theme": {
+        "auto": "跟随系统",
+        "light": "浅色",
+        "dark": "深色"
+      }
+    },
+    "system": {
+      "title": "系统",
+      "closePanel": "关闭面板",
+      "closeOptions": {
+        "minimizeToTray": "最小化到托盘",
+        "exitProgram": "直接退出"
+      },
+      "closePrompt": "关闭提示",
+      "escCloseWindow": "ESC关闭窗口"
+    },
+    "ui": {
+      "title": "界面",
+      "language": "语言",
+      "blur": "高斯模糊",
+      "shadow": "启用阴影",
+      "font": "字体",
+      "fontOptions": {
+        "PingFang": "苹方",
+        "AliFangYuan": "阿里妈妈方圆体"
+      }
+    }
+  },
+  "login": {
+    "title": "登录",
+    "autoLoginStartup": "启动时自动登录",
+    "launchStartup": "开机自启动"
+  },
+  "shortcut": {
+    "title": "快捷键",
+    "sendMessageShortcutOption": "按 {key} 键发送消息",
+    "globalShortcutTitle": "全局",
+    "enableGlobalShortcuts": "启用全局快捷键",
+    "enableGlobalShortcutsHint": "关闭后，下方所有快捷键将失效。",
+    "functionTitle": "功能",
+    "messageTitle": "消息",
+    "screenshot": "截图",
+    "screenshotHint": "按快捷键进行截图",
+    "panelSwitch": "主面板切换",
+    "panelSwitchHint": "按快捷键切换主面板",
+    "messageShortcut": "消息",
+    "sendMessageShortcut": "发送消息",
+    "sendMessageShortcutHint": "按快捷键发送消息",
+    "unbound": "未绑定",
+    "bound": "已绑定",
+    "reset": "重置",
+    "shortcutUpdateResult": "{name} 已更新",
+    "shortcutSettingFailed": "{name} 设置失败",
+    "globalEnable": "全局快捷键已开启",
+    "globalDisable": "全局快捷键已关闭",
+    "globalToggleFailed": "全局快捷键开关设置失败",
+    "sendMessageUpdated": "发送消息快捷键已更新",
+    "sendMessageFailed": "发送消息快捷键设置失败"
+  },
+  "storage": {
+    "title": "存储"
+  },
+  "unknown": "未知",
+  "footer": {
+    "likeProduct": "喜欢这款产品？ 在",
+    "starCta": "GitHub 给我们加星",
+    "shareJoiner": "并",
+    "shareCta": "分享您宝贵的建议",
+    "starPopoverTitle": "在 GitHub 为我们点亮星标",
+    "starPopoverDesc": "如果您喜爱我们的产品，并希望支持我们，可以去 GitHub 给我们点一颗星吗？这个小小的动作对我们来说意义重大，能激励我们为您持续提供特性体验。",
+    "later": "稍后",
+    "starButton": "点亮星标",
+    "issuePopoverTitle": "在 GitHub 分享您宝贵的反馈",
+    "issuePopoverDesc": "您的每一个想法和建议对我们来说都弥足珍贵，我们迫不及待地想知道您的看法！欢迎联系我们提供产品功能和使用体验反馈。",
+    "issueButton": "提出建议"
+  }
+}

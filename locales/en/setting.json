@@ -1,0 +1,86 @@
+{
+  "common": {
+    "providerLabel": "Provider",
+    "providerName": "YuanLive"
+  },
+  "general": {
+    "title": "General",
+    "appearance": {
+      "title": "Appearance",
+      "theme": {
+        "auto": "Follow system",
+        "light": "Light",
+        "dark": "Dark"
+      }
+    },
+    "system": {
+      "title": "System",
+      "closePanel": "Close Panel",
+      "closeOptions": {
+        "minimizeToTray": "Minimize to Tray",
+        "exitProgram": "Exit Directly"
+      },
+      "closePrompt": "Close Prompt",
+      "escCloseWindow": "ESC Close Window"
+    },
+    "ui": {
+      "title": "UI",
+      "language": "Language",
+      "blur": "Gaussian blur",
+      "shadow": "Enable Shadow",
+      "font": "Font Family",
+      "fontOptions": {
+        "PingFang": "PingFang",
+        "AliFangYuan": "Alimama Rounded"
+      }
+    }
+  },
+  "login": {
+    "title": "Log-in",
+    "autoLoginStartup": "Auto-login on startup",
+    "launchStartup": "Launch at startup"
+  },
+  "shortcut": {
+    "title": "Shortcuts",
+    "sendMessageShortcutOption": "Press {key} to send",
+    "globalShortcutTitle": "Global",
+    "enableGlobalShortcuts": "Enable Global Shortcuts",
+    "enableGlobalShortcutsHint": "After closing, all shortcuts below will be disabled.",
+    "functionTitle": "Function",
+    "messageTitle": "Message",
+    "screenshot": "Screenshot",
+    "screenshotHint": "Press the shortcut key to capture",
+    "panelSwitch": "Main panel switch",
+    "panelSwitchHint": "Press the shortcut key to switch the main panel",
+    "messageShortcut": "Message",
+    "sendMessageShortcut": "Send Message",
+    "sendMessageShortcutHint": "Press the shortcut key to send a message",
+    "unbound": "Unbound",
+    "bound": "Bound",
+    "reset": "Reset",
+    "shortcutUpdateResult": "{name} has been updated",
+    "shortcutSettingFailed": "{name} setting failed",
+    "globalEnable": "Global shortcuts enabled",
+    "globalDisable": "Global shortcuts disabled",
+    "globalToggleFailed": "Failed to set the global shortcut toggle",
+    "sendMessageUpdated": "Send message shortcut updated",
+    "sendMessageFailed": "Send message shortcut failed"
+  },
+  "storage": {
+    "title": "Storage"
+  },
+  "unknown": "Unknown",
+  "footer": {
+    "likeProduct": "Like this product? On",
+    "starCta": "GitHub give us a star",
+    "shareJoiner": "and",
+    "shareCta": "share your valuable ideas",
+    "starPopoverTitle": "Star us on GitHub",
+    "starPopoverDesc": "If you enjoy our product and want to support us, could you star the repo on GitHub? This tiny action means a lot and keeps us shipping great features.",
+    "later": "Later",
+    "starButton": "Give a Star",
+    "issuePopoverTitle": "Share feedback on GitHub",
+    "issuePopoverDesc": "Every idea matters. We'd love to hear from you—feel free to tell us what feature or experience you’d like to improve!",
+    "issueButton": "Submit feedback"
+  }
+}

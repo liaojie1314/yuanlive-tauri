@@ -67,7 +67,29 @@ const getCommonRoutes = (): Array<RouteRecordRaw> => [
   {
     name: "setting",
     path: "/setting",
-    component: () => import("@/views/settingWindow/index.vue")
+    component: () => import("@/views/settingWindow/index.vue"),
+    children: [
+      {
+        path: "/general",
+        name: "general",
+        component: () => import("@/views/settingWindow/General.vue")
+      },
+      {
+        path: "/loginSetting",
+        name: "loginSetting",
+        component: () => import("@/views/settingWindow/LoginSetting.vue")
+      },
+      {
+        path: "/manageStore",
+        name: "manageStore",
+        component: () => import("@/views/settingWindow/ManageStore.vue")
+      },
+      {
+        path: "/shortcut",
+        name: "shortcut",
+        component: () => import("@/views/settingWindow/Shortcut.vue")
+      }
+    ]
   },
   {
     name: "about",

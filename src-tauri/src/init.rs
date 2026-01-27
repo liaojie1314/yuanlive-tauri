@@ -1,5 +1,6 @@
 use tauri::plugin::TauriPlugin;
 use tauri::{Manager, Runtime, WindowEvent};
+use tauri_plugin_autostart::MacosLauncher;
 use tauri_plugin_log::fern::colors::{Color, ColoredLevelConfig};
 use tauri_plugin_log::{Target, TargetKind};
 use tracing::warn;
@@ -14,7 +15,12 @@ impl<R: Runtime> CustomInit for tauri::Builder<R> {
         let builder = init_common_plugins(self);
         // 桌面端特有的插件
         #[cfg(desktop)]
-        let builder = builder.plugin(tauri_plugin_global_shortcut::Builder::new().build());
+        let builder = builder
+            .plugin(tauri_plugin_autostart::init(
+                MacosLauncher::LaunchAgent,
+                Some(vec!["--flag1", "--flag2"]),
+            ))
+            .plugin(tauri_plugin_global_shortcut::Builder::new().build());
         builder
     }
 

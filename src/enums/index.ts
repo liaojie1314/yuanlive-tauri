@@ -113,7 +113,9 @@ export enum TauriCommandEnum {
   // 推送流数据
   PUSH_STREAM_CHUNK = "push_stream_chunk",
   // 停止流管道
-  STOP_STREAM_PIPE = "stop_stream_pipe"
+  STOP_STREAM_PIPE = "stop_stream_pipe",
+  // 获取文件元数据
+  GET_FILE_META = "get_file_meta"
 }
 
 /** pinia存储的名称 */
@@ -128,6 +130,8 @@ export enum StoresEnum {
   USER = "user",
   // 设置
   SETTING = "setting",
+  // 扫描器
+  SCANNER = "scanner",
   // 弹幕
   DANMAKU = "danmaku",
   // 视频
@@ -150,4 +154,20 @@ export enum StorageKeyEnum {
 /** WebSocket 响应消息类型 */
 export enum WsResponseMessageEnum {
   REMOTE_LOGIN = "remoteLogin"
+}
+
+/** MacOS键盘映射 */
+export enum MacOsKeyEnum {
+  "⌘" = "⌘",
+  "⌥" = "⌥",
+  "⇧" = "⇧",
+  "^" = "^"
+}
+
+/** Windows键盘映射 */
+export enum WinKeyEnum {
+  CTRL = "Ctrl",
+  WIN = "Win",
+  ALT = "Alt",
+  SHIFT = "Shift"
 }

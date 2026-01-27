@@ -31,6 +31,7 @@ tauri-plugin-process = "2"
 tauri-plugin-clipboard-manager = "2"
 tauri-plugin-global-shortcut = "2"
 tauri-plugin-shell = "2"
+tauri-plugin-autostart = "2"
 
 # Tauri 非官方依赖
 dotenv = "0.15.0"
