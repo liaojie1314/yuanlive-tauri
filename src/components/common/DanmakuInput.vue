@@ -1,5 +1,5 @@
 <template>
-  <div class="danmaku-input-container" v-if="isEnabled" ref="containerRef">
+  <div v-resize="checkCompactMode" class="danmaku-input-container" v-if="isEnabled" ref="containerRef">
     <div class="input-wrapper" :class="{ 'compact-mode': isCompactMode }">
       <div class="danmaku-controls-left" v-if="!isCompactMode">
         <div class="danmaku-toggle-btn" :class="{ active: isDanmakuEnabled }" @click="toggleDanmaku">
@@ -238,7 +238,6 @@
 
 <script setup lang="ts">
 import { useDanmakuStore } from "@/stores/danmaku";
-import { useResizeObserver } from "@/hooks/useResizeObserver";
 
 defineProps<{
   isEnabled: boolean;
@@ -581,11 +580,6 @@ watch(
     localSettings.value.fontSize = getSliderFontSize(newSize);
   }
 );
-
-// 使用ResizeObserver监听容器大小变化
-useResizeObserver(containerRef, () => {
-  checkCompactMode();
-});
 
 onMounted(() => {
   checkCompactMode();

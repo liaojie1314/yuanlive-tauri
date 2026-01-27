@@ -28,6 +28,7 @@
     "libx",
     "longtask",
     "mediapipe",
+    "metas",
     "minimizable",
     "persistedstate",
     "Pinia",

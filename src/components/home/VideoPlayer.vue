@@ -238,7 +238,7 @@
     <!-- Custom Controls -->
     <div class="custom-controls" @click.stop>
       <!-- Left Controls: Play Button and Progress -->
-      <div class="left-controls" ref="leftControlsRef">
+      <div v-resize="checkLeftControlsWidth" class="left-controls" ref="leftControlsRef">
         <!-- Play/Pause Button -->
         <div class="control-item" @click="togglePlay">
           <span class="control-icon play-icon">
@@ -1532,15 +1532,6 @@ onMounted(() => {
   }
 
   checkLeftControlsWidth();
-  if (leftControlsRef.value) {
-    const resizeObserver = new ResizeObserver(() => {
-      checkLeftControlsWidth();
-    });
-    resizeObserver.observe(leftControlsRef.value);
-    onBeforeUnmount(() => {
-      resizeObserver.disconnect();
-    });
-  }
 });
 
 // Animation frame IDs for cleanup

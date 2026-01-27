@@ -1,4 +1,9 @@
 {
+  "profileEdit": {
+    "toast": {
+      "avatarUpdateSuccess": "Avatar updated"
+    }
+  },
   "about": {
     "version": "Version: {version} ({arch})",
     "device": "Device: {type}{version}",

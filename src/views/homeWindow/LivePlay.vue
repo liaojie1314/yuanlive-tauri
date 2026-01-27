@@ -184,7 +184,10 @@
       <!-- 送礼区 固定高度 -->
       <div class="gift-area w-full h-20 bg-black/90 flex items-center p-2 z-999">
         <!-- 礼物列表 -->
-        <div ref="giftListRef" class="gift-list bg-amber flex items-center flex-1 rounded-md">
+        <div
+          v-resize="calculateVisibleGiftCount"
+          ref="giftListRef"
+          class="gift-list bg-amber flex items-center flex-1 rounded-md">
           <!-- 礼物容器，用于隐藏溢出的礼物 -->
           <div class="gifts-container flex items-center overflow-hidden w-full">
             <n-popover
@@ -657,7 +660,6 @@
 import videojs from "video.js";
 import "video.js/dist/video-js.css";
 import "@videojs/http-streaming";
-import { useResizeObserver } from "@/hooks/useResizeObserver";
 
 const router = useRouter();
 const videoRef = ref<HTMLVideoElement | null>(null);
@@ -1346,8 +1348,6 @@ const handleSelectEmoji = (emoji: string) => {
   messageInput.value += emoji;
   showEmojiPicker.value = false;
 };
-// 使用ResizeObserver监听礼物列表宽度变化
-useResizeObserver(giftListRef, calculateVisibleGiftCount);
 
 onMounted(() => {
   // 初始化video.js播放器

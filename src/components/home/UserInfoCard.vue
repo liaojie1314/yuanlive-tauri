@@ -19,7 +19,7 @@
         </div>
         <div class="flex items-center gap-2 text-sm text-gray-600 whitespace-nowrap">
           <span
-            class="cursor-pointer transition-colors duration-200 hover:text-blue-500"
+            class="special-style cursor-pointer transition-colors duration-200 hover:text-blue-500"
             @click="openFollowDialog('following')">
             关注
             <span class="text-gray-800 font-medium">{{ formattedFollowing }}</span>
@@ -27,18 +27,18 @@
           <span class="text-gray-200 mx-1">|</span>
           <span
             v-if="liveUsers > 0"
-            class="cursor-pointer transition-colors duration-200 hover:text-blue-500 text-red-500">
+            class="special-style cursor-pointer transition-colors duration-200 hover:text-blue-500 text-red-500">
             {{ formattedLiveUsers }}人正在直播
           </span>
           <span v-if="liveUsers > 0" class="text-gray-200 mx-1">|</span>
           <span
-            class="cursor-pointer transition-colors duration-200 hover:text-blue-500"
+            class="special-style cursor-pointer transition-colors duration-200 hover:text-blue-500"
             @click="openFollowDialog('followers')">
             粉丝
             <span class="text-gray-800 font-medium">{{ formattedFollowers }}</span>
           </span>
           <span class="text-gray-200 mx-1">|</span>
-          <span class="cursor-pointer transition-colors duration-200 hover:text-blue-500">
+          <span class="special-style cursor-pointer transition-colors duration-200 hover:text-blue-500">
             获赞
             <span class="text-gray-800 font-medium">{{ formattedLikes }}</span>
           </span>
@@ -224,3 +224,16 @@ onUnmounted(() => {
   followersList.value = [];
 });
 </script>
+
+<style scoped lang="scss">
+.special-style {
+  background: linear-gradient(to right, #ec695c, #61c454) no-repeat left bottom;
+  background-size: 0 2px;
+  transition: background-size 800ms;
+}
+
+.special-style:hover {
+  background-position-x: left;
+  background-size: 100% 2px;
+}
+</style>

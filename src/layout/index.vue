@@ -4,7 +4,7 @@
       <AsyncLeft />
       <AsyncRight />
     </div>
-    <div v-if="overlayVisible" class="absolute inset-0 z-10 flex items-center justify-center bg-[--right-bg-color]">
+    <div v-if="overlayVisible" class="absolute inset-0 z-10 flex items-center justify-center">
       <loading-spinner :percentage="loadingPercentage" :loading-text="loadingText" />
     </div>
   </div>

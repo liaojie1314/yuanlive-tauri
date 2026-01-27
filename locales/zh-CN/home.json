@@ -1,4 +1,9 @@
 {
+  "profileEdit": {
+    "toast": {
+      "avatarUpdateSuccess": "头像更新成功"
+    }
+  },
   "about": {
     "version": "版本：{version} ({arch})",
     "device": "当前设备：{type}{version}",

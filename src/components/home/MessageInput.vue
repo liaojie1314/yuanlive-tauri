@@ -15,7 +15,10 @@
     </div>
 
     <!-- 整体包裹容器 -->
-    <div ref="inputContainerRef" class="input-container flex flex-col bg-white rounded-lg p-2 m-1">
+    <div
+      v-resize="handleResize"
+      ref="inputContainerRef"
+      class="input-container flex flex-col bg-white rounded-lg p-2 m-1">
       <!-- 输入框 -->
       <n-input
         v-model:value="messageText"
@@ -155,7 +158,6 @@
 <script setup lang="ts">
 import { type SelectOption, NEllipsis } from "naive-ui";
 import { useGlobalShortcut } from "@/hooks/useGlobalShortcut";
-import { useResizeObserver } from "@/hooks/useResizeObserver";
 import { useSettingStore } from "@/stores/setting";
 
 defineOptions({ name: "MessageInput" });
@@ -390,9 +392,6 @@ const handleResize = () => {
     showButtonText.value = width >= 588;
   }
 };
-
-// 使用ResizeObserver监听容器宽度变化
-useResizeObserver(inputContainerRef, handleResize);
 </script>
 
 <style scoped>

@@ -7,7 +7,8 @@
           <img
             :src="avatar || 'https://picsum.photos/id/1005/200/200'"
             alt="头像"
-            class="w-24 h-24 rounded-full border-2 border-gray-200 object-cover" />
+            class="w-24 h-24 rounded-full border-2 border-gray-200 object-cover"
+            @click="openAvatarCropper" />
           <div
             class="absolute inset-0 bg-black/30 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
             @click="triggerFileInput">
@@ -17,7 +18,6 @@
           </div>
         </div>
         <span class="text-sm text-gray-500" @click="triggerFileInput">点击修改头像</span>
-        <input type="file" ref="fileInput" accept="image/*" class="hidden" @change="handleAvatarChange" />
       </div>
 
       <!-- 名字输入 -->
@@ -47,16 +47,20 @@
       </div>
     </div>
   </base-dialog>
-
+  <input
+    ref="fileInput"
+    type="file"
+    accept="image/jpeg,image/png,image/webp"
+    class="hidden"
+    @change="handleFileChange" />
   <!-- 头像裁剪组件 -->
-  <avatar-cropper
-    v-model:show="showCropper"
-    :image-url="cropperImageUrl"
-    @update:show="showCropper = $event"
-    @crop="handleCrop" />
+  <avatar-cropper ref="cropperRef" v-model:show="showCropper" :image-url="localImageUrl" @crop="handleCrop" />
 </template>
 
 <script setup lang="ts">
+import { useI18n } from "vue-i18n";
+import { useAvatarUpload } from "@/hooks/useAvatarUpload";
+
 interface Props {
   show: boolean;
   name: string;
@@ -67,6 +71,26 @@ interface Props {
 const props = withDefaults(defineProps<Props>(), {
   description: "",
   avatar: ""
+});
+
+const { t } = useI18n();
+
+const {
+  fileInput,
+  localImageUrl,
+  showCropper,
+  cropperRef,
+  openAvatarCropper,
+  handleFileChange,
+  handleCrop: onCrop
+} = useAvatarUpload({
+  onSuccess: async (downloadUrl) => {
+    // TODO 调用更新头像的API
+    avatar.value = downloadUrl;
+    // 更新用户信息
+    // 更新store缓存里面的用户信息
+    window.$message.success(t("home.profileEdit.toast.avatarUpdateSuccess"));
+  }
 });
 
 const emit = defineEmits<{
@@ -84,11 +108,6 @@ const dialogVisible = computed({
 const name = ref(props.name);
 const description = ref(props.description);
 const avatar = ref(props.avatar);
-const fileInput = ref<HTMLInputElement | null>(null);
-
-// 头像裁剪相关
-const showCropper = ref(false);
-const cropperImageUrl = ref("");
 
 // 关闭对话框
 const closeDialog = () => {
@@ -100,28 +119,8 @@ const triggerFileInput = () => {
   fileInput.value?.click();
 };
 
-// 处理头像上传
-const handleAvatarChange = (event: Event) => {
-  const input = event.target as HTMLInputElement;
-  if (input.files && input.files[0]) {
-    const file = input.files[0];
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      cropperImageUrl.value = e.target?.result as string;
-      showCropper.value = true;
-    };
-    reader.readAsDataURL(file);
-  }
-};
-
-// 处理裁剪完成
-const handleCrop = (blob: Blob) => {
-  const reader = new FileReader();
-  reader.onload = (e) => {
-    avatar.value = e.target?.result as string;
-  };
-  // TODO: 上传头像到服务器
-  reader.readAsDataURL(blob);
+const handleCrop = async (cropBlob: Blob) => {
+  await onCrop(cropBlob);
 };
 
 // 保存资料
