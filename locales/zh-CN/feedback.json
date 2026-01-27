@@ -1,0 +1,17 @@
+{
+  "type": {
+    "title": "问题类型",
+    "bug": "功能异常",
+    "lag": "直播卡顿",
+    "suggestion": "改进建议",
+    "other": "其他问题"
+  },
+  "intro": "遇到直播卡顿或黑屏？请详细描述复现步骤，这将帮助我们快速定位问题。",
+  "content": "详细描述",
+  "placeholder": "请描述发生的问题以及复现问题的步骤",
+  "images": "截图/日志 (Max {count})",
+  "contact": "联系方式",
+  "contactPlaceholder": "邮箱或手机号 (选填)",
+  "deviceInfo": "自动采集的设备信息",
+  "deviceInfoDesc": "用于排查兼容性问题"
+}

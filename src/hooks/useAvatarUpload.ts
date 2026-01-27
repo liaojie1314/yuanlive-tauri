@@ -57,7 +57,6 @@ export const useAvatarUpload = (options: AvatarUploadOptions = {}) => {
     try {
       const fileName = `avatar_${Date.now()}.webp`;
       const file = new File([cropBlob], fileName, { type: "image/webp" });
-
       // 检查裁剪后的文件大小
       if (file.size > sizeLimit * 1024) {
         window.$message.error(`图片大小不能超过${sizeLimit}KB，当前图片裁剪后大小为${Math.round(file.size / 1024)}KB`);
@@ -74,10 +73,8 @@ export const useAvatarUpload = (options: AvatarUploadOptions = {}) => {
         cropperRef.value?.finishLoading();
         return;
       }
-
       // 使用useUpload中的上传功能
       const { uploadFile, onComplete } = useUpload();
-
       // 监听上传完成事件获取下载URL
       onComplete((result) => {
         if (result.success && result.url) {
@@ -90,7 +87,6 @@ export const useAvatarUpload = (options: AvatarUploadOptions = {}) => {
 
       // 执行上传
       await uploadFile(file, scene);
-
       // 清理资源
       if (localImageUrl.value) {
         URL.revokeObjectURL(localImageUrl.value);
@@ -99,7 +95,6 @@ export const useAvatarUpload = (options: AvatarUploadOptions = {}) => {
       if (fileInput.value) {
         fileInput.value.value = "";
       }
-
       // 结束加载状态
       cropperRef.value?.finishLoading();
       // 关闭裁剪窗口

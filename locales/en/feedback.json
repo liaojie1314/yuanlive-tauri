@@ -1,0 +1,17 @@
+{
+  "type": {
+    "title": "Problem Type",
+    "bug": "Function",
+    "lag": "Live Lag",
+    "suggestion": "Suggestion",
+    "other": "Other"
+  },
+  "intro": "Encountered live streaming lag or black screen? Please describe the steps to reproduce the issue, which will help us locate the problem quickly.",
+  "content": "Detailed Description",
+  "placeholder": "Please describe the problem and the steps to reproduce it.",
+  "images": "Screenshots/Logs (Max {count})",
+  "contact": "Contact",
+  "contactPlaceholder": "Email or Phone (Optional)",
+  "deviceInfo": "Device Info",
+  "deviceInfoDesc": "Troubleshoot compatibility issues"
+}
