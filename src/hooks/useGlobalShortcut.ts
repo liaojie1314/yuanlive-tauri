@@ -1,4 +1,4 @@
-import { listen } from "@tauri-apps/api/event";
+import { emitTo, listen } from "@tauri-apps/api/event";
 import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { LogicalPosition, LogicalSize } from "@tauri-apps/api/dpi";
 import { register, unregister } from "@tauri-apps/plugin-global-shortcut";
@@ -238,7 +238,12 @@ export const useGlobalShortcut = () => {
       const rollbackSuccess = await registerShortcut(config, oldShortcut);
       console.log(`[Home] 快捷键回滚结果 [${config.key}]: ${rollbackSuccess ? "成功" : "失败"}`);
     }
-    // TODO: 通知设置页面注册状态更新
+    // 通知设置页面注册状态更新
+    await emitTo("setting", config.registrationEventName, {
+      shortcut: newShortcut,
+      registered: success
+    });
+    console.log(`[Home] 已通知 setting 窗口快捷键状态更新 [${config.key}]: ${success ? "已注册" : "未注册"}`);
   };
 
   /**
@@ -250,14 +255,22 @@ export const useGlobalShortcut = () => {
       // 开启时重新注册所有快捷键并通知设置页面
       for (const config of shortcutConfigs) {
         const savedShortcut = settingStore.shortcuts?.[config.key] || config.defaultValue;
-        await registerShortcut(config, savedShortcut as string);
-        // TODO: 通知设置页面注册状态更新
+        const success = await registerShortcut(config, savedShortcut as string);
+        // 通知设置页面注册状态更新
+        await emitTo("setting", config.registrationEventName, {
+          shortcut: savedShortcut,
+          registered: success
+        });
       }
     } else {
       // 关闭时取消注册所有快捷键并通知设置页面状态为未绑定
       for (const config of shortcutConfigs) {
-        settingStore.shortcuts?.[config.key] || config.defaultValue;
-        // TODO: 通知设置页面注册状态更新为未绑定
+        const savedShortcut = settingStore.shortcuts?.[config.key] || config.defaultValue;
+        // 通知设置页面注册状态更新为未绑定
+        await emitTo("setting", config.registrationEventName, {
+          shortcut: savedShortcut,
+          registered: false
+        });
       }
       // 取消注册所有快捷键
       await cleanupGlobalShortcut();

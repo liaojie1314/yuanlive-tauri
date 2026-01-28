@@ -70,9 +70,6 @@
               </div>
             </div>
           </n-popover>
-          <!-- 文件输入框 -->
-          <input ref="fileInput" type="file" accept="*/*" multiple class="hidden" @change="handleFileChange" />
-          <input ref="photoInput" type="file" accept="image/*" multiple class="hidden" @change="handleFileChange" />
 
           <!-- 模型选择器 -->
           <div class="relative">
@@ -154,8 +151,11 @@
 
 <script setup lang="ts">
 import { type SelectOption, NEllipsis } from "naive-ui";
-import { useGlobalShortcut } from "@/hooks/useGlobalShortcut";
+import { open } from "@tauri-apps/plugin-dialog";
+import { convertFileSrc } from "@tauri-apps/api/core";
+
 import { useSettingStore } from "@/stores/setting";
+import { useGlobalShortcut } from "@/hooks/useGlobalShortcut";
 
 defineOptions({ name: "MessageInput" });
 const settingStore = useSettingStore();
@@ -165,10 +165,6 @@ const { handleScreenshot } = useGlobalShortcut();
 const messageText = ref("");
 // 上传的图片列表
 const uploadedImages = ref<string[]>([]);
-// 文件输入框引用
-const fileInput = ref<HTMLInputElement | null>(null);
-// 图片输入框引用
-const photoInput = ref<HTMLInputElement | null>(null);
 // 按钮激活状态管理
 const isThinkActive = ref(false);
 const isSearchActive = ref(false);
@@ -273,13 +269,13 @@ const handleEnterKey = (e: KeyboardEvent) => {
 };
 
 // 处理菜单点击事件
-const handleMenuClick = (menuItem: string) => {
+const handleMenuClick = async (menuItem: string) => {
   switch (menuItem) {
     case "file":
-      fileInput.value?.click();
+      await selectFiles(false);
       break;
     case "photo":
-      photoInput.value?.click();
+      await selectFiles(true);
       break;
     case "screenshot":
       handleScreenshot();
@@ -288,6 +284,35 @@ const handleMenuClick = (menuItem: string) => {
       console.log("Take photo");
       // 这里可以添加拍照功能
       break;
+  }
+};
+
+/**
+ * 打开文件选择对话框，根据 isImage 确定是否为图片选择
+ * @param isImage 是否选择图片文件
+ */
+const selectFiles = async (isImage: boolean) => {
+  try {
+    const selected = await open({
+      multiple: true,
+      directory: false,
+      filters: isImage ? [{ name: "Images", extensions: ["png", "jpg", "jpeg", "webp", "gif", "bmp"] }] : undefined
+    });
+
+    if (selected) {
+      // selected 可能是 string (单选) 或 string[] (多选) 或 null
+      const paths = Array.isArray(selected) ? selected : [selected];
+      paths.forEach((path) => {
+        // 在 Tauri 中显示本地图片，不能直接用路径，
+        // 需要用 convertFileSrc 转换为 asset:// 协议的 URL
+        const assetUrl = convertFileSrc(path);
+        // 实际发送给后端时，你可能需要根据 path 读取文件内容或直接传 path 给 Rust
+        console.log("转换后的图片路径:", assetUrl);
+        uploadedImages.value.push(assetUrl);
+      });
+    }
+  } catch (err) {
+    console.error("Failed to open dialog:", err);
   }
 };
 
@@ -327,29 +352,6 @@ const sendMessage = () => {
     });
     // 清空输入文本
     messageText.value = "";
-  }
-};
-
-// 处理文件选择
-const handleFileChange = (e: Event) => {
-  const target = e.target as HTMLInputElement;
-  const files = target.files;
-
-  if (files) {
-    for (let i = 0; i < files.length; i++) {
-      const file = files[i];
-      const reader = new FileReader();
-
-      reader.onload = (event) => {
-        const result = event.target?.result as string;
-        uploadedImages.value.push(result);
-      };
-
-      reader.readAsDataURL(file);
-    }
-
-    // 清空文件输入
-    target.value = "";
   }
 };
 
