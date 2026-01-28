@@ -184,10 +184,7 @@
       <!-- 送礼区 固定高度 -->
       <div class="gift-area w-full h-20 bg-black/90 flex items-center p-2 z-999">
         <!-- 礼物列表 -->
-        <div
-          v-resize="calculateVisibleGiftCount"
-          ref="giftListRef"
-          class="gift-list bg-amber flex items-center flex-1 rounded-md">
+        <div v-resize="calculateVisibleGiftCount" class="gift-list bg-amber flex items-center flex-1 rounded-md">
           <!-- 礼物容器，用于隐藏溢出的礼物 -->
           <div class="gifts-container flex items-center overflow-hidden w-full">
             <n-popover
@@ -663,7 +660,6 @@ import "@videojs/http-streaming";
 
 const router = useRouter();
 const videoRef = ref<HTMLVideoElement | null>(null);
-const giftListRef = ref<HTMLElement | null>(null);
 let player: any = null;
 
 // 跟踪每个popover的显示状态
@@ -1061,20 +1057,13 @@ const showMoreBtn = computed(() => {
 });
 
 // 计算可显示的礼物数量
-const calculateVisibleGiftCount = () => {
-  if (!giftListRef.value) return;
-
-  // 获取礼物列表宽度
-  const giftListWidth = giftListRef.value.clientWidth;
+const calculateVisibleGiftCount = ({ width }: { width: number }) => {
   // 单个礼物项最小宽度（包含图标、文字和内边距）
   const minGiftWidth = 80;
-
   // 计算可显示的礼物数量
-  let count = Math.floor(giftListWidth / minGiftWidth);
-
+  let count = Math.floor(width / minGiftWidth);
   // 确保至少显示2个礼物和1个更多按钮
   count = Math.max(count, 2);
-
   visibleGiftCount.value = count;
 };
 
@@ -1423,9 +1412,6 @@ onMounted(() => {
       isFullscreen.value = !!(document as any).msFullscreenElement;
     });
   }
-
-  // 初始化礼物列表宽度计算
-  calculateVisibleGiftCount();
 
   // 添加点击外部关闭弹窗的事件监听
   const handleClickOutside = (event: MouseEvent) => {

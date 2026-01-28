@@ -86,7 +86,8 @@ export enum TauriCommandEnum {
   // 登录
   LOGIN_COMMAND = "login_command",
   // 上传分片
-  UPLOAD_CHUNK_COMMAND = "upload_chunk_command",
+  UPLOAD_CHUNK_BYTES_COMMAND = "upload_chunk_bytes_command",
+  UPLOAD_CHUNK_BY_PATH_COMMAND = "upload_chunk_by_path_command",
   // 检查已上传分片
   CHECK_UPLOADED_CHUNKS_COMMAND = "check_uploaded_chunks_command",
   // 合并分片
@@ -95,6 +96,8 @@ export enum TauriCommandEnum {
   UPDATE_TOKEN = "update_token",
   // 移除 token
   REMOVE_TOKEN = "remove_token",
+  // 获取文件元数据
+  GET_FILE_META = "get_file_meta",
   // AI 消息流式发送
   AI_MESSAGE_SEND_STREAM = "ai_message_send_stream",
   // AI 取消流式消息
@@ -113,9 +116,7 @@ export enum TauriCommandEnum {
   // 推送流数据
   PUSH_STREAM_CHUNK = "push_stream_chunk",
   // 停止流管道
-  STOP_STREAM_PIPE = "stop_stream_pipe",
-  // 获取文件元数据
-  GET_FILE_META = "get_file_meta"
+  STOP_STREAM_PIPE = "stop_stream_pipe"
 }
 
 /** pinia存储的名称 */

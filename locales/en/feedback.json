@@ -6,6 +6,9 @@
     "suggestion": "Suggestion",
     "other": "Other"
   },
+  "rule": {
+    "content": "Please describe the problem you encountered"
+  },
   "intro": "Encountered live streaming lag or black screen? Please describe the steps to reproduce the issue, which will help us locate the problem quickly.",
   "content": "Detailed Description",
   "placeholder": "Please describe the problem and the steps to reproduce it.",

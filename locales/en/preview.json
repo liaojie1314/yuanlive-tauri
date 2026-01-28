@@ -1,0 +1,8 @@
+{
+  "code": {
+    "title": "Code Preview",
+    "run": "Run",
+    "hint": "Click to run to see the effect",
+    "save": "(Ctrl + S save)"
+  }
+}

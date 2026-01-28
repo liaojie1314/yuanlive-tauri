@@ -7028,6 +7028,7 @@ dependencies = [
  "futures",
  "futures-util",
  "lazy_static",
+ "mime_guess",
  "reqwest",
  "screenshots",
  "serde",

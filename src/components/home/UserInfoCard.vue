@@ -15,7 +15,9 @@
             @click="openEditDialog">
             {{ name }}
           </span>
-          <span v-if="verified" class="text-blue-500 text-xl font-bold">✓</span>
+          <span v-if="verified" class="text-blue-500 text-xl font-bold">
+            <i-mdi-check />
+          </span>
         </div>
         <div class="flex items-center gap-2 text-sm text-gray-600 whitespace-nowrap">
           <span

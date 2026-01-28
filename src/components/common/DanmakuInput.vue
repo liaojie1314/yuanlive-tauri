@@ -1,5 +1,5 @@
 <template>
-  <div v-resize="checkCompactMode" class="danmaku-input-container" v-if="isEnabled" ref="containerRef">
+  <div v-resize="checkCompactMode" class="danmaku-input-container" v-if="isEnabled">
     <div class="input-wrapper" :class="{ 'compact-mode': isCompactMode }">
       <div class="danmaku-controls-left" v-if="!isCompactMode">
         <div class="danmaku-toggle-btn" :class="{ active: isDanmakuEnabled }" @click="toggleDanmaku">
@@ -256,7 +256,6 @@ const danmakuText = ref("");
 const showEmojiPicker = ref(false);
 const showDanmakuSettingsPanel = ref(false);
 const showEmojiSelector = ref(false);
-const containerRef = ref<HTMLDivElement | null>(null);
 const isCompactMode = ref(false);
 
 let danmakuSettingsHideTimer: number | null = null;
@@ -431,11 +430,8 @@ const fontSizeLabel = computed(() => fontSizeOptions[localSettings.value.fontSiz
 const speedLabel = computed(() => speedOptions[localSettings.value.speed - 1]);
 const displayAreaLabel = computed(() => displayAreaOptions[localSettings.value.displayArea - 1]);
 
-const checkCompactMode = () => {
-  if (containerRef.value) {
-    const width = containerRef.value.offsetWidth;
-    isCompactMode.value = width < 210;
-  }
+const checkCompactMode = ({ width }: any) => {
+  isCompactMode.value = width < 210;
 };
 
 const handleSend = () => {
@@ -580,10 +576,6 @@ watch(
     localSettings.value.fontSize = getSliderFontSize(newSize);
   }
 );
-
-onMounted(() => {
-  checkCompactMode();
-});
 
 onBeforeUnmount(() => {
   if (danmakuSettingsHideTimer) {

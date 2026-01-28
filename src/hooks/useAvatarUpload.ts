@@ -1,38 +1,69 @@
-import { UploadSceneEnum } from "@/enums";
 import { useUpload } from "./useUpload";
+import { UploadSceneEnum } from "@/enums";
+import type { AvatarCropperInstance } from "@/components/common/AvatarCropper.vue";
 
 export interface AvatarUploadOptions {
-  // 上传成功后的回调函数，参数为下载URL
   onSuccess?: (downloadUrl: string) => void;
-  // 上传场景，默认为头像
   scene?: UploadSceneEnum;
-  // 文件大小限制（KB），默认为150KB
-  sizeLimit?: number;
+  sizeLimit?: number; // KB
+  fileInputRef?: Ref<HTMLInputElement | undefined>;
+  cropperRef?: Ref<AvatarCropperInstance | undefined>;
 }
 
-/**
- * 上传头像的hook
- * @param options 上传配置
- */
 export const useAvatarUpload = (options: AvatarUploadOptions = {}) => {
-  const { onSuccess, scene = UploadSceneEnum.AVATAR, sizeLimit = 150 } = options;
+  const {
+    onSuccess,
+    scene = UploadSceneEnum.AVATAR,
+    sizeLimit = 150,
+    fileInputRef = ref<HTMLInputElement>(),
+    cropperRef = ref<AvatarCropperInstance>()
+  } = options;
 
-  const fileInput = ref<HTMLInputElement>();
+  const { uploadFile, onComplete, onError } = useUpload();
+
   const localImageUrl = ref("");
   const showCropper = ref(false);
-  const cropperRef = ref();
 
-  // 打开文件选择器
-  const openFileSelector = () => {
-    fileInput.value?.click();
+  // 监听上传完成
+  onComplete((result) => {
+    if (result.success && result.url) {
+      window.$message.success("头像上传成功");
+      onSuccess?.(result.url);
+
+      // 关闭窗口和清理
+      showCropper.value = false;
+      cleanup();
+    }
+    cropperRef.value?.finishLoading();
+  });
+
+  // 监听错误
+  onError((error) => {
+    console.error("上传头像失败:", error);
+    window.$message.error("上传头像失败");
+    cropperRef.value?.finishLoading();
+  });
+
+  const cleanup = () => {
+    if (localImageUrl.value) {
+      URL.revokeObjectURL(localImageUrl.value);
+      localImageUrl.value = "";
+    }
+    if (fileInputRef.value) {
+      fileInputRef.value.value = "";
+    }
   };
 
-  // 处理文件选择
+  const openFileSelector = () => {
+    fileInputRef.value?.click();
+  };
+
   const handleFileChange = (e: Event) => {
     const file = (e.target as HTMLInputElement).files?.[0];
     if (file) {
-      const img = new Image();
+      // 限制原图大小或类型可以在这里做初步检查
       const url = URL.createObjectURL(file);
+      const img = new Image();
       img.onload = () => {
         localImageUrl.value = url;
         nextTick(() => {
@@ -47,75 +78,40 @@ export const useAvatarUpload = (options: AvatarUploadOptions = {}) => {
     }
   };
 
-  // 校验头像更改条件
   const openAvatarCropper = () => {
-    fileInput.value?.click();
+    fileInputRef.value?.click();
   };
 
-  // 处理裁剪
   const handleCrop = async (cropBlob: Blob) => {
     try {
       const fileName = `avatar_${Date.now()}.webp`;
+      // 注意：这里创建的是内存 File，没有 path 属性
+      // 配合 useUpload 会自动走 upload_chunk_bytes_command，符合预期
       const file = new File([cropBlob], fileName, { type: "image/webp" });
-      // 检查裁剪后的文件大小
-      if (file.size > sizeLimit * 1024) {
-        window.$message.error(`图片大小不能超过${sizeLimit}KB，当前图片裁剪后大小为${Math.round(file.size / 1024)}KB`);
-        // 结束加载状态
-        cropperRef.value?.finishLoading();
-        return;
-      }
 
-      // 先设置图片URL，等待图片加载完成后再显示裁剪窗口
-      const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
-      if (!allowedTypes.includes(file.type)) {
-        window.$message.error("只支持 JPG、PNG、WebP 格式的图片");
-        // 结束加载状态
+      if (file.size > sizeLimit * 1024) {
+        window.$message.error(`图片大小不能超过${sizeLimit}KB`);
         cropperRef.value?.finishLoading();
         return;
       }
-      // 使用useUpload中的上传功能
-      const { uploadFile, onComplete } = useUpload();
-      // 监听上传完成事件获取下载URL
-      onComplete((result) => {
-        if (result.success && result.url) {
-          // 调用成功回调
-          if (onSuccess) {
-            onSuccess(result.url);
-          }
-        }
-      });
 
       // 执行上传
+      // scene 默认为 Avatar，chunkSize 会很小 (1MB)，直接上传
       await uploadFile(file, scene);
-      // 清理资源
-      if (localImageUrl.value) {
-        URL.revokeObjectURL(localImageUrl.value);
-      }
-      localImageUrl.value = "";
-      if (fileInput.value) {
-        fileInput.value.value = "";
-      }
-      // 结束加载状态
-      cropperRef.value?.finishLoading();
-      // 关闭裁剪窗口
-      showCropper.value = false;
-    } catch (error) {
-      console.error("上传头像失败:", error);
-      window.$message.error("上传头像失败");
-      // 发生错误时也需要结束加载状态
+    } catch (e) {
+      // uploadFile 内部会处理大部分错误并触发 onError
+      // 这里只处理同步抛出的异常
+      console.error(e);
       cropperRef.value?.finishLoading();
     }
   };
 
-  // 组件卸载时清理
   onUnmounted(() => {
-    if (localImageUrl.value) {
-      URL.revokeObjectURL(localImageUrl.value);
-    }
+    cleanup();
   });
 
   return {
-    fileInput,
+    fileInputRef,
     localImageUrl,
     showCropper,
     cropperRef,

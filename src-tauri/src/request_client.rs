@@ -1,11 +1,12 @@
-use std::str::FromStr;
-
 use anyhow::Ok;
 use base64::{prelude::BASE64_STANDARD, Engine};
 use chrono::Utc;
 use reqwest::header;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
+use std::fs::File;
+use std::io::{Read, Seek, SeekFrom};
+use std::str::FromStr;
 use tauri::http;
 use tracing::{error, info};
 
@@ -138,21 +139,84 @@ impl RequestClient {
         request_builder
     }
 
-    /// 上传单个分片
-    pub async fn upload_chunk(
+    /// 直接从本地文件读取并上传，避免从 JS 传二进制数据
+    /// 适用于大文件/视频上传场景
+    pub async fn upload_chunk_from_path(
         &mut self,
         file_hash: &str,
         file_name: &str,
         chunk_index: u32,
         total_chunks: u32,
         scene: &str,
-        chunk_data: &[u8],
+        file_path: &str,
+        start: u64,
+        size: u64,
+    ) -> Result<ApiResult<serde_json::Value>, anyhow::Error> {
+        // 在 Rust 中读取文件，零拷贝（相对于 JS Bridge）
+        let mut file = File::open(file_path).map_err(|e| anyhow::anyhow!("无法打开文件: {}", e))?;
+
+        // 移动文件指针到分片起始位置
+        file.seek(SeekFrom::Start(start))
+            .map_err(|e| anyhow::anyhow!("文件Seek失败: {}", e))?;
+
+        // 读取指定大小的数据
+        let mut buffer = vec![0u8; size as usize];
+        let bytes_read = file
+            .read(&mut buffer)
+            .map_err(|e| anyhow::anyhow!("读取文件失败: {}", e))?;
+
+        // 如果实际读取字节数小于预期（通常是最后一片），截断 buffer
+        if bytes_read < size as usize {
+            buffer.truncate(bytes_read);
+        }
+
+        // 调用通用的上传逻辑
+        self.upload_chunk_internal(
+            file_hash,
+            file_name,
+            chunk_index,
+            total_chunks,
+            scene,
+            buffer,
+        )
+        .await
+    }
+
+    /// 适用于内存数据上传（如头像裁剪后的 Blob）
+    /// 接收 Vec<u8>
+    pub async fn upload_chunk_bytes(
+        &mut self,
+        file_hash: &str,
+        file_name: &str,
+        chunk_index: u32,
+        total_chunks: u32,
+        scene: &str,
+        chunk_data: Vec<u8>,
+    ) -> Result<ApiResult<serde_json::Value>, anyhow::Error> {
+        self.upload_chunk_internal(
+            file_hash,
+            file_name,
+            chunk_index,
+            total_chunks,
+            scene,
+            chunk_data,
+        )
+        .await
+    }
+
+    /// 内部私有方法：执行实际的 HTTP 请求
+    async fn upload_chunk_internal(
+        &mut self,
+        file_hash: &str,
+        file_name: &str,
+        chunk_index: u32,
+        total_chunks: u32,
+        scene: &str,
+        chunk_data: Vec<u8>,
     ) -> Result<ApiResult<serde_json::Value>, anyhow::Error> {
         let (method, path) = Url::UploadChunk.get_url();
-
         // 使用 build_request_base 处理公共请求头逻辑
         let request_builder = self.build_request_base(method, path, None);
-
         // 创建表单数据
         let mut form = reqwest::multipart::Form::new();
         form = form.text("fileHash", file_hash.to_string());
@@ -160,16 +224,15 @@ impl RequestClient {
         form = form.text("chunkIndex", chunk_index.to_string());
         form = form.text("totalChunks", total_chunks.to_string());
         form = form.text("scene", scene.to_string());
+        // chunk_data move 进 multipart，无需 clone
         form = form.part(
             "file",
-            reqwest::multipart::Part::bytes(chunk_data.to_vec())
+            reqwest::multipart::Part::bytes(chunk_data)
                 .file_name(format!("{}.chunk{}", file_name, chunk_index)),
         );
-
         // 发送请求
         let response = request_builder.multipart(form).send().await?;
         let result: ApiResult<serde_json::Value> = response.json().await?;
-
         Ok(result)
     }
 

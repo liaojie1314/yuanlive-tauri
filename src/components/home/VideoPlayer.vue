@@ -238,7 +238,7 @@
     <!-- Custom Controls -->
     <div class="custom-controls" @click.stop>
       <!-- Left Controls: Play Button and Progress -->
-      <div v-resize="checkLeftControlsWidth" class="left-controls" ref="leftControlsRef">
+      <div v-resize="checkLeftControlsWidth" class="left-controls">
         <!-- Play/Pause Button -->
         <div class="control-item" @click="togglePlay">
           <span class="control-icon play-icon">
@@ -390,11 +390,9 @@ interface Danmaku {
   horizontalOffset?: number; // 水平偏移量，用于避免同时出现的弹幕重叠
 }
 
-// Refs
 const videoContainerRef = ref<HTMLDivElement | null>(null);
 const playerRef = ref<any>(null);
 const danmakuContainerRef = ref<HTMLDivElement | null>(null);
-const leftControlsRef = ref<HTMLDivElement | null>(null);
 const hoveredDanmakuId = ref<string | null>(null);
 
 // States for custom controls
@@ -716,11 +714,8 @@ const formatTime = (seconds: number): string => {
   return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
 };
 
-const checkLeftControlsWidth = () => {
-  if (leftControlsRef.value) {
-    const width = leftControlsRef.value.offsetWidth;
-    isLeftControlsCompact.value = width < 190;
-  }
+const checkLeftControlsWidth = ({ width }: any) => {
+  isLeftControlsCompact.value = width < 190;
 };
 
 // Resolution options
@@ -1530,8 +1525,6 @@ onMounted(() => {
     console.error("Failed to initialize video player:", error);
     emit("error", error);
   }
-
-  checkLeftControlsWidth();
 });
 
 // Animation frame IDs for cleanup

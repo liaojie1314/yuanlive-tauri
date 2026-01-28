@@ -212,11 +212,13 @@ fn get_invoke_handlers() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Se
 {
     use crate::command::ai_command::{ai_message_cancel_stream, ai_message_send_stream};
     use crate::command::app_state_command::is_app_state_ready;
+    use crate::command::file_command::get_files_meta;
     use crate::command::request_command::{login_command, request_command};
     use crate::command::setting_command::{get_settings, update_settings};
     use crate::command::token_command::remove_token;
     use crate::command::upload_command::{
-        check_uploaded_chunks_command, merge_chunks_command, upload_chunk_command,
+        check_uploaded_chunks_command, merge_chunks_command, upload_chunk_by_path_command,
+        upload_chunk_bytes_command,
     };
     use crate::websocket::commands::{
         ws_disconnect, ws_force_reconnect, ws_get_state, ws_init_connection, ws_is_connected,
@@ -240,8 +242,10 @@ fn get_invoke_handlers() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Se
         ai_message_cancel_stream,
         login_command,
         request_command,
+        get_files_meta,
         // 文件上传相关
-        upload_chunk_command,
+        upload_chunk_bytes_command,
+        upload_chunk_by_path_command,
         check_uploaded_chunks_command,
         merge_chunks_command,
         // websocket

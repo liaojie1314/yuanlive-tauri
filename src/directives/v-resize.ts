@@ -1,33 +1,39 @@
-const map = new WeakMap();
+import type { Directive, DirectiveBinding } from "vue";
 
-// 创建一个ResizeObserver实例
-const ob = new ResizeObserver((entries: any[]) => {
-  // 遍历所有监测到的元素
+const map = new WeakMap<Element, (size: { width: number; height: number }) => void>();
+
+const ob = new ResizeObserver((entries) => {
   for (const entry of entries) {
-    // 获取该元素的处理器
     const handler = map.get(entry.target);
-    // 如果存在处理器
     if (handler) {
-      // 调用处理器函数并传入元素的宽度和高度
-      handler({
-        width: entry.borderBoxSize[0].inlineSize,
-        height: entry.borderBoxSize[0].blockSize
-      });
+      // 更加安全的获取尺寸方式
+      const box = entry.borderBoxSize?.[0];
+      if (box) {
+        handler({
+          width: box.inlineSize,
+          height: box.blockSize
+        });
+      } else {
+        // 降级处理：某些旧浏览器可能只支持 contentRect
+        handler({
+          width: entry.contentRect.width,
+          height: entry.contentRect.height
+        });
+      }
     }
   }
 });
 
-/**
- * 调整元素尺寸指令
- */
-export default {
-  mounted(el: any, binding: any) {
-    //监听el元素尺寸的变化
+export const vResize: Directive = {
+  mounted(el: HTMLElement, binding: DirectiveBinding) {
+    // 将回调函数存入 map
     map.set(el, binding.value);
+    // 开始监听
     ob.observe(el);
   },
-  unmounted(el: any) {
-    //取消监听
+  unmounted(el: HTMLElement) {
+    // 取消监听并清理 map
     ob.unobserve(el);
+    map.delete(el);
   }
 };

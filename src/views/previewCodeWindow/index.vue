@@ -1,77 +1,113 @@
 <template>
-  <div class="h-full flex flex-col bg-[#1e1e1e] overflow-hidden text-white">
-    <action-bar />
-
+  <n-config-provider :theme="naiveTheme" abstract>
     <div
-      data-tauri-drag-region
-      class="h-10 flex shrink-0 items-center justify-between px-4 bg-[#252526] border-b border-[#111]">
-      <div class="flex items-center gap-3">
-        <span class="font-bold text-sm text-gray-300">Code Preview</span>
+      class="h-full flex flex-col bg-[var(--tray-bg-color)] dark:bg-[var(--right-bg-color)] overflow-hidden text-[var(--text-color)]">
+      <action-bar />
+      <div
+        data-tauri-drag-region
+        class="h-10 flex shrink-0 items-center justify-between px-4 bg-[var(--home-bg-color)] dark:bg-[var(--bg-setting-item)] border-b border-[var(--line-color)]">
+        <div class="flex items-center gap-3">
+          <span class="font-bold text-sm text-[var(--text-color)] dark:text-[var(--left-text-color)]">
+            {{ t("preview.code.title") }}
+          </span>
 
-        <select
-          v-model="language"
-          @change="runPreview"
-          class="bg-[#333] text-xs text-white border border-[#444] rounded px-2 py-1 outline-none focus:border-blue-500 cursor-pointer">
-          <option value="html">HTML</option>
-          <option value="vue">Vue 3</option>
-          <option value="react">React</option>
-        </select>
+          <n-select
+            v-model:value="language"
+            :options="languageOptions"
+            @update:value="runPreview"
+            size="small"
+            :consistent-menu-width="false"
+            class="w-24" />
 
-        <span class="text-xs text-gray-500">(Ctrl + S 保存)</span>
+          <span class="text-xs text-[var(--left-text-color)]">{{ t("preview.code.save") }}</span>
+        </div>
+
+        <div class="flex gap-2">
+          <div
+            class="cursor-pointer text-xs bg-[#13987f] hover:bg-[#52aea3] text-white px-3 py-1 rounded transition flex items-center gap-1"
+            @click="runPreview">
+            <span class="text-white flex-center">
+              <i-material-symbols-play-arrow-rounded class="w-5 h-5" />
+            </span>
+            {{ t("preview.code.run") }}
+          </div>
+        </div>
       </div>
 
-      <div class="flex gap-2">
-        <button
-          class="text-xs bg-[#0e639c] hover:bg-[#1177bb] text-white px-3 py-1 rounded transition flex items-center gap-1"
-          @click="runPreview">
-          <span class="text-white">▶</span>
-          运行
-        </button>
-      </div>
-    </div>
-
-    <div class="flex-1 flex w-full h-full overflow-hidden">
-      <div class="w-1/2 h-full border-r border-[#333] flex flex-col">
-        <VueMonacoEditor
-          v-model:value="code"
-          theme="vs-dark"
-          :language="monacoLang"
-          :options="editorOptions"
-          class="h-full w-full"
-          @mount="handleEditorMount" />
-      </div>
-
-      <div class="w-1/2 h-full bg-white relative">
-        <iframe
-          v-if="previewUrl"
-          :src="previewUrl"
-          class="w-full h-full border-none block bg-white"
-          sandbox="allow-scripts allow-forms allow-modals"
-          referrerpolicy="no-referrer"></iframe>
+      <div v-resize="onContainerResize" ref="containerRef" class="flex-1 flex w-full h-full overflow-hidden relative">
+        <div
+          class="h-full flex flex-col border-r border-[var(--line-color)]"
+          :style="{ width: leftWidth + 'px', maxWidth: 'calc(100% - 200px)' }">
+          <VueMonacoEditor
+            v-model:value="code"
+            :theme="monacoTheme"
+            :language="monacoLang"
+            :options="editorOptions"
+            class="h-full w-full"
+            @mount="handleEditorMount" />
+        </div>
 
         <div
-          v-if="!previewUrl"
-          class="absolute inset-0 flex items-center justify-center bg-gray-100 text-gray-500 text-sm">
-          点击运行查看效果
+          class="w-[4px] h-full cursor-col-resize bg-[var(--home-bg-color)] dark:bg-[var(--bg-setting-item)] hover:bg-blue-600 active:bg-blue-600 transition-colors z-20 flex-shrink-0"
+          @mousedown.prevent="startDrag"></div>
+
+        <div class="flex-1 h-full bg-[var(--right-bg-color)] relative min-w-0">
+          <div v-if="isDragging" class="absolute inset-0 z-50 bg-transparent"></div>
+
+          <iframe
+            v-if="previewUrl"
+            :src="previewUrl"
+            class="w-full h-full border-none block bg-white"
+            sandbox="allow-scripts allow-forms allow-modals allow-downloads"
+            referrerpolicy="no-referrer"></iframe>
+
+          <div
+            v-if="!previewUrl"
+            class="absolute inset-0 flex items-center justify-center bg-[var(--right-bg-color)] text-[var(--left-text-color)] text-sm">
+            {{ t("preview.code.hint") }}
+          </div>
         </div>
       </div>
     </div>
-  </div>
+  </n-config-provider>
 </template>
 
 <script setup lang="ts">
+import { useI18n } from "vue-i18n";
+import { darkTheme, lightTheme } from "naive-ui";
 import { VueMonacoEditor } from "@guolao/vue-monaco-editor";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
+
+import { ThemeEnum } from "@/enums";
+import { useSettingStore } from "@/stores/setting";
+import { useWindow } from "@/hooks/useWindow";
 import { generatePreviewHtml } from "@/utils/PreviewFactory";
 
 type LangType = "html" | "vue" | "react";
+
+const { t } = useI18n();
+const settingStore = useSettingStore();
+const { themes } = storeToRefs(settingStore);
+const { getWindowPayload } = useWindow();
 
 const code = ref("");
 const previewUrl = ref("");
 const language = ref<LangType>("html"); // 当前选中的语言
 const editorRef = shallowRef();
+const containerRef = ref<HTMLElement | null>(null);
+const leftWidth = ref(500); // 默认宽度
+const isDragging = ref(false);
+const MIN_WIDTH = 350; // 最小宽度限制
+const languageOptions = [
+  { label: "HTML", value: "html" },
+  { label: "Vue 3", value: "vue" },
+  { label: "React", value: "react" }
+];
 
-// --- 计算属性：根据选中的语言，决定 Monaco 编辑器的高亮模式 ---
+const monacoTheme = computed(() => (themes.value.content === ThemeEnum.DARK ? "vs-dark" : "vs"));
+const naiveTheme = computed(() => (themes.value.content === ThemeEnum.DARK ? darkTheme : lightTheme));
+
+// 根据选中的语言，决定 Monaco 编辑器的高亮模式
 const monacoLang = computed(() => {
   if (language.value === "react") return "javascript";
   return "html"; // Vue 和 HTML 都使用 HTML 模式高亮即可
@@ -84,8 +120,7 @@ const editorOptions = {
   minimap: { enabled: false },
   scrollBeyondLastLine: false,
   wordWrap: "on",
-  tabSize: 2,
-  theme: "vs-dark"
+  tabSize: 2
 };
 
 // 2. 运行预览：将编辑器代码生成 HTML Blob
@@ -118,39 +153,74 @@ const detectLanguage = (content: string) => {
   }
 };
 
-// 4. 监听外部变化
-const handleStorageChange = (e: StorageEvent) => {
-  if (e.key === "preview_code_storage" && e.newValue) {
-    const newCode = e.newValue.replace(/^```[a-z]*\n?/i, "").replace(/\n?```$/, "");
+const startDrag = () => {
+  isDragging.value = true;
+  window.addEventListener("mousemove", onDrag);
+  window.addEventListener("mouseup", stopDrag);
+  document.body.style.cursor = "col-resize"; // 强制光标样式
+};
 
-    if (newCode !== code.value) {
-      code.value = newCode;
-      // 自动检测并切换语言
-      detectLanguage(newCode);
-      runPreview();
-    }
+const onDrag = (e: MouseEvent) => {
+  if (!containerRef.value) return;
+  const containerRect = containerRef.value.getBoundingClientRect();
+  // 计算新宽度：鼠标位置 - 容器左边缘
+  let newWidth = e.clientX - containerRect.left;
+  // 限制左侧最小宽度
+  if (newWidth < MIN_WIDTH) newWidth = MIN_WIDTH;
+  // 限制右侧最小宽度 (总宽 - 新宽 < 最小宽)
+  if (containerRect.width - newWidth < MIN_WIDTH) {
+    newWidth = containerRect.width - MIN_WIDTH;
+  }
+  leftWidth.value = newWidth;
+};
+
+const stopDrag = () => {
+  isDragging.value = false;
+  window.removeEventListener("mousemove", onDrag);
+  window.removeEventListener("mouseup", stopDrag);
+  document.body.style.cursor = "";
+
+  // 拖拽结束强制刷新编辑器布局，防止文字模糊
+  if (editorRef.value) editorRef.value.layout();
+};
+
+const onContainerResize = ({ width }: { width: number }) => {
+  // 如果正在拖拽中，暂时不自动调整，避免冲突
+  if (isDragging.value) return;
+  const containerWidth = width;
+  // 计算右侧剩余空间
+  const remainingForRight = containerWidth - leftWidth.value;
+  // 如果右侧空间不足 MIN_WIDTH (说明窗口变窄了)
+  if (remainingForRight < MIN_WIDTH) {
+    // 强制把左侧变小，给右侧留出 200px
+    const newLeftWidth = containerWidth - MIN_WIDTH;
+    // 同时保证左侧也不小于 MIN_WIDTH (避免左侧完全消失)
+    leftWidth.value = Math.max(MIN_WIDTH, newLeftWidth);
   }
 };
 
 // 1. 初始化
 onMounted(async () => {
   await getCurrentWebviewWindow().show();
-  // TODO: 从窗口payload中获取初始代码
-  const storedCode = localStorage.getItem("preview_code_storage") || "";
-  code.value = storedCode.replace(/^```[a-z]*\n?/i, "").replace(/\n?```$/, "");
+  // 从窗口payload中获取初始代码
+  const payloadContent = (await getWindowPayload<{ content?: string }>("previewCode"))?.content || "";
+  console.log("payloadContent", payloadContent);
+  code.value = payloadContent.replace(/^```[a-z]*\n?/i, "").replace(/\n?```$/, "");
 
   // 初始自动检测语言
   if (code.value) {
     detectLanguage(code.value);
   }
-
   runPreview();
-
-  window.addEventListener("storage", handleStorageChange);
+  // 初始化宽度为容器的一半
+  if (containerRef.value) {
+    leftWidth.value = containerRef.value.clientWidth / 2;
+  }
 });
 
 onUnmounted(() => {
   if (previewUrl.value) URL.revokeObjectURL(previewUrl.value);
-  window.removeEventListener("storage", handleStorageChange);
+  window.removeEventListener("mousemove", onDrag);
+  window.removeEventListener("mouseup", stopDrag);
 });
 </script>

@@ -5,7 +5,7 @@ import App from "@/App.vue";
 import router from "@/router";
 import { createApp } from "vue";
 import { pinia } from "@/stores";
-import vResize from "@/directives/v-resize";
+import { vResize } from "@/directives/v-resize";
 import { initializePlatform } from "@/utils/PlatformUtils.ts";
 import { startWebVitalObserver } from "@/utils/WebVitalsObserver.ts";
 import { setupI18n } from "@/services/i18n.ts";

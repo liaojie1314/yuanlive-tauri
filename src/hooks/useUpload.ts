@@ -2,14 +2,20 @@ import { createEventHook } from "@vueuse/core";
 import { invoke } from "@tauri-apps/api/core";
 
 import type { UploadProgress, UploadResult, UploadStatus, UploadTask, ChunkInfo } from "@/types/upload";
-import { TauriCommandEnum, type UploadSceneEnum } from "@/enums";
+import { TauriCommandEnum, UploadSceneEnum } from "@/enums";
 
-// 生成唯一任务ID
+// 定义扩展的 File 接口，Tauri 环境下 File 对象可能包含 path
+interface ExtendedFile extends File {
+  path?: string;
+}
+
 const generateTaskId = (file: File): string => {
-  return `${file.name}-${file.size}-${file.lastModified}-${Date.now()}`;
+  return `${file.name}-${file.size}-${file.lastModified}`;
 };
 
-// 计算文件分片
+/**
+ * 优化：仅计算分片信息，不再预先计算 Hash，避免界面卡顿
+ */
 export const calculateChunks = (
   file: File,
   chunkSize: number = 5 * 1024 * 1024
@@ -22,9 +28,8 @@ export const calculateChunks = (
   while (start < totalSize) {
     const end = Math.min(start + chunkSize, totalSize);
     const size = end - start;
-    // 简化的哈希生成，实际项目中可能需要更复杂的哈希算法
-    const hash = `${index}-${start}-${end}-${size}`;
-    chunks.push({ index, size, start, end, hash });
+    // hash 暂时留空，如果后端必须校验每个分片的 MD5，则需在上传前异步计算
+    chunks.push({ index, size, start, end, hash: "" });
     start = end;
     index++;
   }
@@ -32,35 +37,19 @@ export const calculateChunks = (
   return { chunks, totalChunks: chunks.length };
 };
 
-// 计算单个分片的哈希值（简化版，实际项目中可能需要更复杂的哈希算法）
-export const calculateChunkHash = async (file: File, start: number, end: number): Promise<string> => {
-  return new Promise((resolve) => {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const arrayBuffer = e.target?.result as ArrayBuffer;
-      const hash = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer))).substring(0, 16);
-      resolve(hash);
-    };
-    reader.readAsArrayBuffer(file.slice(start, end));
-  });
-};
-
-// 读取文件分片数据
+/**
+ * 读取文件分片数据（仅作为 Fallback 或 内存文件使用）
+ */
 export const readChunkData = async (file: File, start: number, end: number): Promise<ArrayBuffer> => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
-    reader.onload = (e) => {
-      resolve(e.target?.result as ArrayBuffer);
-    };
-    reader.onerror = (e) => {
-      reject(new Error(`读取文件分片失败: ${e}`));
-    };
+    reader.onload = (e) => resolve(e.target?.result as ArrayBuffer);
+    reader.onerror = (e) => reject(new Error(`读取文件分片失败: ${e}`));
     reader.readAsArrayBuffer(file.slice(start, end));
   });
 };
 
 export const useUpload = () => {
-  // 状态管理
   const isUploading = ref(false);
   const currentTaskId = ref<string | null>(null);
   const uploadProgress = ref<UploadProgress>({
@@ -75,45 +64,31 @@ export const useUpload = () => {
     lastUploadedSize: 0
   });
   const uploadStatus = ref<UploadStatus>("idle");
-
-  // 任务列表，用于断点续传
   const tasks = ref<Map<string, UploadTask>>(new Map());
-  // 用于控制上传暂停
   const isPaused = ref(false);
+
+  // 并发限制
+  const CONCURRENCY_LIMIT = 3;
 
   // 事件钩子
   const { on: onProgress, trigger: triggerProgress } = createEventHook<UploadProgress>();
   const { on: onComplete, trigger: triggerComplete } = createEventHook<UploadResult>();
   const { on: onError, trigger: triggerError } = createEventHook<Error>();
 
-  // 根据上传场景获取默认配置
   const getDefaultConfigByScene = (scene: UploadSceneEnum) => {
     switch (scene) {
       case "avatar":
-        // 头像上传：较小的分片，较少的重试次数
-        return {
-          chunkSize: 1 * 1024 * 1024, // 1MB
-          retryCount: 3,
-          directUploadThreshold: 1 * 1024 * 1024 // 1MB 以下直接上传
-        };
+        return { chunkSize: 1 * 1024 * 1024, retryCount: 3, directUploadThreshold: 1 * 1024 * 1024 };
       case "video":
-        // 视频上传：较大的分片，较多的重试次数
-        return {
-          chunkSize: 10 * 1024 * 1024, // 10MB
-          retryCount: 5,
-          directUploadThreshold: 10 * 1024 * 1024 // 10MB 以下直接上传
-        };
+        return { chunkSize: 10 * 1024 * 1024, retryCount: 5, directUploadThreshold: 10 * 1024 * 1024 };
       default:
-        // 聊天文件上传：中等分片大小，中等重试次数
-        return {
-          chunkSize: 5 * 1024 * 1024, // 5MB
-          retryCount: 3,
-          directUploadThreshold: 5 * 1024 * 1024 // 5MB 以下直接上传
-        };
+        return { chunkSize: 5 * 1024 * 1024, retryCount: 3, directUploadThreshold: 5 * 1024 * 1024 };
     }
   };
 
-  // 检查已上传的分片
+  /**
+   * 检查已上传分片
+   */
   const checkUploadedChunks = async (task: UploadTask): Promise<Set<number>> => {
     try {
       const result = await invoke<{ uploadedChunks: number[] }>(TauriCommandEnum.CHECK_UPLOADED_CHUNKS_COMMAND, {
@@ -121,173 +96,170 @@ export const useUpload = () => {
         fileName: task.file.name,
         scene: task.scene
       });
-
-      // 解析已上传的分片索引
       const uploadedChunks = new Set<number>(result.uploadedChunks || []);
 
-      // 计算已上传的大小
+      // 更新任务状态中的已上传大小
       let uploadedSize = 0;
-      uploadedChunks.forEach((index) => {
-        const chunk = task.chunks[index];
-        if (chunk) {
+      task.chunks.forEach((chunk) => {
+        if (uploadedChunks.has(chunk.index)) {
           uploadedSize += chunk.size;
         }
       });
-
-      // 更新任务状态
       task.uploadedSize = uploadedSize;
       task.uploadedChunks = uploadedChunks;
-
       return uploadedChunks;
     } catch (error) {
-      console.error("检查已上传分片失败:", error);
-      // 如果检查失败，可能是文件不存在，返回空集合
+      console.warn("检查已上传分片失败 (可能是新文件):", error);
       return new Set();
     }
   };
 
-  // 上传单个分片
-  const uploadChunk = async (
+  /**
+   * 处理单个分片上传
+   * 自动判断使用 路径上传(Rust读盘) 还是 内存上传(JS读Blob)
+   */
+  const processChunkUpload = async (
     task: UploadTask,
     chunkIndex: number,
-    chunk: { start: number; end: number },
+    chunk: ChunkInfo,
     retryCount: number
-  ): Promise<boolean> => {
+  ): Promise<void> => {
     let success = false;
     let retry = 0;
+    const file = task.file as ExtendedFile;
 
     while (!success && retry < retryCount) {
+      // 检查暂停状态
+      if (isPaused.value || task.status === "paused") {
+        throw new Error("Upload Paused");
+      }
+
       try {
-        // 读取分片数据
-        const chunkData = await readChunkData(task.file, chunk.start, chunk.end);
-
-        // 调用后端命令上传分片
-        await invoke(TauriCommandEnum.UPLOAD_CHUNK_COMMAND, {
-          fileHash: task.taskId,
-          fileName: task.file.name,
-          chunkIndex: chunkIndex,
-          totalChunks: task.chunks.length,
-          scene: task.scene,
-          chunkData: new Uint8Array(chunkData)
-        });
-
+        if (file.path) {
+          // 🚀 路径存在，调用 Rust 直接读取文件上传 (性能最佳)
+          await invoke(TauriCommandEnum.UPLOAD_CHUNK_BY_PATH_COMMAND, {
+            fileHash: task.taskId,
+            fileName: task.file.name,
+            chunkIndex: chunkIndex,
+            totalChunks: task.chunks.length,
+            scene: task.scene,
+            filePath: file.path,
+            start: chunk.start,
+            size: chunk.size
+          });
+        } else {
+          // 🐢 路径不存在 (Blob/内存文件)，使用 FileReader
+          const chunkData = await readChunkData(task.file, chunk.start, chunk.end);
+          await invoke(TauriCommandEnum.UPLOAD_CHUNK_BYTES_COMMAND, {
+            fileHash: task.taskId,
+            fileName: task.file.name,
+            chunkIndex: chunkIndex,
+            totalChunks: task.chunks.length,
+            scene: task.scene,
+            chunkData: new Uint8Array(chunkData)
+          });
+        }
         success = true;
       } catch (error) {
+        console.warn(`Chunk ${chunkIndex} failed, retry ${retry + 1}/${retryCount}`, error);
         retry++;
-        if (retry >= retryCount) {
-          throw error;
-        }
-        // 重试间隔
+        if (retry >= retryCount) throw error;
+        // 指数退避重试
         await new Promise((resolve) => setTimeout(resolve, 1000 * retry));
       }
     }
-
-    return success;
   };
 
-  // 合并分片
+  /**
+   * 合并已上传分片
+   * @param task 上传任务
+   * @returns 合并后的文件 URL
+   */
   const mergeChunks = async (task: UploadTask): Promise<{ url: string }> => {
-    const result = await invoke<{ url: string }>(TauriCommandEnum.MERGE_CHUNKS_COMMAND, {
+    return await invoke<{ url: string }>(TauriCommandEnum.MERGE_CHUNKS_COMMAND, {
       fileHash: task.taskId,
       fileName: task.file.name,
       totalChunks: task.chunks.length,
       scene: task.scene
     });
-
-    return result;
   };
 
-  // 通知进度
-  const notifyProgress = (task: UploadTask, currentChunk: number) => {
+  /**
+   * 通知上传进度
+   * @param task 上传任务
+   * @param completedChunksCount 已完成分片数
+   * @returns 上传进度数据
+   */
+  const notifyProgress = (task: UploadTask, completedChunksCount: number) => {
     const now = Date.now();
     const timeDiff = now - task.progress.lastProgressTime;
 
-    if (timeDiff < 100) {
-      // 限制进度通知频率
-      return;
-    }
+    // 限制 UI 刷新频率 (100ms)
+    if (timeDiff < 100 && completedChunksCount < task.chunks.length) return;
 
     const uploadedDiff = task.progress.uploaded - task.progress.lastUploadedSize;
     const speed = timeDiff > 0 ? (uploadedDiff / timeDiff) * 1000 : 0;
-    const progress = task.progress.total > 0 ? task.progress.uploaded / task.progress.total : 0;
+
+    // 防止除以0
+    const progress = task.progress.total > 0 ? Math.min(task.progress.uploaded / task.progress.total, 0.99) : 0;
 
     const progressData: UploadProgress = {
       progress,
       speed,
       uploaded: task.progress.uploaded,
       total: task.progress.total,
-      currentChunk,
+      currentChunk: completedChunksCount,
       totalChunks: task.chunks.length,
       taskId: task.taskId,
       lastProgressTime: now,
       lastUploadedSize: task.progress.uploaded
     };
 
-    // 更新任务进度
     task.progress = progressData;
-    // 更新全局进度
     uploadProgress.value = progressData;
-    // 触发进度事件
     triggerProgress(progressData);
   };
 
-  // 执行直接上传
+  /**
+   * 执行直接上传 (小文件)
+   * @param task 上传任务
+   */
   const executeDirectUpload = async (task: UploadTask) => {
+    // 代码与原版类似，但需适配 processChunkUpload
     try {
-      // 通知初始进度
       notifyProgress(task, 0);
+      // 构造一个伪 Chunk
+      const chunk = { index: 0, start: 0, end: task.file.size, size: task.file.size, hash: "" };
+      await processChunkUpload(task, 0, chunk, 3);
 
-      // 上传整个文件作为单个分片
-      await uploadChunk(task, 0, { start: 0, end: task.file.size }, 3);
-
-      // 标记分片已上传
-      const uploadedChunks = new Set<number>([0]);
-      task.uploadedChunks = uploadedChunks;
+      task.uploadedChunks.add(0);
       task.progress.uploaded = task.file.size;
-
-      // 通知进度（100%）
       notifyProgress(task, 1);
 
-      // 立即合并分片
       const mergeResult = await mergeChunks(task);
 
-      // 上传完成
-      const result: UploadResult = {
-        success: true,
-        taskId: task.taskId,
-        url: mergeResult.url
-      };
-
-      // 触发完成事件
+      const result = { success: true, taskId: task.taskId, url: mergeResult.url };
       triggerComplete(result);
 
-      // 更新任务状态
       task.status = "completed";
-
-      // 重置全局状态
       isUploading.value = false;
       uploadStatus.value = "completed";
-    } catch (error) {
-      console.error("直接上传失败:", error);
-
-      // 触发错误事件
-      triggerError(error as Error);
-
-      // 更新任务状态
+    } catch (e) {
+      console.error("直接上传失败", e);
+      triggerError(e as Error);
       task.status = "failed";
-
-      // 重置全局状态
       isUploading.value = false;
       uploadStatus.value = "failed";
     }
   };
 
-  // 执行上传任务
+  /**
+   * 执行并发分片上传
+   * @param taskId 上传任务 ID
+   */
   const executeUpload = async (taskId: string) => {
     const task = tasks.value.get(taskId);
-    if (!task) {
-      return;
-    }
+    if (!task) return;
 
     isPaused.value = false;
     task.status = "uploading";
@@ -295,118 +267,110 @@ export const useUpload = () => {
     isUploading.value = true;
 
     try {
-      // 如果是小文件，直接上传
       if (task.isDirectUpload) {
         await executeDirectUpload(task);
         return;
       }
 
-      // 大文件分片上传逻辑
-      // 检查已上传的分片（断点续传）
+      // 断点续传检查
       const uploadedChunks = await checkUploadedChunks(task);
 
-      // 找到第一个未上传的分片索引
-      let startIndex = 0;
-      for (let i = 0; i < task.chunks.length; i++) {
-        if (!uploadedChunks.has(i)) {
-          startIndex = i;
-          break;
+      // 筛选未上传分片
+      const pendingChunks = task.chunks.filter((c) => !uploadedChunks.has(c.index));
+      let completedCount = task.chunks.length - pendingChunks.length;
+
+      if (pendingChunks.length === 0) {
+        // 秒传
+        task.progress.uploaded = task.file.size;
+        notifyProgress(task, task.chunks.length);
+      } else {
+        // --- 并发控制逻辑 Start ---
+        const executing = new Set<Promise<void>>();
+
+        for (const chunk of pendingChunks) {
+          // 检查暂停
+          if (isPaused.value) {
+            task.status = "paused";
+            uploadStatus.value = "paused";
+            isUploading.value = false;
+            return;
+          }
+
+          // 创建上传任务 Promise
+          const p = processChunkUpload(task, chunk.index, chunk, 3).then(() => {
+            // 任务完成
+            executing.delete(p);
+            task.uploadedChunks.add(chunk.index);
+            task.progress.uploaded += chunk.size; // 累加进度
+            completedCount++;
+            notifyProgress(task, completedCount);
+          });
+
+          executing.add(p);
+
+          // 如果达到并发限制，等待最快的一个完成
+          if (executing.size >= CONCURRENCY_LIMIT) {
+            await Promise.race(executing);
+          }
         }
+
+        // 等待剩余所有任务完成
+        await Promise.all(executing);
+        // --- 并发控制逻辑 End ---
       }
 
-      // 通知初始进度
-      notifyProgress(task, startIndex);
-
-      // 遍历所有分片
-      for (let i = startIndex; i < task.chunks.length; i++) {
-        if (isPaused.value) {
-          task.status = "paused";
-          uploadStatus.value = "paused";
-          isUploading.value = false;
-          return;
-        }
-
-        const chunk = task.chunks[i];
-
-        // 如果分片已上传，跳过
-        if (uploadedChunks.has(i)) {
-          continue;
-        }
-
-        // 上传分片（带重试机制）
-        await uploadChunk(task, i, chunk, 3);
-
-        // 标记分片已上传
-        uploadedChunks.add(i);
-        task.uploadedChunks = uploadedChunks;
-        task.progress.uploaded += chunk.end - chunk.start;
-
-        // 通知进度
-        notifyProgress(task, i + 1);
-      }
-
-      // 所有分片上传完成，通知合并
+      // 全部上传完成，合并
       const mergeResult = await mergeChunks(task);
 
-      // 上传完成
-      const result: UploadResult = {
-        success: true,
-        taskId,
-        url: mergeResult.url
-      };
+      // 确保进度条 100%
+      task.progress.progress = 1;
+      task.progress.uploaded = task.progress.total;
+      triggerProgress(task.progress);
 
-      // 触发完成事件
-      triggerComplete(result);
+      triggerComplete({ success: true, taskId, url: mergeResult.url });
 
-      // 更新任务状态
       task.status = "completed";
-
-      // 重置全局状态
-      isUploading.value = false;
       uploadStatus.value = "completed";
-    } catch (error) {
-      console.error("上传失败:", error);
-
-      // 触发错误事件
+      isUploading.value = false;
+    } catch (error: any) {
+      if (error.message === "Upload Paused") {
+        // 暂停逻辑已在 processChunkUpload 处理，这里主要是兜底
+        return;
+      }
+      console.error("上传流程失败:", error);
       triggerError(error as Error);
-
-      // 更新任务状态
       task.status = "failed";
-
-      // 重置全局状态
       isUploading.value = false;
       uploadStatus.value = "failed";
     }
   };
 
-  // 上传文件
+  /**
+   * 上传文件
+   * @param file 要上传的文件
+   * @param scene 上传场景
+   * @param options 上传选项
+   * @returns 上传任务 ID
+   */
   const uploadFile = async (
     file: File,
     scene: UploadSceneEnum,
-    options?: {
-      chunkSize?: number;
-      headers?: Record<string, string>;
-      retryCount?: number;
-    }
+    options?: { chunkSize?: number; retryCount?: number }
   ): Promise<string> => {
     try {
-      // 生成任务ID
       const taskId = generateTaskId(file);
       currentTaskId.value = taskId;
 
-      // 根据场景获取默认配置
       const defaultConfig = getDefaultConfigByScene(scene);
-      // 合并配置
       const chunkSize = options?.chunkSize || defaultConfig.chunkSize;
       const directUploadThreshold = defaultConfig.directUploadThreshold;
 
-      // 判断是否需要直接上传
+      // 注意：Tauri 2.0+ 或部分环境 file.size 可能需要异步获取，但通常 File 对象已有
       const isDirectUpload = file.size <= directUploadThreshold;
 
-      // 计算分片
+      // 计算分片 (现在是同步且快速的)
       const { chunks, totalChunks } = calculateChunks(file, chunkSize);
 
-      // 创建任务
       const task: UploadTask = {
         taskId,
         file,
@@ -430,14 +394,11 @@ export const useUpload = () => {
         isDirectUpload
       };
 
-      // 添加到任务列表
       tasks.value.set(taskId, task);
-
-      // 更新状态
       isUploading.value = true;
       uploadStatus.value = "uploading";
 
-      // 开始上传
+      // 异步执行，不阻塞 UI 响应
       executeUpload(taskId);
 
       return taskId;
@@ -447,42 +408,45 @@ export const useUpload = () => {
     }
   };
 
-  // 暂停上传
+  /**
+   * 暂停上传
+   * @param taskId 要暂停的上传任务 ID
+   */
   const pauseUpload = (taskId?: string) => {
     const targetTaskId = taskId || currentTaskId.value;
-    if (!targetTaskId) {
-      return;
+    if (targetTaskId) {
+      isPaused.value = true;
+      // 如果想更即时反馈，可以手动设置状态
+      const task = tasks.value.get(targetTaskId);
+      if (task) task.status = "paused";
     }
-
-    // 设置暂停标志
-    isPaused.value = true;
   };
 
-  // 恢复上传
+  /**
+   * 恢复上传
+   * @param taskId 要恢复的上传任务 ID
+   */
   const resumeUpload = (taskId?: string) => {
     const targetTaskId = taskId || currentTaskId.value;
-    if (!targetTaskId) {
-      return;
+    if (targetTaskId) {
+      // 防止重复调用
+      const task = tasks.value.get(targetTaskId);
+      if (task && task.status === "uploading") return;
+      executeUpload(targetTaskId);
     }
-
-    // 继续执行上传
-    executeUpload(targetTaskId);
   };
 
-  // 取消上传
+  /**
+   * 取消上传
+   * @param taskId 要取消的上传任务 ID
+   */
   const cancelUpload = (taskId?: string) => {
     const targetTaskId = taskId || currentTaskId.value;
-    if (!targetTaskId) {
-      return;
-    }
+    if (!targetTaskId) return;
 
-    // 设置暂停标志
     isPaused.value = true;
-
-    // 从任务列表中移除
     tasks.value.delete(targetTaskId);
 
-    // 重置状态
     if (currentTaskId.value === targetTaskId) {
       currentTaskId.value = null;
       isUploading.value = false;
@@ -490,40 +454,24 @@ export const useUpload = () => {
     }
   };
 
-  // 获取任务状态
-  const getTaskStatus = (taskId: string): UploadStatus => {
-    const task = tasks.value.get(taskId);
-    return task?.status || "idle";
-  };
+  const getTaskStatus = (taskId: string) => tasks.value.get(taskId)?.status || "idle";
+  const getTaskProgress = (taskId: string) => tasks.value.get(taskId)?.progress || null;
 
-  // 获取任务进度
-  const getTaskProgress = (taskId: string): UploadProgress | null => {
-    const task = tasks.value.get(taskId);
-    return task?.progress || null;
-  };
-
-  // 组件卸载时清理
   onUnmounted(() => {
-    // 设置暂停标志，停止所有上传任务
     isPaused.value = true;
   });
 
   return {
-    // 状态
     isUploading,
     uploadProgress,
     uploadStatus,
     currentTaskId,
-
-    // 方法
     uploadFile,
     pauseUpload,
     resumeUpload,
     cancelUpload,
     getTaskStatus,
     getTaskProgress,
-
-    // 事件钩子
     onProgress,
     onComplete,
     onError

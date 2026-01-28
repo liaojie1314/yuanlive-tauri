@@ -206,6 +206,10 @@ import hljs from "highlight.js";
 import "highlight.js/styles/github.css";
 import { writeText } from "@tauri-apps/plugin-clipboard-manager";
 
+import { useWindow } from "@/hooks/useWindow";
+
+const { createWebviewWindow, sendWindowPayload } = useWindow();
+
 // 语言映射表，用于将常见的语言别名映射到正确的语言
 const languageMap: Record<string, string> = {
   // JavaScript相关别名
@@ -533,6 +537,9 @@ const handleGlobalClick = async (event: MouseEvent) => {
   }
   // TODO: 运行逻辑
   else if (action === "run") {
+    const label = "previewCode";
+    await createWebviewWindow("预览代码", label, 1200, 720, "", true, 800, 500);
+    await sendWindowPayload(label, { content });
   }
 };
 

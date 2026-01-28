@@ -15,10 +15,7 @@
     </div>
 
     <!-- 整体包裹容器 -->
-    <div
-      v-resize="handleResize"
-      ref="inputContainerRef"
-      class="input-container flex flex-col bg-white rounded-lg p-2 m-1">
+    <div v-resize="handleResize" class="input-container flex flex-col bg-white rounded-lg p-2 m-1">
       <!-- 输入框 -->
       <n-input
         v-model:value="messageText"
@@ -172,8 +169,6 @@ const uploadedImages = ref<string[]>([]);
 const fileInput = ref<HTMLInputElement | null>(null);
 // 图片输入框引用
 const photoInput = ref<HTMLInputElement | null>(null);
-// 输入框容器ref
-const inputContainerRef = ref<HTMLElement | null>(null);
 // 按钮激活状态管理
 const isThinkActive = ref(false);
 const isSearchActive = ref(false);
@@ -386,11 +381,8 @@ const handleVoiceClick = () => {
 };
 
 // 监听容器宽度变化的回调函数
-const handleResize = () => {
-  if (inputContainerRef.value) {
-    const width = inputContainerRef.value.offsetWidth;
-    showButtonText.value = width >= 588;
-  }
+const handleResize = ({ width }: any) => {
+  showButtonText.value = width >= 588;
 };
 </script>
 

@@ -1,65 +1,66 @@
 <template>
   <base-dialog v-model:show="dialogVisible" title="编辑资料">
-    <div class="space-y-6">
-      <!-- 头像上传区域 -->
-      <div class="flex flex-col items-center gap-2">
-        <div class="relative cursor-pointer group">
-          <img
+    <div class="space-y-6 px-4 py-2">
+      <div class="flex flex-col items-center gap-3">
+        <div class="relative cursor-pointer group size-24">
+          <n-avatar
+            round
+            :size="96"
             :src="avatar || 'https://picsum.photos/id/1005/200/200'"
-            alt="头像"
-            class="w-24 h-24 rounded-full border-2 border-gray-200 object-cover"
+            class="border-2 border-gray-200 object-cover block"
             @click="openAvatarCropper" />
           <div
-            class="absolute inset-0 bg-black/30 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-            @click="triggerFileInput">
-            <n-icon size="28" color="white">
-              <i-mdi-camera />
-            </n-icon>
+            class="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+            @click="openAvatarCropper">
+            <svg class="size-8 text-white" viewBox="0 0 24 24">
+              <path
+                fill="currentColor"
+                d="M4 4h3l2-2h6l2 2h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2m8 3a5 5 0 0 0-5 5a5 5 0 0 0 5 5a5 5 0 0 0 5-5a5 5 0 0 0-5-5m0 2a3 3 0 0 1 3 3a3 3 0 0 1-3 3a3 3 0 0 1-3-3a3 3 0 0 1 3-3Z" />
+            </svg>
           </div>
         </div>
-        <span class="text-sm text-gray-500" @click="triggerFileInput">点击修改头像</span>
+        <span class="text-xs text-gray-500 hover:text-[--primary-color] cursor-pointer" @click="openAvatarCropper">
+          点击修改头像
+        </span>
       </div>
 
-      <!-- 名字输入 -->
-      <div class="flex flex-col gap-1">
-        <label class="text-sm font-medium text-gray-700">名字</label>
-        <n-input v-model:value="name" placeholder="请输入名字" maxlength="20" class="w-full" />
-        <div class="text-right text-xs text-gray-500">{{ name.length }}/20</div>
+      <div class="flex flex-col gap-1.5">
+        <label class="text-sm font-medium text-[--text-color]">名字</label>
+        <n-input v-model:value="form.name" placeholder="请输入名字" maxlength="20" show-count clearable />
       </div>
 
-      <!-- 简介输入 -->
-      <div class="flex flex-col gap-1">
-        <label class="text-sm font-medium text-gray-700">简介</label>
+      <div class="flex flex-col gap-1.5">
+        <label class="text-sm font-medium text-[--text-color]">简介</label>
         <n-input
-          v-model:value="description"
+          v-model:value="form.description"
           placeholder="介绍一下你自己"
           type="textarea"
-          :rows="4"
+          :autosize="{ minRows: 3, maxRows: 5 }"
           maxlength="100"
-          class="w-full" />
-        <div class="text-right text-xs text-gray-500">{{ description.length }}/100</div>
+          show-count />
       </div>
 
-      <!-- 底部按钮 -->
-      <div class="flex justify-center gap-4 pt-2">
-        <n-button type="default" @click="closeDialog" class="w-24">取消</n-button>
-        <n-button type="primary" @click="saveProfile" class="w-24" color="#ff6b6b">保存</n-button>
+      <div class="flex justify-end gap-3 pt-4">
+        <n-button @click="closeDialog">取消</n-button>
+        <n-button type="primary" @click="saveProfile" :disabled="!form.name">保存</n-button>
       </div>
     </div>
   </base-dialog>
+
   <input
     ref="fileInput"
     type="file"
     accept="image/jpeg,image/png,image/webp"
     class="hidden"
     @change="handleFileChange" />
-  <!-- 头像裁剪组件 -->
+
   <avatar-cropper ref="cropperRef" v-model:show="showCropper" :image-url="localImageUrl" @crop="handleCrop" />
 </template>
 
 <script setup lang="ts">
-import { useI18n } from "vue-i18n";
+import { UploadSceneEnum } from "@/enums";
 import { useAvatarUpload } from "@/hooks/useAvatarUpload";
+import type { AvatarCropperInstance } from "@/components/common/AvatarCropper.vue";
 
 interface Props {
   show: boolean;
@@ -73,67 +74,72 @@ const props = withDefaults(defineProps<Props>(), {
   avatar: ""
 });
 
-const { t } = useI18n();
-
-const {
-  fileInput,
-  localImageUrl,
-  showCropper,
-  cropperRef,
-  openAvatarCropper,
-  handleFileChange,
-  handleCrop: onCrop
-} = useAvatarUpload({
-  onSuccess: async (downloadUrl) => {
-    // TODO 调用更新头像的API
-    avatar.value = downloadUrl;
-    // 更新用户信息
-    // 更新store缓存里面的用户信息
-    window.$message.success(t("home.profileEdit.toast.avatarUpdateSuccess"));
-  }
-});
-
 const emit = defineEmits<{
   "update:show": [value: boolean];
   save: [data: { name: string; description: string; avatar?: string }];
 }>();
 
-// 双向绑定
+// 本地表单数据
+const form = reactive({
+  name: "",
+  description: "",
+  avatar: ""
+});
+const fileInputRef = ref<HTMLInputElement>();
+const cropperRef = ref<AvatarCropperInstance>();
+
+// 监听 Props 变化以更新表单（防止重新打开弹窗时数据未重置）
+watch(
+  () => props.show,
+  (visible) => {
+    if (visible) {
+      form.name = props.name;
+      form.description = props.description;
+      form.avatar = props.avatar;
+    }
+  }
+);
+
+const {
+  localImageUrl,
+  showCropper,
+  openAvatarCropper,
+  handleFileChange,
+  handleCrop: onHookCrop
+} = useAvatarUpload({
+  scene: UploadSceneEnum.AVATAR,
+  fileInputRef: fileInputRef,
+  cropperRef: cropperRef,
+  onSuccess: (downloadUrl) => {
+    // 上传成功后，更新本地预览头像
+    form.avatar = downloadUrl;
+    // TODO: 更新用户信息store
+  }
+});
+
+// 计算属性控制 Dialog 显示
 const dialogVisible = computed({
   get: () => props.show,
   set: (value) => emit("update:show", value)
 });
 
-// 编辑表单数据
-const name = ref(props.name);
-const description = ref(props.description);
-const avatar = ref(props.avatar);
-
-// 关闭对话框
 const closeDialog = () => {
   dialogVisible.value = false;
 };
 
-// 触发文件输入
-const triggerFileInput = () => {
-  fileInput.value?.click();
-};
-
+// 代理 Hook 的裁剪事件
 const handleCrop = async (cropBlob: Blob) => {
-  await onCrop(cropBlob);
+  await onHookCrop(cropBlob);
 };
 
 // 保存资料
 const saveProfile = () => {
-  // 简单验证
-  if (!name.value.trim()) {
-    return;
-  }
+  if (!form.name.trim()) return;
 
   emit("save", {
-    name: name.value,
-    description: description.value,
-    avatar: avatar.value
+    name: form.name,
+    description: form.description,
+    avatar: form.avatar
   });
   closeDialog();
 };
