@@ -73,7 +73,8 @@ pub fn init_common_plugins<R: Runtime>(builder: tauri::Builder<R>) -> tauri::Bui
         .plugin(tauri_plugin_http::init())
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_clipboard_manager::init())
-        .plugin(tauri_plugin_dialog::init());
+        .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_mic_recorder::init());
     // 添加日志插件
     builder.plugin(build_log_plugin())
 }
