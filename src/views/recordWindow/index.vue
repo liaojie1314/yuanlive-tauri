@@ -20,9 +20,11 @@
           class="flex-1 min-h-0 relative bg-black/40 rounded-12px border border-white/10 overflow-hidden shadow-2xl group">
           <canvas
             ref="canvasEl"
-            class="size-full object-contain cursor-auto"
-            :class="{ 'cursor-pointer': enableCamera && (isStreaming || isPreviewing) }"
-            @click="handleCanvasClick"></canvas>
+            class="size-full object-contain"
+            @mousedown="handleMouseDown"
+            @mousemove="handleMouseMove"
+            @mouseup="handleMouseUp"
+            @mouseleave="handleMouseLeave"></canvas>
 
           <div
             v-if="!isStreaming && !isPreviewing"
@@ -192,13 +194,95 @@
                 <n-switch v-model:value="beautyConfig.virtualBg" size="small" />
               </div>
               <n-collapse-transition :show="beautyConfig.virtualBg">
-                <div class="bg-black/20 p-2 mt-2 rounded flex flex-col gap-2">
+                <div class="bg-black/20 p-3 mt-2 rounded-8px flex flex-col gap-3 border border-white/5">
                   <span class="text-xs text-gray-400">背景模式</span>
-                  <n-radio-group v-model:value="beautyConfig.bgType" name="bgType" size="small">
-                    <n-radio-button value="green">生成绿幕</n-radio-button>
-                    <n-radio-button value="blur">背景虚化</n-radio-button>
-                    <n-radio-button value="image">自定义图</n-radio-button>
-                  </n-radio-group>
+
+                  <div class="grid grid-cols-3 gap-2 h-16">
+                    <div
+                      class="relative rounded-lg cursor-pointer border-2 transition-all flex items-center justify-center overflow-hidden group"
+                      :class="
+                        beautyConfig.bgType === 'green'
+                          ? 'border-green-500 bg-green-900/20'
+                          : 'border-white/10 hover:border-white/30 bg-black/40'
+                      "
+                      @click="beautyConfig.bgType = 'green'">
+                      <div class="size-6 rounded bg-[#00FF00] shadow-lg"></div>
+                      <span class="absolute bottom-1 text-[10px] text-gray-300">绿幕</span>
+                    </div>
+
+                    <div
+                      class="relative rounded-lg cursor-pointer border-2 transition-all flex items-center justify-center overflow-hidden group"
+                      :class="
+                        beautyConfig.bgType === 'blur'
+                          ? 'border-blue-500 bg-blue-900/20'
+                          : 'border-white/10 hover:border-white/30 bg-black/40'
+                      "
+                      @click="beautyConfig.bgType = 'blur'">
+                      <div class="i-carbon-blur text-xl mb-2 text-gray-300"></div>
+                      <span class="absolute bottom-1 text-[10px] text-gray-300">虚化</span>
+                    </div>
+
+                    <div
+                      class="relative rounded-lg cursor-pointer border-2 transition-all flex items-center justify-center overflow-hidden group"
+                      :class="
+                        beautyConfig.bgType === 'image'
+                          ? 'border-purple-500'
+                          : 'border-white/10 hover:border-white/30 bg-black/40'
+                      "
+                      @click="handleImageModeClick">
+                      <img
+                        v-if="bgImage.src"
+                        :src="bgImage.src"
+                        class="absolute inset-0 size-full object-cover opacity-60 group-hover:opacity-40 transition-opacity" />
+
+                      <div class="z-10 flex flex-col items-center">
+                        <div
+                          class="text-xl text-gray-200"
+                          :class="bgImage.src ? 'i-carbon-image-copy' : 'i-carbon-add'"></div>
+                        <span class="text-[10px] text-gray-300 mt-1">
+                          {{ bgImage.src ? (beautyConfig.bgType === "image" ? "更换" : "自定义") : "上传" }}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </n-collapse-transition>
+              <n-divider class="!my-2 bg-white/10" />
+
+              <div class="flex items-center justify-between">
+                <span class="text-(12px #ddd) font-bold">🖼️ 品牌水印</span>
+                <n-switch v-model:value="watermarkConfig.enable" size="small" />
+              </div>
+
+              <n-collapse-transition :show="watermarkConfig.enable">
+                <div class="bg-black/20 p-2 mt-2 rounded-8px flex flex-col gap-2 border border-white/5">
+                  <div class="flex items-center gap-2 mb-1">
+                    <div class="relative flex-1">
+                      <n-button size="tiny" ghost block class="!text-(10px #aaa)" @click="handleLogoUpload">
+                        {{ logoImg.src ? "更换图片" : "上传 Logo (PNG/JPG)" }}
+                      </n-button>
+                    </div>
+                  </div>
+
+                  <div class="flex items-center gap-2">
+                    <span class="text-(10px #888) w-8 text-right">大小</span>
+                    <n-slider v-model:value="watermarkConfig.scale" :step="0.05" :min="0.1" :max="2.0" class="flex-1" />
+                  </div>
+
+                  <div class="flex items-center gap-2">
+                    <span class="text-(10px #888) w-8 text-right">透明</span>
+                    <n-slider v-model:value="watermarkConfig.opacity" :step="0.05" :min="0" :max="1.0" class="flex-1" />
+                  </div>
+
+                  <div class="flex items-center gap-2">
+                    <span class="text-(10px #888) w-8 text-right">X轴</span>
+                    <n-slider v-model:value="watermarkConfig.x" :step="10" :min="0" :max="1800" class="flex-1" />
+                  </div>
+
+                  <div class="flex items-center gap-2">
+                    <span class="text-(10px #888) w-8 text-right">Y轴</span>
+                    <n-slider v-model:value="watermarkConfig.y" :step="10" :min="0" :max="1000" class="flex-1" />
+                  </div>
                 </div>
               </n-collapse-transition>
             </n-flex>
@@ -231,9 +315,10 @@
 
 <script setup lang="ts">
 import * as fx from "glfx";
-import { invoke } from "@tauri-apps/api/core";
 import { fetch } from "@tauri-apps/plugin-http";
 import { error } from "@tauri-apps/plugin-log";
+import { open } from "@tauri-apps/plugin-dialog";
+import { convertFileSrc, invoke } from "@tauri-apps/api/core";
 import { SelfieSegmentation } from "@mediapipe/selfie_segmentation";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 
@@ -244,10 +329,15 @@ const CANVAS_W = 1920;
 const CANVAS_H = 1080;
 const PIP_W = 480;
 const PIP_H = 270;
-// 计算画中画的左上角坐标 (内部坐标系)
-const PIP_X = CANVAS_W - PIP_W - 40;
-const PIP_Y = CANVAS_H - PIP_H - 40;
-const message = useMessage();
+const pipState = reactive({
+  x: CANVAS_W - PIP_W - 40,
+  y: CANVAS_H - PIP_H - 40,
+  isDragging: false,
+  dragStartX: 0,
+  dragStartY: 0,
+  initialPipX: 0,
+  initialPipY: 0
+});
 const roomId = ref("room1");
 const token = ref("123456");
 const isStreaming = ref(false);
@@ -266,6 +356,18 @@ const micVolume = ref(1.2);
 const canvasEl = ref<HTMLCanvasElement | null>(null);
 const screenVideo = ref<HTMLVideoElement | null>(null);
 const cameraVideo = ref<HTMLVideoElement | null>(null);
+
+// 水印配置
+const watermarkConfig = reactive({
+  enable: true, // 开关
+  opacity: 0.8, // 透明度 (0 ~ 1)
+  scale: 0.5, // 缩放比例 (0.1 ~ 2.0)
+  x: 50, // X 坐标
+  y: 50 // Y 坐标
+});
+
+// 水印图片对象
+const logoImg = new Image();
 
 // 媒体对象
 let screenStream: MediaStream | null = null;
@@ -330,7 +432,7 @@ let fxTexture: any = null;
 let selfieSegmentation: SelfieSegmentation | null = null;
 // 虚拟背景图片 (如果是纯色背景，这个可以不用)
 const bgImage = new Image();
-bgImage.src = "/bg.jpg"; // 确保你在 public 下放了一张 bg.jpg，或者不需要也可以
+bgImage.src = "";
 
 // 监听模式变化
 watch(
@@ -378,7 +480,7 @@ const handleStreamToggle = async () => {
 };
 
 const startEverything = async () => {
-  if (!roomId.value) return message.warning("请输入房间号");
+  if (!roomId.value) return window.$message.warning("请输入房间号");
   loading.value = true;
 
   try {
@@ -438,14 +540,14 @@ const startEverything = async () => {
 
     // 8. 监听屏幕分享的原生停止按钮
     screenStream.getVideoTracks()[0].onended = () => {
-      message.info("屏幕分享已结束");
+      window.$message.info("屏幕分享已结束");
       stopEverything();
     };
 
     isStreaming.value = true;
   } catch (err: any) {
     console.error(err);
-    message.error(`启动失败: ${err.message || "未知错误"}`);
+    window.$message.error(`启动失败: ${err.message || "未知错误"}`);
     await stopEverything();
   } finally {
     loading.value = false;
@@ -639,50 +741,6 @@ watch(micVolume, (v) => {
   if (micGain) micGain.gain.value = v;
 });
 
-const handleCanvasClick = (e: MouseEvent) => {
-  // 如果没开启摄像头，或者没在推流/预览，不处理
-  if (!enableCamera.value || (!isStreaming.value && !isPreviewing.value)) return;
-  if (!canvasEl.value) return;
-
-  // 1. 获取 Canvas 在屏幕上的显示尺寸
-  const rect = canvasEl.value.getBoundingClientRect();
-  const domW = rect.width;
-  const domH = rect.height;
-
-  // 2. 计算 object-contain 带来的偏移量和缩放比
-  // Canvas 内部比例 (16:9)
-  const canvasRatio = CANVAS_W / CANVAS_H;
-  // 当前 DOM 元素比例
-  const domRatio = domW / domH;
-
-  let scale: number;
-  let offsetX = 0;
-  let offsetY = 0;
-
-  if (domRatio > canvasRatio) {
-    // 窗口太宽，左右有黑边，高度占满
-    const actualW = domH * canvasRatio;
-    scale = CANVAS_H / domH; // 或者 CANVAS_W / actualW
-    offsetX = (domW - actualW) / 2;
-  } else {
-    // 窗口太高，上下有黑边，宽度占满
-    const actualH = domW / canvasRatio;
-    scale = CANVAS_W / domW;
-    offsetY = (domH - actualH) / 2;
-  }
-
-  // 3. 将鼠标点击坐标映射回 1920x1080 的内部坐标系
-  const internalX = (e.offsetX - offsetX) * scale;
-  const internalY = (e.offsetY - offsetY) * scale;
-
-  // 4. 碰撞检测：判断是否点击在画中画区域内
-  // 画中画区域是固定的 PIP_X, PIP_Y, PIP_W, PIP_H
-  if (internalX >= PIP_X && internalX <= PIP_X + PIP_W && internalY >= PIP_Y && internalY <= PIP_Y + PIP_H) {
-    // 切换状态
-    isSwapped.value = !isSwapped.value;
-  }
-};
-
 // --- Canvas 渲染引擎 (集成 AI 虚拟背景 & 绿幕) ---
 const startCanvasLoop = () => {
   if (!canvasEl.value) return;
@@ -694,8 +752,6 @@ const startCanvasLoop = () => {
 
   const PIP_W = 480;
   const PIP_H = 270;
-  const PIP_X = 1920 - PIP_W - 40;
-  const PIP_Y = 1080 - PIP_H - 40;
 
   // 1. 初始化 WebGL (glfx) 并清理旧资源
   try {
@@ -913,14 +969,26 @@ const startCanvasLoop = () => {
           isPipRawVideo && beautyConfig.enable && !beautyConfig.greenScreen && !beautyConfig.virtualBg && !needWebGL;
 
         ctx.filter = shouldApplyCssToPip ? currentFilter.value : "none";
-
-        ctx.drawImage(pipSource, PIP_X, PIP_Y, PIP_W, PIP_H);
-
+        ctx.drawImage(pipSource, pipState.x, pipState.y, PIP_W, PIP_H);
         // 边框
         ctx.filter = "none";
         ctx.strokeStyle = "white";
         ctx.lineWidth = 4;
-        ctx.strokeRect(PIP_X, PIP_Y, PIP_W, PIP_H);
+        ctx.strokeRect(pipState.x, pipState.y, PIP_W, PIP_H);
+      }
+      // 阶段四：绘制水印 (Overlay)
+      if (watermarkConfig.enable && logoImg.src && logoImg.complete && logoImg.naturalWidth > 0) {
+        // 保存当前的透明度设置
+        const prevAlpha = ctx.globalAlpha;
+        // 应用水印透明度
+        ctx.globalAlpha = watermarkConfig.opacity;
+        // 计算绘制尺寸
+        const drawW = logoImg.naturalWidth * watermarkConfig.scale;
+        const drawH = logoImg.naturalHeight * watermarkConfig.scale;
+        // 绘制图片
+        ctx.drawImage(logoImg, watermarkConfig.x, watermarkConfig.y, drawW, drawH);
+        // 恢复全局透明度 (非常重要！否则下一帧整个画面都会变半透明)
+        ctx.globalAlpha = prevAlpha;
       }
     } catch (e) {
       console.warn("Draw loop error:", e);
@@ -929,6 +997,63 @@ const startCanvasLoop = () => {
   };
 
   draw();
+};
+
+const handleBgUpload = async () => {
+  try {
+    const selected = await open({
+      multiple: false,
+      filters: [
+        {
+          name: "Image",
+          extensions: ["png", "jpg", "jpeg", "webp"]
+        }
+      ]
+    });
+    if (selected === null) return;
+    const filePath = selected as string;
+    const assetUrl = convertFileSrc(filePath);
+    bgImage.src = assetUrl;
+    // 图片加载成功后，自动切换到"自定义图"模式
+    bgImage.onload = () => {
+      beautyConfig.bgType = "image";
+      window.$message.success("背景替换成功");
+    };
+  } catch (err) {
+    console.error("背景选择失败:", err);
+    window.$message.error("无法加载图片");
+  }
+};
+
+const handleLogoUpload = async () => {
+  try {
+    // 1. 打开原生文件选择框
+    const selected = await open({
+      multiple: false, // 单选
+      filters: [
+        {
+          name: "Image",
+          extensions: ["png", "jpg", "jpeg", "webp"]
+        }
+      ]
+    });
+    // 用户取消了选择
+    if (selected === null) return;
+    // 2. 获取文件路径 (Tauri v2 open 返回的是 string | null)
+    // 注意：如果是多选会返回 string[]，这里我们配置了 multiple: false
+    const filePath = selected as string;
+    // 3. 将本地路径转换为 Webview 可识别的 URL
+    const assetUrl = convertFileSrc(filePath);
+    // 4. 加载图片
+    logoImg.src = assetUrl;
+    logoImg.onload = () => {
+      watermarkConfig.enable = true;
+      window.$message.success("水印加载成功");
+    };
+  } catch (err) {
+    console.error("文件选择失败:", err);
+    window.$message.error("无法加载图片");
+  }
 };
 
 // 这里的 results 包含：image (原图), segmentationMask (蒙版)
@@ -973,6 +1098,121 @@ const onSegmentationResults = (results: any) => {
 
   // 5. 恢复混合模式，以免影响后续绘制
   ctx.globalCompositeOperation = "source-over";
+};
+
+// 智能点击处理：切换模式 OR 触发上传
+const handleImageModeClick = () => {
+  // 情况 1: 当前已经是 Image 模式 -> 用户的意图是"换一张图"
+  if (beautyConfig.bgType === "image") {
+    handleBgUpload();
+    return;
+  }
+  // 情况 2: 当前不是 Image 模式 -> 用户的意图是"切换过去"
+  beautyConfig.bgType = "image";
+  // 顺便检查：如果切换过去了但还没图 -> 自动帮用户点开上传
+  if (!bgImage.src) {
+    handleBgUpload();
+  }
+};
+
+// 将鼠标在 DOM 元素上的坐标 (e.offsetX) 转换为 Canvas 内部坐标 (1920x1080)
+const getCanvasCoordinates = (e: MouseEvent) => {
+  if (!canvasEl.value) return { x: 0, y: 0 };
+  const rect = canvasEl.value.getBoundingClientRect();
+  const domW = rect.width;
+  const domH = rect.height;
+  // 计算缩放比例 (object-fit: contain)
+  const canvasRatio = CANVAS_W / CANVAS_H;
+  const domRatio = domW / domH;
+  let scale = 1;
+  let offsetX = 0;
+  let offsetY = 0;
+  if (domRatio > canvasRatio) {
+    // 窗口太宽，左右有黑边
+    const actualW = domH * canvasRatio;
+    scale = CANVAS_H / domH;
+    offsetX = (domW - actualW) / 2;
+  } else {
+    // 窗口太高，上下有黑边
+    const actualH = domW / canvasRatio;
+    scale = CANVAS_W / domW;
+    offsetY = (domH - actualH) / 2;
+  }
+  // 映射坐标
+  const x = (e.offsetX - offsetX) * scale;
+  const y = (e.offsetY - offsetY) * scale;
+  return { x, y };
+};
+
+// 鼠标按下 (开始拖拽检测)
+const handleMouseDown = (e: MouseEvent) => {
+  if (!enableCamera.value) return;
+  const { x, y } = getCanvasCoordinates(e);
+  // 判断是否点击在画中画区域内
+  // 使用 pipState.x 代替原来的常量 PIP_X
+  if (x >= pipState.x && x <= pipState.x + PIP_W && y >= pipState.y && y <= pipState.y + PIP_H) {
+    pipState.isDragging = true;
+    pipState.dragStartX = e.clientX; // 记录屏幕坐标用于计算位移
+    pipState.dragStartY = e.clientY;
+    pipState.initialPipX = pipState.x;
+    pipState.initialPipY = pipState.y;
+  }
+};
+
+// 鼠标移动 (执行拖拽)
+const handleMouseMove = (e: MouseEvent) => {
+  // 1. 改变鼠标样式：如果鼠标悬停在 PIP 上，显示抓手
+  if (!pipState.isDragging) {
+    const { x, y } = getCanvasCoordinates(e);
+    const isHover = x >= pipState.x && x <= pipState.x + PIP_W && y >= pipState.y && y <= pipState.y + PIP_H;
+    if (canvasEl.value) {
+      // 如果开启了摄像头且悬停，显示 move 样式
+      canvasEl.value.style.cursor = enableCamera.value && isHover ? "move" : "default";
+    }
+    return;
+  }
+
+  // 2. 执行拖拽逻辑
+  if (pipState.isDragging) {
+    const deltaX = e.clientX - pipState.dragStartX;
+    const deltaY = e.clientY - pipState.dragStartY;
+    // 重新计算 Canvas 缩放比例，因为 deltaX 是屏幕像素，需要转成 Canvas 内部像素
+    const rect = canvasEl.value!.getBoundingClientRect();
+    const domRatio = rect.width / rect.height;
+    const canvasRatio = CANVAS_W / CANVAS_H;
+    let scale = 1;
+    if (domRatio > canvasRatio) {
+      scale = CANVAS_H / rect.height;
+    } else {
+      scale = CANVAS_W / rect.width;
+    }
+    // 更新位置
+    let newX = pipState.initialPipX + deltaX * scale;
+    let newY = pipState.initialPipY + deltaY * scale;
+    // 边界限制 (不让它跑出画布)
+    newX = Math.max(0, Math.min(newX, CANVAS_W - PIP_W));
+    newY = Math.max(0, Math.min(newY, CANVAS_H - PIP_H));
+    pipState.x = newX;
+    pipState.y = newY;
+  }
+};
+
+// 鼠标松开 (结束拖拽 & 判断点击)
+const handleMouseUp = (e: MouseEvent) => {
+  if (pipState.isDragging) {
+    // 计算总移动距离
+    const dist = Math.sqrt((e.clientX - pipState.dragStartX) ** 2 + (e.clientY - pipState.dragStartY) ** 2);
+    // 如果移动距离小于 5px，我们认为这是一次"点击"，触发画面交换
+    if (dist < 5) {
+      isSwapped.value = !isSwapped.value;
+    }
+    pipState.isDragging = false;
+  }
+};
+
+// 确保鼠标移出画布时也停止拖拽
+const handleMouseLeave = () => {
+  pipState.isDragging = false;
 };
 
 onMounted(async () => {
