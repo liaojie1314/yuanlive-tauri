@@ -47,9 +47,6 @@ pub struct UserInfo {
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
-        .manage(FfmpegState {
-            child: std::sync::Mutex::new(None),
-        })
         .init_plugin()
         .init_window_event()
         .setup(move |app| {
@@ -191,6 +188,9 @@ fn common_setup(app_handle: AppHandle) -> Result<(), Box<dyn std::error::Error>>
                 config: settings,
                 stream_tasks: Arc::new(Mutex::new(HashMap::new())),
             });
+            app_handle.manage(FfmpegState {
+                child: std::sync::Mutex::new(None),
+            });
             APP_STATE_READY.store(true, Ordering::SeqCst);
             if let Err(e) = app_handle.emit("app-state-ready", ()) {
                 warn!("Failed to emit app-state-ready event: {}", e);
@@ -231,6 +231,8 @@ fn get_invoke_handlers() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Se
         check_ffmpeg_installed, push_stream_chunk, start_stream_pipe, stop_stream_pipe,
     };
     #[cfg(desktop)]
+    use desktop::tts::speak_system;
+    #[cfg(desktop)]
     use desktop::window_payload::{get_window_payload, push_window_payload};
 
     tauri::generate_handler![
@@ -269,5 +271,7 @@ fn get_invoke_handlers() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Se
         stop_stream_pipe,
         #[cfg(desktop)]
         push_stream_chunk,
+        #[cfg(desktop)]
+        speak_system,
     ]
 }

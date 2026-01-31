@@ -116,7 +116,9 @@ export enum TauriCommandEnum {
   // 推送流数据
   PUSH_STREAM_CHUNK = "push_stream_chunk",
   // 停止流管道
-  STOP_STREAM_PIPE = "stop_stream_pipe"
+  STOP_STREAM_PIPE = "stop_stream_pipe",
+  // 系统tts发声
+  SPEAK_SYSTEM = "speak_system"
 }
 
 /** pinia存储的名称 */

@@ -10,13 +10,24 @@
 
 ```shell
 sudo apt-get update
-sudo apt-get install speech-dispatcher espeak-ng
-```
+sudo apt install libspeechd-dev speech-dispatcher espeak-ng
 
-对于某些WebKitGTK版本，可能还需要gstreamer插件:
-
-```shell
-sudo apt-get install gstreamer1.0-plugins-good gstreamer1.0-plugins-base
+# 可能需要安装
+sudo apt install libgstreamer1.0-dev \
+    libgstreamer-plugins-base1.0-dev \
+    libgstreamer-plugins-bad1.0-dev \
+    gstreamer1.0-plugins-base \
+    gstreamer1.0-plugins-good \
+    gstreamer1.0-plugins-bad \
+    gstreamer1.0-plugins-ugly \
+    gstreamer1.0-libav \
+    gstreamer1.0-tools \
+    gstreamer1.0-x \
+    gstreamer1.0-alsa \
+    gstreamer1.0-gl \
+    gstreamer1.0-gtk3 \
+    gstreamer1.0-qt5 \
+    gstreamer1.0-pulseaudio
 ```
 
 ### 配置环境变量

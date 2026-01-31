@@ -27,6 +27,7 @@ import { Live2DModel } from "pixi-live2d-display";
 import { invoke } from "@tauri-apps/api/core";
 import { LogicalPosition } from "@tauri-apps/api/window";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
+import { TauriCommandEnum } from "@/enums";
 
 // 挂载 PIXI 到 window (插件必需)
 (window as any).PIXI = PIXI;
@@ -76,7 +77,6 @@ const handleDrag = async (e: PointerEvent) => {
   let newX = e.screenX - dragOffset.x;
   let newY = e.screenY - dragOffset.y;
 
-  console.log(newX, newY);
   // 边界限制
   if (newX < 0) newX = 0;
   if (newY < 0) newY = 0;
@@ -162,30 +162,69 @@ const playAudioWithLipSync = async (audioData: Uint8Array) => {
 };
 
 // --- 核心逻辑：播放系统 TTS (降级方案 - 随机口型) ---
-const playSystemTTS = (text: string) => {
-  if (!synth) {
-    console.warn("当前环境不支持window.speechSynthesis(可能是Linux缺少speech-dispatcher)");
+const playSystemTTS = async (text: string) => {
+  stopSpeaking(); // 先清理
+  // 1. 尝试使用浏览器原生 API
+  if (window.speechSynthesis) {
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = "zh-CN";
+    utterance.rate = 1.0;
+    // 模拟口型
+    utterance.onstart = () => {
+      startRandomLipSync(); // 把下面的定时器逻辑抽成一个函数方便复用
+    };
+    utterance.onend = () => stopSpeaking();
+    utterance.onerror = () => {
+      // 如果浏览器报错，也尝试切到 Rust
+      invokeRustTTS(text);
+    };
+    window.speechSynthesis.speak(utterance);
     return;
   }
-  stopSpeaking(); // 先清理
+  // 2. 如果浏览器不支持，调用 Rust
+  console.log("浏览器不支持 TTS，切换到 Rust 后端...");
+  await invokeRustTTS(text);
+};
 
-  const utterance = new SpeechSynthesisUtterance(text);
-  utterance.lang = "zh-CN";
-  utterance.rate = 1.0;
+const invokeRustTTS = async (text: string) => {
+  try {
+    // 开始模拟口型 (因为系统 TTS 不给回调，我们只能估算时间)
+    startRandomLipSync();
+    // 1. 自动识别语言
+    const lang = detectLanguage(text);
+    console.log(`识别语言: ${lang}, 调用系统 TTS...`);
+    // 2. 传给 Rust
+    await invoke(TauriCommandEnum.SPEAK_SYSTEM, { text, lang });
+    // 3. 估算结束时间 (清理口型)
+    // 英文语速通常比中文快，可以微调
+    const charRate = lang === "zh" ? 250 : 150;
+    const duration = Math.max(2000, text.length * charRate);
+    setTimeout(() => {
+      stopSpeaking();
+    }, duration);
+  } catch (e) {
+    console.error("Rust TTS 也失败了:", e);
+    stopSpeaking();
+  }
+};
 
-  utterance.onstart = () => {
-    // 随机口型
-    lipSyncInterval = setInterval(() => {
-      if (!live2dModel.value?.internalModel?.coreModel) return;
-      const value = Math.random() * 0.8;
-      live2dModel.value.internalModel.coreModel.setParameterValueById("ParamMouthOpenY", value);
-    }, 100);
-  };
+const detectLanguage = (text: string): string => {
+  // 正则表达式：只要包含任何中文字符，就认为是中文
+  if (/[\u4e00-\u9fa5]/.test(text)) {
+    return "zh";
+  }
+  // 否则默认英文
+  return "en";
+};
 
-  utterance.onend = () => stopSpeaking();
-  utterance.onerror = () => stopSpeaking();
-
-  synth.speak(utterance);
+// 随机口型
+const startRandomLipSync = () => {
+  if (lipSyncInterval) clearInterval(lipSyncInterval);
+  lipSyncInterval = setInterval(() => {
+    if (!live2dModel.value?.internalModel?.coreModel) return;
+    const value = Math.random() * 0.8;
+    live2dModel.value.internalModel.coreModel.setParameterValueById("ParamMouthOpenY", value);
+  }, 100);
 };
 
 // --- 核心逻辑：打字机 ---
@@ -309,7 +348,7 @@ onMounted(async () => {
       // 撑满宽度，高度留空
       const rawWidth = model.internalModel.originalWidth || model.width;
       const rawHeight = model.internalModel.originalHeight || model.height;
-      const scaleX = (screenW * 1.0) / rawWidth;
+      const scaleX = screenW / rawWidth;
       const scaleY = (screenH * 0.9) / rawHeight;
       const scale = Math.min(scaleX, scaleY);
 
@@ -327,7 +366,7 @@ onMounted(async () => {
     model.on("hit", (hitAreas) => {
       if (hitAreas.includes("Body")) {
         model.motion("TapBody");
-        speak("这是一段用来测试跑马灯和语音降级功能的超长文本，如果不滚动我就要睡着了zzZ");
+        speak("hello world");
       }
     });
   } catch (e) {
