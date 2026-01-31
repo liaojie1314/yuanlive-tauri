@@ -6,8 +6,28 @@
 
 [前置要求](https://tauri.app/start/prerequisites)
 
+### Linux(ubuntu为例)安装语音分发器和espeak引擎(可选)
+
+```shell
+sudo apt-get update
+sudo apt-get install speech-dispatcher espeak-ng
+```
+
+对于某些WebKitGTK版本，可能还需要gstreamer插件:
+
+```shell
+sudo apt-get install gstreamer1.0-plugins-good gstreamer1.0-plugins-base
+```
+
+### 配置环境变量
+
 ```shell
 mv src-tauri/.env.example src-tauri/.env
+```
+
+### 安装依赖并启动项目
+
+```shell
 pnpm i
 pnpm tauri:dev # 启动桌面端 更多命令查看package.json
 ```

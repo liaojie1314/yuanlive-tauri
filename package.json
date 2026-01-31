@@ -69,6 +69,7 @@
     "dayjs": "^1.11.19",
     "digest-wasm": "^0.1.4",
     "driver.js": "^1.4.0",
+    "echarts": "^6.0.0",
     "es-toolkit": "^1.42.0",
     "glfx": "^0.0.4",
     "highlight.js": "^11.11.1",

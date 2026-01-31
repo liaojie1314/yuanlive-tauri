@@ -101,7 +101,7 @@ const stopSpeaking = () => {
     audioSource.value = null;
   }
   // 2. 停止原生 TTS
-  synth.cancel();
+  synth?.cancel();
 
   // 3. 停止口型动画
   if (lipSyncInterval) {
@@ -163,6 +163,10 @@ const playAudioWithLipSync = async (audioData: Uint8Array) => {
 
 // --- 核心逻辑：播放系统 TTS (降级方案 - 随机口型) ---
 const playSystemTTS = (text: string) => {
+  if (!synth) {
+    console.warn("当前环境不支持window.speechSynthesis(可能是Linux缺少speech-dispatcher)");
+    return;
+  }
   stopSpeaking(); // 先清理
 
   const utterance = new SpeechSynthesisUtterance(text);
