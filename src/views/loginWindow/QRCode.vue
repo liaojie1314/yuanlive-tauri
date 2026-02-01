@@ -1,7 +1,7 @@
 <template>
   <n-config-provider :theme="naiveTheme" data-tauri-drag-region class="login-box size-full rounded-8px select-none">
     <!--顶部操作栏-->
-    <action-bar :max-w="false" :shrink="false" proxy data-tauri-drag-region />
+    <action-bar :max-w="false" proxy data-tauri-drag-region />
 
     <n-flex justify="center" class="mt-15px" data-tauri-drag-region>
       <img src="/vite.svg" class="w-140px h-60px drop-shadow-xl" alt="" data-tauri-drag-region />

@@ -112,6 +112,21 @@ const getCommonRoutes = (): Array<RouteRecordRaw> => [
     component: () => import("@/views/previewCodeWindow/index.vue")
   },
   {
+    name: "previewImage",
+    path: "/previewImage",
+    component: () => import("@/views/previewImageWindow/index.vue")
+  },
+  {
+    name: "previewVideo",
+    path: "/previewVideo",
+    component: () => import("@/views/previewVideoWindow/index.vue")
+  },
+  {
+    name: "previewFile",
+    path: "/previewFile",
+    component: () => import("@/views/previewFileWindow/index.vue")
+  },
+  {
     name: "tray",
     path: "/tray",
     component: () => import("@/views/Tray.vue")

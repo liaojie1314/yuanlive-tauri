@@ -35,6 +35,8 @@
   --bg-left-menu: rgba(241, 241, 241, 1);
   --bg-left-menu-hover: rgba(90, 90, 90, 0.1);
   --bg-left-active: rgba(90, 90, 90, 0.2);
+  // 警告样式
+  --warning-text: #f7b668ff;
 }
 
 html[data-theme="dark"] {
@@ -67,6 +69,8 @@ html[data-theme="dark"] {
   --bg-left-menu: rgba(22, 22, 22, 1);
   --bg-left-menu-hover: #3b3b3b;
   --bg-left-active: #444444;
+  // 警告样式
+  --warning-text: #f4c375ff;
 }
 
 /**!修改naive-ui的遮罩层样式*/

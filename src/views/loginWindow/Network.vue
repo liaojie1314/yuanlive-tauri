@@ -1,7 +1,7 @@
 <template>
   <n-config-provider :theme="naiveTheme" data-tauri-drag-region class="login-box size-full rounded-8px select-none">
     <!--顶部操作栏-->
-    <action-bar :max-w="false" :shrink="false" proxy data-tauri-drag-region />
+    <action-bar :max-w="false" proxy data-tauri-drag-region />
 
     <n-flex vertical :size="12" align="center" class="pt-10px">
       <span class="text-(16px #70938c) textFont">{{ t("auth.network.title") }}</span>

@@ -27,7 +27,7 @@
 
     <!-- 右边内容 -->
     <section class="bg-[--right-bg-color] relative rounded-r-8px flex-1 border-l-(1px solid [--line-color])">
-      <action-bar :shrink="false" :max-w="true" />
+      <action-bar :max-w="true" />
       <header class="header" data-tauri-drag-region>
         {{ title }}
       </header>
