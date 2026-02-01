@@ -39,6 +39,8 @@ tauri-plugin-mic-recorder = "2.0.0"
 dotenv = "0.15.0"
 anyhow = "1.0.100"
 thiserror = "2.0.17"
+sysinfo = "0.38.0"
+async-walkdir = "2.1.0"
 tracing = { version = "0.1", features = ["log"] }
 base64 = "0.22.1"
 reqwest = { version = "0.12", default-features = false, features = [

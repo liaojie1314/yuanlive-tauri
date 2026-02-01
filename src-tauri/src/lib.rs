@@ -227,6 +227,10 @@ fn get_invoke_handlers() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Se
     #[cfg(desktop)]
     use desktop::cmd::screenshot;
     #[cfg(desktop)]
+    use desktop::directory_scanner::{
+        cancel_directory_scan, get_directory_usage_info_with_progress,
+    };
+    #[cfg(desktop)]
     use desktop::live_stream::{
         check_ffmpeg_installed, push_stream_chunk, start_stream_pipe, stop_stream_pipe,
     };
@@ -271,6 +275,10 @@ fn get_invoke_handlers() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Se
         stop_stream_pipe,
         #[cfg(desktop)]
         push_stream_chunk,
+        #[cfg(desktop)]
+        get_directory_usage_info_with_progress,
+        #[cfg(desktop)]
+        cancel_directory_scan,
         #[cfg(desktop)]
         speak_system,
     ]

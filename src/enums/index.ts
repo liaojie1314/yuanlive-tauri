@@ -117,6 +117,10 @@ export enum TauriCommandEnum {
   PUSH_STREAM_CHUNK = "push_stream_chunk",
   // 停止流管道
   STOP_STREAM_PIPE = "stop_stream_pipe",
+  // 获取目录占用信息
+  GET_DIRECTORY_USAGE_INFO_WITH_PROGRESS = "get_directory_usage_info_with_progress",
+  // 取消目录扫描
+  CANCEL_DIRECTORY_SCAN = "cancel_directory_scan",
   // 系统tts发声
   SPEAK_SYSTEM = "speak_system"
 }
