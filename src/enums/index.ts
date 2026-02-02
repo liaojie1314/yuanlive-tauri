@@ -143,6 +143,8 @@ export enum StoresEnum {
   DANMAKU = "danmaku",
   // 视频
   VIDEO = "video",
+  // 文件下载
+  FILE_DOWNLOAD = "fileDownload",
   // 图片查看器
   IMAGE_VIEWER = "imageViewer",
   // 视频查看器

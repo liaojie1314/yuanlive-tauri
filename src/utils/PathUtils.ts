@@ -34,6 +34,36 @@ export const getUserDataRootAbsoluteDir = async (): Promise<string> => {
 };
 
 /**
+ * 获取用户资源文件夹（userData/uid），并确保整个路径存在。
+ * @param uid 用户ID
+ */
+export const getUserResourceDir = async (uid: string): Promise<string> => {
+  await ensureUserDataRoot();
+  // 确保用户ID的子目录也存在
+  const userDir = await join(USER_DATA, uid);
+  const baseDir = isMobile() ? BaseDirectory.AppData : BaseDirectory.Resource;
+  const userDirExists = await exists(userDir, { baseDir });
+  if (!userDirExists) {
+    await mkdir(userDir, {
+      baseDir,
+      recursive: true
+    });
+  }
+  return userDir;
+};
+
+/**
+ * 获取用户视频缓存目录的绝对路径。
+ * @param uid 用户ID
+ * @returns 用户视频缓存目录的绝对路径
+ */
+export const getUserAbsoluteResourceDir = async (uid: string) => {
+  const filePath = await getUserResourceDir(uid);
+  const baseDirPath = isMobile() ? await appDataDir() : await resourceDir();
+  return await join(baseDirPath, filePath);
+};
+
+/**
  * 获取用户图片缓存目录路径。
  * @param subFolder 子目录名，用于分类存储不同类型的图片。
  * @param userUid 用户唯一标识，用于区分不同用户的缓存。
