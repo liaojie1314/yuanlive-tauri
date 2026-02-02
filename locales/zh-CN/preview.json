@@ -4,5 +4,16 @@
     "run": "运行",
     "hint": "点击运行查看效果",
     "save": "(Ctrl + S 保存)"
+  },
+  "image": {
+    "zoomOut": "缩小",
+    "zoomIn": "放大",
+    "rotateLeft": "向左旋转",
+    "rotateRight": "向右旋转",
+    "reset": "重置",
+    "saveAs": "另存为",
+    "firstImage": "这是第一张图片",
+    "lastImage": "已经最后一张图片",
+    "filterName": "图片"
   }
 }

@@ -4,5 +4,16 @@
     "run": "Run",
     "hint": "Click to run to see the effect",
     "save": "(Ctrl + S save)"
+  },
+  "image": {
+    "zoomOut": "Zoom out",
+    "zoomIn": "Zoom in",
+    "rotateLeft": "Rotate left",
+    "rotateRight": "Rotate right",
+    "reset": "Reset",
+    "saveAs": "Save as",
+    "firstImage": "This is the first image",
+    "lastImage": "This is already the last image",
+    "filterName": "Image"
   }
 }
