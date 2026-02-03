@@ -36,6 +36,7 @@
         "language": "zh-CN"
       },
       "nsis": {
+        "installMode": "perMachine",
         "installerIcon": "./icons/icon.ico",
         "displayLanguageSelector": true,
         "languages": ["SimpChinese"],

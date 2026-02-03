@@ -7,6 +7,7 @@ declare global {
     VITE_COMPRESSION: ViteCompression;
     VITE_CRYPTO_SECRET_KEY: string;
     VITE_CRYPTO_SECRET_IV: string;
+    VITE_UPGRADE_LINK_ACCESS_KEY: string;
   }
   /**
    * 打包压缩格式的类型声明

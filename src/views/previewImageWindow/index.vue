@@ -4,7 +4,7 @@
     @mousemove="handleMouseMove"
     @mouseleave="handleMouseLeave">
     <!-- 顶部操作栏 -->
-    <action-bar class="bg-#000 z-9999" :current-label="currentLabel" />
+    <action-bar class="bg-#000 z-9999" />
 
     <!-- 主体内容区域 -->
     <div ref="contentRef" class="flex-1 overflow-auto">
@@ -126,7 +126,6 @@ const appWindow = WebviewWindow.getCurrent();
 // 初始化数据
 const imageList = ref<string[]>([]);
 
-const currentLabel = WebviewWindow.getCurrent().label;
 const currentIndex = ref(0);
 const scale = ref(1);
 const rotation = ref(0);

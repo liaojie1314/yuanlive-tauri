@@ -145,7 +145,6 @@ const {
   maxW?: boolean;
   closeW?: boolean;
   topWinLabel?: string;
-  currentLabel?: string;
   proxy?: boolean;
   isDrag?: boolean;
   iconColor?: string;

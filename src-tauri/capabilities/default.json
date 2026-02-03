@@ -34,8 +34,12 @@
     {
       "identifier": "fs:allow-read",
       "allow": [
-        { "path": "$HOME/**" },
-        { "path": "**" } 
+        {
+          "path": "$HOME/**"
+        },
+        {
+          "path": "**"
+        }
       ]
     },
     {
@@ -71,11 +75,11 @@
     "shell:default",
     "shell:allow-open",
     {
-      "identifier": "shell:allow-spawn",
+      "identifier": "shell:allow-execute",
       "allow": [
         {
           "name": "ffmpeg",
-          "cmd": "ffmpeg",
+          "cmd": "binaries/ffmpeg",
           "args": true
         }
       ]
@@ -85,6 +89,7 @@
     "autostart:allow-is-enabled",
     "dialog:default",
     "dialog:allow-save",
-    "mic-recorder:default"
+    "mic-recorder:default",
+    "updater:default"
   ]
 }

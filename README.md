@@ -34,6 +34,7 @@ sudo apt install libgstreamer1.0-dev \
 
 ```shell
 mv src-tauri/.env.example src-tauri/.env
+mv .env.example .env
 ```
 
 ### 安装依赖并启动项目
@@ -46,7 +47,22 @@ pnpm tauri:dev # 启动桌面端 更多命令查看package.json
 ## 代码提交
 
 ```shell
-pnpm commit
+pnpm commit # 暂存代码并commit
+pnpm gitcz # 给当前暂存的代码commit
+```
+
+## 发布更新
+
+```shell
+# 设置tauri签名密钥
+# linux或macos
+export TAURI_SIGNING_PRIVATE_KEY="./yuanlive.key"
+export TAURI_SIGNING_PRIVATE_KEY_PASSWORD=""
+# windows
+$env:TAURI_SIGNING_PRIVATE_KEY="./yuanlive.key"
+$env:TAURI_SIGNING_PRIVATE_KEY_PASSWORD=""
+
+pnpm tauri:build
 ```
 
 ## 组件

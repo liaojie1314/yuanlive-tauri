@@ -25,16 +25,12 @@ impl RequestClient {
 
         // Read basic auth credentials from environment variables
         let credentials = format!(
-            "Basic {}:{}",
+            "{}:{}",
             std::env::var("BASIC_AUTH").unwrap_or("".to_string()),
             std::env::var("BASIC_AUTH_PWD").unwrap_or("".to_string())
         );
-        // Check if basic auth credentials are empty
-        if credentials.eq(":") {
-            error!("Basic auth credentials are empty. Please set BASIC_AUTH and BASIC_AUTH_PWD on .env file.");
-            return Err(anyhow::anyhow!("Basic auth credentials are empty"));
-        }
-        let basic_auth = BASE64_STANDARD.encode(credentials);
+        let mut basic_auth = BASE64_STANDARD.encode(credentials);
+        basic_auth.insert_str(0, "Basic ");
         let basic_auth_value = header::HeaderValue::from_str(&basic_auth)
             .map_err(|e| anyhow::anyhow!("Failed to create HTTP client: {}", e))?;
         headers.insert(header::AUTHORIZATION, basic_auth_value);

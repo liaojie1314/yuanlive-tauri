@@ -27,3 +27,8 @@ dist-ssr
 /src/typings/components.d.ts
 
 /public/selfie_segmentation
+
+# 秘钥
+yuanlive.key
+yuanlive.key.pub
+.env

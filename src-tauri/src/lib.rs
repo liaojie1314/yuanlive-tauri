@@ -6,18 +6,17 @@ mod init;
 mod request_client;
 mod tray;
 pub mod websocket;
-
 use crate::configuration::{get_configuration, BackendSettings};
 use crate::error::CommonError;
 use crate::init::CustomInit;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::process::Child;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use tauri::async_runtime::Mutex;
 use tauri::{AppHandle, Emitter, Listener, Manager};
 use tauri_plugin_fs::FsExt;
+use tauri_plugin_shell::process::CommandChild;
 use tracing::{error, info, warn};
 
 #[derive(Debug)]
@@ -31,7 +30,7 @@ pub struct AppData {
 
 /// Ffmpeg状态管理
 pub struct FfmpegState {
-    child: std::sync::Mutex<Option<Child>>,
+    child: std::sync::Mutex<Option<CommandChild>>,
 }
 
 pub(crate) static APP_STATE_READY: AtomicBool = AtomicBool::new(false);
