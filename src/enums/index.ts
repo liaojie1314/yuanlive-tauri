@@ -19,7 +19,12 @@ export enum UploadSceneEnum {
 }
 
 /** 事件key */
-export enum MittEnum {}
+export enum MittEnum {
+  /** 更新提示 */
+  CHECK_UPDATE = "checkUpdate",
+  /** 强制更新 */
+  DO_UPDATE = "doUpdate"
+}
 
 /** 主题类型 */
 export enum ThemeEnum {

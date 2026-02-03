@@ -12,7 +12,7 @@ export const useMitt = {
       onUnmounted(() => mittInstance.off(event, handler));
     }
   },
-  emit: (event: MittEnum | string, data: any) => {
+  emit: (event: MittEnum | string, data?: any) => {
     mittInstance.emit(event, data);
   },
   off: (event: MittEnum | string, handler: Handler<any>) => {

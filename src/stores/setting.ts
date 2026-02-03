@@ -53,8 +53,11 @@ export const useSettingStore = defineStore(StoresEnum.SETTING, {
     },
     // 是否通过esc关闭
     escClose: true,
-    // TODO: 自动更新
-    autoUpdate: false
+    // 更新设置
+    update: {
+      // 忽略更新版本
+      dismiss: ""
+    }
   }),
   actions: {
     /**

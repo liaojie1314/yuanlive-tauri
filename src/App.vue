@@ -12,7 +12,7 @@ import { listen } from "@tauri-apps/api/event";
 import { exit } from "@tauri-apps/plugin-process";
 import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
 
-import { EventEnum, StorageKeyEnum, ThemeEnum, WsResponseMessageEnum } from "@/enums";
+import { EventEnum, MittEnum, StorageKeyEnum, ThemeEnum, WsResponseMessageEnum } from "@/enums";
 import { useSettingStore } from "@/stores/setting";
 import { useUserStore } from "@/stores/user";
 import { loadLanguage } from "@/services/i18n";
@@ -30,7 +30,7 @@ const { addListener } = useTauriListener();
 const { initializeGlobalShortcut, cleanupGlobalShortcut } = useGlobalShortcut();
 const { themes, page } = storeToRefs(settingStore);
 const appWindow = WebviewWindow.getCurrent();
-const { sendWindowPayload } = useWindow();
+const { sendWindowPayload, createWebviewWindow } = useWindow();
 const { t } = useI18n();
 
 let lastWsConnectionState: string | null = null;
@@ -82,8 +82,8 @@ const handleWebsocketEvent = async (event: any) => {
   if (!shouldHandleReconnect) return;
 };
 
-useMitt.on(WsResponseMessageEnum.REMOTE_LOGIN, async (data: { uid: string; ip: string; client: string }) => {
-  if (Number(userUid.value) === Number(data.uid) && userStore.userInfo!.client === data.client) {
+useMitt.on(WsResponseMessageEnum.REMOTE_LOGIN, async (data: { uid: string; ip: string; device: string }) => {
+  if (Number(userUid.value) === Number(data.uid) && userStore.userInfo!.device === data.device) {
     const { useLogin } = await import("@/hooks/useLogin");
     const { logout } = useLogin();
     if (!isMobile()) {
@@ -175,6 +175,15 @@ onMounted(() => {
     window.addEventListener("contextmenu", preventGlobalContextMenu, false);
   }
   if (isDesktop()) {
+    useMitt.on(MittEnum.CHECK_UPDATE, async () => {
+      const checkUpdateWindow = await WebviewWindow.getByLabel("checkUpdate");
+      await checkUpdateWindow?.show();
+    });
+    useMitt.on(MittEnum.DO_UPDATE, async (event) => {
+      await createWebviewWindow("更新", "update", 490, 335, "", false, 490, 335, void 0, void 0, false, true);
+      const closeWindow = await WebviewWindow.getByLabel(event.close);
+      closeWindow?.close();
+    });
     addListener(
       appWindow.listen(EventEnum.EXIT, async () => {
         await exit(0);

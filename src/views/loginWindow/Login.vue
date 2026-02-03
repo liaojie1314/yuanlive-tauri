@@ -166,6 +166,7 @@ import { useGlobalStore } from "@/stores/global";
 import { useSettingStore } from "@/stores/setting";
 import { useWindow } from "@/hooks/useWindow";
 import { useLogin } from "@/hooks/useLogin";
+import { useCheckUpdate } from "@/hooks/useCheckUpdate";
 import { type DriverStepConfig, useDriver } from "@/hooks/useDriver";
 import { formatBottomText } from "@/utils/FormattingUtils";
 import { isCompatibility, isDesktop, isMac } from "@/utils/PlatformUtils";
@@ -173,6 +174,7 @@ import { isCompatibility, isDesktop, isMac } from "@/utils/PlatformUtils";
 const { t } = useI18n();
 // 网络连接是否正常
 const { isOnline } = useNetwork();
+const { checkUpdate, CHECK_UPDATE_LOGIN_TIME } = useCheckUpdate();
 const { createWebviewWindow, createModalWindow, getWindowPayload } = useWindow();
 const { userInfo, uiState, loading, loginDisabled, loginText, normalLogin } = useLogin();
 const userStore = useUserStore();
@@ -273,6 +275,9 @@ watch(
   }
 );
 
+// 导入Web Worker
+const timerWorker = new Worker(new URL("@/workers/timer.worker.ts", import.meta.url));
+
 /**
  * 点击非更多按钮时关闭更多菜单
  * @param event 点击事件
@@ -337,6 +342,19 @@ const openRemoteLoginModal = async (ip?: string) => {
   );
 };
 
+// 添加错误处理
+timerWorker.onerror = (error) => {
+  console.error("[Worker Error]", error);
+};
+
+// 监听 Worker 消息
+timerWorker.onmessage = (e) => {
+  const { type } = e.data;
+  if (type === "timeout") {
+    checkUpdate("login");
+  }
+};
+
 onMounted(async () => {
   // 检查引导状态，只有未完成时才启动引导
   if (!isGuideCompleted.value) {
@@ -361,11 +379,24 @@ onMounted(async () => {
 
   window.addEventListener("click", closeMenu, true);
   window.addEventListener("keyup", enterKey);
+  // 检查更新
+  await checkUpdate("login", true);
+  timerWorker.postMessage({
+    type: "startTimer",
+    msgId: "checkUpdate",
+    duration: CHECK_UPDATE_LOGIN_TIME
+  });
 });
 
 onUnmounted(() => {
   window.removeEventListener("click", closeMenu, true);
   window.removeEventListener("keyup", enterKey);
+  // 清除Web Worker计时器
+  timerWorker.postMessage({
+    type: "clearTimer",
+    msgId: "checkUpdate"
+  });
+  timerWorker.terminate();
 });
 </script>
 
