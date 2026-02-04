@@ -1,3 +1,6 @@
+import { setTheme } from "@tauri-apps/api/app";
+import type { Theme } from "@tauri-apps/api/window";
+
 import { CloseBxEnum, StoresEnum, ThemeEnum } from "@/enums";
 import { isMac } from "@/utils/PlatformUtils";
 
@@ -8,6 +11,32 @@ const getDefaultShortcuts = () => {
     openMainPanel: isMac() ? "Cmd+Ctrl+P" : "Ctrl+Alt+P",
     globalEnabled: false // 默认关闭全局快捷键
   };
+};
+
+/**
+ * 标准化主题
+ * @param theme 主题
+ * @returns 标准化后的主题
+ */
+const normalizeTheme = (theme: string) => {
+  if (theme === ThemeEnum.DARK) return ThemeEnum.DARK;
+  if (theme === ThemeEnum.LIGHT) return ThemeEnum.LIGHT;
+  return ThemeEnum.LIGHT;
+};
+
+/** 解析系统主题 */
+const resolveOsTheme = () => {
+  if (typeof window === "undefined" || typeof window.matchMedia !== "function") return ThemeEnum.LIGHT;
+  return window.matchMedia("(prefers-color-scheme: dark)").matches ? ThemeEnum.DARK : ThemeEnum.LIGHT;
+};
+
+/**
+ * 设置文档主题
+ * @param theme 主题
+ */
+const setDocumentTheme = (theme: string) => {
+  if (typeof document === "undefined") return;
+  document.documentElement.dataset.theme = theme;
 };
 
 export const useSettingStore = defineStore(StoresEnum.SETTING, {
@@ -64,10 +93,44 @@ export const useSettingStore = defineStore(StoresEnum.SETTING, {
      * 初始化主题
      * @param theme 主题
      */
+    /** 初始化主题 */
     initTheme(theme: string) {
-      this.themes.content = theme;
-      document.documentElement.dataset.theme = theme;
-      this.themes.pattern = theme;
+      const nextPattern = theme === ThemeEnum.OS ? ThemeEnum.OS : normalizeTheme(theme);
+      const nextContent = theme === ThemeEnum.OS ? resolveOsTheme() : normalizeTheme(theme);
+      this.$patch((state) => {
+        state.themes.pattern = nextPattern;
+        state.themes.content = nextContent;
+      });
+      setDocumentTheme(nextContent);
+      setTheme(Object.is(theme, "os") ? null : (theme as Theme));
+    },
+
+    /** 兜底修正主题状态 */
+    normalizeThemeState() {
+      if (this.themes.pattern === ThemeEnum.OS) {
+        this.syncOsTheme();
+        return;
+      }
+      const nextTheme = normalizeTheme(this.themes.pattern || this.themes.content);
+      if (this.themes.pattern !== nextTheme || this.themes.content !== nextTheme) {
+        this.$patch((state) => {
+          state.themes.pattern = nextTheme;
+          state.themes.content = nextTheme;
+        });
+      }
+      setDocumentTheme(nextTheme);
+    },
+
+    /** 同步系统主题到内容（仅在跟随系统时生效） */
+    syncOsTheme() {
+      if (this.themes.pattern !== ThemeEnum.OS) return;
+      const os = resolveOsTheme();
+      if (this.themes.content !== os) {
+        this.$patch((state) => {
+          state.themes.content = os;
+        });
+      }
+      setDocumentTheme(os);
     },
 
     /**
@@ -75,16 +138,22 @@ export const useSettingStore = defineStore(StoresEnum.SETTING, {
      * @param theme 主题
      */
     toggleTheme(theme: string) {
+      setTheme(Object.is(theme, "os") ? null : (theme as Theme));
       if (theme === ThemeEnum.OS) {
-        this.themes.pattern = theme;
-        const os = matchMedia("(prefers-color-scheme: dark)").matches ? ThemeEnum.DARK : ThemeEnum.LIGHT;
-        document.documentElement.dataset.theme = os;
-        this.themes.content = os;
-      } else {
-        this.themes.content = theme;
-        document.documentElement.dataset.theme = theme;
-        this.themes.pattern = theme;
+        const os = resolveOsTheme();
+        this.$patch((state) => {
+          state.themes.pattern = ThemeEnum.OS;
+          state.themes.content = os;
+        });
+        setDocumentTheme(os);
+        return;
       }
+      const nextTheme = normalizeTheme(theme);
+      this.$patch((state) => {
+        state.themes.pattern = nextTheme;
+        state.themes.content = nextTheme;
+      });
+      setDocumentTheme(nextTheme);
     },
 
     /**

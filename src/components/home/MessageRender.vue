@@ -535,7 +535,7 @@ const handleGlobalClick = async (event: MouseEvent) => {
   // TODO: 下载逻辑
   else if (action === "download") {
   }
-  // TODO: 运行逻辑
+  // 运行逻辑
   else if (action === "run") {
     const label = "previewCode";
     await createWebviewWindow("预览代码", label, 1200, 720, "", true, 800, 500);

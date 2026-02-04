@@ -12,7 +12,7 @@ import { listen } from "@tauri-apps/api/event";
 import { exit } from "@tauri-apps/plugin-process";
 import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
 
-import { EventEnum, MittEnum, StorageKeyEnum, ThemeEnum, WsResponseMessageEnum } from "@/enums";
+import { EventEnum, MittEnum, ThemeEnum, WsResponseMessageEnum } from "@/enums";
 import { useSettingStore } from "@/stores/setting";
 import { useUserStore } from "@/stores/user";
 import { loadLanguage } from "@/services/i18n";
@@ -28,6 +28,7 @@ const userStore = useUserStore();
 const { addListener } = useTauriListener();
 // 全局快捷键管理
 const { initializeGlobalShortcut, cleanupGlobalShortcut } = useGlobalShortcut();
+const { initTheme, normalizeThemeState, toggleTheme } = settingStore;
 const { themes, page } = storeToRefs(settingStore);
 const appWindow = WebviewWindow.getCurrent();
 const { sendWindowPayload, createWebviewWindow } = useWindow();
@@ -145,16 +146,26 @@ watch(
   { immediate: true }
 );
 
+// 监听主题变化
+watch(
+  () => themes.value.content,
+  (theme) => {
+    toggleTheme(theme);
+  }
+);
+
 onMounted(() => {
   if (isWindows10()) {
     appWindow.setShadow(false).catch((error) => {
       console.warn("禁用窗口阴影失败:", error);
     });
   }
-  // 判断localStorage中是否有设置主题
-  if (!localStorage.getItem(StorageKeyEnum.SETTING)) {
-    // 初始化设置
-    settingStore.initTheme(ThemeEnum.OS);
+  if (!themes.value.content) {
+    // 首次运行使用跟随系统，保持既有体验
+    initTheme(ThemeEnum.OS);
+  } else {
+    // 非首次运行时直接使用已恢复的主题信息，避免被强制改回“跟随系统”
+    normalizeThemeState();
   }
   document.documentElement.dataset.theme = themes.value.content;
   window.addEventListener("dragstart", preventDefault);

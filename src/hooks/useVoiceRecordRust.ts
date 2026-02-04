@@ -105,7 +105,7 @@ export const useVoiceRecordRust = (options: VoiceRecordRustOptions = {}) => {
       recordingTime.value = 0;
       // 初始化worker计时器
       if (!timerWorker) {
-        timerWorker = new Worker(new URL("../workers/timer.worker.ts", import.meta.url));
+        timerWorker = new Worker(new URL("@/workers/timer.worker.ts", import.meta.url));
         // 监听worker消息
         timerWorker.onmessage = (e) => {
           const { type, msgId } = e.data;

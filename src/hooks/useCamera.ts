@@ -26,8 +26,10 @@ export function useCamera() {
       });
       stream.value = mediaStream;
       videoElement.srcObject = mediaStream;
-      videoElement.play(); // 确保视频开始播放
+      // 必须调用 play 否则有些浏览器/环境不会自动播放
+      await videoElement.play();
       isCameraOpen.value = true;
+      photoUrl.value = ""; // 重置照片
     } catch (err) {
       console.error("摄像头启动失败:", err);
       throw new Error("无法访问摄像头，请检查权限或设备连接");
