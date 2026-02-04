@@ -3,6 +3,10 @@ declare global {
    * 全局自定义环境变量的类型声明
    */
   interface ViteEnv {
+    VITE_APP_NAME: string;
+    VITE_PC_URL: string;
+    VITE_SERVICE_URL: string;
+    VITE_ADMIN_URL: string;
     VITE_CDN: boolean;
     VITE_COMPRESSION: ViteCompression;
     VITE_CRYPTO_SECRET_KEY: string;

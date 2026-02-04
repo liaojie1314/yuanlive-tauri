@@ -137,6 +137,16 @@ const getCommonRoutes = (): Array<RouteRecordRaw> => [
     component: () => import("@/views/Capture.vue")
   },
   {
+    path: "/checkUpdate",
+    name: "checkUpdate",
+    component: () => import("@/views/CheckUpdate.vue")
+  },
+  {
+    path: "/update",
+    name: "update",
+    component: () => import("@/views/Update.vue")
+  },
+  {
     path: "/modal-remoteLogin",
     name: "modal-remoteLogin",
     component: () => import("@/views/loginWindow/RemoteLoginModal.vue")

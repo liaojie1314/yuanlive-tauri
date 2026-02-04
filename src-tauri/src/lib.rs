@@ -92,7 +92,7 @@ async fn initialize_app_data(
 ///
 /// 该函数会：
 /// - 关闭除 login/tray 外的大部分窗口
-/// - 隐藏但保留 capture 窗口
+/// - 隐藏但保留 capture/checkUpdate 窗口
 /// - 优雅地处理窗口关闭过程中的错误
 #[cfg(desktop)]
 pub async fn handle_logout_windows(app_handle: &AppHandle) {
@@ -110,7 +110,7 @@ pub async fn handle_logout_windows(app_handle: &AppHandle) {
                 info!("[LOGOUT] Skipping window: {}", label);
             }
             // 这些窗口只隐藏，不销毁
-            "capture" => {
+            "capture" | "checkUpdate" => {
                 info!("[LOGOUT] Marking window for preservation: {}", label);
                 windows_to_hide.push((label, window));
             }

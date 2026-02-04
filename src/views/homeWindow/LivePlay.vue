@@ -2,18 +2,15 @@
   <div
     class="live-play-container relative w-full h-full bg-black flex select-none"
     :class="{ 'more-gifts-open': moreGiftsVisible }">
-    <!-- 左侧内容区域 占3/4宽度，折叠时占100% -->
     <div
       :class="[
         'left-content',
         chatCollapsed ? 'w-full' : 'w-3/4',
         'h-full flex flex-col overflow-hidden transition-all duration-300 ease-in-out'
       ]">
-      <!-- 顶部信息栏 固定高度 -->
       <div
         data-tauri-drag-region
         class="top-info-bar w-full h-12 bg-black/80 flex items-center justify-between px-2 z-999">
-        <!-- 返回按钮和主播信息 -->
         <div class="flex items-center gap-3">
           <div
             @click="handleBack"
@@ -22,7 +19,6 @@
             <i-mdi-arrow-left class="w-6 h-6" />
           </div>
 
-          <!-- 主播信息 -->
           <div class="host-info flex items-center gap-3 bg-black/50 backdrop-blur-sm px-2 py-1 rounded-full">
             <div class="avatar w-8 h-8 rounded-full overflow-hidden border-2 border-red-500">
               <img src="https://picsum.photos/id/1/100/100" alt="主播头像" class="w-full h-full object-cover" />
@@ -53,9 +49,7 @@
           </div>
         </div>
 
-        <!-- 观众数量和前三名头像 -->
         <div class="flex items-center gap-2 mr-5">
-          <!-- 前三名头像 -->
           <div class="flex -space-x-2">
             <div
               v-for="(user, index) in audienceList.slice(0, 3)"
@@ -66,12 +60,10 @@
             </div>
           </div>
 
-          <!-- 在线观众数 -->
           <div v-if="chatCollapsed" class="flex items-center gap-2 bg-black/50 backdrop-blur-sm px-3 py-1 rounded-full">
             <span class="audience-count text-white font-medium">{{ audienceCount }}</span>
           </div>
 
-          <!-- 展开聊天区域按钮（仅在折叠状态显示） -->
           <div
             v-if="chatCollapsed"
             @click="toggleChat"
@@ -81,22 +73,21 @@
         </div>
       </div>
 
-      <!-- 视频播放器区域 自适应剩余高度 -->
       <div
-        class="player-container relative w-full flex-grow overflow-hidden"
+        class="player-container relative w-full flex-grow overflow-hidden bg-black flex justify-center items-center"
         @mouseenter="controlsVisible = true"
         @mouseleave="controlsVisible = false">
         <video
           ref="videoRef"
-          class="video-js vjs-big-play-centered object-contain"
+          class="w-full h-full object-contain"
           autoplay
           playsinline
-          preload="auto"
-          :controls="false">
+          :controls="false"
+          @play="isPlaying = true"
+          @pause="isPlaying = false">
           您的浏览器不支持视频播放。
         </video>
 
-        <!-- 视频控制按钮 -->
         <div
           class="video-controls absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-3 z-30 transition-all duration-300 transform"
           :class="{
@@ -104,23 +95,18 @@
             'translate-y-0 opacity-100': shouldShowControls
           }">
           <div class="controls-container flex items-center justify-between">
-            <!-- 左侧控制按钮 -->
             <div class="left-controls flex items-center gap-3">
-              <!-- 播放/暂停按钮 -->
               <div class="control-btn" @click="togglePlay">
                 <i-material-symbols-pause-rounded v-if="isPlaying" class="w-6 h-6 text-white" />
                 <i-material-symbols-play-arrow-rounded v-else class="w-6 h-6 text-white" />
               </div>
 
-              <!-- 刷新按钮 -->
               <div class="control-btn" @click="refreshVideo">
                 <i-material-symbols-refresh-rounded class="w-5 h-5 text-white" />
               </div>
             </div>
 
-            <!-- 右侧控制按钮 -->
             <div class="right-controls flex items-center gap-3">
-              <!-- 清晰度控制 -->
               <div class="control-item">
                 <n-dropdown :options="resolutionOptions" @select="switchResolution">
                   <div class="control-btn">
@@ -129,22 +115,18 @@
                 </n-dropdown>
               </div>
 
-              <!-- 屏幕旋转 -->
               <div class="control-btn" @click="toggleScreenRotation">
                 <i-mdi-rotate-3d class="w-5 h-5 text-white" />
               </div>
 
-              <!-- 弹幕设置 -->
               <div class="control-btn" @click="toggleDanmakuSettings">
                 <i-material-symbols-settings class="w-5 h-5 text-white" />
               </div>
 
-              <!-- 礼物设置 -->
               <div class="control-btn" @click="toggleGiftSettings">
                 <i-mdi-gift class="w-5 h-5 text-white" />
               </div>
 
-              <!-- 音量控制 -->
               <div
                 class="control-btn volume-control relative"
                 @mouseenter="showVolumeSlider = true"
@@ -161,17 +143,14 @@
                 </div>
               </div>
 
-              <!-- 小窗 -->
               <div class="control-btn" @click="toggleMiniWindow">
                 <i-mdi-dock-window class="w-5 h-5 text-white" />
               </div>
 
-              <!-- 窗口全屏 -->
               <div class="control-btn" @click="toggleWindowFullscreen">
                 <i-material-symbols-fullscreen class="w-5 h-5 text-white" />
               </div>
 
-              <!-- 全屏 -->
               <div class="control-btn" @click="toggleFullscreen">
                 <i-material-symbols-fullscreen-exit v-if="isFullscreen" class="w-5 h-5 text-white" />
                 <i-material-symbols-fullscreen v-else class="w-5 h-5 text-white" />
@@ -181,11 +160,8 @@
         </div>
       </div>
 
-      <!-- 送礼区 固定高度 -->
       <div class="gift-area w-full h-20 bg-black/90 flex items-center p-2 z-999">
-        <!-- 礼物列表 -->
         <div v-resize="calculateVisibleGiftCount" class="gift-list bg-amber flex items-center flex-1 rounded-md">
-          <!-- 礼物容器，用于隐藏溢出的礼物 -->
           <div class="gifts-container flex items-center overflow-hidden w-full">
             <n-popover
               v-for="(gift, index) in displayGifts"
@@ -198,7 +174,6 @@
               <template #trigger>
                 <div
                   class="gift-item-container flex flex-col items-center cursor-pointer flex-1 h-full relative overflow-visible transition-all duration-300">
-                  <!-- 竖线分割 -->
                   <div
                     v-if="index > 0"
                     class="gift-divider absolute left-0 top-1/2 transform -translate-y-1/2 h-10 w-[1px] bg-white/20"></div>
@@ -225,7 +200,6 @@
                     </div>
                     <div class="gift-cost text-white text-xs opacity-70">{{ gift.cost }}钻</div>
                   </div>
-                  <!-- 赠送按钮 -->
                   <div
                     class="gift-send-btn-container transition-all duration-300 opacity-0 transform translate-y-2 flex justify-center">
                     <div
@@ -249,12 +223,10 @@
               </div>
             </n-popover>
 
-            <!-- 更多按钮 -->
             <div
               v-if="showMoreBtn"
               class="gift-item-container gift-more-container flex flex-col items-center cursor-pointer flex-1 h-full relative"
               @click="toggleMoreGifts">
-              <!-- 竖线分割 -->
               <div
                 v-if="displayGifts.length > 0"
                 class="gift-divider absolute left-0 top-1/2 transform -translate-y-1/2 h-10 w-[1px] bg-white/20"></div>
@@ -280,7 +252,6 @@
           </div>
         </div>
 
-        <!-- 充值按钮 -->
         <div
           @click="handleRechargeClick"
           class="cursor-pointer recharge-btn bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-sm px-3 h-full flex flex-col items-center justify-center rounded-md hover:opacity-90 transition-opacity ml-3 mr-5">
@@ -303,10 +274,8 @@
         </div>
       </div>
 
-      <!-- 礼物动画容器 -->
       <div class="gift-animation-container absolute inset-0 pointer-events-none overflow-hidden z-20"></div>
 
-      <!-- 更多礼物弹窗 -->
       <div
         v-if="moreGiftsVisible"
         :class="[
@@ -314,7 +283,6 @@
           chatCollapsed ? 'right-0' : 'right-[25%]'
         ]"
         style="width: 320px; max-height: 380px">
-        <!-- 弹窗头部 -->
         <div class="more-gifts-header flex items-center justify-between px-4 py-3 border-b border-white/10">
           <h3 class="text-white font-medium">更多礼物</h3>
           <div
@@ -337,7 +305,6 @@
           </div>
         </div>
 
-        <!-- 礼物列表 -->
         <div class="more-gifts-content p-2">
           <n-scrollbar style="border-radius: 4px; max-height: 300px; min-height: 0">
             <div class="more-gifts-grid grid grid-cols-4 gap-2">
@@ -371,7 +338,6 @@
                       {{ gift.name }}
                     </div>
                     <div class="gift-cost text-white text-xs opacity-70">{{ gift.cost }}钻</div>
-                    <!-- 赠送按钮 -->
                     <div class="gift-send-btn-container mt-2">
                       <div
                         class="gift-send-btn bg-red-500 text-white text-xs font-medium py-1 px-4 rounded-md w-full cursor-pointer hover:bg-red-600 transition-colors text-center"
@@ -398,7 +364,6 @@
         </div>
       </div>
 
-      <!-- 充值弹窗 -->
       <div
         v-if="rechargeVisible"
         :class="[
@@ -406,7 +371,6 @@
           chatCollapsed ? 'right-0' : 'right-[25%]'
         ]"
         style="width: 500px; max-height: 340px">
-        <!-- 弹窗头部 -->
         <div class="recharge-header flex items-center justify-between px-4 py-3 bg-black">
           <h3 class="text-lg font-bold text-white">钻石充值</h3>
           <div class="flex items-center gap-4">
@@ -420,7 +384,6 @@
           </div>
         </div>
 
-        <!-- 充值金额选项 -->
         <div class="recharge-amounts px-3 bg-black">
           <div class="grid grid-cols-4 gap-3">
             <div
@@ -450,18 +413,14 @@
           </div>
         </div>
 
-        <!-- 扫码支付区域 -->
         <div class="recharge-payment py-2 px-3 bg-black border-t border-gray-800">
           <h4 class="text-md font-medium text-white mb-4">扫码支付</h4>
           <div class="payment-content flex flex-row gap-4 items-center">
-            <!-- 二维码 -->
             <div class="qrcode-container bg-white rounded-sm shadow-lg">
               <i-material-symbols-qr-code class="w-20! h-20!" />
             </div>
 
-            <!-- 支付信息区域 -->
             <div class="payment-info flex flex-col gap-2 flex-1">
-              <!-- 应付金额 -->
               <div class="amount-info text-left">
                 <div class="text-sm text-white">应付金额</div>
                 <div class="text-xl font-bold text-red-500 mt-1">
@@ -469,7 +428,6 @@
                 </div>
               </div>
 
-              <!-- 支付方式 -->
               <div class="payment-methods flex flex-col gap-2 w-full">
                 <div class="methods-icons flex items-center gap-3">
                   <div class="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center">
@@ -481,7 +439,6 @@
             </div>
           </div>
 
-          <!-- 充值按钮 -->
           <div class="recharge-footer p-4 bg-black border-t border-gray-800 mt-4">
             <button
               @click="handleRechargeSubmit"
@@ -493,11 +450,9 @@
       </div>
     </div>
 
-    <!-- 右侧聊天区域 占1/4宽度 -->
     <div
       v-if="!chatCollapsed"
       class="chat-container w-1/4 h-full bg-black/95 border-l border-white/10 flex flex-col transition-all duration-300 ease-in-out">
-      <!-- 聊天头部 -->
       <div class="chat-header flex items-center justify-between p-3 border-b border-white/10 overflow-hidden">
         <div class="flex items-center gap-2 whitespace-nowrap overflow-hidden flex-1">
           <i-mdi-account-group class="text-white flex-shrink-0" />
@@ -511,7 +466,6 @@
         </div>
       </div>
 
-      <!-- 标签页 -->
       <div class="chat-tabs flex border-b border-white/10 min-w-0">
         <div
           v-for="tab in chatTabs"
@@ -530,16 +484,13 @@
         </div>
       </div>
 
-      <!-- 聊天内容区域 -->
       <div class="chat-content flex-grow flex flex-col overflow-hidden">
-        <!-- 观众列表（上半部分） -->
         <div
           class="audience-list h-[155px] overflow-hidden transition-all duration-300 hover:h-1/2"
           @mouseenter="showUserCard = true"
           @mouseleave="handleAudienceListLeave">
           <n-scrollbar height="100%" ref="audienceScrollbar">
             <div class="p-2">
-              <!-- 观众列表 -->
               <div
                 v-for="(user, index) in audienceList"
                 :key="user.id"
@@ -574,9 +525,7 @@
           </n-scrollbar>
         </div>
 
-        <!-- 聊天消息（下半部分） -->
         <div class="message-list flex-1 overflow-hidden border-t border-white/10 transition-all duration-300 relative">
-          <!-- 用户信息卡片 -->
           <div
             v-if="showUserCard"
             class="user-info-card absolute top-0 left-0 right-0 z-10 transition-all duration-300">
@@ -597,14 +546,12 @@
 
           <n-scrollbar height="100%">
             <div class="p-2">
-              <!-- 系统消息 -->
               <div class="system-message text-center py-2">
                 <div class="inline-block px-3 py-1 bg-white/5 text-white/70 text-xs rounded-lg">
                   欢迎来到直播间！抖音严禁未成年人直播或礼物消费。严禁违法违规、低俗色情、吸烟酗酒、人身伤害等直播内容。理性消费，如主播在直播中以不当方式诱导消费，请谨慎辨别。切勿私下交易，以防人财两失，谨防网络诈骗。
                 </div>
               </div>
 
-              <!-- 用户消息 -->
               <div v-for="(message, index) in chatMessages" :key="index" class="message-item py-2">
                 <div class="flex items-start gap-2">
                   <div class="w-6 h-6 rounded-full overflow-hidden flex-shrink-0">
@@ -624,7 +571,6 @@
         </div>
       </div>
 
-      <!-- 聊天输入区域 -->
       <div class="chat-input-area p-3 border-t border-white/10">
         <div class="danmaku-input-wrapper">
           <div class="emoji-btn" @mouseenter="showEmojiPickerHover" @mouseleave="hideEmojiPickerHover">
@@ -654,13 +600,11 @@
 </template>
 
 <script setup lang="ts">
-import videojs from "video.js";
-import "video.js/dist/video-js.css";
-import "@videojs/http-streaming";
+import mpegts from "mpegts.js";
 
 const router = useRouter();
 const videoRef = ref<HTMLVideoElement | null>(null);
-let player: any = null;
+let flvPlayer: mpegts.Player | null = null;
 
 // 跟踪每个popover的显示状态
 const popoverVisible = ref<Record<number, boolean>>({});
@@ -1058,12 +1002,17 @@ const showMoreBtn = computed(() => {
 
 // 计算可显示的礼物数量
 const calculateVisibleGiftCount = ({ width }: { width: number }) => {
+  // 获取礼物列表宽度
+  const giftListWidth = width;
   // 单个礼物项最小宽度（包含图标、文字和内边距）
   const minGiftWidth = 80;
+
   // 计算可显示的礼物数量
-  let count = Math.floor(width / minGiftWidth);
+  let count = Math.floor(giftListWidth / minGiftWidth);
+
   // 确保至少显示2个礼物和1个更多按钮
   count = Math.max(count, 2);
+
   visibleGiftCount.value = count;
 };
 
@@ -1205,24 +1154,23 @@ const handleAudienceListLeave = () => {
   }, 300); // 等待动画完成后再滚动
 };
 
-// 视频控制相关方法
+// 视频控制逻辑：直接操作 videoRef 元素
 const togglePlay = () => {
-  isPlaying.value = !isPlaying.value;
-  if (player) {
+  if (videoRef.value) {
     if (isPlaying.value) {
-      player.play();
-      controlsVisible.value = false;
+      videoRef.value.pause();
     } else {
-      player.pause();
-      controlsVisible.value = true;
+      videoRef.value.play();
     }
   }
 };
 
+// 刷新视频：重建播放器
 const refreshVideo = () => {
-  if (player) {
-    player.load();
-    player.play();
+  if (flvPlayer) {
+    flvPlayer.unload();
+    flvPlayer.load();
+    flvPlayer.play();
     isPlaying.value = true;
   }
 };
@@ -1252,21 +1200,19 @@ const toggleWindowFullscreen = () => {
   console.log("Toggle window fullscreen");
 };
 
+// 全屏逻辑
 const toggleFullscreen = () => {
-  if (!player) return;
-
-  const videoElement = player.el();
-  if (!videoElement) return;
+  if (!videoRef.value) return;
 
   if (!document.fullscreenElement) {
-    if (videoElement.requestFullscreen) {
-      videoElement.requestFullscreen();
-    } else if ((videoElement as any).webkitRequestFullscreen) {
-      (videoElement as any).webkitRequestFullscreen();
-    } else if ((videoElement as any).mozRequestFullScreen) {
-      (videoElement as any).mozRequestFullScreen();
-    } else if ((videoElement as any).msRequestFullscreen) {
-      (videoElement as any).msRequestFullscreen();
+    if (videoRef.value.requestFullscreen) {
+      videoRef.value.requestFullscreen();
+    } else if ((videoRef.value as any).webkitRequestFullscreen) {
+      (videoRef.value as any).webkitRequestFullscreen();
+    } else if ((videoRef.value as any).mozRequestFullScreen) {
+      (videoRef.value as any).mozRequestFullScreen();
+    } else if ((videoRef.value as any).msRequestFullscreen) {
+      (videoRef.value as any).msRequestFullscreen();
     }
   } else {
     if (document.exitFullscreen) {
@@ -1288,13 +1234,12 @@ const switchResolution = (key: string) => {
   // 实际应用中这里会切换视频源
 };
 
-// 设置音量
+// 音量逻辑：直接操作 videoRef.value.volume
 const setVolume = (newVolume: number) => {
   volume.value = newVolume;
-  if (player) {
-    player.volume(newVolume / 100);
+  if (videoRef.value) {
+    videoRef.value.volume = newVolume / 100;
   }
-  console.log("Set volume to:", newVolume);
 };
 
 // Emoji选择器相关逻辑
@@ -1339,77 +1284,34 @@ const handleSelectEmoji = (emoji: string) => {
 };
 
 onMounted(() => {
-  // 初始化video.js播放器
-  if (videoRef.value) {
-    player = videojs(videoRef.value, {
-      controls: false,
-      autoplay: true,
-      preload: "auto",
-      responsive: true,
-      fluid: false,
-      bigPlayButton: false,
-      controlBar: false,
-      loadingSpinner: false,
-      posterImage: false,
-      textTrackDisplay: false,
-      errorDisplay: false,
-      pictureInPictureToggle: false,
-      fullscreenToggle: false,
-      // 添加FLV支持配置
-      sources: [
-        {
-          src: "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8",
-          type: "application/x-mpegURL"
-        }
-      ],
-      html5: {
-        vhs: {
-          enableLowInitialPlaylist: true,
-          smoothQualityChange: true
-        }
-      }
+  // 使用 mpegts 初始化 FLV 播放
+  if (mpegts.getFeatureList().mseLivePlayback && videoRef.value) {
+    flvPlayer = mpegts.createPlayer({
+      type: "flv",
+      isLive: true,
+      url: "http://localhost:8000/live/room1.flv" // 你的 FLV 拉流地址
     });
 
-    // 确保播放器尺寸正确
-    player.on("ready", () => {
-      const resizePlayer = () => {
-        if (videoRef.value && player) {
-          const container = videoRef.value.parentElement;
-          if (container) {
-            const rect = container.getBoundingClientRect();
-            player.width(rect.width);
-            player.height(rect.height);
-          }
-        }
-      };
-
-      resizePlayer();
-      window.addEventListener("resize", resizePlayer);
-    });
-
-    // 事件监听器
-    player.on("play", () => {
+    flvPlayer.attachMediaElement(videoRef.value);
+    flvPlayer.load();
+    const playPromise = flvPlayer.play();
+    if (playPromise !== undefined) {
+      playPromise
+        .then(() => {
+          isPlaying.value = true;
+        })
+        .catch((err: any) => {
+          console.error("Auto play failed", err);
+          isPlaying.value = false;
+        });
+    } else {
+      // 如果返回 void，说明是旧版逻辑，通常直接视为播放成功
       isPlaying.value = true;
-      controlsVisible.value = false;
-    });
+    }
 
-    player.on("pause", () => {
-      isPlaying.value = false;
-      controlsVisible.value = true;
-    });
-
-    // 监听全屏状态变化
-    document.addEventListener("fullscreenchange", () => {
-      isFullscreen.value = !!document.fullscreenElement;
-    });
-    document.addEventListener("webkitfullscreenchange", () => {
-      isFullscreen.value = !!(document as any).webkitFullscreenElement;
-    });
-    document.addEventListener("mozfullscreenchange", () => {
-      isFullscreen.value = !!(document as any).mozFullScreenElement;
-    });
-    document.addEventListener("MSFullscreenChange", () => {
-      isFullscreen.value = !!(document as any).msFullscreenElement;
+    // 监听错误
+    flvPlayer.on(mpegts.Events.ERROR, (type, details) => {
+      console.log("flv error", type, details);
     });
   }
 
@@ -1451,10 +1353,10 @@ onMounted(() => {
 });
 
 onUnmounted(() => {
-  // 清理视频播放器
-  if (player) {
-    player.dispose();
-    player = null;
+  // 销毁播放器
+  if (flvPlayer) {
+    flvPlayer.destroy();
+    flvPlayer = null;
   }
 
   // 清理动画帧
@@ -1830,64 +1732,6 @@ onUnmounted(() => {
   font-weight: 500;
 }
 
-/* 自定义video.js样式 */
-:deep(.video-js) {
-  width: 100%;
-  height: 100%;
-  --vjs-theme-sea-primary: #ff0000;
-  object-fit: contain;
-  max-width: 100%;
-  max-height: 100%;
-}
-
-:deep(.vjs-tech) {
-  object-fit: contain !important;
-  width: 100% !important;
-  height: 100% !important;
-}
-
-:deep(.vjs-control-bar) {
-  background: linear-gradient(to top, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0) 100%);
-  padding: 10px 20px;
-}
-
-:deep(.vjs-button) {
-  color: #fff;
-  font-size: 16px;
-}
-
-:deep(.vjs-button:hover) {
-  color: #ff0000;
-}
-
-:deep(.vjs-play-progress) {
-  background-color: #ff0000;
-}
-
-:deep(.vjs-slider-bar) {
-  background-color: #ff0000;
-}
-
-:deep(.vjs-big-play-button) {
-  background-color: rgba(255, 0, 0, 0.7);
-  border-color: #fff;
-  border-radius: 50%;
-  width: 80px;
-  height: 80px;
-  margin-left: -40px;
-  margin-top: -40px;
-}
-
-:deep(.vjs-big-play-button:hover) {
-  background-color: rgba(255, 0, 0, 0.9);
-  border-color: #fff;
-  transform: scale(1.1);
-}
-
-:deep(.vjs-loading-spinner) {
-  border-color: rgba(255, 0, 0, 0.5);
-}
-
 /* 自定义naive-ui样式 */
 :deep(.n-popover) {
   z-index: 1000 !important;
@@ -1970,6 +1814,4 @@ onUnmounted(() => {
 .more-gifts-popup :deep(.n-popover) {
   z-index: 1001 !important;
 }
-
-/* 充值弹窗样式已集成到类名中，无需额外样式 */
 </style>

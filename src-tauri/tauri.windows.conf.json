@@ -84,6 +84,19 @@
         "decorations": false,
         "visible": false,
         "hiddenTitle": true
+      },
+      {
+        "label": "checkUpdate",
+        "url": "/checkUpdate",
+        "resizable": false,
+        "width": 500,
+        "height": 150,
+        "alwaysOnTop": true,
+        "focus": true,
+        "skipTaskbar": true,
+        "visible": false,
+        "decorations": false,
+        "hiddenTitle": true
       }
     ],
     "security": {

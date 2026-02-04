@@ -1,3 +1,7 @@
 onlyBuiltDependencies:
   - '@parcel/watcher'
+  - '@vue-office/docx'
+  - '@vue-office/excel'
+  - '@vue-office/pdf'
+  - '@vue-office/pptx'
   - esbuild

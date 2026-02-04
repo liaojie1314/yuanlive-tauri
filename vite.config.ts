@@ -1,8 +1,11 @@
+import os from "os";
 import { join } from "node:path";
 import { readFileSync } from "node:fs";
+import { internalIpV4 } from "internal-ip";
 import postcsspxtorem from "postcss-pxtorem";
 import { ConfigEnv, defineConfig, loadEnv } from "vite";
 import { root, getSrcPath, createManualChunks, wrapperEnv } from "./build/utils";
+import { atStartup } from "./build/console";
 import { getPluginsList } from "./build/plugins";
 import { include, exclude } from "./build/optimize";
 
@@ -10,9 +13,48 @@ import { include, exclude } from "./build/optimize";
 const packageJson = JSON.parse(readFileSync(join(process.cwd(), "package.json"), "utf-8"));
 const dependencies = Object.keys(packageJson.dependencies || {});
 
+function getLocalIP() {
+  const interfaces = os.networkInterfaces();
+  for (const name of Object.keys(interfaces)) {
+    for (const iface of interfaces[name] || []) {
+      // 只要 IPv4、非内网回环地址
+      if (iface.family === "IPv4" && !iface.internal) {
+        return iface.address;
+      }
+    }
+  }
+  return void 0;
+}
+
+// 预先获取本地IP
+const rawIP = getLocalIP() || (await internalIpV4());
+
 // https://vite.dev/config/
 export default defineConfig(({ mode }: ConfigEnv) => {
   const { VITE_CDN, VITE_COMPRESSION } = wrapperEnv(loadEnv(mode, root));
+  const config = loadEnv(mode, process.cwd(), "");
+  const currentPlatform = config.TAURI_ENV_PLATFORM;
+  const isPC = currentPlatform === "windows" || currentPlatform === "darwin" || currentPlatform === "linux";
+  // 根据平台决定host地址
+  const host = (() => {
+    if (isPC) {
+      return "127.0.0.1";
+    }
+
+    // 移动端逻辑：检查是否为有效的内网IP地址
+    if (rawIP && !rawIP.endsWith(".0") && !rawIP.endsWith(".255")) {
+      return rawIP; // 有效IP且非网段/广播地址
+    }
+
+    // 无效IP或特殊地址的情况
+    return config.TAURI_ENV_PLATFORM === "ios"
+      ? (rawIP ?? "127.0.0.1")
+      : config.TAURI_ENV_PLATFORM === "android"
+        ? "0.0.0.0"
+        : "127.0.0.1";
+  })();
+  // 是否开启启动时打印信息
+  atStartup(config, mode, host)();
   return {
     resolve: {
       alias: {
