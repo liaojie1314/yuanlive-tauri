@@ -171,6 +171,13 @@ const dragOffset: Ref<{ x: number; y: number }> = ref({ x: 0, y: 0 });
 
 // 圆角控制器样式
 const borderRadiusControllerStyle: Ref<any> = ref({});
+// 定义一个全局变量用于存储动画帧 ID
+let rafId: number | null = null;
+// 防止重复初始化的锁
+const isInitializing = ref(false);
+// 存储取消监听的函数
+let unlistenCapture: (() => void) | null = null;
+let unlistenCaptureReset: (() => void) | null = null;
 
 // resize相关
 const isResizing: Ref<boolean> = ref(false);
@@ -210,7 +217,6 @@ const currentDrawTool: Ref<string | null> = ref(null);
 
 // 性能优化：鼠标移动事件节流（仅 macOS）
 let mouseMoveThrottleId: number | null = null;
-const mouseMoveThrottleDelay = 16; // 约60FPS，在菜单栏区域降低频率
 
 // 窗口状态恢复函数
 const restoreWindowState = async () => {
@@ -316,163 +322,166 @@ const resetDrawTools = () => {
   console.log("绘图工具已重置");
 };
 
-/**
- * 初始化canvas
- */
 const initCanvas = async () => {
-  // 在截图前隐藏放大镜，避免被截进去
-  if (magnifier.value) {
-    magnifier.value.style.display = "none";
+  // 如果正在初始化中，直接忽略本次请求，防止双重加载
+  if (isInitializing.value) {
+    console.warn("⚠️ initCanvas 正在运行，跳过重复调用");
+    return;
   }
-  // 重置绘图工具状态
-  resetDrawTools();
 
-  // 重置图像加载状态
-  isImageLoaded = false;
+  isInitializing.value = true;
 
-  // 重置其他状态
-  borderRadius.value = 0;
-  isDragging.value = false;
-  isResizing.value = false;
-
-  const canvasWidth = Math.round(screen.width * window.devicePixelRatio);
-  const canvasHeight = Math.round(screen.height * window.devicePixelRatio);
-
-  const config = {
-    x: "0",
-    y: "0",
-    width: `${canvasWidth}`,
-    height: `${canvasHeight}`
-  };
-
-  const screenshotData = await invokeWithErrorHandler(TauriCommandEnum.SCREENSHOT, config, {
-    customErrorMessage: "截图失败",
-    errorType: ErrorType.Client
-  });
-
-  if (imgCanvas.value && maskCanvas.value) {
-    imgCanvas.value.width = canvasWidth;
-    imgCanvas.value.height = canvasHeight;
-    maskCanvas.value.width = canvasWidth;
-    maskCanvas.value.height = canvasHeight;
-    drawCanvas.value!.width = canvasWidth;
-    drawCanvas.value!.height = canvasHeight;
-
-    imgCtx.value = imgCanvas.value.getContext("2d");
-    maskCtx.value = maskCanvas.value.getContext("2d");
-    drawCtx.value = drawCanvas.value!.getContext("2d", { willReadFrequently: true });
-
-    // 清除绘图canvas的内容
-    if (drawCtx.value) {
-      drawCtx.value.clearRect(0, 0, canvasWidth, canvasHeight);
-      console.log("绘图canvas已清除");
+  try {
+    // 1. 清理
+    if (magnifier.value) magnifier.value.style.display = "none";
+    if (drawTools) {
+      drawTools.dispose?.() || drawTools.clearEvents?.();
+      drawTools = null;
     }
-
-    // 获取屏幕缩放比例
-    const { clientWidth: containerWidth, clientHeight: containerHeight } = imgCanvas.value!;
-    screenConfig.value.scaleX = canvasWidth / containerWidth;
-    screenConfig.value.scaleY = canvasHeight / containerHeight;
-
-    screenshotImage = new Image();
-
-    screenshotImage.onload = () => {
-      if (imgCtx.value) {
-        try {
-          imgCtx.value.drawImage(screenshotImage, 0, 0, canvasWidth, canvasHeight);
-
-          // 绘制全屏绿色边框
-          if (maskCtx.value) {
-            drawRectangle(
-              maskCtx.value,
-              screenConfig.value.startX,
-              screenConfig.value.startY,
-              canvasWidth,
-              canvasHeight,
-              4
-            );
-          }
-
-          if (drawCanvas.value && drawCtx.value && imgCtx.value) {
-            drawTools = useCanvasTool(drawCanvas, drawCtx, imgCtx, screenConfig);
-            // 初始化时禁用绘图canvas事件，让事件穿透到选区
-            drawCanvas.value.style.pointerEvents = "none";
-            drawCanvas.value.style.zIndex = "5";
-            // 同步 canUndo 状态到本组件用于禁用撤回按钮
-            if (drawTools?.canUndo) {
-              watch(drawTools.canUndo, (val: boolean) => (canUndo.value = val), { immediate: true });
-            }
-            console.log("绘图工具初始化完成 (备用方式)");
-          }
-          isImageLoaded = true;
-        } catch (error) {
-          console.error("绘制图像到canvas失败:", error);
-        }
-      } else {
-        console.error("imgCtx.value为空");
-      }
+    isImageLoaded = false;
+    borderRadius.value = 0;
+    screenConfig.value = {
+      startX: 0,
+      startY: 0,
+      endX: 0,
+      endY: 0,
+      scaleX: 1,
+      scaleY: 1,
+      isDrawing: false,
+      width: 0,
+      height: 0
     };
 
-    // 直接将原始buffer绘制到canvas，不使用Image对象
-    if (screenshotData && imgCtx.value) {
-      try {
-        // 解码base64数据
-        const binaryString = atob(screenshotData);
-        const bytes = new Uint8Array(binaryString.length);
-        for (let i = 0; i < binaryString.length; i++) {
-          bytes[i] = binaryString.charCodeAt(i);
-        }
+    // 2. 截图请求
+    const currentX = window.screenX + window.innerWidth / 2;
+    const currentY = window.screenY + window.innerHeight / 2;
 
-        // 创建ImageData并绘制到canvas
-        const imageData = new ImageData(new Uint8ClampedArray(bytes), canvasWidth, canvasHeight);
-        imgCtx.value.putImageData(imageData, 0, 0);
+    const screenshotData = await invokeWithErrorHandler(
+      TauriCommandEnum.SCREENSHOT,
+      { x: currentX, y: currentY },
+      { customErrorMessage: "截图失败", errorType: ErrorType.Client }
+    );
 
-        // 绘制全屏绿色边框
-        if (maskCtx.value) {
-          drawRectangle(
-            maskCtx.value,
-            screenConfig.value.startX,
-            screenConfig.value.startY,
-            canvasWidth,
-            canvasHeight,
-            4
-          );
-        }
+    if (!screenshotData) return;
 
-        if (drawCanvas.value && drawCtx.value && imgCtx.value) {
-          drawTools = useCanvasTool(drawCanvas, drawCtx, imgCtx, screenConfig);
-          // 初始化时禁用绘图canvas事件，让事件穿透到选区
-          drawCanvas.value.style.pointerEvents = "none";
-          drawCanvas.value.style.zIndex = "5";
-          // 同步 canUndo 状态到本组件用于禁用撤回按钮
-          if (drawTools?.canUndo) {
-            watch(drawTools.canUndo, (val: boolean) => (canUndo.value = val), { immediate: true });
+    // 3. 加载与初始化
+    if (imgCanvas.value && maskCanvas.value && drawCanvas.value) {
+      await new Promise<void>((resolve) => {
+        screenshotImage = new Image();
+
+        screenshotImage.onload = () => {
+          // 二次检查防止组件卸载
+          const imgEl = imgCanvas.value;
+          const maskEl = maskCanvas.value;
+          const drawEl = drawCanvas.value;
+          if (!imgEl || !maskEl || !drawEl) {
+            resolve();
+            return;
           }
-          console.log("绘图工具初始化完成");
-        }
-        isImageLoaded = true;
-      } catch (error) {
-        // 如果直接绘制失败，回退到Image对象方式
+
+          const realWidth = screenshotImage.naturalWidth;
+          const realHeight = screenshotImage.naturalHeight;
+          const dpr = window.devicePixelRatio || 1;
+          const cssStyleWidth = realWidth / dpr;
+          const cssStyleHeight = realHeight / dpr;
+
+          console.log(`📊 适配数据: 物理=${realWidth}x${realHeight}, DPR=${dpr}`);
+
+          // 设置尺寸
+          [imgEl, maskEl, drawEl].forEach((cvs) => {
+            cvs.width = realWidth;
+            cvs.height = realHeight;
+            cvs.style.width = `${cssStyleWidth}px`;
+            cvs.style.height = `${cssStyleHeight}px`;
+          });
+
+          // 获取 Context
+          imgCtx.value = imgEl.getContext("2d", { willReadFrequently: true });
+          maskCtx.value = maskEl.getContext("2d");
+          drawCtx.value = drawEl.getContext("2d", { willReadFrequently: true });
+
+          if (imgCtx.value && maskCtx.value && drawCtx.value) {
+            // 1. 清空并绘制图片层
+            imgCtx.value.clearRect(0, 0, realWidth, realHeight);
+            imgCtx.value.drawImage(screenshotImage, 0, 0);
+
+            screenConfig.value.scaleX = dpr;
+            screenConfig.value.scaleY = dpr;
+
+            // 2. 清空绘图工具层
+            drawCtx.value.clearRect(0, 0, realWidth, realHeight);
+
+            // 3. 强制清空蒙层画布！
+            // 这一步解决了"1秒后变黑"的问题。无论之前是否残留，现在必须归零。
+            maskCtx.value.clearRect(0, 0, realWidth, realHeight);
+            drawTools = useCanvasTool(drawCanvas, drawCtx, imgCtx, screenConfig);
+            drawEl.style.pointerEvents = "none";
+            drawEl.style.zIndex = "5";
+
+            if (drawTools?.canUndo) {
+              watch(drawTools.canUndo, (val) => (canUndo.value = val), { immediate: true });
+            }
+
+            // 此时 maskCtx 是干净的，调用 drawMask 只会画这一层
+            drawMask();
+
+            isImageLoaded = true;
+            console.log("✅ 适配完成，初始化结束");
+            resolve();
+          }
+        };
+
+        screenshotImage.onerror = () => {
+          console.error("图片加载失败");
+          resolve();
+        };
+
         screenshotImage.src = `data:image/png;base64,${screenshotData}`;
-      }
-    } else {
-      screenshotImage.src = `data:image/png;base64,${screenshotData}`;
+      });
     }
+
+    bindEvents();
+  } catch (error) {
+    console.error("初始化过程出错:", error);
+  } finally {
+    setTimeout(() => (isInitializing.value = false), 1000);
+  }
+};
+
+/**
+ * 绑定全局和 Canvas 事件
+ * 采用“先移除后添加”的策略，防止重复绑定导致内存泄漏或逻辑错误
+ */
+const bindEvents = () => {
+  // 1. 针对 maskCanvas (遮罩层) 的鼠标事件
+  // 用户在未选区时，是在 maskCanvas 上进行拖拽框选的
+  if (maskCanvas.value) {
+    // 移除旧事件
+    maskCanvas.value.removeEventListener("mousedown", handleMaskMouseDown);
+    maskCanvas.value.removeEventListener("mousemove", handleMaskMouseMove);
+    maskCanvas.value.removeEventListener("mouseup", handleMaskMouseUp);
+    maskCanvas.value.removeEventListener("contextmenu", handleRightClick);
+
+    // 添加新事件
+    maskCanvas.value.addEventListener("mousedown", handleMaskMouseDown);
+    maskCanvas.value.addEventListener("mousemove", handleMaskMouseMove);
+    maskCanvas.value.addEventListener("mouseup", handleMaskMouseUp);
+    maskCanvas.value.addEventListener("contextmenu", handleRightClick);
   }
 
-  // 添加鼠标监听事件
-  maskCanvas.value?.addEventListener("mousedown", handleMaskMouseDown);
-  maskCanvas.value?.addEventListener("mousemove", handleMaskMouseMove);
-  maskCanvas.value?.addEventListener("mouseup", handleMaskMouseUp);
-  maskCanvas.value?.addEventListener("contextmenu", handleRightClick);
-
-  // 添加键盘监听事件
+  // 2. 全局键盘事件 (例如按 ESC 退出截图)
+  document.removeEventListener("keydown", handleKeyDown);
   document.addEventListener("keydown", handleKeyDown);
 
-  // 添加全局右键监听事件
+  // 3. 全局右键事件 (防止弹出浏览器默认菜单，通常用于退出或取消)
+  document.removeEventListener("contextmenu", handleRightClick);
   document.addEventListener("contextmenu", handleRightClick);
 
-  // 添加全局点击监听，用于取消绘图工具
+  // 4. 全局点击事件 (用于点击空白处取消当前激活的绘图工具等)
+  document.removeEventListener("mousedown", handleGlobalMouseDown);
   document.addEventListener("mousedown", handleGlobalMouseDown);
+
+  console.log("✅ 事件监听已重新绑定");
 };
 
 const handleMagnifierMouseMove = (event: MouseEvent) => {
@@ -562,103 +571,112 @@ const handleMagnifierMouseMove = (event: MouseEvent) => {
 };
 
 const handleMaskMouseDown = (event: MouseEvent) => {
-  // 如果已经显示按钮组，则不执行任何操作
-  if (showButtonGroup.value) return;
+  // 禁止未加载或已存在选区时操作
+  if (!isImageLoaded || showButtonGroup.value) return;
+
+  // 立即取消可能存在的上一帧渲染请求，防止"双重蒙层"重影
+  if (rafId) {
+    cancelAnimationFrame(rafId);
+    rafId = null;
+  }
+
   const offsetEvent = event as any;
-  screenConfig.value.startX = offsetEvent.offsetX * screenConfig.value.scaleX;
-  screenConfig.value.startY = offsetEvent.offsetY * screenConfig.value.scaleY;
+
+  screenConfig.value.startX = Math.round(offsetEvent.offsetX * screenConfig.value.scaleX);
+  screenConfig.value.startY = Math.round(offsetEvent.offsetY * screenConfig.value.scaleY);
+
+  // 重置终点为起点
+  screenConfig.value.endX = screenConfig.value.startX;
+  screenConfig.value.endY = screenConfig.value.startY;
+
   screenConfig.value.isDrawing = true;
-  if (!screenConfig.value.isDrawing) {
-    drawMask();
-  } // 先绘制遮罩层
+
+  // 立即初始化干净的蒙层
+  if (maskCtx.value && maskCanvas.value) {
+    maskCtx.value.clearRect(0, 0, maskCanvas.value.width, maskCanvas.value.height);
+    maskCtx.value.fillStyle = "rgba(0, 0, 0, 0.4)";
+    maskCtx.value.fillRect(0, 0, maskCanvas.value.width, maskCanvas.value.height);
+  }
+};
+
+/**
+ * 核心渲染帧函数
+ * @param drawBorder 是否绘制边框 (拖动选区时为 false，因为 DOM 元素已有边框)
+ */
+const renderMaskFrame = (currentX: number, currentY: number, drawBorder: boolean = true) => {
+  if (!maskCtx.value || !maskCanvas.value) return;
+
+  const width = maskCanvas.value.width;
+  const height = maskCanvas.value.height;
+  const { startX, startY } = screenConfig.value;
+
+  // 1. 彻底清空画布 (防止颜色叠加变深)
+  maskCtx.value.clearRect(0, 0, width, height);
+
+  // 2. 绘制全屏半透明遮罩
+  maskCtx.value.fillStyle = "rgba(0, 0, 0, 0.4)";
+  maskCtx.value.fillRect(0, 0, width, height);
+
+  // 3. 计算标准化的矩形
+  const drawX = Math.min(startX, currentX);
+  const drawY = Math.min(startY, currentY);
+  const drawW = Math.abs(currentX - startX);
+  const drawH = Math.abs(currentY - startY);
+
+  // 4. 挖空选区
+  if (drawW > 0 && drawH > 0) {
+    maskCtx.value.clearRect(drawX, drawY, drawW, drawH);
+  }
+
+  // 5. 绘制选区边框 (仅在创建选区时绘制，拖动时由 DOM 负责显示)
+  if (drawBorder) {
+    maskCtx.value.strokeStyle = "#13987f";
+    maskCtx.value.lineWidth = 2;
+    maskCtx.value.strokeRect(drawX, drawY, drawW, drawH);
+    // 绘制尺寸文字
+    drawSizeText(maskCtx.value, drawX, drawY, drawW, drawH);
+  }
 };
 
 const handleMaskMouseMove = (event: MouseEvent) => {
   handleMagnifierMouseMove(event);
+
   if (!screenConfig.value.isDrawing || !maskCtx.value || !maskCanvas.value) return;
 
   const offsetEvent = event as any;
+  const currentX = Math.round(offsetEvent.offsetX * screenConfig.value.scaleX);
+  const currentY = Math.round(offsetEvent.offsetY * screenConfig.value.scaleY);
 
-  // 只在 macOS 上应用性能优化
-  if (isMac()) {
-    // 在菜单栏区域（y < 30）使用更强的节流来减少卡顿
-    const currentY = offsetEvent.offsetY * screenConfig.value.scaleY;
-    const isInMenuBar = currentY < 30; // 菜单栏区域
-    const throttleDelay = isInMenuBar ? 32 : mouseMoveThrottleDelay; // 菜单栏区域降低到30FPS
+  if (rafId) return;
 
-    if (mouseMoveThrottleId) {
-      return;
-    }
-
-    mouseMoveThrottleId = window.setTimeout(() => {
-      mouseMoveThrottleId = null;
-
-      if (!screenConfig.value.isDrawing || !maskCtx.value || !maskCanvas.value) return;
-
-      const mouseX = offsetEvent.offsetX * screenConfig.value.scaleX;
-      const mouseY = offsetEvent.offsetY * screenConfig.value.scaleY;
-      const width = mouseX - screenConfig.value.startX;
-      const height = mouseY - screenConfig.value.startY;
-
-      // 优化：使用 save/restore 来减少重绘开销
-      maskCtx.value.save();
-
-      // 清除之前的矩形区域
-      maskCtx.value.clearRect(0, 0, maskCanvas.value.width, maskCanvas.value.height);
-
-      // 重新绘制整个遮罩层
-      drawMask();
-
-      // 清除矩形区域内的遮罩，实现透明效果
-      maskCtx.value.clearRect(screenConfig.value.startX, screenConfig.value.startY, width, height);
-
-      // 绘制矩形边框
-      drawRectangle(maskCtx.value, screenConfig.value.startX, screenConfig.value.startY, width, height);
-
-      maskCtx.value.restore();
-    }, throttleDelay);
-  } else {
-    const mouseX = offsetEvent.offsetX * screenConfig.value.scaleX;
-    const mouseY = offsetEvent.offsetY * screenConfig.value.scaleY;
-    const width = mouseX - screenConfig.value.startX;
-    const height = mouseY - screenConfig.value.startY;
-
-    // 清除之前的矩形区域
-    maskCtx.value.clearRect(0, 0, maskCanvas.value.width, maskCanvas.value.height);
-
-    // 重新绘制整个遮罩层
-    drawMask();
-
-    // 清除矩形区域内的遮罩，实现透明效果
-    maskCtx.value.clearRect(screenConfig.value.startX, screenConfig.value.startY, width, height);
-
-    // 绘制矩形边框
-    drawRectangle(maskCtx.value, screenConfig.value.startX, screenConfig.value.startY, width, height);
-  }
+  rafId = requestAnimationFrame(() => {
+    renderMaskFrame(currentX, currentY, true);
+    rafId = null;
+  });
 };
 
 const handleMaskMouseUp = (event: MouseEvent) => {
   if (!screenConfig.value.isDrawing) return;
+
+  // 停止拖动时，取消所有挂起的渲染帧
+  if (rafId) {
+    cancelAnimationFrame(rafId);
+    rafId = null;
+  }
+
   screenConfig.value.isDrawing = false;
-  // 记录矩形区域的结束坐标
+
   const offsetEvent = event as any;
   screenConfig.value.endX = offsetEvent.offsetX * screenConfig.value.scaleX;
   screenConfig.value.endY = offsetEvent.offsetY * screenConfig.value.scaleY;
 
-  // 记录矩形区域的宽高
   screenConfig.value.width = Math.abs(screenConfig.value.endX - screenConfig.value.startX);
   screenConfig.value.height = Math.abs(screenConfig.value.endY - screenConfig.value.startY);
-  // 判断矩形区域是否有效
+
   if (screenConfig.value.width > 5 && screenConfig.value.height > 5) {
-    // 隐藏放大镜，避免干扰后续操作
-    if (magnifier.value) {
-      magnifier.value.style.display = "none";
-    }
-
-    // 重绘蒙版
+    if (magnifier.value) magnifier.value.style.display = "none";
     redrawSelection();
-
-    showButtonGroup.value = true; // 显示按钮组
+    showButtonGroup.value = true;
     nextTick(() => {
       updateButtonGroupPosition();
     });
@@ -667,9 +685,10 @@ const handleMaskMouseUp = (event: MouseEvent) => {
 
 // 计算矩形区域工具栏位置
 const updateButtonGroupPosition = () => {
-  if (!buttonGroup.value) return;
+  // 增加 imgCanvas 检查
+  if (!buttonGroup.value || !imgCanvas.value) return;
 
-  // 按钮组不可见、正在拖动或正在调整大小时，不进行尺寸测量和定位
+  // 按钮组不可见、正在拖动或正在调整大小时，不进行定位
   if (!showButtonGroup.value || isDragging.value || isResizing.value) {
     updateSelectionAreaPosition();
     return;
@@ -677,59 +696,49 @@ const updateButtonGroupPosition = () => {
 
   const { scaleX, scaleY, startX, startY, endX, endY } = screenConfig.value;
 
-  // 矩形的边界
-  const minY = Math.min(startY, endY) / scaleY;
+  // 获取选区边界 (CSS像素)
   const maxX = Math.max(startX, endX) / scaleX;
-  const maxY = Math.max(startY, endY) / scaleY;
+  const maxY = Math.max(startY, endY) / scaleY; // 选区底部 Y 坐标
 
-  // 可用屏幕尺寸
-  const availableHeight = window.innerHeight;
-  const availableWidth = window.innerWidth;
+  // 获取容器尺寸 (使用 imgCanvas 的尺寸，最准确)
+  const containerWidth = imgCanvas.value.offsetWidth;
+  const containerHeight = imgCanvas.value.offsetHeight;
 
   const el = buttonGroup.value;
-  el.style.flexWrap = "nowrap";
-  el.style.whiteSpace = "nowrap";
+  // 重置样式以便正确测量
   el.style.width = "max-content";
-  el.style.overflow = "visible";
+  el.style.whiteSpace = "nowrap";
 
   const rect = el.getBoundingClientRect();
-  const measuredHeight = rect.height;
-  const contentWidth = el.scrollWidth || rect.width;
+  const toolHeight = rect.height;
+  const toolWidth = rect.width;
 
-  const maxAllowedWidth = availableWidth - 20;
-  const finalWidth = Math.min(contentWidth, maxAllowedWidth);
+  // 1. 计算水平位置 (默认右对齐)
+  let left = maxX - toolWidth;
+  // 边界检查：防止溢出屏幕左/右边界 (保持 10px 间距)
+  if (left < 10) left = 10;
+  if (left + toolWidth > containerWidth - 10) left = containerWidth - toolWidth - 10;
 
-  // 判断是否能放在选区下方
-  const spaceBelow = availableHeight - maxY;
-  const canFitBelow = spaceBelow >= measuredHeight + 10; // 留10px缓冲
+  // 2. 计算垂直位置
+  // 策略：默认放在选区下方 (10px 间距)
+  let top = maxY + 10;
 
-  let leftPosition: number;
-  let topPosition: number;
-
-  if (canFitBelow) {
-    // 优先放在选区下方
-    topPosition = maxY + 4;
-
-    // 与选区右对齐
-    leftPosition = maxX - finalWidth;
-    leftPosition = Math.max(10, Math.min(leftPosition, availableWidth - finalWidth - 10));
-  } else {
-    // 选区下方空间不足，放在选区上方
-    topPosition = minY - (measuredHeight + 4);
-    if (topPosition < 0) topPosition = 10;
-
-    // 与选区右对齐
-    leftPosition = maxX - finalWidth;
-    leftPosition = Math.max(10, Math.min(leftPosition, availableWidth - finalWidth - 10));
+  // 检查是否超出容器底部
+  // 如果 (当前Top + 工具栏高度) 超过了 容器高度
+  if (top + toolHeight > containerHeight) {
+    // 翻转策略：放在选区【内部】的底部 (10px 间距)
+    // 公式：选区底边Y - 工具栏高度 - 间距
+    top = maxY - toolHeight - 10;
   }
 
-  // 应用最终位置与宽度
-  el.style.top = `${topPosition}px`;
-  el.style.left = `${leftPosition}px`;
-  el.style.width = `${finalWidth}px`;
-  el.style.boxSizing = "border-box";
+  // 安全检查：如果翻转后顶出了屏幕上边缘（极少数情况），强制吸顶
+  if (top < 0) top = 10;
 
-  // 更新选区拖动区域位置
+  // 应用位置
+  el.style.top = `${top}px`;
+  el.style.left = `${left}px`;
+
+  // 同步更新选区拖动框位置
   updateSelectionAreaPosition();
 };
 
@@ -760,8 +769,11 @@ const updateSelectionAreaPosition = () => {
 
 // 更新圆角控制器位置
 const updateBorderRadiusControllerPosition = (selectionLeft: number, selectionTop: number) => {
+  if (!imgCanvas.value) return;
+
   const controllerHeight = 35; // 控制器高度
   const controllerWidth = 120; // 控制器宽度
+  const containerWidth = imgCanvas.value.offsetWidth; // 使用 Canvas 宽度
 
   let left = selectionLeft;
   let top = selectionTop - controllerHeight;
@@ -771,9 +783,9 @@ const updateBorderRadiusControllerPosition = (selectionLeft: number, selectionTo
     left = 0;
   }
 
-  // 确保控制器不超出屏幕右边界
-  if (left + controllerWidth > window.innerWidth) {
-    left = window.innerWidth - controllerWidth - 10;
+  // 确保控制器不超出屏幕右边界 (使用 containerWidth)
+  if (left + controllerWidth > containerWidth) {
+    left = containerWidth - controllerWidth - 10;
   }
 
   // 确保控制器不超出屏幕上边界
@@ -815,38 +827,46 @@ const handleSelectionDragStart = (event: MouseEvent) => {
 
 // 选区拖动移动
 const handleSelectionDragMove = (event: MouseEvent) => {
-  if (!isDragging.value) return;
+  // 必须检查 imgCanvas 是否存在
+  if (!isDragging.value || !imgCanvas.value) return;
 
   event.preventDefault();
 
-  // 拖动选区时不显示放大镜
   const newLeft = event.clientX - dragOffset.value.x;
   const newTop = event.clientY - dragOffset.value.y;
 
-  // 确保选区不超出屏幕边界
   const selectionWidth = parseFloat(selectionAreaStyle.value.width);
   const selectionHeight = parseFloat(selectionAreaStyle.value.height);
-  const maxLeft = window.innerWidth - selectionWidth;
-  const maxTop = window.innerHeight - selectionHeight;
 
+  // [关键修复] 使用 clientWidth (内容宽度) 而不是 window.innerWidth
+  // offsetWidth 包含边框，clientWidth 不包含，通常 clientWidth 更准确用于内部定位
+  const containerWidth = imgCanvas.value.clientWidth;
+  const containerHeight = imgCanvas.value.clientHeight;
+
+  const maxLeft = containerWidth - selectionWidth;
+  const maxTop = containerHeight - selectionHeight;
+
+  // 严格限制坐标
   const constrainedLeft = Math.max(0, Math.min(newLeft, maxLeft));
   const constrainedTop = Math.max(0, Math.min(newTop, maxTop));
 
   selectionAreaStyle.value.left = `${constrainedLeft}px`;
   selectionAreaStyle.value.top = `${constrainedTop}px`;
-  selectionAreaStyle.value.borderRadius = `${borderRadius.value}px`;
-  selectionAreaStyle.value.border = "2px solid #13987f";
 
-  // 更新screenConfig
+  // 重新绑定样式，防止丢失
+  selectionAreaStyle.value.border = "2px solid #13987f";
+  selectionAreaStyle.value.borderRadius = `${borderRadius.value}px`;
+
+  // 更新 screenConfig (同步物理坐标)
   const { scaleX, scaleY } = screenConfig.value;
   screenConfig.value.startX = constrainedLeft * scaleX;
   screenConfig.value.startY = constrainedTop * scaleY;
   screenConfig.value.endX = (constrainedLeft + selectionWidth) * scaleX;
   screenConfig.value.endY = (constrainedTop + selectionHeight) * scaleY;
 
-  // 重新绘制矩形
+  // [关键] 调用 redrawSelection (只挖空，不画线)，因为 DOM 元素此时正在跟着鼠标动
   redrawSelection();
-  // 拖动过程中不定位按钮组
+
   if (!isDragging.value) {
     updateButtonGroupPosition();
   }
@@ -903,11 +923,10 @@ const handleResizeStart = (event: MouseEvent, direction: string) => {
 
 // resize移动
 const handleResizeMove = (event: MouseEvent) => {
-  if (!isResizing.value) return;
+  // 必须检查 imgCanvas 是否存在
+  if (!isResizing.value || !imgCanvas.value) return;
 
   event.preventDefault();
-
-  // 调整大小时也显示放大镜，辅助精确定位
   handleMagnifierMouseMove(event);
 
   const deltaX = event.clientX - resizeStartPosition.value.x;
@@ -918,64 +937,66 @@ const handleResizeMove = (event: MouseEvent) => {
   let newWidth = resizeStartPosition.value.width;
   let newHeight = resizeStartPosition.value.height;
 
-  // 根据resize方向调整位置和尺寸
+  // 必须包含这个 switch 才能改变大小
   switch (resizeDirection.value) {
-    case "nw": // 左上角
+    case "nw": // 左上
       newLeft += deltaX;
       newTop += deltaY;
       newWidth -= deltaX;
       newHeight -= deltaY;
       break;
-    case "ne": // 右上角
+    case "ne": // 右上
       newTop += deltaY;
       newWidth += deltaX;
       newHeight -= deltaY;
       break;
-    case "sw": // 左下角
+    case "sw": // 左下
       newLeft += deltaX;
       newWidth -= deltaX;
       newHeight += deltaY;
       break;
-    case "se": // 右下角
+    case "se": // 右下
       newWidth += deltaX;
       newHeight += deltaY;
       break;
-    case "n": // 上边
+    case "n": // 上
       newTop += deltaY;
       newHeight -= deltaY;
       break;
-    case "e": // 右边
+    case "e": // 右
       newWidth += deltaX;
       break;
-    case "s": // 下边
+    case "s": // 下
       newHeight += deltaY;
       break;
-    case "w": // 左边
+    case "w": // 左
       newLeft += deltaX;
       newWidth -= deltaX;
       break;
   }
 
-  // 确保最小尺寸
+  // [边界限制] 使用容器尺寸
+  const containerWidth = imgCanvas.value.offsetWidth;
+  const containerHeight = imgCanvas.value.offsetHeight;
+
+  // 1. 限制左上角
+  newLeft = Math.max(0, newLeft);
+  newTop = Math.max(0, newTop);
+
+  // 2. 限制右下角不溢出
+  if (newLeft + newWidth > containerWidth) {
+    newWidth = containerWidth - newLeft;
+  }
+  if (newTop + newHeight > containerHeight) {
+    newHeight = containerHeight - newTop;
+  }
+
+  // 3. 最小尺寸限制
   const minSize = 20;
-  if (newWidth < minSize) {
-    if (resizeDirection.value.includes("w")) {
-      newLeft = resizeStartPosition.value.left + resizeStartPosition.value.width - minSize;
-    }
-    newWidth = minSize;
-  }
-  if (newHeight < minSize) {
-    if (resizeDirection.value.includes("n")) {
-      newTop = resizeStartPosition.value.top + resizeStartPosition.value.height - minSize;
-    }
-    newHeight = minSize;
-  }
+  newWidth = Math.max(minSize, newWidth);
+  newHeight = Math.max(minSize, newHeight);
 
-  // 确保不超出屏幕边界
-  newLeft = Math.max(0, Math.min(newLeft, window.innerWidth - newWidth));
-  newTop = Math.max(0, Math.min(newTop, window.innerHeight - newHeight));
-
-  // 更新样式
+  // 应用新样式
   selectionAreaStyle.value = {
     left: `${newLeft}px`,
     top: `${newTop}px`,
@@ -985,15 +1006,15 @@ const handleResizeMove = (event: MouseEvent) => {
     border: "2px solid #13987f"
   };
 
-  // 更新screenConfig
+  // 同步更新 screenConfig
   const { scaleX, scaleY } = screenConfig.value;
   screenConfig.value.startX = newLeft * scaleX;
   screenConfig.value.startY = newTop * scaleY;
   screenConfig.value.endX = (newLeft + newWidth) * scaleX;
   screenConfig.value.endY = (newTop + newHeight) * scaleY;
 
-  // 重新绘制选区
   redrawSelection();
+
   if (showButtonGroup.value) {
     updateButtonGroupPosition();
   }
@@ -1031,59 +1052,6 @@ const handleBorderRadiusChange = (event: Event) => {
 };
 
 /**
- * 绘制矩形（支持圆角）
- */
-const drawRectangle = (
-  context: CanvasRenderingContext2D,
-  x: number,
-  y: number,
-  width: number,
-  height: number,
-  lineWidth: number = 2
-) => {
-  context.strokeStyle = "#13987f";
-  context.lineWidth = lineWidth;
-
-  // 如果有圆角，绘制圆角矩形
-  if (borderRadius.value > 0) {
-    const radius = borderRadius.value * screenConfig.value.scaleX; // 根据缩放调整圆角大小
-    const adjustedRadius = Math.min(radius, Math.abs(width) / 2, Math.abs(height) / 2);
-
-    context.beginPath();
-
-    // 确保坐标正确（处理负宽高的情况）
-    const rectX = width >= 0 ? x : x + width;
-    const rectY = height >= 0 ? y : y + height;
-    const rectWidth = Math.abs(width);
-    const rectHeight = Math.abs(height);
-
-    // 绘制圆角矩形路径
-    context.moveTo(rectX + adjustedRadius, rectY);
-    context.lineTo(rectX + rectWidth - adjustedRadius, rectY);
-    context.quadraticCurveTo(rectX + rectWidth, rectY, rectX + rectWidth, rectY + adjustedRadius);
-    context.lineTo(rectX + rectWidth, rectY + rectHeight - adjustedRadius);
-    context.quadraticCurveTo(
-      rectX + rectWidth,
-      rectY + rectHeight,
-      rectX + rectWidth - adjustedRadius,
-      rectY + rectHeight
-    );
-    context.lineTo(rectX + adjustedRadius, rectY + rectHeight);
-    context.quadraticCurveTo(rectX, rectY + rectHeight, rectX, rectY + rectHeight - adjustedRadius);
-    context.lineTo(rectX, rectY + adjustedRadius);
-    context.quadraticCurveTo(rectX, rectY, rectX + adjustedRadius, rectY);
-    context.closePath();
-
-    context.stroke();
-  } else {
-    // 普通矩形
-    context.strokeRect(x, y, width, height);
-  }
-
-  drawSizeText(context, x, y, width, height);
-};
-
-/**
  * 绘制矩形尺寸文本
  */
 const drawSizeText = (context: CanvasRenderingContext2D, x: number, y: number, width: number, height: number) => {
@@ -1111,9 +1079,14 @@ const drawSizeText = (context: CanvasRenderingContext2D, x: number, y: number, w
  * 绘制蒙版
  */
 const drawMask = () => {
+  console.log("drawMask");
   if (maskCtx.value && maskCanvas.value) {
+    const w = maskCanvas.value.width;
+    const h = maskCanvas.value.height;
+    maskCtx.value.clearRect(0, 0, w, h);
+
     maskCtx.value.fillStyle = "rgba(0, 0, 0, 0.4)";
-    maskCtx.value.fillRect(0, 0, maskCanvas.value.width, maskCanvas.value.height);
+    maskCtx.value.fillRect(0, 0, w, h);
   }
 };
 
@@ -1122,16 +1095,30 @@ const redrawSelection = () => {
   if (!maskCtx.value || !maskCanvas.value) return;
 
   const { startX, startY, endX, endY } = screenConfig.value;
+
+  // 复用 renderMaskFrame，传入 false 表示不画边框
+  // 因为此时 DOM 元素 (.selection-area) 已经显示了绿色边框
+  // 我们只需要 Canvas 负责把背景变暗并挖空中间即可
+  // 这里的坐标需要转换，因为 renderMaskFrame 接收的是 currentX/Y
+  // 我们直接用 endX, endY 即可（render 内部会自动 min/max 处理）
+
+  // 但为了逻辑复用，我们这里手动写一下更清晰：
+  const width = maskCanvas.value.width;
+  const height = maskCanvas.value.height;
   const x = Math.min(startX, endX);
   const y = Math.min(startY, endY);
-  const width = Math.abs(endX - startX);
-  const height = Math.abs(endY - startY);
+  const w = Math.abs(endX - startX);
+  const h = Math.abs(endY - startY);
 
-  // 清空并重绘蒙版
-  maskCtx.value.clearRect(0, 0, maskCanvas.value.width, maskCanvas.value.height);
-  drawMask();
-
-  maskCtx.value.clearRect(x, y, width, height);
+  // 1. 清空
+  maskCtx.value.clearRect(0, 0, width, height);
+  // 2. 铺满遮罩
+  maskCtx.value.fillStyle = "rgba(0, 0, 0, 0.4)";
+  maskCtx.value.fillRect(0, 0, width, height);
+  // 3. 挖空
+  if (w > 0 && h > 0) {
+    maskCtx.value.clearRect(x, y, w, h);
+  }
 };
 
 /**
@@ -1264,26 +1251,26 @@ const confirmSelection = async () => {
 
               try {
                 await writeImage(buffer);
-                window.$message?.success(t("message.screenshot.save_success"));
+                window.$message?.success(t("components.screenshot.saveSuccess"));
               } catch (clipboardError) {
                 console.error("复制到剪贴板失败:", clipboardError);
-                window.$message?.error(t("message.screenshot.save_failed"));
+                window.$message?.error(t("components.screenshot.saveFailed"));
               }
 
               await resetScreenshot();
             } catch (error) {
-              window.$message?.error(t("message.screenshot.save_failed"));
+              window.$message?.error(t("components.screenshot.saveFailed"));
               await resetScreenshot();
             }
           } else {
-            window.$message?.error(t("message.screenshot.save_failed"));
+            window.$message?.error(t("components.screenshot.saveFailed"));
             await resetScreenshot();
           }
         }, "image/png");
       }
     } catch (error) {
       console.error("Canvas操作失败:", error);
-      window.$message?.error(t("message.screenshot.save_failed"));
+      window.$message?.error(t("components.screenshot.saveFailed"));
       await resetScreenshot();
     }
   }
@@ -1291,19 +1278,25 @@ const confirmSelection = async () => {
 
 const resetScreenshot = async () => {
   try {
-    // 清理性能优化相关的定时器（仅 macOS）
+    // 1. 停止动画帧
+    if (rafId) {
+      cancelAnimationFrame(rafId);
+      rafId = null;
+    }
+
+    // 2. 清理定时器
     if (isMac() && mouseMoveThrottleId) {
       clearTimeout(mouseMoveThrottleId);
       mouseMoveThrottleId = null;
     }
 
-    // 重置绘图工具状态
+    // 3. 重置工具
     resetDrawTools();
 
-    // 重置所有状态
+    // 4. 重置状态
     showButtonGroup.value = false;
     isImageLoaded = false;
-    borderRadius.value = 0; // 重置圆角
+    borderRadius.value = 0;
     isDragging.value = false;
     isResizing.value = false;
 
@@ -1312,35 +1305,33 @@ const resetScreenshot = async () => {
       startY: 0,
       endX: 0,
       endY: 0,
-      scaleX: 0,
-      scaleY: 0,
+      scaleX: 1,
+      scaleY: 1,
       isDrawing: false,
       width: 0,
       height: 0
     };
 
-    // 清除所有canvas内容
-    if (imgCtx.value && imgCanvas.value) {
-      imgCtx.value.clearRect(0, 0, imgCanvas.value.width, imgCanvas.value.height);
-    }
-    if (maskCtx.value && maskCanvas.value) {
-      maskCtx.value.clearRect(0, 0, maskCanvas.value.width, maskCanvas.value.height);
-    }
-    if (drawCtx.value && drawCanvas.value) {
-      drawCtx.value.clearRect(0, 0, drawCanvas.value.width, drawCanvas.value.height);
-      // 重置时禁用绘图canvas事件
-      drawCanvas.value.style.pointerEvents = "none";
-    }
+    // 5. 强制销毁 Canvas 缓冲区
+    // 直接把 width 设为 0，这比 clearRect 更彻底，
+    // 能确保下次 initCanvas 时是从一张全新的白纸开始，绝对没有缓存残留。
+    const canvases = [imgCanvas.value, maskCanvas.value, drawCanvas.value];
+    canvases.forEach((cvs) => {
+      if (cvs) {
+        cvs.width = 0;
+        cvs.height = 0;
+      }
+    });
 
-    // 隐藏放大镜
+    // 6. 隐藏放大镜
     if (magnifier.value) {
       magnifier.value.style.display = "none";
     }
 
-    // 恢复窗口状态（macOS需要退出全屏）
+    // 7. 隐藏窗口
     await restoreWindowState();
   } catch (error) {
-    // 即使出错也要尝试恢复窗口状态
+    console.error("Reset Error:", error);
     await restoreWindowState();
   }
 };
@@ -1382,45 +1373,58 @@ const handleScreenshot = () => {
 };
 
 onMounted(async () => {
-  appWindow.listen("capture", () => {
+  // 获取并存储 unlisten 函数
+  // 这样当组件重新加载时，我们可以清除旧的监听器，防止累积
+  unlistenCapture = await appWindow.listen("capture", () => {
+    // 如果正在初始化，则忽略新的请求
+    if (isInitializing.value) return;
+
+    console.log("📥 收到 capture 事件");
     resetDrawTools();
     initCanvas();
     initMagnifier();
   });
 
-  // 监听窗口隐藏时的重置事件
-  appWindow.listen("capture-reset", () => {
+  unlistenCaptureReset = await appWindow.listen("capture-reset", () => {
+    console.log("📥 收到 capture-reset 事件");
     resetDrawTools();
     resetScreenshot();
-    console.log("📷 Screenshot组件已重置");
   });
 
-  // 监听自定义截图事件
   window.addEventListener("trigger-screenshot", handleScreenshot);
 });
 
-onUnmounted(async () => {
-  // 清理性能优化相关的定时器（仅 macOS）
+onUnmounted(() => {
+  // 清理性能优化相关的定时器
   if (isMac() && mouseMoveThrottleId) {
     clearTimeout(mouseMoveThrottleId);
     mouseMoveThrottleId = null;
   }
 
-  // 清理键盘监听事件
+  // 手动销毁工具实例
+  if (drawTools?.dispose) {
+    drawTools.dispose();
+  }
+
+  // 执行 Tauri 事件的取消监听函数
+  if (unlistenCapture) {
+    unlistenCapture();
+    unlistenCapture = null;
+  }
+  if (unlistenCaptureReset) {
+    unlistenCaptureReset();
+    unlistenCaptureReset = null;
+  }
+
+  // 清理 DOM 事件
   document.removeEventListener("keydown", handleKeyDown);
-
-  // 清理全局右键监听事件
   document.removeEventListener("contextmenu", handleRightClick);
-
-  // 清理全局点击监听事件
   document.removeEventListener("mousedown", handleGlobalMouseDown);
 
-  // 清理右键监听事件
   if (maskCanvas.value) {
     maskCanvas.value.removeEventListener("contextmenu", handleRightClick);
   }
 
-  // 清理自定义事件监听
   window.removeEventListener("trigger-screenshot", handleScreenshot);
 });
 </script>
@@ -1430,15 +1434,15 @@ onUnmounted(async () => {
   width: 100vw;
   height: 100vh;
   position: relative;
+  overflow: hidden;
   background-color: transparent;
 }
 
 canvas {
-  width: 100%;
-  height: 100%;
   position: absolute;
   top: 0;
   left: 0;
+  display: block;
 }
 
 .magnifier {

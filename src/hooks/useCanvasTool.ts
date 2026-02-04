@@ -35,10 +35,6 @@ export function useCanvasTool(drawCanvas: any, drawCtx: any, imgCtx: any, screen
     startListen();
   };
 
-  onUnmounted(() => {
-    closeListen();
-  });
-
   const handleMouseDown = (event: MouseEvent) => {
     const { offsetX, offsetY } = event;
     drawConfig.value.isDrawing = true;
@@ -213,6 +209,7 @@ export function useCanvasTool(drawCanvas: any, drawCtx: any, imgCtx: any, screen
 
   // 实时马赛克涂抹
   const drawMosaic = (context: any, x: any, y: any, size: any) => {
+    if (!imgCtx.value) return;
     // 确保马赛克绘制区域不会超出选区边界（考虑边框和画笔半径）
     const borderWidth = 2;
     const halfSize = size / 2;
@@ -230,10 +227,14 @@ export function useCanvasTool(drawCanvas: any, drawCtx: any, imgCtx: any, screen
     const drawWidth = Math.max(0, maxDrawX - drawX);
     const drawHeight = Math.max(0, maxDrawY - drawY);
 
-    if (drawWidth > 0 && drawHeight > 0) {
-      const imageData = imgCtx.value.getImageData(drawX, drawY, drawWidth, drawHeight);
-      const blurredData = blurImageData(imageData, Math.min(drawWidth, drawHeight));
-      context.putImageData(blurredData, drawX, drawY);
+    try {
+      if (drawWidth > 0 && drawHeight > 0) {
+        const imageData = imgCtx.value.getImageData(drawX, drawY, drawWidth, drawHeight);
+        const blurredData = blurImageData(imageData, Math.min(drawWidth, drawHeight));
+        context.putImageData(blurredData, drawX, drawY);
+      }
+    } catch (e) {
+      console.warn("Mosaic read failed", e);
     }
   };
 
@@ -359,6 +360,13 @@ export function useCanvasTool(drawCanvas: any, drawCtx: any, imgCtx: any, screen
     document.removeEventListener("mouseup", handleMouseUp);
   };
 
+  const dispose = () => {
+    closeListen();
+    drawConfig.value.actions = [];
+    drawConfig.value.undoStack = [];
+    console.log("CanvasTool disposed manually");
+  };
+
   return {
     draw,
     drawMosaicBrushSize,
@@ -371,6 +379,7 @@ export function useCanvasTool(drawCanvas: any, drawCtx: any, imgCtx: any, screen
     resetState,
     stopDrawing,
     clearEvents,
+    dispose,
     canUndo
   };
 }

@@ -85,7 +85,7 @@
           <use href="#close"></use>
         </svg>
         <n-flex vertical :size="20" class="p-[22px_10px_10px_22px] select-none">
-          <span class="text-16px">{{ t("components.actionBar.closePrompt.title") }}</span>
+          <span class="text-(16px [--text-color])">{{ t("components.actionBar.closePrompt.title") }}</span>
           <label class="text-(14px #707070) flex gap-6px lh-16px items-center">
             <n-radio :checked="tipsRef.type === CloseBxEnum.HIDE" @change="tipsRef.type = CloseBxEnum.HIDE" />
             <span>{{ t("components.actionBar.closePrompt.hideToTray") }}</span>
