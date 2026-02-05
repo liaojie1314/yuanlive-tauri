@@ -243,6 +243,9 @@ importers:
       cz-git:
         specifier: ^1.12.0
         version: 1.12.0
+      fs-extra:
+        specifier: ^11.3.3
+        version: 11.3.3
       gradient-string:
         specifier: ^3.0.0
         version: 3.0.0
@@ -2589,6 +2592,10 @@ packages:
     resolution: {integrity: sha512-oRXApq54ETRj4eMiFzGnHWGy+zo5raudjuxN0b8H7s/RU2oW0Wvsx9O0ACRN/kRq9E8Vu/ReskGB5o3ji+FzHQ==}
     engines: {node: '>=12'}
 
+  fs-extra@11.3.3:
+    resolution: {integrity: sha512-VWSRii4t0AFm6ixFFmLLx1t7wS1gh+ckoa84aOeapGum0h+EZd1EhEumSB+ZdDLnEPuucsVB9oB7cxJHap6Afg==}
+    engines: {node: '>=14.14'}
+
   fs-extra@8.1.0:
     resolution: {integrity: sha512-yhlQgA6mnOJUKOsRUFsgJdQCvkKhcz8tlZG5HBQfReYZy46OwLcY+Zia0mtdHsOo9y/hP+CxMN0TU9QxoOtG4g==}
     engines: {node: '>=6 <7 || >=8'}
@@ -4399,8 +4406,8 @@ packages:
   webpack-virtual-modules@0.6.2:
     resolution: {integrity: sha512-66/V2i5hQanC51vBQKPH4aI8NMAcBW59FVBs+rC7eGHupMyfn34q7rZIE+ETlJ+XTevqfUhVVBgSUNSW2flEUQ==}
 
-  webworkify-webpack@https://codeload.github.com/xqq/webworkify-webpack/tar.gz/24d1e719b4a6cac37a518b2bb10fe124527ef4ef:
-    resolution: {tarball: https://codeload.github.com/xqq/webworkify-webpack/tar.gz/24d1e719b4a6cac37a518b2bb10fe124527ef4ef}
+  webworkify-webpack@git+https://git@github.com:xqq/webworkify-webpack.git#24d1e719b4a6cac37a518b2bb10fe124527ef4ef:
+    resolution: {commit: 24d1e719b4a6cac37a518b2bb10fe124527ef4ef, repo: git@github.com:xqq/webworkify-webpack.git, type: git}
     version: 2.1.5
 
   when-exit@2.1.5:
@@ -6755,6 +6762,12 @@ snapshots:
       jsonfile: 6.2.0
       universalify: 2.0.1
 
+  fs-extra@11.3.3:
+    dependencies:
+      graceful-fs: 4.2.11
+      jsonfile: 6.2.0
+      universalify: 2.0.1
+
   fs-extra@8.1.0:
     dependencies:
       graceful-fs: 4.2.11
@@ -7407,7 +7420,7 @@ snapshots:
   mpegts.js@1.8.0:
     dependencies:
       es6-promise: 4.2.8
-      webworkify-webpack: https://codeload.github.com/xqq/webworkify-webpack/tar.gz/24d1e719b4a6cac37a518b2bb10fe124527ef4ef
+      webworkify-webpack: git+https://git@github.com:xqq/webworkify-webpack.git#24d1e719b4a6cac37a518b2bb10fe124527ef4ef
 
   mrmime@2.0.1: {}
 
@@ -8577,7 +8590,7 @@ snapshots:
 
   webpack-virtual-modules@0.6.2: {}
 
-  webworkify-webpack@https://codeload.github.com/xqq/webworkify-webpack/tar.gz/24d1e719b4a6cac37a518b2bb10fe124527ef4ef: {}
+  webworkify-webpack@git+https://git@github.com:xqq/webworkify-webpack.git#24d1e719b4a6cac37a518b2bb10fe124527ef4ef: {}
 
   when-exit@2.1.5: {}
 

@@ -28,6 +28,8 @@ dist-ssr
 
 /public/selfie_segmentation
 
+src-tauri/binaries/
+
 # 秘钥
 yuanlive.key
 yuanlive.key.pub
