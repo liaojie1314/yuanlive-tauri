@@ -18,6 +18,7 @@
     <div v-resize="handleResize" class="input-container flex flex-col bg-white rounded-lg p-2 m-1">
       <!-- 输入框 -->
       <n-input
+        v-if="!isVoiceMode"
         v-model:value="messageText"
         type="textarea"
         placeholder="Ask anything"
@@ -29,10 +30,14 @@
         :bordered="false"
         :show-count="false" />
 
-      <div class="flex justify-between items-center mt-3 pt-2 border-t border-gray-200">
+      <div v-if="!isVoiceMode" class="flex justify-between items-center mt-3 pt-2 border-t border-gray-200">
         <div class="flex items-center gap-3">
           <!-- Attach按钮 -->
-          <n-popover class="p-0 bg-transparent select-none" :show-arrow="false" trigger="click">
+          <n-popover
+            class="p-0 bg-transparent select-none"
+            :show-arrow="false"
+            trigger="click"
+            v-model:show="showAttachPopover">
             <template #trigger>
               <div
                 class="flex items-center gap-1 px-4 py-1.5 text-sm text-gray-600 hover:bg-gray-50 rounded-full cursor-pointer"
@@ -94,7 +99,7 @@
               'border-color': isThinkActive ? '#3b82f6' : '#d1d5db'
             }"
             title="Think"
-            @click="handleThinkClick">
+            @click="isThinkActive = !isThinkActive">
             <i-mdi-lightbulb-outline class="w-4 h-4" />
             <span v-if="showButtonText">Think</span>
           </div>
@@ -111,7 +116,7 @@
               'border-color': isSearchActive ? '#3b82f6' : '#d1d5db'
             }"
             title="Search"
-            @click="handleSearchClick">
+            @click="isSearchActive = !isSearchActive">
             <i-mdi-magnify class="w-4 h-4" />
             <span v-if="showButtonText">Search</span>
           </div>
@@ -129,22 +134,19 @@
           </div>
 
           <!-- 发送按钮 -->
-          <div
-            class="text-white flex items-center justify-center w-8 h-8 rounded-full cursor-pointer transition-all duration-200"
-            :class="{
-              'bg-blue-500': messageText.trim() || uploadedImages.length > 0,
-              'bg-blue-400': !(messageText.trim() || uploadedImages.length > 0)
-            }"
-            :style="{
-              border: '1px solid',
-              'border-color': messageText.trim() || uploadedImages.length > 0 ? '#3b82f6' : '#d1d5db'
-            }"
-            title="Send message"
-            @click="sendMessage">
-            <i-mdi-arrow-up class="w-4 h-4" />
-          </div>
+          <n-button circle type="primary" :disabled="isBtnDisabled" @click="sendMessage">
+            <template #icon>
+              <n-icon>
+                <i-material-symbols-arrow-upward v-if="status === 'normal'" class="w-4 h-4" />
+                <i-material-symbols-pause v-else-if="status === 'streaming'" class="w-4 h-4" />
+                <i-mdi-loading v-else class="w-4 h-4 animate-spin" />
+              </n-icon>
+            </template>
+          </n-button>
         </div>
       </div>
+      <voice-recorder v-show="isVoiceMode" @cancel="handleVoiceCancel" @send="sendVoiceDirect" />
+      <camera-modal v-model:show="showCameraModal" @confirm="handleCameraConfirm" />
     </div>
   </div>
 </template>
@@ -153,26 +155,28 @@
 import { type SelectOption, NEllipsis } from "naive-ui";
 import { open } from "@tauri-apps/plugin-dialog";
 import { convertFileSrc } from "@tauri-apps/api/core";
+import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
 
+import { MittEnum } from "@/enums";
 import { useSettingStore } from "@/stores/setting";
+import { useMitt } from "@/hooks/useMitt";
 import { useGlobalShortcut } from "@/hooks/useGlobalShortcut";
+import { UploadFile } from "@/utils/FileUtil";
 
 defineOptions({ name: "MessageInput" });
 const settingStore = useSettingStore();
 const { handleScreenshot } = useGlobalShortcut();
+const appWindow = WebviewWindow.getCurrent();
 
-// 输入的文本
-const messageText = ref("");
-// 上传的图片列表
-const uploadedImages = ref<string[]>([]);
-// 按钮激活状态管理
-const isThinkActive = ref(false);
-const isSearchActive = ref(false);
-// 控制按钮文字显示状态
-const showButtonText = ref(true);
+// 混合类型消息的内容结构
+interface MixedContent {
+  text: string;
+  images: string[];
+}
 
-// 模型选择相关
-const selectedModel = ref("auto");
+interface Props {
+  status?: "loading" | "streaming" | "normal";
+}
 
 // 模型数据结构
 const modelOptions = [
@@ -218,16 +222,36 @@ const modelOptions = [
   },
   {
     label: "前往设置添加模型",
-    value: "settings",
-    disabled: true
+    value: "settings"
   }
 ];
 
-// 混合类型消息的内容结构
-interface MixedContent {
-  text: string;
-  images: string[];
-}
+// 输入的文本
+const messageText = ref("");
+// 上传的图片列表
+const uploadedImages = ref<string[]>([]);
+// 按钮激活状态管理
+const isThinkActive = ref(false);
+const isSearchActive = ref(false);
+const showAttachPopover = ref(false);
+// 控制按钮文字显示状态
+const showButtonText = ref(true);
+// 模型选择相关
+const selectedModel = ref("auto");
+// 拍照相关状态
+const showCameraModal = ref(false);
+// 录音模式状态
+const isVoiceMode = ref(false);
+
+const isBtnDisabled = computed(() => {
+  if (props.status === "loading") return true;
+  if (props.status === "streaming") return false;
+  return !messageText.value.trim() && uploadedImages.value.length === 0;
+});
+
+const props = withDefaults(defineProps<Props>(), {
+  status: "normal"
+});
 
 // 定义emit事件
 const emit =
@@ -268,8 +292,21 @@ const handleEnterKey = (e: KeyboardEvent) => {
   }
 };
 
+const sendVoiceDirect = (voiceData: any) => {
+  console.log(voiceData);
+};
+
+const handleVoiceCancel = () => {
+  isVoiceMode.value = false;
+};
+
+const handleCameraConfirm = (base64Photo: string) => {
+  uploadedImages.value.push(base64Photo);
+};
+
 // 处理菜单点击事件
 const handleMenuClick = async (menuItem: string) => {
+  showAttachPopover.value = false;
   switch (menuItem) {
     case "file":
       await selectFiles(false);
@@ -281,8 +318,7 @@ const handleMenuClick = async (menuItem: string) => {
       handleScreenshot();
       break;
     case "camera":
-      console.log("Take photo");
-      // 这里可以添加拍照功能
+      showCameraModal.value = true;
       break;
   }
 };
@@ -318,41 +354,34 @@ const selectFiles = async (isImage: boolean) => {
 
 // 发送消息
 const sendMessage = () => {
-  const trimmedText = messageText.value.trim();
-  const hasText = !!trimmedText;
-  const hasImages = uploadedImages.value.length > 0;
+  if (!isBtnDisabled.value) return;
 
-  // 如果同时有文本和图片，发送混合类型消息
-  if (hasText && hasImages) {
-    emit("send-message", {
-      type: "mixed",
-      content: {
-        text: trimmedText,
-        images: [...uploadedImages.value]
-      }
-    });
-    // 清空输入和图片
-    messageText.value = "";
-    uploadedImages.value = [];
+  const text = messageText.value.trim();
+  const images = [...uploadedImages.value];
+
+  let msgType: "text" | "image" | "mixed" = "text";
+  let msgContent: string | string[] | MixedContent = text;
+
+  if (images.length > 0 && text) {
+    msgType = "mixed";
+    msgContent = {
+      text: text,
+      images: images
+    };
+  } else if (images.length > 0) {
+    msgType = "image";
+    msgContent = images;
+  } else {
+    // 默认为 text，上面初始化时已赋值
+    msgType = "text";
+    msgContent = text;
   }
-  // 如果只有图片，发送图片消息
-  else if (hasImages) {
-    emit("send-message", {
-      type: "image",
-      content: [...uploadedImages.value]
-    });
-    // 清空上传的图片
-    uploadedImages.value = [];
-  }
-  // 如果只有文本，发送文本消息
-  else if (hasText) {
-    emit("send-message", {
-      type: "text",
-      content: trimmedText
-    });
-    // 清空输入文本
-    messageText.value = "";
-  }
+  emit("send-message", {
+    type: msgType,
+    content: msgContent
+  });
+  messageText.value = "";
+  uploadedImages.value = [];
 };
 
 // 移除上传的图片
@@ -360,32 +389,42 @@ const removeImage = (index: number) => {
   uploadedImages.value.splice(index, 1);
 };
 
-// 处理Search按钮点击
-const handleSearchClick = () => {
-  console.log("Search button clicked");
-  // 切换激活状态
-  isSearchActive.value = !isSearchActive.value;
-  // 这里可以实现搜索功能
-};
-
-// 处理Think按钮点击
-const handleThinkClick = () => {
-  console.log("Think button clicked");
-  // 切换激活状态
-  isThinkActive.value = !isThinkActive.value;
-  // 这里可以实现深度思考功能
-};
-
 // 处理Voice按钮点击
 const handleVoiceClick = () => {
   console.log("Voice button clicked");
-  // 这里可以实现语音消息功能
+  isVoiceMode.value = true;
 };
 
 // 监听容器宽度变化的回调函数
 const handleResize = ({ width }: any) => {
   showButtonText.value = width >= 588;
 };
+
+// 处理全局拖拽文件
+const handleGlobalFilesDrop = async (files: UploadFile[]) => {
+  // TODO: 文件显示
+  console.log("处理全局拖拽文件:", files);
+};
+
+onMounted(() => {
+  useMitt.on(MittEnum.GLOBAL_FILES_DROP, handleGlobalFilesDrop);
+  appWindow.listen("screenshot", async (e: any) => {
+    try {
+      // 从 ArrayBuffer 数组重建 Blob 对象
+      const buffer = new Uint8Array(e.payload.buffer);
+      const blob = new Blob([buffer], { type: e.payload.mimeType });
+      const file = new File([blob], "screenshot.png", { type: e.payload.mimeType });
+      console.log("处理截图成功:", file);
+      uploadedImages.value.push(URL.createObjectURL(file));
+    } catch (error) {
+      console.error("处理截图失败:", error);
+    }
+  });
+});
+
+onUnmounted(() => {
+  useMitt.off(MittEnum.GLOBAL_FILES_DROP, handleGlobalFilesDrop);
+});
 </script>
 
 <style scoped>

@@ -26,6 +26,18 @@
     },
     "uploading": "上传中..."
   },
+  "camera": {
+    "title": "拍照",
+    "retake": "重拍",
+    "usePhoto": "使用照片"
+  },
+  "voiceRecorder": {
+    "tapPrefix": "点击",
+    "tapSuffix": "说话",
+    "recording": "正在录音",
+    "processing": "正在处理音频",
+    "error": "录音失败"
+  },
   "window": {
     "logoutFail": "退出登录失败，请重试",
     "createWindowFail": "创建{label}窗口失败"

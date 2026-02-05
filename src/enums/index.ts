@@ -20,6 +20,8 @@ export enum UploadSceneEnum {
 
 /** 事件key */
 export enum MittEnum {
+  /** 全局文件拖拽 */
+  GLOBAL_FILES_DROP = "globalFilesDrop",
   /** 更新提示 */
   CHECK_UPDATE = "checkUpdate",
   /** 强制更新 */

@@ -26,6 +26,18 @@
     },
     "uploading": "Uploading..."
   },
+  "camera": {
+    "title": "Take Photo",
+    "retake": "Retake",
+    "usePhoto": "Use Photo"
+  },
+  "voiceRecorder": {
+    "tapPrefix": "Tap",
+    "tapSuffix": "to speak",
+    "recording": "Recording",
+    "processing": "Processing audio",
+    "error": "Recording failed"
+  },
   "window": {
     "logoutFail": "Logout failed, please try again",
     "createWindowFail": "Failed to create {label} window"

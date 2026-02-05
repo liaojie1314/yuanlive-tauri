@@ -37,6 +37,7 @@
   --bg-left-active: rgba(90, 90, 90, 0.2);
   // 警告样式
   --warning-text: #f7b668ff;
+  --bg-modal: #f0f0f0;
 }
 
 html[data-theme="dark"] {
@@ -71,6 +72,7 @@ html[data-theme="dark"] {
   --bg-left-active: #444444;
   // 警告样式
   --warning-text: #f4c375ff;
+  --bg-modal: #262626;
 }
 
 /**!修改naive-ui的遮罩层样式*/

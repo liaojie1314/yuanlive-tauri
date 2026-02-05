@@ -11,13 +11,18 @@
 </template>
 
 <script setup lang="ts">
-import { listen } from "@tauri-apps/api/event";
+import { type UnlistenFn, listen } from "@tauri-apps/api/event";
 import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
 
+import { MittEnum } from "@/enums";
+import { useMitt } from "@/hooks/useMitt";
 import { useLogin } from "@/hooks/useLogin";
 import { useCheckUpdate } from "@/hooks/useCheckUpdate";
 import { useOverlayController } from "@/hooks/useOverlayController";
 import { useGlobalStore } from "@/stores/global";
+import FileUtil from "@/utils/FileUtil";
+import { getFilesMeta } from "@/utils/PathUtils";
+import rustWebSocketClient from "@/services/webSocketRust";
 
 const { logout } = useLogin();
 const { checkUpdate, CHECK_UPDATE_TIME } = useCheckUpdate();
@@ -36,6 +41,10 @@ const { overlayVisible, markAsyncLoaded } = useOverlayController({
   asyncTotal: 2,
   minDisplayMs: 600
 });
+
+const isDraggingFiles = ref(false);
+const appWindow = WebviewWindow.getCurrent();
+const tauriFileDropUnlisteners: UnlistenFn[] = [];
 
 // 导入Web Worker
 const timerWorker = new Worker(new URL("@/workers/timer.worker.ts", import.meta.url));
@@ -65,6 +74,79 @@ const AsyncRight = defineAsyncComponent({
   timeout: 3000 // 3秒超时
 });
 
+/**
+ * 构建上传文件对象
+ * @param paths 文件路径数组
+ * @returns 上传文件对象数组
+ */
+const buildPathUploadFiles = async (paths: string[]) => {
+  if (!paths?.length) return [];
+  try {
+    const filesMeta = (await getFilesMeta<FilesMeta>(paths)) ?? [];
+    return await FileUtil.map2PathUploadFile(paths, filesMeta);
+  } catch (error) {
+    console.error("[layout] 解析拖拽文件元数据失败:", error);
+    window.$message?.error?.("解析拖拽文件失败");
+    return [];
+  }
+};
+
+/**
+ * 处理原生拖拽文件
+ * @param paths 文件路径数组
+ */
+const handleNativeFileDrop = async (paths: string[]) => {
+  if (!paths?.length) return;
+  try {
+    const pathFiles = await buildPathUploadFiles(paths);
+    if (pathFiles.length > 0) {
+      useMitt.emit(MittEnum.GLOBAL_FILES_DROP, pathFiles);
+    } else {
+      window.$message?.error?.("无法识别拖拽的文件");
+    }
+  } catch (error) {
+    console.error("[layout] 处理原生拖拽文件失败:", error);
+  } finally {
+    isDraggingFiles.value = false;
+  }
+};
+
+/**
+ * 设置原生文件拖拽监听
+ */
+const setupNativeFileDropListeners = async () => {
+  try {
+    const unlisten = await appWindow.onDragDropEvent((event) => {
+      if (event.payload.type === "enter") {
+        const paths = event.payload.paths || [];
+        if (paths.length > 0) {
+          isDraggingFiles.value = true;
+        }
+      } else if (event.payload.type === "over") {
+        isDraggingFiles.value = true;
+      } else if (event.payload.type === "drop") {
+        const paths = event.payload.paths || [];
+        handleNativeFileDrop(paths);
+      } else if (event.payload.type === "leave") {
+        isDraggingFiles.value = false;
+      }
+    });
+    tauriFileDropUnlisteners.push(unlisten);
+  } catch (error) {
+    console.error("[layout] 注册原生文件拖拽监听失败:", error);
+  }
+};
+
+/**
+ * 清理原生文件拖拽监听
+ */
+const cleanupNativeFileDropListeners = () => {
+  while (tauriFileDropUnlisteners.length > 0) {
+    const unlisten = tauriFileDropUnlisteners.pop();
+    unlisten?.();
+  }
+};
+
 listen("reLogin", async () => {
   await logout();
 });
@@ -83,8 +165,15 @@ timerWorker.onmessage = (e) => {
 };
 
 onMounted(async () => {
+  timerWorker.postMessage({
+    type: "startTimer",
+    msgId: "checkUpdate",
+    duration: CHECK_UPDATE_TIME
+  });
   const homeWindow = await WebviewWindow.getByLabel("home");
   if (homeWindow) {
+    // 设置业务消息监听器
+    await rustWebSocketClient.setupBusinessMessageListeners();
     // 居中
     if (firstEnter.value) {
       await homeWindow.center();
@@ -92,14 +181,11 @@ onMounted(async () => {
     }
     await homeWindow.show();
   }
-  timerWorker.postMessage({
-    type: "startTimer",
-    msgId: "checkUpdate",
-    duration: CHECK_UPDATE_TIME
-  });
+  await setupNativeFileDropListeners();
 });
 
 onUnmounted(() => {
+  cleanupNativeFileDropListeners();
   // 清除Web Worker计时器
   timerWorker.postMessage({
     type: "clearTimer",

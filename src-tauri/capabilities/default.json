@@ -30,14 +30,33 @@
     "core:app:allow-set-app-theme",
     "opener:default",
     "log:default",
-    "fs:default",
-    "fs:allow-write-file",
     {
-      "identifier": "fs:allow-read",
+      "identifier": "fs:write-files",
       "allow": [
         {
-          "path": "$HOME/**"
-        },
+          "path": "**"
+        }
+      ]
+    },
+    {
+      "identifier": "fs:allow-mkdir",
+      "allow": [
+        {
+          "path": "**"
+        }
+      ]
+    },
+    {
+      "identifier": "fs:read-dirs",
+      "allow": [
+        {
+          "path": "**"
+        }
+      ]
+    },
+    {
+      "identifier": "fs:read-files",
+      "allow": [
         {
           "path": "**"
         }
