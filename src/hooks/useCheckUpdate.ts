@@ -1,3 +1,4 @@
+import semver from "semver";
 import { getVersion } from "@tauri-apps/api/app";
 import { check } from "@tauri-apps/plugin-updater";
 
@@ -39,21 +40,11 @@ export const useCheckUpdate = () => {
         }
 
         const newVersion = e.version;
-        const newMajorVersion = newVersion.substring(0, newVersion.indexOf("."));
-        const newMiddleVersion = newVersion.substring(
-          newVersion.indexOf(".") + 1,
-          newVersion.lastIndexOf(".") === -1 ? newVersion.length : newVersion.lastIndexOf(".")
-        );
         const currentVersion = await getVersion();
-        const currentMajorVersion = currentVersion.substring(0, currentVersion.indexOf("."));
-        const currentMiddleVersion = currentVersion.substring(
-          currentVersion.indexOf(".") + 1,
-          currentVersion.lastIndexOf(".") === -1 ? currentVersion.length : currentVersion.lastIndexOf(".")
-        );
         const requireForceUpdate =
           isProduction &&
-          (newMajorVersion > currentMajorVersion ||
-            (newMajorVersion === currentMajorVersion && newMiddleVersion > currentMiddleVersion));
+          // 只要是 minor (次版本) 或 major (主版本) 变动，就强制更新
+          semver.diff(currentVersion, newVersion) !== "patch";
         if (requireForceUpdate) {
           useMitt.emit(MittEnum.DO_UPDATE, { close: closeWin });
         } else if (newVersion !== currentVersion && settingStore.update.dismiss !== newVersion && !initialCheck) {
