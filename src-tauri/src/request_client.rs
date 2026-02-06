@@ -507,13 +507,12 @@ pub enum Url {
     GetCode,
     GenerateQRCode,
     CheckQRStatus,
-    GetUserInfoDetail,
+    GetUserInfo,
+    GetLiveCategory,
     MessageSendStream,
-    // 地图相关
     MapCoordTranslate,
     MapReverseGeocode,
     MapStatic,
-    // 文件上传相关
     UploadChunk,
     CheckUploadedChunks,
     MergeChunks,
@@ -532,7 +531,9 @@ impl Url {
             Url::GenerateQRCode => (http::Method::GET, "user/auth/qrcode/init"),
             Url::CheckQRStatus => (http::Method::GET, "user/auth/qrcode/check"),
             // 用户信息相关
-            Url::GetUserInfoDetail => (http::Method::GET, "user/info"),
+            Url::GetUserInfo => (http::Method::GET, "user/user/getUserInfo"),
+            // 直播相关
+            Url::GetLiveCategory => (http::Method::GET, "live/category/firstLevel"),
             // AI 相关
             Url::MessageSendStream => (http::Method::POST, "ai/chat/stream"),
             // 地图相关
@@ -558,7 +559,9 @@ impl Url {
             "generateQRCode" => Ok(Url::GenerateQRCode),
             "checkQRStatus" => Ok(Url::CheckQRStatus),
             // 用户信息相关
-            "getUserInfoDetail" => Ok(Url::GetUserInfoDetail),
+            "getUserInfo" => Ok(Url::GetUserInfo),
+            // 直播相关
+            "getLiveCategory" => Ok(Url::GetLiveCategory),
             // AI 相关
             "messageSendStream" => Ok(Url::MessageSendStream),
             // 地图相关

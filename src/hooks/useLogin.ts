@@ -5,7 +5,6 @@ import { info } from "@tauri-apps/plugin-log";
 import { invoke } from "@tauri-apps/api/core";
 import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
 
-import type { UserInfoType } from "@/api/types.ts";
 import webSocketRust from "@/services/webSocketRust.ts";
 import { EventEnum, StorageKeyEnum, TauriCommandEnum } from "@/enums";
 import { logoutApi } from "@/api/auth";
@@ -37,7 +36,6 @@ export function useLogin() {
     account: "",
     password: "",
     avatar: "",
-    username: "",
     uid: ""
   });
   const uiState = ref<"manual" | "auto">("manual");
@@ -71,7 +69,7 @@ export function useLogin() {
     loading.value = true;
     loginText.value = t("auth.status.loggingIn");
     loginDisabled.value = true;
-    const hasStoredUserInfo = !!userStore.userInfo?.account;
+    const hasStoredUserInfo = !!userStore.userInfo?.email;
     if (auto && !hasStoredUserInfo) {
       loading.value = false;
       loginDisabled.value = false;
@@ -81,9 +79,10 @@ export function useLogin() {
       info("自动登录信息已失效，请手动登录");
       return;
     }
-    const loginInfo = auto && userStore.userInfo ? (userStore.userInfo as UserInfoType) : userInfo.value;
-    const account = loginInfo?.account;
-    const password = loginInfo?.password ?? userInfo.value.password;
+    const account =
+      auto && userStore.userInfo ? userStore.userInfo?.username || userStore.userInfo?.email : userInfo.value.account;
+    const password = userStore.userInfo?.password ?? userInfo.value.password;
+
     if (!account) {
       loading.value = false;
       loginDisabled.value = false;
@@ -116,6 +115,7 @@ export function useLogin() {
         loginDisabled.value = true;
         loading.value = false;
         loginText.value = t("auth.status.successRedirect");
+        userStore.getUserDetail();
         await webSocketRust.initConnect();
         await openHomeWindow();
       })
@@ -133,9 +133,8 @@ export function useLogin() {
           settingStore.setAutoLogin(false);
           // 自动填充之前尝试登录的账号信息到手动登录表单
           if (userStore.userInfo) {
-            userInfo.value.account = userStore.userInfo.account || userStore.userInfo.email || "";
+            userInfo.value.account = userStore.userInfo.username || userStore.userInfo.email;
             userInfo.value.avatar = userStore.userInfo.avatar;
-            userInfo.value.username = userStore.userInfo.username;
             userInfo.value.uid = userStore.userInfo.uid;
           }
         }

@@ -5,8 +5,8 @@ import { UrlEnum } from "@/enums";
  * 获取用户详情
  * @returns 用户详情
  */
-export async function getUserDetailApi() {
+export async function getUserInfoApi() {
   return await request({
-    url: UrlEnum.GET_USER_INFO_DETAIL
+    url: UrlEnum.GET_USER_INFO
   });
 }

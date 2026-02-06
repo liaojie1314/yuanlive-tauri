@@ -47,7 +47,9 @@ export enum UrlEnum {
   // 忘记密码
   FORGET_PASSWORD = "forgetPassword",
   // 获取用户信息详情
-  GET_USER_INFO_DETAIL = "getUserInfoDetail",
+  GET_USER_INFO = "getUserInfo",
+  // 获取直播类别
+  GET_LIVE_CATEGORY = "getLiveCategory",
   // 生成登录二维码
   GENERATE_QR_CODE = "generateQRCode",
   // 检测二维码状态

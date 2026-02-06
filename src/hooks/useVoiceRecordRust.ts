@@ -40,9 +40,9 @@ const generateHashKey = async (fileObj: File, fileName: string) => {
   // 使用文件哈希作为文件名的一部分，实现去重
   const fileHash = await calculateFileHash(fileObj);
   const fileSuffix = fileName.split(".").pop() || "";
-  // 获取当前登录用户的account
-  const account = useUserStore().userInfo!.account;
-  const key = `${account}/${fileHash}.${fileSuffix}`;
+  // 获取当前登录用户的用户名
+  const username = useUserStore().userInfo!.username;
+  const key = `${username}/${fileHash}.${fileSuffix}`;
   console.log("使用文件去重模式，文件哈希:", fileHash);
   return key;
 };

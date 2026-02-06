@@ -1,6 +1,6 @@
 import { StoresEnum } from "@/enums";
 import type { UserInfoType } from "@/api/types.ts";
-import { getUserDetailApi } from "@/api/user.ts";
+import { getUserInfoApi } from "@/api/user.ts";
 import { getUserResourceDir, getUserAbsoluteResourceDir } from "@/utils/PathUtils";
 
 export const useUserStore = defineStore(
@@ -12,8 +12,9 @@ export const useUserStore = defineStore(
      * 获取用户详情
      */
     const getUserDetail = () => {
-      getUserDetailApi()
+      getUserInfoApi()
         .then((res) => {
+          console.log(res);
           userInfo.value = { ...userInfo.value, ...res };
         })
         .catch((e) => {

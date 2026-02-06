@@ -4,10 +4,7 @@
       <!-- 搜索框 -->
       <search-box class="mx-auto mb-10px" />
       <!-- 分类导航 -->
-      <category-nav
-        :categories="categories"
-        :active-category="activeCategory"
-        @category-change="handleCategoryChange" />
+      <category-nav :active-category="activeCategory" @category-change="handleCategoryChange" />
       <!-- 大图展示区域（仅在全部分类显示） -->
       <div v-if="activeCategory === 'all'" class="grid grid-cols-5 gap-4 mt-4">
         <!-- 主要大图 -->
@@ -126,19 +123,6 @@ const router = useRouter();
 const navigateToLive = (id: number) => {
   router.push(`/live/${id}`);
 };
-
-// 分类列表
-const categories = ref([
-  { label: "全部", value: "all" },
-  { label: "聊天", value: "chat" },
-  { label: "音乐", value: "music" },
-  { label: "游戏", value: "game" },
-  { label: "二次元", value: "anime" },
-  { label: "舞蹈", value: "dance" },
-  { label: "文化", value: "culture" },
-  { label: "生活", value: "life" },
-  { label: "运动", value: "sports" }
-]);
 
 // 当前激活分类
 const activeCategory = ref("all");
