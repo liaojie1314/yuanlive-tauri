@@ -9,11 +9,8 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 // ---------------- 配置区域 ----------------
 const FFMPEG_VERSION = "b5.0.1";
 
-// 镜像源列表 (优先尝试国内镜像，最后尝试官方)
-const MIRROR_URLS = [
-  "https://mirror.ghproxy.com/https://github.com/eugeneware/ffmpeg-static/releases/download",
-  "https://github.com/eugeneware/ffmpeg-static/releases/download"
-];
+// 镜像源列表
+const MIRROR_URLS = ["https://github.com/eugeneware/ffmpeg-static/releases/download"];
 
 // ---------------- 映射表 ----------------
 const PLATFORM_MAP = { win32: "win32", darwin: "darwin", linux: "linux" };

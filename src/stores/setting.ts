@@ -9,6 +9,7 @@ const getDefaultShortcuts = () => {
   return {
     screenshot: isMac() ? "Cmd+Ctrl+H" : "Ctrl+Alt+H",
     openMainPanel: isMac() ? "Cmd+Ctrl+P" : "Ctrl+Alt+P",
+    colorPicker: isMac() ? "Cmd+Ctrl+C" : "Ctrl+Alt+C",
     globalEnabled: false // 默认关闭全局快捷键
   };
 };
@@ -191,6 +192,17 @@ export const useSettingStore = defineStore(StoresEnum.SETTING, {
         this.shortcuts = getDefaultShortcuts();
       }
       this.shortcuts.screenshot = shortcut;
+    },
+
+    /**
+     * 设置颜色选择器快捷键
+     * @param shortcut 颜色选择器快捷键
+     */
+    setColorPickerShortcut(shortcut: string) {
+      if (!this.shortcuts) {
+        this.shortcuts = getDefaultShortcuts();
+      }
+      this.shortcuts.colorPicker = shortcut;
     },
 
     /**

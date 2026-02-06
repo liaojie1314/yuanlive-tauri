@@ -53,6 +53,51 @@
           </n-flex>
         </n-flex>
         <span class="w-full h-1px bg-[--line-color]"></span>
+        <!-- 颜色选择器快捷键 -->
+        <n-flex align="center" justify="space-between">
+          <n-flex vertical :size="8">
+            <span>{{ shortcutConfigs.colorPicker.displayName }}</span>
+            <span class="text-(12px #909090)">{{ t("setting.shortcut.colorPickerHint") }}</span>
+          </n-flex>
+          <n-flex align="center" :size="12">
+            <n-tag
+              v-if="shortcutConfigs.colorPicker.isRegistered.value !== null"
+              :type="shortcutConfigs.colorPicker.isRegistered.value ? 'success' : 'error'"
+              size="small">
+              {{
+                shortcutConfigs.colorPicker.isRegistered.value
+                  ? t("setting.shortcut.bound")
+                  : t("setting.shortcut.unbound")
+              }}
+            </n-tag>
+            <n-input
+              :value="colorPickerShortcutDisplay"
+              :placeholder="colorPickerShortcutDisplay"
+              style="width: 130px"
+              class="border-(1px solid #90909080)"
+              readonly
+              size="small"
+              :disabled="!globalShortcutEnabled"
+              @keydown="handleColorPickerShortcutInput"
+              @focus="handleColorPickerFocus"
+              @blur="handleColorPickerBlur">
+              <template #suffix>
+                <n-tooltip trigger="hover">
+                  <template #trigger>
+                    <svg
+                      @click="resetColorPickerShortcut"
+                      class="size-14px"
+                      :class="globalShortcutEnabled ? 'cursor-pointer' : 'cursor-not-allowed opacity-50'">
+                      <use href="#return"></use>
+                    </svg>
+                  </template>
+                  <span>{{ t("setting.shortcut.reset") }}</span>
+                </n-tooltip>
+              </template>
+            </n-input>
+          </n-flex>
+        </n-flex>
+        <span class="w-full h-1px bg-[--line-color]"></span>
         <!-- 打开主面板快捷键 -->
         <n-flex align="center" justify="space-between">
           <n-flex vertical :size="8">
@@ -133,7 +178,7 @@ const { t } = useI18n();
 const sendOptions = useSendOptions();
 // 快捷键配置管理
 type ShortcutConfig = {
-  key: "screenshot" | "openMainPanel";
+  key: "screenshot" | "openMainPanel" | "colorPicker";
   value: Ref<string>;
   isCapturing: Ref<boolean>;
   isRegistered: Ref<boolean | null>;
@@ -171,16 +216,29 @@ const shortcutConfigs: Record<string, ShortcutConfig> = {
     eventName: "open-main-panel-shortcut-updated",
     registrationEventName: "open-main-panel-shortcut-registration-updated",
     displayName: t("setting.shortcut.panelSwitch")
+  },
+  colorPicker: {
+    key: "colorPicker",
+    value: ref(settingStore.shortcuts?.colorPicker),
+    isCapturing: ref(false),
+    isRegistered: ref<boolean | null>(null),
+    original: ref(settingStore.shortcuts?.colorPicker),
+    defaultValue: getDefaultShortcuts().colorPicker,
+    eventName: "color-picker-shortcut-updated",
+    registrationEventName: "color-picker-shortcut-registration-updated",
+    displayName: t("setting.shortcut.colorPicker")
   }
 };
 
 watchEffect(() => {
   shortcutConfigs.screenshot.displayName = t("setting.shortcut.screenshot");
+  shortcutConfigs.colorPicker.displayName = t("setting.shortcut.colorPicker");
   shortcutConfigs.openMainPanel.displayName = t("setting.shortcut.panelSwitch");
 });
 
 // 向后兼容的别名（仅保留模板中使用的）
 const screenshotShortcut = shortcutConfigs.screenshot.value;
+const colorPickerShortcut = shortcutConfigs.colorPicker.value;
 const openMainPanelShortcut = shortcutConfigs.openMainPanel.value;
 const shortcutRegistered = shortcutConfigs.screenshot.isRegistered;
 const openMainPanelShortcutRegistered = shortcutConfigs.openMainPanel.isRegistered;
@@ -243,6 +301,10 @@ const screenshotShortcutDisplay = computed(() => {
   return formatShortcutDisplay(screenshotShortcut.value);
 });
 
+const colorPickerShortcutDisplay = computed(() => {
+  return formatShortcutDisplay(colorPickerShortcut.value);
+});
+
 const openMainPanelShortcutDisplay = computed(() => {
   return formatShortcutDisplay(openMainPanelShortcut.value);
 });
@@ -263,6 +325,7 @@ const createShortcutWatcher = (config: ShortcutConfig, storeGetter: () => string
 
 // 监听 store 变化，确保数据同步
 createShortcutWatcher(shortcutConfigs.screenshot, () => settingStore.shortcuts?.screenshot);
+createShortcutWatcher(shortcutConfigs.colorPicker, () => settingStore.shortcuts?.colorPicker);
 createShortcutWatcher(shortcutConfigs.openMainPanel, () => settingStore.shortcuts?.openMainPanel);
 
 watch(
@@ -343,6 +406,7 @@ const createShortcutInputHandler = (config: ShortcutConfig) => {
 
 // 创建具体的处理函数
 const handleShortcutInput = createShortcutInputHandler(shortcutConfigs.screenshot);
+const handleColorPickerShortcutInput = createShortcutInputHandler(shortcutConfigs.colorPicker);
 const handleOpenMainPanelShortcutInput = createShortcutInputHandler(shortcutConfigs.openMainPanel);
 
 // 通用的焦点处理
@@ -373,6 +437,7 @@ const createBlurHandler = (config: ShortcutConfig, saveFunction: () => Promise<v
 
 // 创建具体的焦点处理函数
 const handleScreenshotFocus = createFocusHandler(shortcutConfigs.screenshot);
+const handleColorPickerFocus = createFocusHandler(shortcutConfigs.colorPicker);
 const handleOpenMainPanelFocus = createFocusHandler(shortcutConfigs.openMainPanel);
 
 // 处理发送消息快捷键失去焦点事件（自动保存）
@@ -395,6 +460,8 @@ const createSaveShortcutFunction = (config: ShortcutConfig) => {
         settingStore.setScreenshotShortcut(config.value.value);
       } else if (config.key === "openMainPanel") {
         settingStore.setOpenMainPanelShortcut(config.value.value);
+      } else if (config.key === "colorPicker") {
+        settingStore.setColorPickerShortcut(config.value.value);
       }
 
       config.original.value = config.value.value;
@@ -428,10 +495,12 @@ const createResetShortcutFunction = (config: ShortcutConfig, saveFunction: () =>
 
 // 创建具体的保存函数
 const saveScreenshotShortcut = createSaveShortcutFunction(shortcutConfigs.screenshot);
+const saveColorPickerShortcut = createSaveShortcutFunction(shortcutConfigs.colorPicker);
 const saveOpenMainPanelShortcut = createSaveShortcutFunction(shortcutConfigs.openMainPanel);
 
 // 创建具体的重置函数
 const resetScreenshotShortcut = createResetShortcutFunction(shortcutConfigs.screenshot, saveScreenshotShortcut);
+const resetColorPickerShortcut = createResetShortcutFunction(shortcutConfigs.colorPicker, saveColorPickerShortcut);
 const resetOpenMainPanelShortcut = createResetShortcutFunction(
   shortcutConfigs.openMainPanel,
   saveOpenMainPanelShortcut
@@ -439,6 +508,7 @@ const resetOpenMainPanelShortcut = createResetShortcutFunction(
 
 // 创建失焦处理函数
 const handleScreenshotBlur = createBlurHandler(shortcutConfigs.screenshot, saveScreenshotShortcut);
+const handleColorPickerBlur = createBlurHandler(shortcutConfigs.colorPicker, saveColorPickerShortcut);
 const handleOpenMainPanelBlur = createBlurHandler(shortcutConfigs.openMainPanel, saveOpenMainPanelShortcut);
 
 // 处理全局快捷键开关切换
@@ -492,16 +562,19 @@ onMounted(async () => {
   // 检查所有快捷键的绑定状态
   await Promise.all([
     checkShortcutRegistration(shortcutConfigs.screenshot),
+    checkShortcutRegistration(shortcutConfigs.colorPicker),
     checkShortcutRegistration(shortcutConfigs.openMainPanel)
   ]);
 
   // 创建事件监听器
   const unlistenScreenshot = await createRegistrationListener(shortcutConfigs.screenshot);
+  const unlistenColorPicker = await createRegistrationListener(shortcutConfigs.colorPicker);
   const unlistenOpenMainPanel = await createRegistrationListener(shortcutConfigs.openMainPanel);
 
   // 组件卸载时取消监听
   onUnmounted(() => {
     unlistenScreenshot();
+    unlistenColorPicker();
     unlistenOpenMainPanel();
   });
 });

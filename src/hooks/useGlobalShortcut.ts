@@ -1,10 +1,16 @@
+import { useThrottleFn } from "@vueuse/core";
 import { emitTo, listen } from "@tauri-apps/api/event";
 import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
+import { writeText } from "@tauri-apps/plugin-clipboard-manager";
 import { LogicalPosition, LogicalSize } from "@tauri-apps/api/dpi";
 import { register, unregister } from "@tauri-apps/plugin-global-shortcut";
 
 import { isMac } from "@/utils/PlatformUtils";
 import { useSettingStore } from "@/stores/setting.ts";
+
+interface EyeDropper {
+  open: () => Promise<{ sRGBHex: string }>;
+}
 
 // 快捷键配置接口
 type ShortcutConfig = {
@@ -25,7 +31,6 @@ const globalShortcutStates = new Map<string, string>();
 
 // 防抖状态管理
 let togglePanelTimeout: ReturnType<typeof setTimeout> | null = null;
-let lastToggleTime = 0;
 const isMacPlatform = isMac();
 
 /**
@@ -39,7 +44,8 @@ export const useGlobalShortcut = () => {
   const getDefaultShortcuts = () => {
     return {
       screenshot: isMacPlatform ? "Cmd+Ctrl+H" : "Ctrl+Alt+H",
-      openMainPanel: isMacPlatform ? "Cmd+Ctrl+P" : "Ctrl+Alt+P"
+      openMainPanel: isMacPlatform ? "Cmd+Ctrl+P" : "Ctrl+Alt+P",
+      colorPicker: isMacPlatform ? "Cmd+Ctrl+C" : "Ctrl+Alt+C"
     };
   };
 
@@ -66,79 +72,113 @@ export const useGlobalShortcut = () => {
   /**
    * 截图处理函数
    */
-  const handleScreenshot = async () => {
-    try {
-      const homeWindow = await WebviewWindow.getByLabel("home");
-      if (!homeWindow) return;
-      const captureWindow = await WebviewWindow.getByLabel("capture");
-      if (!captureWindow) return;
-      // 检查是否需要隐藏home窗口
-      if (settingStore.screenshot.isConceal) {
-        await homeWindow.hide();
-        // 等待窗口隐藏完成
-        await new Promise((resolve) => setTimeout(resolve, 100));
+  const handleScreenshot = useThrottleFn(
+    async () => {
+      try {
+        const homeWindow = await WebviewWindow.getByLabel("home");
+        if (!homeWindow) return;
+        const captureWindow = await WebviewWindow.getByLabel("capture");
+        if (!captureWindow) return;
+        // 检查是否需要隐藏home窗口
+        if (settingStore.screenshot.isConceal) {
+          await homeWindow.hide();
+          // 等待窗口隐藏完成
+          await new Promise((resolve) => setTimeout(resolve, 100));
+        }
+        // 设置窗口覆盖整个屏幕（包括菜单栏）
+        const screenWidth = window.screen.width * window.devicePixelRatio;
+        const screenHeight = window.screen.height * window.devicePixelRatio;
+        // 依靠窗口级别设置来确保覆盖菜单栏
+        await captureWindow.setSize(new LogicalSize(screenWidth, screenHeight));
+        await captureWindow.setPosition(new LogicalPosition(0, 0));
+        await captureWindow.show();
+        await captureWindow.setFocus();
+        await captureWindow.emit("capture", true);
+        console.log("截图窗口已启动");
+      } catch (error) {
+        console.error("Failed to open screenshot window:", error);
       }
-      // 设置窗口覆盖整个屏幕（包括菜单栏）
-      const screenWidth = window.screen.width * window.devicePixelRatio;
-      const screenHeight = window.screen.height * window.devicePixelRatio;
-      // 依靠窗口级别设置来确保覆盖菜单栏
-      await captureWindow.setSize(new LogicalSize(screenWidth, screenHeight));
-      await captureWindow.setPosition(new LogicalPosition(0, 0));
-      await captureWindow.show();
-      await captureWindow.setFocus();
-      await captureWindow.emit("capture", true);
-      console.log("截图窗口已启动");
-    } catch (error) {
-      console.error("Failed to open screenshot window:", error);
-    }
-  };
+    },
+    500,
+    false,
+    true
+  );
 
   /**
    * 切换主面板显示状态
    * - 如果窗口已显示，则隐藏
    * - 如果窗口隐藏或最小化，则显示并聚焦
    */
-  const handleOpenMainPanel = async () => {
-    const currentTime = Date.now();
-    // 防抖：如果距离上次操作少于500ms，则忽略
-    if (currentTime - lastToggleTime < 500) {
-      return;
-    }
-    // 清除之前的延时操作
-    if (togglePanelTimeout) {
-      clearTimeout(togglePanelTimeout);
-      togglePanelTimeout = null;
-    }
-    lastToggleTime = currentTime;
-    try {
-      const homeWindow = await WebviewWindow.getByLabel("home");
-      if (!homeWindow) {
-        console.warn("Home window not found");
+  const handleOpenMainPanel = useThrottleFn(
+    async () => {
+      try {
+        const homeWindow = await WebviewWindow.getByLabel("home");
+        if (!homeWindow) {
+          console.warn("Home window not found");
+          return;
+        }
+        // 获取当前窗口状态
+        const isVisible = await homeWindow.isVisible();
+        const isMinimized = await homeWindow.isMinimized();
+        console.log(`快捷键触发 - 窗口状态: 可见=${isVisible}, 最小化=${isMinimized}`);
+        if (isVisible && !isMinimized) {
+          // 窗口当前可见且未最小化，直接隐藏
+          await homeWindow.hide();
+        } else {
+          // 处理最小化状态
+          if (isMinimized) {
+            await homeWindow.unminimize();
+          }
+          // 显示窗口
+          await homeWindow.show();
+          // 延迟设置焦点，确保窗口已完全显示
+          togglePanelTimeout = setTimeout(async () => {
+            await homeWindow.setFocus();
+          }, 50);
+        }
+      } catch (error) {
+        console.error("Failed to toggle main panel:", error);
+      }
+    },
+    500,
+    false,
+    true
+  );
+
+  /**
+   * 取色器处理函数
+   * 1. 调用原生 EyeDropper
+   * 2. 获取颜色 hex
+   * 3. 写入剪切板
+   */
+  const handleColorPicker = useThrottleFn(
+    async () => {
+      // 检查浏览器支持 (Windows WebView2 支持，macOS 需要 fallback 或提示)
+      if (!("EyeDropper" in window)) {
+        console.warn("当前环境不支持原生 EyeDropper API");
+        // 如果需要兼容 Mac，可以在这里调用 Tauri Dialog 或者 Rust 插件
         return;
       }
-      // 获取当前窗口状态
-      const isVisible = await homeWindow.isVisible();
-      const isMinimized = await homeWindow.isMinimized();
-      console.log(`快捷键触发 - 窗口状态: 可见=${isVisible}, 最小化=${isMinimized}`);
-      if (isVisible && !isMinimized) {
-        // 窗口当前可见且未最小化，直接隐藏
-        await homeWindow.hide();
-      } else {
-        // 处理最小化状态
-        if (isMinimized) {
-          await homeWindow.unminimize();
-        }
-        // 显示窗口
-        await homeWindow.show();
-        // 延迟设置焦点，确保窗口已完全显示
-        togglePanelTimeout = setTimeout(async () => {
-          await homeWindow.setFocus();
-        }, 50);
+
+      try {
+        console.log("启动取色器...");
+        // 实例化并打开取色器
+        const eyeDropper = new (window as any).EyeDropper() as EyeDropper;
+        const result = await eyeDropper.open();
+        const hexColor = result.sRGBHex;
+        // 写入剪切板
+        await writeText(hexColor);
+        console.log(`颜色已复制: ${hexColor}`);
+        // 可选：在这里发送一个通知告诉用户复制成功
+        window.$message.success("取色成功");
+      } catch (error) {
+        console.log("用户取消取色", error);
       }
-    } catch (error) {
-      console.error("Failed to toggle main panel:", error);
-    }
-  };
+    },
+    500,
+    false,
+    true
+  );
 
   // 快捷键配置数组 - 新增快捷键只需在此处添加配置即可
   const shortcutConfigs: ShortcutConfig[] = [
@@ -155,6 +195,13 @@ export const useGlobalShortcut = () => {
       handler: handleOpenMainPanel,
       updateEventName: "open-main-panel-shortcut-updated",
       registrationEventName: "open-main-panel-shortcut-registration-updated"
+    },
+    {
+      key: "colorPicker",
+      defaultValue: getDefaultShortcuts().colorPicker,
+      handler: handleColorPicker,
+      updateEventName: "color-picker-shortcut-updated",
+      registrationEventName: "color-picker-shortcut-registration-updated"
     }
   ];
 
@@ -343,6 +390,7 @@ export const useGlobalShortcut = () => {
   return {
     shortcutConfigs,
     handleScreenshot,
+    handleColorPicker,
     handleOpenMainPanel,
     initializeGlobalShortcut,
     cleanupGlobalShortcut,

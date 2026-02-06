@@ -52,6 +52,8 @@
     "screenshotHint": "按快捷键进行截图",
     "panelSwitch": "主面板切换",
     "panelSwitchHint": "按快捷键切换主面板",
+    "colorPicker": "取色器",
+    "colorPickerHint": "按快捷键打开取色器",
     "messageShortcut": "消息",
     "sendMessageShortcut": "发送消息",
     "sendMessageShortcutHint": "按快捷键发送消息",

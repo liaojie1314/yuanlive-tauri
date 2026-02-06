@@ -52,6 +52,8 @@
     "screenshotHint": "Press the shortcut key to capture",
     "panelSwitch": "Main panel switch",
     "panelSwitchHint": "Press the shortcut key to switch the main panel",
+    "colorPicker": "Color Picker",
+    "colorPickerHint": "Press the shortcut key to open the color picker",
     "messageShortcut": "Message",
     "sendMessageShortcut": "Send Message",
     "sendMessageShortcutHint": "Press the shortcut key to send a message",
