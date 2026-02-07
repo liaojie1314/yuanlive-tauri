@@ -37,7 +37,7 @@
         <!-- 开直播按钮 -->
         <div
           class="flex flex-col items-center justify-center p-3 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
-          @click="createWebviewWindow('直播', 'record', 1200, 720, '', true, 800, 500)">
+          @click="openRecordWindow">
           <i-mdi-camcorder class="text-xl text-red-500 mb-1"></i-mdi-camcorder>
           <span class="text-sm text-gray-700">开直播</span>
         </div>
@@ -134,6 +134,7 @@
 
 <script setup lang="ts">
 import { useWindow } from "@/hooks/useWindow";
+import { isWindows } from "@/utils/PlatformUtils";
 
 const { createWebviewWindow } = useWindow();
 
@@ -294,6 +295,17 @@ const handleScroll = (event: Event) => {
   if (scrollTop + clientHeight >= scrollHeight - 100) {
     loadMoreVideos();
   }
+};
+
+/**
+ * 打开直播窗口
+ */
+const openRecordWindow = () => {
+  if (isWindows()) {
+    createWebviewWindow("直播", "record", 1200, 720, "", true, 800, 500);
+    return;
+  }
+  window.$message.warning("直播功能仅在Windows平台支持");
 };
 
 // 监听标签页切换，初始化数据

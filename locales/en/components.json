@@ -38,6 +38,11 @@
     "processing": "Processing audio",
     "error": "Recording failed"
   },
+  "fileUpload": {
+    "title": "Send files",
+    "cancel": "Cancel",
+    "send": "Send ({count})"
+  },
   "window": {
     "logoutFail": "Logout failed, please try again",
     "createWindowFail": "Failed to create {label} window"

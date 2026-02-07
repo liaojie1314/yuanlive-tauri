@@ -38,6 +38,11 @@
     "processing": "正在处理音频",
     "error": "录音失败"
   },
+  "fileUpload": {
+    "title": "发送文件",
+    "cancel": "取消",
+    "send": "发送 ({count})"
+  },
   "window": {
     "logoutFail": "退出登录失败，请重试",
     "createWindowFail": "创建{label}窗口失败"
