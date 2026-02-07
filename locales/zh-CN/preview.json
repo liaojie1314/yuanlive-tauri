@@ -15,5 +15,18 @@
     "firstImage": "这是第一张图片",
     "lastImage": "已经最后一张图片",
     "filterName": "图片"
+  },
+  "video": {
+    "previousVideo": "上一个视频",
+    "nextVideo": "下一个视频",
+    "play": "播放",
+    "pause": "暂停",
+    "mute": "静音",
+    "unMute": "取消静音",
+    "tipPlayingIndex": "正在播放第 {index} 个视频",
+    "tipPlayingPrevious": "正在播放上一个视频",
+    "tipFirst": "已经是第一个视频了",
+    "tipPlayingNext": "正在播放下一个视频",
+    "tipLast": "已经是最后一个视频了"
   }
 }

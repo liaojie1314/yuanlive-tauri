@@ -11,6 +11,7 @@
   },
   "bundle": {
     "resources": ["configuration"],
+    "externalBin": ["binaries/ffmpeg"],
     "active": true,
     "targets": ["msi", "nsis"],
     "icon": [

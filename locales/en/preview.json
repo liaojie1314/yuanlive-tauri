@@ -15,5 +15,18 @@
     "firstImage": "This is the first image",
     "lastImage": "This is already the last image",
     "filterName": "Image"
+  },
+  "video": {
+    "previousVideo": "Previous video",
+    "nextVideo": "Next video",
+    "play": "Play",
+    "pause": "Pause",
+    "mute": "Mute",
+    "unMute": "UnMute",
+    "tipPlayingIndex": "Playing video #{index}",
+    "tipPlayingPrevious": "Now playing previous video",
+    "tipFirst": "This is the first video",
+    "tipPlayingNext": "Now playing next video",
+    "tipLast": "This is the last video"
   }
 }

@@ -1,7 +1,6 @@
 import fs from "fs-extra";
 import path from "path";
 import os from "os";
-import { execSync } from "child_process";
 import { fileURLToPath } from "url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -94,6 +93,11 @@ async function downloadWithProgress(url, destPath) {
 
 async function main() {
   const platform = os.platform();
+  if (platform !== "win32") {
+    console.log(`ℹ️  [FFmpeg] 当前平台是 ${platform}，跳过下载 (仅 Windows 需要)。`);
+    return;
+  }
+
   const arch = os.arch();
 
   if (!PLATFORM_MAP[platform] || !ARCH_MAP[arch]) {
@@ -102,9 +106,9 @@ async function main() {
   }
 
   const ext = platform === "win32" ? ".exe" : "";
-  // Tauri 需要的文件名 (例如: ffmpeg-x86_64-unknown-linux-gnu)
+  // Tauri 需要的文件名
   const tauriFilename = `ffmpeg-${RUST_ARCH_MAP[arch]}-${RUST_TARGET_MAP[platform]}${ext}`;
-  // GitHub 上的原始文件名 (例如: linux-x64)
+  // GitHub 上的原始文件名
   const downloadFilename = `${PLATFORM_MAP[platform]}-${ARCH_MAP[arch]}`;
 
   const binariesDir = path.resolve(__dirname, "../src-tauri/binaries");
@@ -153,11 +157,6 @@ async function main() {
     if (!success) {
       throw new Error(`自动下载彻底失败: ${lastError?.message}`);
     }
-
-    // 3. 赋权
-    if (platform !== "win32") {
-      execSync(`chmod +x "${targetFile}"`);
-    }
     console.log(`✅ [FFmpeg] 配置完成!`);
   } catch (_err) {
     // ============================================================
@@ -178,15 +177,7 @@ async function main() {
     console.error(``);
     console.error(`3️⃣  将文件移动到此目录：`);
     console.error(`   ${binariesDir}`);
-
-    if (platform !== "win32") {
-      console.error(``);
-      console.error(`4️⃣  执行权限命令 (在项目根目录)：`);
-      console.error(`   chmod +x src-tauri/binaries/${tauriFilename}`);
-    }
     console.error(`================================================================\n`);
-
-    // 退出码 1，阻止 dev 启动，强迫用户解决依赖
     process.exit(1);
   }
 }

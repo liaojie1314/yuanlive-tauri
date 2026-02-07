@@ -24,7 +24,6 @@
   },
   "bundle": {
     "resources": ["configuration"],
-    "externalBin": ["binaries/ffmpeg"],
     "active": true,
     "category": "Video",
     "copyright": "Copyright © 2026 YuanLive Team",
