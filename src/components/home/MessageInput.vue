@@ -1,15 +1,37 @@
 <template>
-  <div class="flex flex-col max-w-[800px] w-full">
-    <!-- 上传的图片展示区域 -->
-    <div v-if="uploadedImages.length > 0" class="uploaded-images flex flex-wrap gap-2 m-1">
-      <div v-for="(image, index) in uploadedImages" :key="index" class="relative w-15 h-15 rounded-lg overflow-hidden">
-        <img :src="image" alt="Uploaded image" class="w-full h-full object-cover" />
+  <div class="flex flex-col max-w-[800px] w-full min-w-0">
+    <div v-if="attachments.length > 0" class="flex flex-wrap gap-2 m-1 p-1 select-none w-[calc(100%-16px)]">
+      <div v-for="(item, index) in attachments" :key="index" class="relative flex-shrink-0 group cursor-default">
         <div
-          class="absolute top-1 right-1 w-5 h-5 rounded-full bg-black bg-opacity-50 text-white flex items-center justify-center hover:bg-opacity-70"
-          @click="removeImage(index)">
-          <svg class="size-10px cursor-pointer">
-            <use href="#close"></use>
-          </svg>
+          v-if="item.type === 'image'"
+          class="w-16 h-16 rounded-lg overflow-hidden border border-gray-200 bg-gray-50">
+          <img :src="item.previewUrl" alt="img" class="w-full h-full object-cover" />
+        </div>
+
+        <div
+          v-else
+          class="w-16 h-16 bg-white rounded-lg border border-gray-200 flex-center flex-col gap-1 shadow-sm hover:shadow-md transition-shadow select-none cursor-default"
+          :title="item.name">
+          <span class="text-sm text-gray-700 font-medium w-full truncate text-center">
+            {{ item.name }}
+          </span>
+
+          <div class="flex-center mt-1 gap-1 w-full opacity-80">
+            <img
+              :src="`/file/${getFileSuffix(item.name || '')}.svg`"
+              :alt="getFileSuffix(item.name || '')"
+              class="w-5 h-5 object-contain flex-shrink-0" />
+
+            <span class="text-[10px] text-gray-400 uppercase font-bold truncate max-w-[2rem]">
+              {{ getFileSuffix(item.name) }}
+            </span>
+          </div>
+        </div>
+
+        <div
+          class="absolute top-[-4px] right-[-4px] w-5 h-5 rounded-full bg-gray-500 text-white flex items-center justify-center cursor-pointer hover:bg-red-500 transition-colors shadow-sm z-10 opacity-0 group-hover:opacity-100"
+          @click="removeAttachment(index)">
+          <i-mdi-close class="w-3 h-3" />
         </div>
       </div>
     </div>
@@ -162,16 +184,24 @@ import { useSettingStore } from "@/stores/setting";
 import { useMitt } from "@/hooks/useMitt";
 import { useGlobalShortcut } from "@/hooks/useGlobalShortcut";
 import { UploadFile } from "@/utils/FileUtil";
+import { getFileSuffix } from "@/utils/FormattingUtils";
 
 defineOptions({ name: "MessageInput" });
 const settingStore = useSettingStore();
 const { handleScreenshot } = useGlobalShortcut();
 const appWindow = WebviewWindow.getCurrent();
 
-// 混合类型消息的内容结构
+interface Attachment {
+  type: "image" | "file";
+  path: string; // 原始文件路径 (用于发送)
+  previewUrl?: string; // 图片预览地址 (asset协议)
+  name: string; // 文件名
+}
+
 interface MixedContent {
   text: string;
   images: string[];
+  files: string[];
 }
 
 interface Props {
@@ -228,8 +258,7 @@ const modelOptions = [
 
 // 输入的文本
 const messageText = ref("");
-// 上传的图片列表
-const uploadedImages = ref<string[]>([]);
+const attachments = ref<Attachment[]>([]);
 // 按钮激活状态管理
 const isThinkActive = ref(false);
 const isSearchActive = ref(false);
@@ -246,7 +275,7 @@ const isVoiceMode = ref(false);
 const isBtnDisabled = computed(() => {
   if (props.status === "loading") return true;
   if (props.status === "streaming") return false;
-  return !messageText.value.trim() && uploadedImages.value.length === 0;
+  return !messageText.value.trim() && attachments.value.length === 0;
 });
 
 const props = withDefaults(defineProps<Props>(), {
@@ -262,6 +291,11 @@ const emit =
     ) => void
   >();
 
+/**
+ * 渲染选择选项的标签，支持超出部分省略号显示
+ * @param option 选择选项对象
+ * @returns 渲染后的标签元素
+ */
 const renderLabel = (option: SelectOption) => {
   return h(
     NEllipsis,
@@ -301,7 +335,16 @@ const handleVoiceCancel = () => {
 };
 
 const handleCameraConfirm = (base64Photo: string) => {
-  uploadedImages.value.push(base64Photo);
+  if (attachments.value.length >= 6) {
+    window.$message.warning("最多只能上传6个文件");
+    return;
+  }
+  attachments.value.push({
+    type: "image",
+    path: base64Photo, // Base64 字符串直接作为路径/内容
+    previewUrl: base64Photo,
+    name: `photo_${Date.now()}.png`
+  });
 };
 
 // 处理菜单点击事件
@@ -328,23 +371,41 @@ const handleMenuClick = async (menuItem: string) => {
  * @param isImage 是否选择图片文件
  */
 const selectFiles = async (isImage: boolean) => {
+  if (attachments.value.length >= 6) {
+    window.$message.warning("最多只能上传6个文件");
+    return;
+  }
   try {
     const selected = await open({
       multiple: true,
       directory: false,
-      filters: isImage ? [{ name: "Images", extensions: ["png", "jpg", "jpeg", "webp", "gif", "bmp"] }] : undefined
+      filters: isImage
+        ? [{ name: "Images", extensions: ["png", "jpg", "jpeg", "webp", "svg", "gif", "bmp"] }]
+        : undefined
     });
 
     if (selected) {
-      // selected 可能是 string (单选) 或 string[] (多选) 或 null
       const paths = Array.isArray(selected) ? selected : [selected];
+      const remainingSlots = 6 - attachments.value.length;
+      if (paths.length > remainingSlots) {
+        window.$message.warning(`最多只能再上传${remainingSlots}个文件`);
+        // 截取前面的文件
+        paths.length = remainingSlots;
+      }
       paths.forEach((path) => {
-        // 在 Tauri 中显示本地图片，不能直接用路径，
-        // 需要用 convertFileSrc 转换为 asset:// 协议的 URL
-        const assetUrl = convertFileSrc(path);
-        // 实际发送给后端时，你可能需要根据 path 读取文件内容或直接传 path 给 Rust
-        console.log("转换后的图片路径:", assetUrl);
-        uploadedImages.value.push(assetUrl);
+        // 获取文件名
+        // 注意：Windows路径可能是反斜杠，Mac/Linux是正斜杠，这里做个简单兼容处理
+        const name = path.split(/[\\/]/).pop() || "unknown";
+
+        // 判断是否为图片 (如果不是强制图片模式，则通过后缀判断)
+        const isImg = isImage || /\.(png|jpg|jpeg|webp|gif|bmp)$/i.test(name);
+
+        attachments.value.push({
+          type: isImg ? "image" : "file",
+          path: path,
+          previewUrl: isImg ? convertFileSrc(path) : undefined,
+          name: name
+        });
       });
     }
   } catch (err) {
@@ -354,39 +415,54 @@ const selectFiles = async (isImage: boolean) => {
 
 // 发送消息
 const sendMessage = () => {
-  if (!isBtnDisabled.value) return;
-
+  if (isBtnDisabled.value) return;
   const text = messageText.value.trim();
-  const images = [...uploadedImages.value];
-
-  let msgType: "text" | "image" | "mixed" = "text";
+  // 分离图片和文件
+  const imagePaths = attachments.value.filter((item) => item.type === "image").map((item) => item.path);
+  const filePaths = attachments.value.filter((item) => item.type === "file").map((item) => item.path);
+  let msgType: "text" | "image" | "mixed" | "file" = "text";
+  // 构造 content
   let msgContent: string | string[] | MixedContent = text;
-
-  if (images.length > 0 && text) {
+  const hasAttachments = imagePaths.length > 0 || filePaths.length > 0;
+  if (hasAttachments && text) {
     msgType = "mixed";
     msgContent = {
       text: text,
-      images: images
+      images: imagePaths,
+      files: filePaths
     };
-  } else if (images.length > 0) {
+  } else if (imagePaths.length > 0 && filePaths.length === 0) {
     msgType = "image";
-    msgContent = images;
+    msgContent = imagePaths;
+  } else if (filePaths.length > 0 && imagePaths.length === 0 && !text) {
+    // 如果只有文件且没文字
+    msgType = "mixed";
+    msgContent = { text: "", images: [], files: filePaths };
   } else {
-    // 默认为 text，上面初始化时已赋值
+    // 兜底混合
+    msgType = "mixed";
+    msgContent = {
+      text: text,
+      images: imagePaths,
+      files: filePaths
+    };
+  }
+  if (!hasAttachments && text) {
     msgType = "text";
     msgContent = text;
   }
   emit("send-message", {
-    type: msgType,
+    type: msgType as any,
     content: msgContent
   });
+
+  // 重置
   messageText.value = "";
-  uploadedImages.value = [];
+  attachments.value = [];
 };
 
-// 移除上传的图片
-const removeImage = (index: number) => {
-  uploadedImages.value.splice(index, 1);
+const removeAttachment = (index: number) => {
+  attachments.value.splice(index, 1);
 };
 
 // 处理Voice按钮点击
@@ -402,20 +478,79 @@ const handleResize = ({ width }: any) => {
 
 // 处理全局拖拽文件
 const handleGlobalFilesDrop = async (files: UploadFile[]) => {
-  // TODO: 文件显示
   console.log("处理全局拖拽文件:", files);
+  if (!files || files.length === 0) return;
+  const remainingSlots = 6 - attachments.value.length;
+  if (remainingSlots <= 0) {
+    window.$message.warning("文件数量已达上限");
+    return;
+  }
+  const filesToProcess = files.length > remainingSlots ? files.slice(0, remainingSlots) : files;
+  if (files.length > remainingSlots) {
+    window.$message.warning(`最多只能再上传${remainingSlots}个文件`);
+  }
+  filesToProcess.forEach((file) => {
+    let name = "";
+    let path = ""; // 这里的 path 将作为附件的标识
+    let isImage = false;
+    let previewUrl: string | undefined;
+    // 判断是否为 PathUploadFile (Tauri 系统拖拽)
+    if ("kind" in file && file.kind === "path") {
+      name = file.name;
+      path = file.path;
+      // 通过后缀名或 type 字段粗略判断是否为图片
+      isImage = /\.(png|jpg|jpeg|webp|gif|bmp)$/i.test(name) || file.type.startsWith("image/");
+      if (isImage) {
+        //如果是系统路径，必须用 convertFileSrc 转换才能显示预览
+        previewUrl = convertFileSrc(path);
+      }
+    }
+    // 判断是否为标准 File 对象 (浏览器内部拖拽)
+    else if (file instanceof File) {
+      name = file.name;
+      isImage = file.type.startsWith("image/");
+      // 对于 File 对象，生成临时的 blob: URL 用于预览
+      // 注意：发送消息时，如果是 blob URL，后端 rust 无法直接读取，
+      const blobUrl = URL.createObjectURL(file);
+      path = blobUrl; // 暂时用 blobUrl 作为 path 占位
+      if (isImage) {
+        previewUrl = blobUrl;
+      }
+    }
+    // 推送到 attachments 数组
+    attachments.value.push({
+      type: isImage ? "image" : "file",
+      path: path,
+      previewUrl: previewUrl,
+      name: name
+    });
+  });
 };
 
 onMounted(() => {
+  // 监听全局文件拖拽
   useMitt.on(MittEnum.GLOBAL_FILES_DROP, handleGlobalFilesDrop);
+
+  // 监听截图事件
   appWindow.listen("screenshot", async (e: any) => {
+    if (attachments.value.length >= 6) {
+      window.$message.warning("最多只能上传6个文件");
+      return;
+    }
     try {
-      // 从 ArrayBuffer 数组重建 Blob 对象
+      // 1. 从 ArrayBuffer 重建 Blob
       const buffer = new Uint8Array(e.payload.buffer);
       const blob = new Blob([buffer], { type: e.payload.mimeType });
       const file = new File([blob], "screenshot.png", { type: e.payload.mimeType });
-      console.log("处理截图成功:", file);
-      uploadedImages.value.push(URL.createObjectURL(file));
+      // 2. 生成预览地址
+      const url = URL.createObjectURL(file);
+      // 3. 推送到新的 attachments 数组中
+      attachments.value.push({
+        type: "image",
+        path: url,
+        previewUrl: url,
+        name: `Screenshot_${new Date().getTime()}.png` // 给一个唯一的文件名
+      });
     } catch (error) {
       console.error("处理截图失败:", error);
     }
@@ -430,10 +565,5 @@ onUnmounted(() => {
 <style scoped>
 .input-container {
   border: 1px solid #707070;
-}
-
-.uploaded-images {
-  width: calc(100% - 16px);
-  flex-wrap: wrap;
 }
 </style>

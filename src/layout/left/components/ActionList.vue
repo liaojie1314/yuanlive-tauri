@@ -68,10 +68,12 @@ import { useI18n } from "vue-i18n";
 import router from "@/router";
 import { useLogin } from "@/hooks/useLogin";
 import { useWindow } from "@/hooks/useWindow";
+import { useCheckUpdate } from "@/hooks/useCheckUpdate";
 
 const { t } = useI18n();
 const { logout } = useLogin();
 const { createWebviewWindow } = useWindow();
+const { checkUpdate } = useCheckUpdate();
 
 const activeUrl = ref<string>("index");
 
@@ -143,8 +145,8 @@ const settingMenu = computed<BaseMenuItem[]>(() => [
   {
     label: t("home.menu.setting.update"),
     icon: "arrow-circle-up",
-    click: () => {
-      console.log("update");
+    click: async () => {
+      await checkUpdate("home");
     }
   },
   {

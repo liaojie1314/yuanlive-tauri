@@ -1,6 +1,6 @@
 import { invoke } from "@tauri-apps/api/core";
 import { appDataDir, join, resourceDir } from "@tauri-apps/api/path";
-import { BaseDirectory, exists, mkdir } from "@tauri-apps/plugin-fs";
+import { BaseDirectory, exists, mkdir, readFile } from "@tauri-apps/plugin-fs";
 
 import { TauriCommandEnum } from "@/enums";
 import { isMobile } from "./PlatformUtils";
@@ -64,6 +64,23 @@ export const getUserAbsoluteResourceDir = async (uid: string) => {
 };
 
 /**
+ * 从指定的绝对路径读取文件内容，并返回一个包含文件元数据和文件对象的对象。
+ * @param absolutePath 文件的绝对路径
+ * @returns 包含文件元数据和文件对象的对象，文件对象为 Blob 类型
+ */
+export async function getFile(absolutePath: string) {
+  const [fileMeta] = await getFilesMeta<FilesMeta>([absolutePath]);
+  const fileData = await readFile(absolutePath);
+  const fileName = fileMeta.name;
+  const blob = new Blob([new Uint8Array(fileData)]);
+  const fileType = fileMeta?.mime_type || fileMeta?.file_type;
+  return {
+    file: new File([blob], fileName, { type: fileType }),
+    meta: fileMeta
+  };
+}
+
+/**
  * 获取用户图片缓存目录路径。
  * @param subFolder 子目录名，用于分类存储不同类型的图片。
  * @param userUid 用户唯一标识，用于区分不同用户的缓存。
@@ -98,7 +115,7 @@ export const getImageCache = (subFolder: string, userUid: string): string => {
  * metas.forEach(m => console.log(m.file_type))
  */
 export async function getFilesMeta<T>(filesPath: string[]) {
-  return invoke<T>(TauriCommandEnum.GET_FILE_META, {
+  return invoke<T>(TauriCommandEnum.GET_FILES_META, {
     filesPath
   });
 }

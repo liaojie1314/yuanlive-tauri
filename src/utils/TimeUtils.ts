@@ -12,3 +12,8 @@ export const setDayjsLocale = (lang: string) => {
 dayjs.extend(relativeTime);
 dayjs.extend(weekday);
 setDayjsLocale("zh-CN");
+
+/** 相对时间(前) */
+export const handRelativeTime = (time: string) => {
+  return dayjs(time).fromNow();
+};

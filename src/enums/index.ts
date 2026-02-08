@@ -98,7 +98,7 @@ export enum TauriCommandEnum {
   // 移除 token
   REMOVE_TOKEN = "remove_token",
   // 获取文件元数据
-  GET_FILE_META = "get_file_meta",
+  GET_FILES_META = "get_files_meta",
   // AI 消息流式发送
   AI_MESSAGE_SEND_STREAM = "ai_message_send_stream",
   // AI 取消流式消息

@@ -1,5 +1,59 @@
 import { compact } from "es-toolkit";
 
+/** 文件图标映射关系表 */
+const fileSuffixMap: Record<string, string> = {
+  cad: "cad",
+  psd: "psd",
+  doc: "doc",
+  docx: "docx",
+  csv: "csv",
+  xls: "xls",
+  xlsx: "xls",
+  pdf: "pdf",
+  ppt: "ppt",
+  pptx: "ppt",
+  zip: "zip",
+  css: "css",
+  gitignore: "gitignore",
+  html: "html",
+  java: "java",
+  js: "js",
+  json: "json",
+  jsx: "jsx",
+  less: "less",
+  py: "py",
+  scss: "scss",
+  sql: "sql",
+  stylus: "stylus",
+  ts: "ts",
+  vue: "vue",
+  txt: "txt",
+  md: "md",
+  mov: "mov",
+  mp4: "mp4",
+  avi: "mp4",
+  rmvb: "mp4",
+  mkv: "mp4",
+  wmv: "mp4",
+  flv: "mp4",
+  webm: "mp4",
+  m4v: "mp4",
+  mp3: "mp3"
+};
+/**
+ * 获取文件对应的Icon
+ * @param fileName 文件名
+ * @returns Icon
+ */
+export const getFileSuffix = (fileName: string): string => {
+  if (!fileName) return "other";
+
+  const suffix = fileName.toLowerCase().split(".").pop();
+  if (!suffix) return "other";
+
+  return fileSuffixMap[suffix] || "other";
+};
+
 /**
  * 从文件路径中提取文件名
  * @param path 文件路径
