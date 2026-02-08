@@ -47,8 +47,7 @@
                 :autosize="{ minRows: 4, maxRows: 6 }"
                 maxlength="500"
                 show-count
-                class="w-full"
-                style="border: 1px solid var(--disabled-color)" />
+                class="w-full border-(1px solid #90909080)" />
             </n-form-item>
             <n-form-item :label="t('feedback.images', { count: imageCounts })" path="images">
               <n-upload
@@ -63,7 +62,7 @@
               <n-input
                 v-model:value="formModel.contact"
                 :placeholder="t('feedback.contactPlaceholder')"
-                style="border: 1px solid var(--disabled-color)" />
+                class="border-(1px solid #90909080)" />
             </n-form-item>
           </n-form>
           <n-collapse arrow-placement="right" class="rounded-md" style="border: 1px solid var(--disabled-color)">

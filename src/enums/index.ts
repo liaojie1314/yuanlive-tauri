@@ -1,13 +1,5 @@
 // 全局枚举文件
 
-/** 性别 */
-export enum GenderEnum {
-  // 男
-  MAN = 1,
-  // 女
-  WOMAN = 2
-}
-
 /** 上传场景 */
 export enum UploadSceneEnum {
   /** 聊天 */

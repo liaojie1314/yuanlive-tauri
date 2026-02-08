@@ -1,4 +1,9 @@
-import type { GenderEnum } from "@/enums";
+type UserStats = {
+  followerCount: number;
+  followingCount: number;
+  totalLikesReceived: number;
+  followingLiveCount: number;
+};
 
 export type UserInfoType = {
   // 用户唯一标识
@@ -8,13 +13,14 @@ export type UserInfoType = {
   // 密码
   password?: string;
   // 用户头像
-  avatar: string;
+  avatar?: string;
   // 用户名
   username: string;
   // 性别 1为男性，2为女性
-  gender: GenderEnum;
+  gender: string;
   // 设备类型
   device: string;
+  userStats: UserStats;
 };
 
 export type RegisterUserReq = {

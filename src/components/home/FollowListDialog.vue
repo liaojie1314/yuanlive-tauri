@@ -2,14 +2,18 @@
   <base-dialog v-model:show="dialogVisible">
     <template #header>
       <n-tabs v-model:value="activeTab" type="line" class="h-12 leading-12 mb-[-1px] w-full">
-        <n-tab-pane name="following" :tab="`关注 (${followingCount})`" />
-        <n-tab-pane name="followers" :tab="`粉丝 (${followersCount})`" />
+        <n-tab-pane name="following" :tab="`关注 (${userInfo?.userStats.followingCount})`" />
+        <n-tab-pane name="followers" :tab="`粉丝 (${userInfo?.userStats.followerCount})`" />
       </n-tabs>
     </template>
 
     <div class="space-y-5">
       <div class="flex items-center justify-between">
-        <n-input v-model:value="searchQuery" placeholder="搜索用户名或者YuanLive号" clearable class="w-[400px]">
+        <n-input
+          v-model:value="searchQuery"
+          placeholder="搜索用户名或者YuanLive号"
+          clearable
+          class="w-[400px] border-(1px solid #90909080)">
           <template #prefix>
             <n-icon>
               <i-mdi-magnify />
@@ -58,6 +62,8 @@
 </template>
 
 <script setup lang="ts">
+import { useUserStore } from "@/stores/user";
+
 interface User {
   id: string;
   name: string;
@@ -70,22 +76,23 @@ interface User {
 interface Props {
   show: boolean;
   activeTab?: "following" | "followers";
-  followingCount: number;
-  followersCount: number;
-  followingList?: User[];
-  followersList?: User[];
 }
 
+const { userInfo } = useUserStore();
+
 const props = withDefaults(defineProps<Props>(), {
-  activeTab: "following",
-  followingList: () => [],
-  followersList: () => []
+  activeTab: "following"
 });
 
 const emit = defineEmits<{
   "update:show": [value: boolean];
   "update:activeTab": [value: "following" | "followers"];
 }>();
+
+// 模拟关注列表数据
+const followingList = ref<User[]>([]);
+// 模拟粉丝列表数据
+const followersList = ref<User[]>([]);
 
 // 双向绑定
 const dialogVisible = computed({
@@ -109,12 +116,19 @@ const sortOptions = ref([
 
 // 根据当前Tab和搜索条件过滤用户列表
 const displayUsers = computed(() => {
-  const list = activeTab.value === "following" ? props.followingList : props.followersList;
+  const list = activeTab.value === "following" ? followingList.value : followersList.value;
   if (!searchQuery.value) return list;
 
   const query = searchQuery.value.toLowerCase();
   return list.filter(
     (user) => user.name.toLowerCase().includes(query) || user.description.toLowerCase().includes(query)
   );
+});
+
+// 清理函数
+onUnmounted(() => {
+  // 清理引用
+  followingList.value = [];
+  followersList.value = [];
 });
 </script>

@@ -6,7 +6,7 @@
           <n-avatar
             round
             :size="96"
-            :src="avatar || 'https://picsum.photos/id/1005/200/200'"
+            :src="userInfo?.avatar || 'https://picsum.photos/id/1005/200/200'"
             class="border-2 border-gray-200 object-cover block"
             @click="openAvatarCropper" />
           <div
@@ -26,7 +26,7 @@
 
       <div class="flex flex-col gap-1.5">
         <label class="text-sm font-medium text-[--text-color]">名字</label>
-        <n-input v-model:value="form.name" placeholder="请输入名字" maxlength="20" show-count clearable />
+        <n-input v-model:value="form.username" placeholder="请输入用户名" maxlength="20" show-count clearable />
       </div>
 
       <div class="flex flex-col gap-1.5">
@@ -42,7 +42,7 @@
 
       <div class="flex justify-end gap-3 pt-4">
         <n-button @click="closeDialog">取消</n-button>
-        <n-button type="primary" @click="saveProfile" :disabled="!form.name">保存</n-button>
+        <n-button type="primary" @click="saveProfile" :disabled="!form.username">保存</n-button>
       </div>
     </div>
   </base-dialog>
@@ -59,19 +59,14 @@
 
 <script setup lang="ts">
 import { UploadSceneEnum } from "@/enums";
+import { useUserStore } from "@/stores/user";
 import { useAvatarUpload } from "@/hooks/useAvatarUpload";
 import type { AvatarCropperInstance } from "@/components/common/AvatarCropper.vue";
 
-interface Props {
-  show: boolean;
-  name: string;
-  description?: string;
-  avatar?: string;
-}
+const { userInfo } = useUserStore();
 
-const props = withDefaults(defineProps<Props>(), {
-  description: "",
-  avatar: ""
+const props = defineProps({
+  show: Boolean
 });
 
 const emit = defineEmits<{
@@ -81,24 +76,12 @@ const emit = defineEmits<{
 
 // 本地表单数据
 const form = reactive({
-  name: "",
+  username: userInfo?.username,
   description: "",
-  avatar: ""
+  avatar: userInfo?.avatar
 });
 const fileInputRef = ref<HTMLInputElement>();
 const cropperRef = ref<AvatarCropperInstance>();
-
-// 监听 Props 变化以更新表单（防止重新打开弹窗时数据未重置）
-watch(
-  () => props.show,
-  (visible) => {
-    if (visible) {
-      form.name = props.name;
-      form.description = props.description;
-      form.avatar = props.avatar;
-    }
-  }
-);
 
 const {
   localImageUrl,
@@ -134,10 +117,10 @@ const handleCrop = async (cropBlob: Blob) => {
 
 // 保存资料
 const saveProfile = () => {
-  if (!form.name.trim()) return;
+  if (!form.username?.trim()) return;
 
   emit("save", {
-    name: form.name,
+    name: form.username,
     description: form.description,
     avatar: form.avatar
   });

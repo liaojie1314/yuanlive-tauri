@@ -9,7 +9,7 @@
       v-for="category in categories"
       :key="category.value"
       :name="category.value"
-      :tab="category.label"></n-tab-pane>
+      :tab="category.name"></n-tab-pane>
   </n-tabs>
 </template>
 
@@ -21,7 +21,7 @@ defineOptions({
 });
 
 interface Category {
-  label: string;
+  name: string;
   value: string;
 }
 
@@ -30,17 +30,7 @@ interface Props {
 }
 
 // 分类列表
-const categories = ref<Category[]>([
-  { label: "全部", value: "all" },
-  { label: "聊天", value: "chat" },
-  { label: "音乐", value: "music" },
-  { label: "游戏", value: "game" },
-  { label: "二次元", value: "anime" },
-  { label: "舞蹈", value: "dance" },
-  { label: "文化", value: "culture" },
-  { label: "生活", value: "life" },
-  { label: "运动", value: "sports" }
-]);
+const categories = ref<Category[]>([{ name: "全部", value: "all" }]);
 
 const props = defineProps<Props>();
 
@@ -64,7 +54,7 @@ const handleCategoryChange = (category: string) => {
 };
 
 onMounted(() => {
-  getLiveCategoryApi().then((res) => console.log(res));
+  getLiveCategoryApi().then((res) => categories.value.push(...res));
 });
 </script>
 

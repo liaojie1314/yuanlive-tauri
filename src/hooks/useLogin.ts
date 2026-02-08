@@ -134,7 +134,7 @@ export function useLogin() {
           // 自动填充之前尝试登录的账号信息到手动登录表单
           if (userStore.userInfo) {
             userInfo.value.account = userStore.userInfo.username || userStore.userInfo.email;
-            userInfo.value.avatar = userStore.userInfo.avatar;
+            userInfo.value.avatar = userStore.userInfo.avatar!;
             userInfo.value.uid = userStore.userInfo.uid;
           }
         }
