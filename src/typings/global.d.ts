@@ -12,6 +12,8 @@ declare global {
     VITE_CRYPTO_SECRET_KEY: string;
     VITE_CRYPTO_SECRET_IV: string;
     VITE_UPGRADE_LINK_ACCESS_KEY: string;
+    VITE_GITHUB_TOKEN: string;
+    VITE_GITEE_TOKEN: string;
   }
   /**
    * 打包压缩格式的类型声明

@@ -1,0 +1,28 @@
+{
+  "updating": "更新中",
+  "fetchCommitFailed": "v{version} 版本更新内容获取失败",
+  "fetchReleaseError": "获取版本更新信息失败",
+  "fetchReleaseErrorWithReason": "获取版本更新信息失败：{reason}",
+  "noDescription": "暂无更新日志",
+  "updateError": "更新失败，请稍后重试",
+  "checkUpdate": {
+    "currentVersion": "当前版本",
+    "newTag": "new",
+    "newReleaseDate": "新版本发布日期：",
+    "releaseDate": "版本发布日期：",
+    "logTitle": "版本更新日志",
+    "collapse": "收起",
+    "expand": "展开",
+    "ignore": "忽略更新",
+    "updateNow": "立即更新",
+    "checkNow": "检查更新",
+    "downloading": "正在下载...",
+    "updateSuccess": "更新成功",
+    "confirmUpdate": "确定更新吗？",
+    "confirmIgnore": "忽略更新不影响登录后手动更新，后续将不再弹出此次更新提醒，确定忽略更新吗？",
+    "updateError": "检查更新错误，请稍后再试",
+    "fetchLogFailed": "获取更新日志失败，请配置token后再试",
+    "downloadSuccessToast": "安装包下载成功，稍后将自动安装并重启",
+    "restartFailed": "重启失败，请手动重启"
+  }
+}

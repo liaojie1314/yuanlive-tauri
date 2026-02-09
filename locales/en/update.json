@@ -1,0 +1,28 @@
+{
+  "updating": "Updating",
+  "fetchCommitFailed": "Failed to load release notes for v{version}",
+  "fetchReleaseError": "Failed to fetch release info",
+  "fetchReleaseErrorWithReason": "Failed to fetch release info: {reason}",
+  "noDescription": "No release notes available",
+  "updateError": "Update failed, please try again later",
+  "checkUpdate": {
+    "currentVersion": "Current version",
+    "newTag": "new",
+    "newReleaseDate": "New release date:",
+    "releaseDate": "Release date:",
+    "logTitle": "Release notes",
+    "collapse": "Collapse",
+    "expand": "Expand",
+    "ignore": "Ignore",
+    "updateNow": "Update now",
+    "checkNow": "Check update",
+    "downloading": "Downloading...",
+    "updateSuccess": "Updated",
+    "confirmUpdate": "Proceed with update?",
+    "confirmIgnore": "Ignoring will stop this reminder but you can still update later. Confirm ignore?",
+    "updateError": "Update check failed, please try again later",
+    "fetchLogFailed": "Failed to load release notes, please set token and retry",
+    "downloadSuccessToast": "Installer downloaded. It will install and restart soon",
+    "restartFailed": "Restart failed, please restart manually"
+  }
+}
