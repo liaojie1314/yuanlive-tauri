@@ -7,8 +7,7 @@
             round
             :size="96"
             :src="userInfo?.avatar || 'https://picsum.photos/id/1005/200/200'"
-            class="border-2 border-gray-200 object-cover block"
-            @click="openAvatarCropper" />
+            class="border-2 border-gray-200 object-cover block" />
           <div
             class="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300"
             @click="openAvatarCropper">
@@ -19,9 +18,7 @@
             </svg>
           </div>
         </div>
-        <span class="text-xs text-gray-500 hover:text-[--primary-color] cursor-pointer" @click="openAvatarCropper">
-          点击修改头像
-        </span>
+        <span class="text-xs text-gray-500 hover:text-[--primary-color] cursor-pointer">点击修改头像</span>
       </div>
 
       <div class="flex flex-col gap-1.5">
@@ -48,7 +45,7 @@
   </base-dialog>
 
   <input
-    ref="fileInput"
+    ref="fileInputRef"
     type="file"
     accept="image/jpeg,image/png,image/webp"
     class="hidden"
@@ -91,8 +88,8 @@ const {
   handleCrop: onHookCrop
 } = useAvatarUpload({
   scene: UploadSceneEnum.AVATAR,
-  fileInputRef: fileInputRef,
-  cropperRef: cropperRef,
+  fileInputRef,
+  cropperRef,
   onSuccess: (downloadUrl) => {
     // 上传成功后，更新本地预览头像
     form.avatar = downloadUrl;

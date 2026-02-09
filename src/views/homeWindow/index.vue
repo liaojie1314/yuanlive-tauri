@@ -1,6 +1,6 @@
 <template>
   <n-scrollbar>
-    <div class="home-container p-4 h-full overflow-y-auto select-none">
+    <div class="home-container p-4 h-full select-none">
       <!-- 搜索框 -->
       <search-box class="mx-auto mb-10px" />
       <!-- 分类导航 -->

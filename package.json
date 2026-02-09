@@ -1,7 +1,7 @@
 {
   "name": "yuanlive-tauri",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.2.0",
   "type": "module",
   "author": {
     "name": "yuanyuan",
@@ -89,6 +89,7 @@
     "pinia-shared-state": "^1.0.1",
     "pixi-live2d-display": "^0.4.0",
     "pixi.js": "6.5.9",
+    "seemly": "^0.3.10",
     "semver": "^7.7.3",
     "tauri-plugin-mic-recorder-api": "^2.0.0",
     "video.js": "^8.23.4",

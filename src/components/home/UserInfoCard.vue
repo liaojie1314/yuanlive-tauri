@@ -6,13 +6,12 @@
           :src="userInfo?.avatar"
           :alt="`${userInfo?.username}的头像`"
           class="w-24 h-24 rounded-full border-3 border-white shadow-lg object-cover"
-          loading="lazy" />
+          loading="lazy"
+          @click="openEditDialog" />
       </div>
       <div class="flex flex-col gap-2 flex-1">
         <div class="flex items-center gap-2">
-          <span
-            class="text-2xl font-semibold text-gray-800 cursor-pointer hover:text-blue-500 transition-colors"
-            @click="openEditDialog">
+          <span class="text-2xl font-semibold text-gray-800 cursor-pointer hover:text-blue-500 transition-colors">
             {{ userInfo?.username }}
           </span>
           <span class="text-blue-500 text-xl font-bold">
@@ -24,7 +23,7 @@
             class="special-style cursor-pointer transition-colors duration-200 hover:text-blue-500"
             @click="openFollowDialog('following')">
             关注
-            <span class="text-gray-800 font-medium">{{ userInfo?.userStats.followingCount }}</span>
+            <span class="text-gray-800 font-medium">{{ userInfo?.userStats.followingCount || 0 }}</span>
           </span>
           <span class="text-gray-200 mx-1">|</span>
           <span
@@ -37,12 +36,12 @@
             class="special-style cursor-pointer transition-colors duration-200 hover:text-blue-500"
             @click="openFollowDialog('followers')">
             粉丝
-            <span class="text-gray-800 font-medium">{{ userInfo?.userStats.followerCount }}</span>
+            <span class="text-gray-800 font-medium">{{ userInfo?.userStats.followerCount || 0 }}</span>
           </span>
           <span class="text-gray-200 mx-1">|</span>
           <span class="special-style cursor-pointer transition-colors duration-200 hover:text-blue-500">
             获赞
-            <span class="text-gray-800 font-medium">{{ userInfo?.userStats.totalLikesReceived }}</span>
+            <span class="text-gray-800 font-medium">{{ userInfo?.userStats.totalLikesReceived || 0 }}</span>
           </span>
         </div>
         <div class="text-sm text-gray-600">

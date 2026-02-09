@@ -2,8 +2,8 @@
   <base-dialog v-model:show="dialogVisible">
     <template #header>
       <n-tabs v-model:value="activeTab" type="line" class="h-12 leading-12 mb-[-1px] w-full">
-        <n-tab-pane name="following" :tab="`关注 (${userInfo?.userStats.followingCount})`" />
-        <n-tab-pane name="followers" :tab="`粉丝 (${userInfo?.userStats.followerCount})`" />
+        <n-tab-pane name="following" :tab="`关注 (${userInfo?.userStats.followingCount || 0})`" />
+        <n-tab-pane name="followers" :tab="`粉丝 (${userInfo?.userStats.followerCount || 0})`" />
       </n-tabs>
     </template>
 
