@@ -136,13 +136,6 @@ const settingMenu = computed<BaseMenuItem[]>(() => [
     }
   },
   {
-    label: t("home.menu.setting.privacy"),
-    icon: "lock",
-    click: () => {
-      console.log("privacy");
-    }
-  },
-  {
     label: t("home.menu.setting.update"),
     icon: "arrow-circle-up",
     click: async () => {

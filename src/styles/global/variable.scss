@@ -6,7 +6,6 @@
   --font-family: "PingFang";
   // 是否启用透明高斯模糊
   --blur-enabled: 1;
-  --home-bg-color: #f9f9fa;
   --left-item-bg-color: #e4e4e6;
   --left-text-color: #4e5059;
   --left-active-text-color: #000;
@@ -38,10 +37,13 @@
   // 警告样式
   --warning-text: #f7b668ff;
   --bg-modal: #f0f0f0;
+  --input-area-bg: #ffffff;
+  --btn-secondary-bg: #f1f1f1;
+  --btn-secondary-border: #e3e3e3eb;
+  --btn-secondary-hover: #eae9e9;
 }
 
 html[data-theme="dark"] {
-  --home-bg-color: #161823;
   --left-item-bg-color: #2d2f38;
   --left-text-color: #c5c5c8;
   --left-active-text-color: #fff;
@@ -73,6 +75,10 @@ html[data-theme="dark"] {
   // 警告样式
   --warning-text: #f4c375ff;
   --bg-modal: #262626;
+  --input-area-bg: #262626;
+  --btn-secondary-bg: #333333;
+  --btn-secondary-border: #444444;
+  --btn-secondary-hover: #454545;
 }
 
 /**!修改naive-ui的遮罩层样式*/

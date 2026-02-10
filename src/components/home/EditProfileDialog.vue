@@ -1,45 +1,40 @@
 <template>
   <base-dialog v-model:show="dialogVisible" title="编辑资料">
-    <div class="space-y-6 px-4 py-2">
+    <div class="space-y-6">
       <div class="flex flex-col items-center gap-3">
         <div class="relative cursor-pointer group size-24">
-          <n-avatar
-            round
-            :size="96"
-            :src="userInfo?.avatar || 'https://picsum.photos/id/1005/200/200'"
-            class="border-2 border-gray-200 object-cover block" />
+          <n-avatar round :size="96" :src="userInfo?.avatar" class="border-2 border-[--line-color] shadow-sm" />
           <div
-            class="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+            class="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 backdrop-blur-[2px]"
             @click="openAvatarCropper">
-            <svg class="size-8 text-white" viewBox="0 0 24 24">
-              <path
-                fill="currentColor"
-                d="M4 4h3l2-2h6l2 2h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2m8 3a5 5 0 0 0-5 5a5 5 0 0 0 5 5a5 5 0 0 0 5-5a5 5 0 0 0-5-5m0 2a3 3 0 0 1 3 3a3 3 0 0 1-3 3a3 3 0 0 1-3-3a3 3 0 0 1 3-3Z" />
-            </svg>
+            <i-mdi-camera class="size-7 text-white" />
           </div>
         </div>
-        <span class="text-xs text-gray-500 hover:text-[--primary-color] cursor-pointer">点击修改头像</span>
+        <span class="text-xs text-[--user-text-color] hover:text-blue-500 transition-colors">点击更换头像</span>
       </div>
 
-      <div class="flex flex-col gap-1.5">
-        <label class="text-sm font-medium text-[--text-color]">名字</label>
-        <n-input v-model:value="form.username" placeholder="请输入用户名" maxlength="20" show-count clearable />
+      <div class="grid gap-5">
+        <div class="flex flex-col gap-2">
+          <label class="text-sm font-medium text-[--text-color] ml-1">名字</label>
+          <n-input v-model:value="form.username" placeholder="设置你的昵称" class="border-(1px solid #90909080)" />
+        </div>
+
+        <div class="flex flex-col gap-2">
+          <label class="text-sm font-medium text-[--text-color] ml-1">个人简介</label>
+          <n-input
+            v-model:value="form.description"
+            placeholder="介绍一下自己吧"
+            type="textarea"
+            :autosize="{ minRows: 3, maxRows: 5 }"
+            maxlength="100"
+            class="border-(1px solid #90909080)"
+            show-count />
+        </div>
       </div>
 
-      <div class="flex flex-col gap-1.5">
-        <label class="text-sm font-medium text-[--text-color]">简介</label>
-        <n-input
-          v-model:value="form.description"
-          placeholder="介绍一下你自己"
-          type="textarea"
-          :autosize="{ minRows: 3, maxRows: 5 }"
-          maxlength="100"
-          show-count />
-      </div>
-
-      <div class="flex justify-end gap-3 pt-4">
-        <n-button @click="closeDialog">取消</n-button>
-        <n-button type="primary" @click="saveProfile" :disabled="!form.username">保存</n-button>
+      <div class="flex justify-end gap-3 pt-4 border-t border-[--line-color]">
+        <n-button ghost @click="closeDialog">取消</n-button>
+        <n-button type="primary" class="px-8" @click="saveProfile" :disabled="!form.username">保存修改</n-button>
       </div>
     </div>
   </base-dialog>

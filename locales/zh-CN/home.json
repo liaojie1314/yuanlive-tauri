@@ -20,8 +20,7 @@
     "setting": {
       "general": "通用设置",
       "signOut": "退出登录",
-      "update": "检查更新",
-      "privacy": "隐私设置"
+      "update": "检查更新"
     },
     "help": {
       "about": "关于我们",

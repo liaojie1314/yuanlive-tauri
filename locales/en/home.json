@@ -20,8 +20,7 @@
     "setting": {
       "general": "General Setting",
       "signOut": "Sign Out",
-      "update": "Check Update",
-      "privacy": "Privacy Setting"
+      "update": "Check Update"
     },
     "help": {
       "about": "About Us",

@@ -3,28 +3,34 @@
     <div class="new-folder-dialog">
       <div class="dialog-content">
         <div class="input-group">
-          <input
+          <n-input
+            v-model:value="folderName"
             type="text"
-            v-model="folderName"
             placeholder="请输入收藏夹的名称（15个字以内）"
-            class="folder-name-input"
             maxlength="15"
+            show-count
+            clearable
+            class="border-(1px solid #90909080)"
             @input="handleInput" />
-          <div v-if="!isFormValid" class="error-message">请输入收藏夹名称</div>
+          <div v-if="folderName.length === 0" class="error-message">请输入收藏夹名称</div>
         </div>
+
         <div class="switch-group">
           <div class="switch-label">
             <span class="main-label">设置为公开</span>
             <span class="sub-label">公开后有机会被推荐，帮助到更多人</span>
           </div>
           <div class="switch-btn">
-            <n-switch v-model:value="isPublicFolder" class="public-switch" />
+            <n-switch v-model:value="isPublicFolder" />
           </div>
         </div>
       </div>
+
       <div class="dialog-footer">
-        <button class="cancel-btn" @click="handleCancel">取消</button>
-        <button class="confirm-btn" @click="handleConfirm" :disabled="!isFormValid">确认</button>
+        <n-button strong secondary @click="handleCancel">取消</n-button>
+        <n-button type="primary" @click="handleConfirm" :disabled="!isFormValid" class="confirm-btn-style">
+          确认
+        </n-button>
       </div>
     </div>
   </base-dialog>
@@ -109,31 +115,15 @@ onUnmounted(() => {
   margin-bottom: 20px;
 }
 
-.folder-name-input {
-  width: 100%;
-  padding: 12px;
-  box-sizing: border-box;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  font-size: 14px;
-  outline: none;
-  transition: all 0.3s ease;
-  background-color: #f8fafc;
-}
-
-.folder-name-input:focus {
-  border-color: #ff0050;
-  background-color: #fff;
-  box-shadow: 0 0 0 3px rgba(255, 0, 80, 0.1);
-}
-
 .switch-group {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 12px;
-  background-color: #f8fafc;
-  border-radius: 8px;
+  padding: 16px;
+  // 适配背景色：浅色模式下略深，深色模式下使用对应的 setting-item 色
+  background-color: var(--bg-setting-item);
+  border-radius: 12px;
+  border: 1px solid var(--line-color);
 }
 
 .switch-label {
@@ -144,30 +134,22 @@ onUnmounted(() => {
 .main-label {
   font-size: 14px;
   font-weight: 600;
-  color: #1e293b;
+  // 使用主题文字颜色
+  color: var(--text-color);
   margin-bottom: 4px;
 }
 
 .sub-label {
-  margin-top: 4px;
   font-size: 12px;
-  color: #64748b;
-}
-
-.public-switch {
-  --n-switch-on-color: #ff0050;
+  // 使用辅助文字颜色
+  color: var(--user-text-color);
 }
 
 .error-message {
   margin-top: 8px;
   font-size: 12px;
+  // 使用警告色或红色
   color: #ff4757;
-}
-
-.confirm-btn:disabled {
-  background-color: #ff94a6;
-  cursor: not-allowed;
-  transform: none;
 }
 
 .dialog-footer {
@@ -176,32 +158,19 @@ onUnmounted(() => {
   justify-content: flex-end;
 }
 
-.cancel-btn,
-.confirm-btn {
-  padding: 10px 20px;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 14px;
-  font-weight: 600;
-  transition: all 0.3s ease;
-}
+// 针对确认按钮的特殊品牌色覆盖
+.confirm-btn-style {
+  background-color: #ff0050 !important;
+  border-color: #ff0050 !important;
+  color: #fff !important;
 
-.cancel-btn {
-  background-color: #f1f5f9;
-  color: #64748b;
-}
+  &:hover {
+    background-color: #ff3366 !important;
+  }
 
-.cancel-btn:hover {
-  background-color: #e2e8f0;
-}
-
-.confirm-btn {
-  background-color: #ff0050;
-  color: #fff;
-}
-
-.confirm-btn:hover {
-  background-color: #ff3366;
+  &:disabled {
+    background-color: #ff94a6 !important;
+    opacity: 0.6;
+  }
 }
 </style>

@@ -11,50 +11,48 @@
       <div class="flex items-center justify-between">
         <n-input
           v-model:value="searchQuery"
-          placeholder="搜索用户名或者YuanLive号"
+          placeholder="搜索用户名"
           clearable
-          class="w-[400px] border-(1px solid #90909080)">
+          class="w-[360px] border-(1px solid #90909080)">
           <template #prefix>
-            <n-icon>
-              <i-mdi-magnify />
-            </n-icon>
+            <i-mdi-magnify class="text-[--disabled-color]" />
           </template>
         </n-input>
         <n-dropdown v-if="activeTab === 'following'" trigger="click" :options="sortOptions">
-          <n-button class="px-2 text-gray-600">
-            <span>综合排序</span>
-          </n-button>
+          <n-button quaternary class="text-[--user-text-color]">综合排序</n-button>
         </n-dropdown>
       </div>
-      <n-scrollbar class="h-[400px]">
-        <div>
+
+      <n-scrollbar class="max-h-[450px] pr-2">
+        <div class="divide-y divide-[--line-color]">
           <div
             v-for="user in displayUsers"
             :key="user.id"
-            class="mr-4 flex items-center justify-between py-4 border-b border-gray-100">
-            <div class="mr-3">
-              <img :src="user.avatar" :alt="user.name" class="w-12 h-12 rounded-full object-cover" />
-            </div>
-            <div class="flex-1 min-w-0">
-              <div class="flex items-center gap-1 mb-1">
-                <span class="font-medium text-gray-800">{{ user.name }}</span>
-                <span v-if="user.verified" class="text-blue-500">✓</span>
+            class="flex items-center justify-between py-4 transition-colors hover:bg-[--bg-left-menu-hover] rounded-lg px-2">
+            <div class="flex items-center flex-1 min-w-0">
+              <img :src="user.avatar" class="w-12 h-12 rounded-full object-cover border border-[--line-color]" />
+              <div class="ml-3 flex-1 min-w-0">
+                <div class="flex items-center gap-1 mb-0.5">
+                  <span class="font-medium text-[--text-color]">{{ user.name }}</span>
+                  <i-mdi-check-decagram v-if="user.verified" class="text-blue-500 text-sm" />
+                </div>
+                <div class="text-xs text-[--user-text-color] truncate">{{ user.description }}</div>
               </div>
-              <div class="text-xs text-gray-600 truncate">{{ user.description }}</div>
             </div>
             <div class="ml-4">
               <n-button
                 v-if="user.isFollowing"
-                type="default"
-                class="px-4 text-xs rounded-full bg-gray-100 text-gray-600">
+                round
+                size="small"
+                class="bg-[--left-item-bg-color] text-[--user-text-color] border-none">
                 已关注
               </n-button>
-              <n-button v-else type="primary" class="px-4 text-xs rounded-full">关注</n-button>
+              <n-button v-else round size="small" type="primary">关注</n-button>
             </div>
           </div>
-          <div v-if="displayUsers.length === 0" class="py-10 text-center">
-            <n-empty description="暂无数据" />
-          </div>
+        </div>
+        <div v-if="displayUsers.length === 0" class="py-10">
+          <n-empty description="暂无内容" />
         </div>
       </n-scrollbar>
     </div>

@@ -4,15 +4,15 @@
       <div v-for="(item, index) in attachments" :key="index" class="relative flex-shrink-0 group cursor-default">
         <div
           v-if="item.type === 'image'"
-          class="w-16 h-16 rounded-lg overflow-hidden border border-gray-200 bg-gray-50">
+          class="w-16 h-16 rounded-lg overflow-hidden border border-[--line-color] bg-[--input-area-bg]">
           <img :src="item.previewUrl" alt="img" class="w-full h-full object-cover" />
         </div>
 
         <div
           v-else
-          class="w-16 h-16 bg-white rounded-lg border border-gray-200 flex-center flex-col gap-1 shadow-sm hover:shadow-md transition-shadow select-none cursor-default"
+          class="w-16 h-16 rounded-lg border border-[--line-color] bg-[--input-area-bg] flex-center flex-col gap-1 shadow-sm hover:shadow-md transition-shadow select-none cursor-default"
           :title="item.name">
-          <span class="text-sm text-gray-700 font-medium w-full truncate text-center">
+          <span class="text-sm text-[--text-color] font-medium w-full truncate text-center">
             {{ item.name }}
           </span>
 
@@ -22,23 +22,21 @@
               :alt="getFileSuffix(item.name || '')"
               class="w-5 h-5 object-contain flex-shrink-0" />
 
-            <span class="text-[10px] text-gray-400 uppercase font-bold truncate max-w-[2rem]">
+            <span class="text-[10px] text-[--user-text-color] uppercase font-bold truncate max-w-[2rem]">
               {{ getFileSuffix(item.name) }}
             </span>
           </div>
         </div>
 
         <div
-          class="absolute top-[-4px] right-[-4px] w-5 h-5 rounded-full bg-gray-500 text-white flex items-center justify-center cursor-pointer hover:bg-red-500 transition-colors shadow-sm z-10 opacity-0 group-hover:opacity-100"
+          class="absolute top-[-4px] right-[-4px] w-5 h-5 rounded-full bg-[--action-bar-icon-color] text-[--tray-bg-color] flex items-center justify-center cursor-pointer hover:bg-red-500 transition-colors shadow-sm z-10 opacity-0 group-hover:opacity-100"
           @click="removeAttachment(index)">
           <i-mdi-close class="w-3 h-3" />
         </div>
       </div>
     </div>
 
-    <!-- 整体包裹容器 -->
-    <div v-resize="handleResize" class="input-container flex flex-col bg-white rounded-lg p-2 m-1">
-      <!-- 输入框 -->
+    <div v-resize="handleResize" class="input-container flex flex-col bg-[--input-area-bg] rounded-lg p-2 m-1">
       <n-input
         v-if="!isVoiceMode"
         v-model:value="messageText"
@@ -47,50 +45,53 @@
         :min-height="40"
         :max-height="120"
         :autosize="{ minRows: 1, maxRows: 5 }"
-        class="w-full"
+        class="w-full !bg-transparent"
         @keydown.enter="handleEnterKey"
         :bordered="false"
         :show-count="false" />
 
-      <div v-if="!isVoiceMode" class="flex justify-between items-center mt-3 pt-2 border-t border-gray-200">
+      <div v-if="!isVoiceMode" class="flex justify-between items-center mt-3 pt-2 border-t border-[--line-color]">
         <div class="flex items-center gap-3">
-          <!-- Attach按钮 -->
           <n-popover
-            class="p-0 bg-transparent select-none"
+            class="p-0 bg-[--bg-popover] select-none border border-[--line-color]"
             :show-arrow="false"
             trigger="click"
             v-model:show="showAttachPopover">
             <template #trigger>
               <div
-                class="flex items-center gap-1 px-4 py-1.5 text-sm text-gray-600 hover:bg-gray-50 rounded-full cursor-pointer"
-                style="border: 1px solid #d1d5db"
+                class="flex items-center gap-1 px-4 py-1.5 text-sm text-[--text-color] rounded-full cursor-pointer transition-colors border"
+                :class="
+                  showAttachPopover
+                    ? 'bg-[--btn-secondary-hover]'
+                    : 'bg-[--btn-secondary-bg] hover:bg-[--btn-secondary-hover]'
+                "
+                style="border-color: var(--btn-secondary-border)"
                 title="Attach file">
                 <i-mdi-paperclip class="w-4 h-4" />
                 <span v-if="showButtonText">Attach</span>
               </div>
             </template>
-            <!-- 弹出菜单内容 -->
-            <div class="menu-list space-y-1">
+            <div class="menu-list space-y-1 p-1 rounded-md">
               <div
-                class="menu-item flex items-center gap-2 px-3 py-2 text-sm hover:bg-gray-100 rounded-md cursor-pointer"
+                class="menu-item flex items-center gap-2 px-3 py-2 text-sm text-[--text-color] hover:bg-[--tray-hover] rounded-md cursor-pointer transition-colors"
                 @click="handleMenuClick('file')">
                 <i-mdi-file-upload-outline class="w-4 h-4" />
                 <span>Upload file</span>
               </div>
               <div
-                class="menu-item flex items-center gap-2 px-3 py-2 text-sm hover:bg-gray-100 rounded-md cursor-pointer"
+                class="menu-item flex items-center gap-2 px-3 py-2 text-sm text-[--text-color] hover:bg-[--tray-hover] rounded-md cursor-pointer transition-colors"
                 @click="handleMenuClick('photo')">
                 <i-mdi-image-outline class="w-4 h-4" />
                 <span>Upload photo</span>
               </div>
               <div
-                class="menu-item flex items-center gap-2 px-3 py-2 text-sm hover:bg-gray-100 rounded-md cursor-pointer"
+                class="menu-item flex items-center gap-2 px-3 py-2 text-sm text-[--text-color] hover:bg-[--tray-hover] rounded-md cursor-pointer transition-colors"
                 @click="handleMenuClick('screenshot')">
                 <i-mdi-camera class="w-4 h-4" />
                 <span>Take screenshot</span>
               </div>
               <div
-                class="menu-item flex items-center gap-2 px-3 py-2 text-sm hover:bg-gray-100 rounded-md cursor-pointer"
+                class="menu-item flex items-center gap-2 px-3 py-2 text-sm text-[--text-color] hover:bg-[--tray-hover] rounded-md cursor-pointer transition-colors"
                 @click="handleMenuClick('camera')">
                 <i-mdi-camera-plus class="w-4 h-4" />
                 <span>Take photo</span>
@@ -98,7 +99,6 @@
             </div>
           </n-popover>
 
-          <!-- 模型选择器 -->
           <div class="relative">
             <n-select
               v-model:value="selectedModel"
@@ -109,16 +109,12 @@
               :render-label="renderLabel" />
           </div>
 
-          <!-- Think按钮 -->
           <div
-            class="flex items-center gap-1 px-4 py-1.5 text-sm hover:bg-blue-50 rounded-full cursor-pointer transition-all duration-200"
+            class="flex items-center gap-1 px-4 py-1.5 text-sm rounded-full cursor-pointer transition-all duration-200 border"
             :class="{
-              'text-blue-500 bg-blue-50': isThinkActive,
-              'text-gray-600 bg-white': !isThinkActive
-            }"
-            :style="{
-              border: '1px solid',
-              'border-color': isThinkActive ? '#3b82f6' : '#d1d5db'
+              'text-blue-500 bg-blue-500/15 border-blue-500/50': isThinkActive,
+              'text-[--text-color] bg-[--btn-secondary-bg] border-[--btn-secondary-border] hover:bg-[--btn-secondary-hover]':
+                !isThinkActive
             }"
             title="Think"
             @click="isThinkActive = !isThinkActive">
@@ -126,16 +122,12 @@
             <span v-if="showButtonText">Think</span>
           </div>
 
-          <!-- Search按钮 -->
           <div
-            class="flex items-center gap-1 px-4 py-1.5 text-sm hover:bg-blue-50 rounded-full cursor-pointer transition-all duration-200"
+            class="flex items-center gap-1 px-4 py-1.5 text-sm rounded-full cursor-pointer transition-all duration-200 border"
             :class="{
-              'text-blue-500 bg-blue-50': isSearchActive,
-              'text-gray-600 bg-white': !isSearchActive
-            }"
-            :style="{
-              border: '1px solid',
-              'border-color': isSearchActive ? '#3b82f6' : '#d1d5db'
+              'text-blue-500 bg-blue-500/15 border-blue-500/50': isSearchActive,
+              'text-[--text-color] bg-[--btn-secondary-bg] border-[--btn-secondary-border] hover:bg-[--btn-secondary-hover]':
+                !isSearchActive
             }"
             title="Search"
             @click="isSearchActive = !isSearchActive">
@@ -144,18 +136,14 @@
           </div>
         </div>
 
-        <!-- 右侧按钮组 -->
         <div class="flex items-center gap-3">
-          <!-- Voice按钮 -->
           <div
-            class="flex items-center justify-center w-8 h-8 text-gray-600 hover:bg-gray-100 rounded-full cursor-pointer"
-            style="border: 1px solid #d1d5db"
+            class="flex items-center justify-center w-8 h-8 text-[--text-color] rounded-full cursor-pointer transition-colors border bg-[--btn-secondary-bg] border-[--btn-secondary-border] hover:bg-[--btn-secondary-hover]"
             title="Voice message"
             @click="handleVoiceClick">
             <i-mdi-microphone-outline class="w-4 h-4" />
           </div>
 
-          <!-- 发送按钮 -->
           <n-button circle type="primary" :disabled="isBtnDisabled" @click="sendMessage">
             <template #icon>
               <n-icon>
@@ -564,6 +552,13 @@ onUnmounted(() => {
 
 <style scoped>
 .input-container {
-  border: 1px solid #707070;
+  /* 使用 CSS 变量适配边框颜色 */
+  border: 1px solid var(--line-color);
+  transition: border-color 0.3s var(--n-bezier);
+}
+
+.input-container:focus-within {
+  /* 聚焦时的颜色，可以根据需要调整，这里用了 Naive UI 的主色变量或自定义 */
+  border-color: #3b82f6;
 }
 </style>

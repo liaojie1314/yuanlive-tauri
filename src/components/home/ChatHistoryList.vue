@@ -1,45 +1,50 @@
 <template>
-  <div class="flex flex-col h-full">
-    <!-- 新建对话按钮和折叠图标 -->
+  <div class="flex flex-col h-full bg-[--tray-bg-color]">
     <div class="p-3 flex items-center justify-between">
       <n-button
         v-if="!isCollapsed"
         type="primary"
         @click="handleNewChat"
-        class="bg-blue-50 text-blue-600 hover:bg-blue-100 flex-1 mr-2">
+        class="bg-[--btn-secondary-bg] text-[--text-color] hover:bg-[--btn-secondary-hover] border border-[--line-color] flex-1 mr-2 transition-colors">
         <template #icon>
           <i-mdi-plus class="w-4 h-4" />
         </template>
         新建对话
       </n-button>
-      <!-- 折叠图标按钮 -->
-      <n-button quaternary circle :bordered="false" @click="emit('toggle-collapse')" class="flex-shrink-0">
+
+      <n-button
+        quaternary
+        circle
+        :bordered="false"
+        @click="emit('toggle-collapse')"
+        class="flex-shrink-0 text-[--action-bar-icon-color] hover:text-[--text-color] hover:bg-[--tray-hover]">
         <i-mdi-chevron-right v-if="isCollapsed" class="w-4 h-4" />
         <i-mdi-chevron-left v-else class="w-4 h-4" />
       </n-button>
     </div>
 
-    <!-- 历史对话标题 -->
-    <div v-if="!isCollapsed" class="flex items-center justify-between px-3 py-2 border-y border-gray-200">
-      <div class="flex items-center gap-2 text-sm font-medium">
+    <div v-if="!isCollapsed" class="flex items-center justify-between px-3 py-2 border-y border-[--line-color]">
+      <div class="flex items-center gap-2 text-sm font-medium text-[--user-text-color]">
         <i-mdi-history class="w-4 h-4" />
         <span>历史对话</span>
       </div>
+
       <n-dropdown trigger="click" placement="bottom-end" :options="clearMenuOptions" @select="handleMenuSelect">
-        <n-button quaternary circle :bordered="false">
+        <n-button
+          quaternary
+          circle
+          :bordered="false"
+          class="text-[--action-bar-icon-color] hover:text-[--text-color] hover:bg-[--tray-hover]">
           <i-mdi-delete-outline class="w-4 h-4" />
         </n-button>
       </n-dropdown>
     </div>
 
-    <!-- 历史对话列表 -->
     <n-scrollbar v-if="!isCollapsed" class="flex-1">
-      <!-- 日期分组 -->
       <div v-for="(group, index) in historyGroups" :key="index" class="p-3">
-        <div class="text-xs text-gray-500 mb-2">{{ group.date }}</div>
+        <div class="text-xs text-[--user-text-color] mb-2 font-medium opacity-80">{{ group.date }}</div>
 
-        <!-- 对话项 -->
-        <div v-for="(item, itemIndex) in group.items" :key="itemIndex" class="mb-1">
+        <div v-for="(item, itemIndex) in group.items" :key="itemIndex">
           <chat-history-item
             :title="item.title"
             :active="item.id === activeChatId"

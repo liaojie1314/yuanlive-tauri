@@ -1,17 +1,15 @@
 <template>
   <div
-    class="group relative w-full cursor-pointer transition-all duration-200 rounded-lg hover:shadow-md"
+    class="group relative w-full cursor-pointer transition-all duration-200 rounded-lg bg-[--tray-bg-color] border border-transparent hover:border-[--line-color] hover:shadow-[0_4px_12px_rgba(0,0,0,0.1)] dark:hover:shadow-[0_4px_12px_rgba(0,0,0,0.4)]"
     @mouseenter="playVideo"
     @mouseleave="pauseVideo">
-    <!-- 视频容器 -->
-    <div class="relative w-full aspect-video overflow-hidden rounded-lg bg-black">
-      <!-- 封面图 -->
+    <div class="relative w-full aspect-video overflow-hidden rounded-t-lg bg-black">
       <img
         :src="video.coverUrl"
         :alt="video.title"
         class="w-full h-full object-cover transition-opacity duration-300"
         :class="{ 'opacity-0': isPlaying }" />
-      <!-- 视频元素 -->
+
       <video
         ref="videoRef"
         :src="video.videoUrl"
@@ -20,22 +18,24 @@
         muted
         playsinline
         loop></video>
-      <!-- 点赞数 -->
-      <div class="flex items-center absolute bottom-2 left-2 text-xs text-white">
+
+      <div class="flex items-center absolute bottom-2 left-2 text-xs text-white drop-shadow-md">
         <i-mdi-heart class="w-3.5 h-3.5 text-red-500 mr-1" />
-        <span>{{ formatNumber(video.likes) }}</span>
+        <span class="font-medium">{{ formatNumber(video.likes) }}</span>
       </div>
-      <!-- 时长 -->
+
       <div
         v-if="video.duration"
-        class="absolute bottom-2 right-2 bg-black bg-opacity-80 text-white text-xs px-1.5 py-0.5 rounded">
+        class="absolute bottom-2 right-2 bg-black/70 backdrop-blur-[2px] text-white text-[10px] px-1.5 py-0.5 rounded">
         {{ formatDuration(video.duration) }}
       </div>
     </div>
 
-    <!-- 视频信息 -->
-    <div class="m-2 space-y-1">
-      <h3 class="text-sm font-medium text-gray-800 line-clamp-1">{{ video.title }}</h3>
+    <div class="p-2 space-y-1 bg-[--tray-bg-color] rounded-b-lg">
+      <h3
+        class="text-sm font-medium text-[--text-color] line-clamp-2 leading-snug group-hover:text-red-500 transition-colors">
+        {{ video.title }}
+      </h3>
     </div>
   </div>
 </template>

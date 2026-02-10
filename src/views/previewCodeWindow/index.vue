@@ -5,7 +5,7 @@
       <action-bar />
       <div
         data-tauri-drag-region
-        class="h-10 flex shrink-0 items-center justify-between px-4 bg-[var(--home-bg-color)] dark:bg-[var(--bg-setting-item)] border-b border-[var(--line-color)]">
+        class="h-10 flex shrink-0 items-center justify-between px-4 bg-[var(--right-bg-color)] dark:bg-[var(--bg-setting-item)] border-b border-[var(--line-color)]">
         <div class="flex items-center gap-3">
           <span class="font-bold text-sm text-[var(--text-color)] dark:text-[var(--left-text-color)]">
             {{ t("preview.code.title") }}
@@ -48,7 +48,7 @@
         </div>
 
         <div
-          class="w-[4px] h-full cursor-col-resize bg-[var(--home-bg-color)] dark:bg-[var(--bg-setting-item)] hover:bg-blue-600 active:bg-blue-600 transition-colors z-20 flex-shrink-0"
+          class="w-[4px] h-full cursor-col-resize bg-[var(--right-bg-color)] dark:bg-[var(--bg-setting-item)] hover:bg-blue-600 active:bg-blue-600 transition-colors z-20 flex-shrink-0"
           @mousedown.prevent="startDrag"></div>
 
         <div class="flex-1 h-full bg-[var(--right-bg-color)] relative min-w-0">

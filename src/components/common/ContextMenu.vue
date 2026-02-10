@@ -15,10 +15,11 @@
             v-if="(visibleMenu && visibleMenu.length > 0) || (visibleSpecialMenu && visibleSpecialMenu.length > 0)"
             class="menu-list">
             <div v-for="(item, index) in visibleMenu" :key="index">
-              <!-- 禁止的菜单选项需要禁止点击事件  -->
               <div class="menu-item-disabled" v-if="item.disabled" @click.prevent="$event.preventDefault()">
                 <div class="menu-item-content">
-                  <svg><use :href="`#${getMenuItemProp(item, 'icon')}`"></use></svg>
+                  <svg v-if="getMenuItemProp(item, 'icon')">
+                    <use :href="`#${getMenuItemProp(item, 'icon')}`"></use>
+                  </svg>
                   <p class="h-24px">{{ getMenuItemProp(item, "label") }}</p>
                 </div>
               </div>
@@ -30,7 +31,9 @@
                 @mouseenter="handleMouseEnter(item, index)"
                 @mouseleave="handleMouseLeave">
                 <div class="menu-item-content">
-                  <svg><use :href="`#${getMenuItemProp(item, 'icon')}`"></use></svg>
+                  <svg v-if="getMenuItemProp(item, 'icon')">
+                    <use :href="`#${getMenuItemProp(item, 'icon')}`"></use>
+                  </svg>
                   <p class="h-24px">{{ getMenuItemProp(item, "label") }}</p>
                   <svg v-if="shouldShowArrow(item)" class="arrow-icon">
                     <use href="#right"></use>
@@ -38,9 +41,8 @@
                 </div>
               </div>
             </div>
-            <!-- 判断是否有特别的菜单项才需要分割线 -->
+
             <div v-if="visibleSpecialMenu.length > 0" class="flex-col-y-center gap-6px">
-              <!-- 分割线（只有当常规菜单存在时才显示） -->
               <div v-if="visibleMenu && visibleMenu.length > 0" class="h-1px bg-[--line-color] m-[2px_8px]"></div>
               <div
                 @click="handleClick(item)"
@@ -48,14 +50,15 @@
                 :class="{ 'menu-item-danger': isDangerousItem(item) }"
                 v-for="item in visibleSpecialMenu"
                 :key="item.label">
-                <svg><use :href="`#${getMenuItemProp(item, 'icon')}`"></use></svg>
+                <svg v-if="getMenuItemProp(item, 'icon')">
+                  <use :href="`#${getMenuItemProp(item, 'icon')}`"></use>
+                </svg>
                 <p class="h-24px">{{ getMenuItemProp(item, "label") }}</p>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- 二级菜单 -->
         <div v-if="showSubmenu && activeSubmenu" class="context-submenu" :style="submenuPosition">
           <div class="menu-list">
             <div
@@ -64,7 +67,7 @@
               class="menu-item"
               :class="{ 'menu-item-danger': isDangerousItem(subItem) }">
               <div class="menu-item-content" @click="handleSubItemClick(subItem)">
-                <svg class="check-icon">
+                <svg v-if="getMenuItemProp(subItem, 'icon')" class="check-icon">
                   <use :href="`#${getMenuItemProp(subItem, 'icon')}`"></use>
                 </svg>
                 <p class="h-24px">{{ getMenuItemProp(subItem, "label") }}</p>
@@ -96,12 +99,10 @@ const props = withDefaults(defineProps<Props>(), {
 
 // 使用计算属性过滤显示的菜单项
 const visibleMenu = computed(() => {
-  // 检查是否有 visible 属性并作为函数调用
   return props.menu?.filter((item: any) => {
     if (typeof item.visible === "function") {
-      return item.visible(props.content); // 如果 visible 是函数，则调用它
+      return item.visible(props.content);
     }
-    // 如果没有 visible 属性，则默认显示
     return true;
   });
 });
@@ -131,6 +132,7 @@ watch(
   },
   { immediate: true }
 );
+
 /** 获取视口的宽高 */
 const { vw, vh } = useViewport();
 /** 定义右键菜单尺寸 */
@@ -143,6 +145,7 @@ const submenuPosition = ref({
   left: "0px",
   top: "0px"
 });
+
 /** 计算右键菜单的位置 */
 const pos = computed(() => {
   let posX = x.value;
@@ -166,7 +169,6 @@ watch(
   () => showMenu.value,
   (newVal) => {
     if (!newVal) {
-      // 主菜单隐藏时,同时隐藏二级菜单
       showSubmenu.value = false;
       activeSubmenu.value = [];
     }
@@ -208,64 +210,47 @@ const handleEnter = (el: any) => {
 };
 
 /**
- * 获取菜单项的属性值（处理函数式和静态值）
- * @param item 菜单项
- * @param prop 属性名 ('icon' | 'label')
+ * 获取菜单项的属性值
  */
 const getMenuItemProp = (item: any, prop: "icon" | "label") => {
   return typeof item[prop] === "function" ? item[prop](props.content) : item[prop];
 };
 
-/**
- * 判断菜单项是否需要危险样式
- * @param item 菜单项
- */
 const isDangerousItem = (item: any) => {
   const icon = getMenuItemProp(item, "icon");
   return ["logout", "forbid"].includes(icon);
 };
 
-// 修改 handleMouseEnter 函数
 const handleMouseEnter = (item: any, index: number) => {
-  // 检查是否有子菜单（包括函数形式的 children）
   const hasChildren = typeof item.children === "function" ? true : Array.isArray(item.children);
   if (!hasChildren) {
     showSubmenu.value = false;
     return;
   }
 
-  // 获取子菜单内容
   const children = typeof item.children === "function" ? item.children(props.content) : item.children;
   if (!children || children.length === 0) {
     showSubmenu.value = false;
     return;
   }
 
-  // 获取当前菜单项的位置
   const menuItem = document.querySelectorAll(".menu-item")[index];
   const rect = menuItem.getBoundingClientRect();
 
-  // 计算子菜单的预期宽度和高度
-  const submenuWidth = 120; // 子菜单的最小宽度
-  const submenuHeight = children.length * 30; // 预估每项高度
+  const submenuWidth = 120;
+  const submenuHeight = children.length * 30;
 
   let left = rect.right + 5;
   let top = rect.top;
 
-  // 判断右侧空间是否足够
   if (rect.right + submenuWidth > vw.value) {
-    // 右侧空间不足，改为显示在下方
     left = rect.left;
-    top = rect.bottom + 5; // 添加一点间距
-
-    // 检查下方空间是否足够，不够则向上显示
+    top = rect.bottom + 5;
     if (top + submenuHeight > vh.value) {
       top = rect.top - submenuHeight - 5;
     }
   } else {
-    // 右侧空间足够，但需要检查垂直方向
     if (rect.top + submenuHeight > vh.value) {
-      // 如果超出视口底部，向上偏移
       top = vh.value - submenuHeight - 10;
     }
   }
@@ -279,17 +264,11 @@ const handleMouseEnter = (item: any, index: number) => {
   showSubmenu.value = true;
 };
 
-// 修改鼠标离开处理函数
 const handleMouseLeave = (e: MouseEvent) => {
-  // 增加一个状态来跟踪鼠标移动
   const relatedTarget = e.relatedTarget as HTMLElement;
-
-  // 如果鼠标是移动到子菜单或者子菜单的子元素上，则不关闭菜单
   if (relatedTarget?.closest(".context-submenu")) {
     return;
   }
-
-  // 如果既不在主菜单也不在子菜单内，则关闭子菜单
   setTimeout(() => {
     if (!isMouseInSubmenu(e) && !isMouseInMainMenu(e)) {
       showSubmenu.value = false;
@@ -297,32 +276,22 @@ const handleMouseLeave = (e: MouseEvent) => {
   }, 100);
 };
 
-// 修改检查鼠标是否在子菜单内的函数
 const isMouseInSubmenu = (e: MouseEvent) => {
   const submenu = document.querySelector(".context-submenu");
   if (!submenu) return false;
-
-  // 使用 document.elementFromPoint 来检查鼠标下的元素
   const elementsUnderMouse = document.elementsFromPoint(e?.clientX || 0, e?.clientY || 0);
-
   return elementsUnderMouse.some((el) => el.closest(".context-submenu"));
 };
 
-// 修改检查鼠标是否在主菜单内的函数
 const isMouseInMainMenu = (e: MouseEvent) => {
   const mainMenu = document.querySelector(".context-menu");
   if (!mainMenu) return false;
-
   const elementsUnderMouse = document.elementsFromPoint(e.clientX, e.clientY);
   return elementsUnderMouse.some((el) => el.closest(".context-menu"));
 };
 
-// 添加判断是否显示箭头的函数
 const shouldShowArrow = (item: any) => {
-  // 如果 children 是函数，先获取结果
   const children = typeof item.children === "function" ? item.children(props.content) : item.children;
-
-  // 检查是否有有效的子菜单内容
   return Array.isArray(children) && children.length > 0;
 };
 </script>
@@ -412,6 +381,7 @@ const shouldShowArrow = (item: any) => {
 .menu-item {
   .menu-item-content {
     display: grid;
+    // 使用 auto 1fr auto，如果图标 v-if 为 false，文本会自动填充第一列，效果符合预期
     grid-template-columns: auto 1fr auto;
     align-items: center;
     column-gap: 12px;

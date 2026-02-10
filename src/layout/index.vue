@@ -1,5 +1,5 @@
 <template>
-  <div id="layout" class="relative flex min-w-310px bg-[--home-bg-color] h-full">
+  <div id="layout" class="relative flex min-w-310px bg-[--right-bg-color] h-full">
     <div class="flex flex-1 min-h-0">
       <AsyncLeft />
       <AsyncRight />

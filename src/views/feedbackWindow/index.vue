@@ -1,6 +1,6 @@
 <template>
   <n-config-provider :theme="naiveTheme">
-    <main class="h-screen w-full flex flex-col overflow-hidden bg-[var(--bg-popover)] select-none">
+    <main class="h-screen w-full flex flex-col overflow-hidden bg-[--right-bg-color] select-none">
       <action-bar :max-w="false" class="shrink-0" />
       <n-scrollbar class="flex-1" content-class="p-6">
         <n-flex vertical :size="24">

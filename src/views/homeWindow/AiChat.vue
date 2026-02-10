@@ -1,12 +1,9 @@
 <template>
-  <div class="h-[calc(100%-24px)] flex flex-row bg-gray-50 w-full overflow-auto">
-    <!-- 左侧面板 -->
+  <div class="h-[calc(100%-24px)] flex flex-row bg-[--home-bg-color] w-full overflow-auto">
     <div
       :class="[
-        'transition-all duration-300 ease-in-out',
-        isHistoryCollapsed
-          ? 'w-[55px] bg-white border-r border-gray-200'
-          : 'w-[20%] min-w-[200px] bg-white border-r border-gray-200'
+        'transition-all duration-300 ease-in-out bg-[--tray-bg-color] border-r border-[--line-color]',
+        isHistoryCollapsed ? 'w-[55px]' : 'w-[20%] min-w-[200px]  '
       ]">
       <chat-history-list
         :active-chat-id="activeChatId"
@@ -20,16 +17,14 @@
         @toggle-collapse="handleToggleCollapse" />
     </div>
 
-    <!-- 中间聊天区域 -->
     <div
       :class="[
         'w-[80%] lg:w-[60%] flex flex-col transition-all duration-300 ease-in-out min-w-0',
         isHistoryCollapsed ? 'w-[calc(100%-55px)] lg:w-[calc(100%-55px)]' : ''
       ]">
-      <!-- 聊天记录区域 -->
       <div
         ref="chatMessagesRef"
-        class="chat-messages flex-1 overflow-y-auto flex justify-center scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100">
+        class="chat-messages flex-1 overflow-y-auto flex justify-center scrollbar-thin scrollbar-thumb-[--disabled-color] scrollbar-track-transparent">
         <div class="w-full max-w-[1000px] p-4">
           <message-render
             v-for="(message, index) in messages"
@@ -39,17 +34,14 @@
         </div>
       </div>
 
-      <!-- 消息输入区域 - 自适应高度 -->
       <div class="py-1 flex justify-center">
         <message-input @send-message="handleSendMessage" />
       </div>
     </div>
 
-    <!-- 右侧面板 -->
     <div
-      class="w-0 lg:w-[20%] bg-white border-l border-gray-200 overflow-hidden transition-all duration-300 ease-in-out">
-      <!-- 右侧面板内容（占位） -->
-      <div class="p-4 text-center text-gray-500">右侧面板</div>
+      class="w-0 lg:w-[20%] bg-[--tray-bg-color] border-l border-[--line-color] overflow-hidden transition-all duration-300 ease-in-out">
+      <div class="p-4 text-center text-[--user-text-color]">右侧面板</div>
     </div>
   </div>
 </template>

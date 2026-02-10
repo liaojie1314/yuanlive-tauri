@@ -83,7 +83,6 @@ interface FollowItem {
   name: string;
   avatar: string;
   unreadCount: number;
-  hasBadge?: boolean;
 }
 
 // 展开/缩放状态管理
@@ -97,33 +96,15 @@ const toggleCollapse = () => {
 // 模拟关注列表数据
 const followList = ref<FollowItem[]>([
   { id: 1, name: "皇甫极", avatar: "https://picsum.photos/id/64/100/100", unreadCount: 0 },
-  { id: 2, name: "中国军号", avatar: "https://picsum.photos/id/65/100/100", unreadCount: 21, hasBadge: true },
-  { id: 3, name: "春娇与志明", avatar: "https://picsum.photos/id/66/100/100", unreadCount: 0 },
-  { id: 4, name: "阿Z想开了", avatar: "https://picsum.photos/id/67/100/100", unreadCount: 2 },
-  { id: 5, name: "富贵哥", avatar: "https://picsum.photos/id/68/100/100", unreadCount: 0 },
-  { id: 6, name: "千年小爱同学", avatar: "https://picsum.photos/id/69/100/100", unreadCount: 2 },
-  { id: 7, name: "李帆收藏家", avatar: "https://picsum.photos/id/70/100/100", unreadCount: 1 },
-  { id: 8, name: "水生生水~~~", avatar: "https://picsum.photos/id/71/100/100", unreadCount: 1 },
-  { id: 9, name: "天才北极星", avatar: "https://picsum.photos/id/72/100/100", unreadCount: 0 },
-  { id: 10, name: "原理大揭秘", avatar: "https://picsum.photos/id/73/100/100", unreadCount: 11 },
-  { id: 11, name: "二狗脱口秀", avatar: "https://picsum.photos/id/74/100/100", unreadCount: 0 },
-  { id: 12, name: "老王足球观察", avatar: "https://picsum.photos/id/75/100/100", unreadCount: 2 },
-  { id: 13, name: "布丁的猫meme", avatar: "https://picsum.photos/id/76/100/100", unreadCount: 0 },
-  {
-    id: 14,
-    name: "王者荣耀树叶（aaaaaaaaaaaaaaaaaaaaaaaaaa",
-    avatar: "https://picsum.photos/id/77/100/100",
-    unreadCount: 0
-  },
-  { id: 15, name: "尚小贺✨（上学中）", avatar: "https://picsum.photos/id/78/100/100", unreadCount: 1 },
-  { id: 16, name: "墨瑜（王者小店在橱……", avatar: "https://picsum.photos/id/79/100/100", unreadCount: 0 }
+  { id: 2, name: "中国军号", avatar: "https://picsum.photos/id/65/100/100", unreadCount: 21 },
+  { id: 3, name: "春娇与志明", avatar: "https://picsum.photos/id/66/100/100", unreadCount: 0 }
 ]);
 </script>
 
 <style scoped>
 .follow-container {
   height: 100%;
-  background-color: var(--home-bg-color);
+  background-color: var(--right-bg-color);
   position: relative;
   transition: width 0.3s ease;
 }
