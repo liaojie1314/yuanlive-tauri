@@ -3,39 +3,36 @@
     class="size-full bg-#222 relative flex flex-col select-none"
     @mousemove="handleMouseMove"
     @mouseleave="handleMouseLeave">
-    <!-- 顶部操作栏 -->
     <action-bar class="bg-#000 z-9999" />
 
-    <!-- 主体内容区域 -->
-    <div ref="contentRef" class="flex-1 overflow-auto">
-      <!-- 图片展示区域 -->
-      <div ref="imgContainerRef" style="min-height: calc(100vh - 124px)" class="flex-center">
+    <div ref="viewportRef" class="flex-1 w-full h-full overflow-hidden relative bg-black">
+      <div
+        ref="transformLayerRef"
+        class="absolute left-0 top-0 origin-center will-change-transform"
+        :style="transformStyle">
         <img
           ref="imageRef"
           :src="currentImage"
           :style="{
-            willChange: isDragging ? 'transform' : 'auto',
             cursor: isDragging ? 'grabbing' : 'grab'
           }"
-          class="max-w-90% max-h-90% select-none"
-          :class="[{ 'transition-transform duration-200': !isDragging }]"
+          class="block select-none pointer-events-auto"
           @mousedown="startDrag"
-          @load="checkScrollbar"
+          @load="onImageLoad"
+          @dragstart.prevent
           alt="preview" />
-
-        <!-- 提示文本 -->
-        <Transition name="viewer-tip">
-          <div
-            v-if="showTip"
-            class="fixed z-10 left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-black/60 px-24px py-12px rounded-8px text-(white 14px) transition-all duration-300 backdrop-blur-sm select-none flex items-center gap-8px">
-            <svg class="size-16px"><use href="#info"></use></svg>
-            {{ tipText }}
-          </div>
-        </Transition>
       </div>
+
+      <Transition name="viewer-tip">
+        <div
+          v-if="showTip"
+          class="fixed z-10 left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-black/60 px-24px py-12px rounded-8px text-(white 14px) transition-all duration-300 backdrop-blur-sm select-none flex items-center gap-8px">
+          <svg class="size-16px"><use href="#info"></use></svg>
+          {{ tipText }}
+        </div>
+      </Transition>
     </div>
 
-    <!-- 左右箭头 -->
     <div
       v-show="imageList.length > 1 && showArrows.left"
       @click="prevImage"
@@ -55,7 +52,6 @@
       <svg class="size-24px color-white"><use href="#arrow-right"></use></svg>
     </div>
 
-    <!-- 底部工具栏 -->
     <div data-tauri-drag-region class="z-9999 h-50px bg-#000 flex justify-center items-center gap-30px">
       <n-tooltip placement="top">
         <template #trigger>
@@ -125,21 +121,25 @@ const appWindow = WebviewWindow.getCurrent();
 
 // 初始化数据
 const imageList = ref<string[]>([]);
-
 const currentIndex = ref(0);
+
+// 状态变量
 const scale = ref(1);
 const rotation = ref(0);
+const translateX = ref(0);
+const translateY = ref(0);
 const isDragging = ref(false);
-const dragStart = reactive({ x: 0, y: 0 });
-const imagePosition = reactive({ x: 0, y: 0 });
+
+const dragStart = reactive({ x: 0, y: 0, initialTX: 0, initialTY: 0 });
+
+// Refs
 const imageRef = ref<HTMLImageElement>();
-// 添加响应式变量来跟踪是否有滚动条
-const contentScrollbar = useTemplateRef<HTMLElement>("contentRef");
-// 图片容器
-const imgContainer = useTemplateRef<HTMLElement>("imgContainerRef");
-//提示相关的响应式变量
+const viewportRef = useTemplateRef<HTMLElement>("viewportRef");
+
+// 提示相关
 const showTip = ref(false);
 const tipText = ref("");
+
 // 左右箭头显示
 const showArrows = reactive({
   left: false,
@@ -148,11 +148,8 @@ const showArrows = reactive({
   rightHover: false
 });
 
-// 添加缩放倍数显示的计算属性
-const scaleText = computed(() => {
-  return `${Math.round(scale.value * 100)}%`;
-});
-// 当前显示的图片URL
+const scaleText = computed(() => `${Math.round(scale.value * 100)}%`);
+
 const currentImage = computed(() => {
   if (imageViewerStore.isSingleMode) {
     return imageViewerStore.singleImage;
@@ -160,33 +157,66 @@ const currentImage = computed(() => {
   return imageList.value[currentIndex.value];
 });
 
-// 添加鼠标移动处理函数
+const transformStyle = computed(() => {
+  const style: Record<string, string> = {
+    transform: `translate3d(${translateX.value}px, ${translateY.value}px, 0) scale(${scale.value}) rotate(${rotation.value}deg)`
+  };
+  if (!isDragging.value) {
+    style.transition = "transform 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94)";
+  }
+  return style;
+});
+
+const onImageLoad = () => {
+  fitImageToWindow();
+};
+
+const fitImageToWindow = () => {
+  if (!viewportRef.value || !imageRef.value) return;
+
+  // 重置旋转
+  rotation.value = 0;
+
+  const viewport = viewportRef.value;
+  const img = imageRef.value;
+
+  // 获取尺寸
+  const viewportWidth = viewport.clientWidth;
+  const viewportHeight = viewport.clientHeight;
+  const imgWidth = img.naturalWidth || img.width;
+  const imgHeight = img.naturalHeight || img.height;
+
+  if (imgWidth === 0 || imgHeight === 0) return;
+
+  // 1. 计算居中位置
+  translateX.value = (viewportWidth - imgWidth) / 2;
+  translateY.value = (viewportHeight - imgHeight) / 2;
+
+  // 2. 计算适应比例 (保留80px内边距)
+  const padding = 80;
+  const availableWidth = viewportWidth - padding;
+  const availableHeight = viewportHeight - padding;
+
+  const widthRatio = availableWidth / imgWidth;
+  const heightRatio = availableHeight / imgHeight;
+
+  // 取较小比例以确保完全显示，且不超过100%
+  // 如果希望小图也放大填满，可以去掉 Math.min(..., 1) 中的 1
+  scale.value = Math.min(widthRatio, heightRatio, 1);
+};
+
 const handleMouseMove = (e: MouseEvent) => {
   const { clientX } = e;
   const { innerWidth } = window;
-
-  // 左侧箭头显示逻辑
-  if (!showArrows.leftHover) {
-    showArrows.left = clientX <= 78;
-  }
-
-  // 右侧箭头显示逻辑
-  if (!showArrows.rightHover) {
-    showArrows.right = innerWidth - clientX <= 78;
-  }
+  if (!showArrows.leftHover) showArrows.left = clientX <= 78;
+  if (!showArrows.rightHover) showArrows.right = innerWidth - clientX <= 78;
 };
 
-// 添加鼠标离开整个容器的处理
 const handleMouseLeave = () => {
-  if (!showArrows.leftHover) {
-    showArrows.left = false;
-  }
-  if (!showArrows.rightHover) {
-    showArrows.right = false;
-  }
+  if (!showArrows.leftHover) showArrows.left = false;
+  if (!showArrows.rightHover) showArrows.right = false;
 };
 
-// 添加箭头hover状态处理
 const handleArrowEnter = (direction: "left" | "right") => {
   showArrows[`${direction}Hover`] = true;
   showArrows[direction] = true;
@@ -197,15 +227,30 @@ const handleArrowLeave = (direction: "left" | "right") => {
   showArrows[direction] = false;
 };
 
-// 图片拖动相关
 const startDrag = (e: MouseEvent) => {
-  isDragging.value = true;
-  dragStart.x = e.clientX - imagePosition.x;
-  dragStart.y = e.clientY - imagePosition.y;
+  if (e.button !== 0) return;
+  e.preventDefault();
 
-  // 使用 addEventListener 的第三个参数 { passive: true } 来优化性能
-  document.addEventListener("mousemove", handleDrag, { passive: true });
+  isDragging.value = true;
+
+  dragStart.x = e.clientX;
+  dragStart.y = e.clientY;
+  dragStart.initialTX = translateX.value;
+  dragStart.initialTY = translateY.value;
+
+  document.addEventListener("mousemove", handleDrag, { passive: false });
   document.addEventListener("mouseup", stopDrag);
+};
+
+const handleDrag = (e: MouseEvent) => {
+  if (!isDragging.value) return;
+  e.preventDefault();
+
+  const deltaX = e.clientX - dragStart.x;
+  const deltaY = e.clientY - dragStart.y;
+
+  translateX.value = dragStart.initialTX + deltaX;
+  translateY.value = dragStart.initialTY + deltaY;
 };
 
 const stopDrag = () => {
@@ -214,64 +259,24 @@ const stopDrag = () => {
   document.removeEventListener("mouseup", stopDrag);
 };
 
-const updateTransform = () => {
-  if (!imageRef.value) return;
-  const transform = `translate3d(${imagePosition.x}px, ${imagePosition.y}px, 0) scale3d(${scale.value}, ${scale.value}, 1) rotate(${rotation.value}deg)`;
-
-  requestAnimationFrame(() => {
-    if (imageRef.value) {
-      imageRef.value.style.transform = transform;
-    }
-  });
-};
-
-const handleDrag = (e: MouseEvent) => {
-  if (!isDragging.value) return;
-  imagePosition.x = e.clientX - dragStart.x;
-  imagePosition.y = e.clientY - dragStart.y;
-  updateTransform();
-};
-
-// 工具栏操作
 const zoomIn = () => {
   scale.value = Math.min(5, scale.value + 0.1);
-  updateTransform();
 };
 
 const zoomOut = () => {
   scale.value = Math.max(0.1, scale.value - 0.1);
-  updateTransform();
 };
 
 const rotateLeft = () => {
   rotation.value -= 90;
-  updateTransform();
 };
 
 const rotateRight = () => {
   rotation.value += 90;
-  updateTransform();
 };
 
-// 重置图片
-const resetImage = (immediate = false) => {
-  scale.value = 1;
-  rotation.value = 0;
-  imagePosition.x = 0;
-  imagePosition.y = 0;
-  if (imageRef.value) {
-    if (immediate) {
-      // 立即重置，不使用过渡动画
-      imageRef.value.style.transition = "none";
-      imageRef.value.style.transform = "";
-      // 强制重绘
-      imageRef.value.offsetHeight;
-      // 恢复过渡动画
-      imageRef.value.style.transition = "";
-    } else {
-      imageRef.value.style.transform = "";
-    }
-  }
+const resetImage = () => {
+  fitImageToWindow();
 };
 
 const saveImage = async () => {
@@ -293,7 +298,6 @@ const saveImage = async () => {
   }
 };
 
-// 显示提示的函数
 const showTipMessage = (message: string) => {
   tipText.value = message;
   showTip.value = true;
@@ -302,7 +306,6 @@ const showTipMessage = (message: string) => {
   }, 1500);
 };
 
-// 修改切换图片的函数
 const syncCurrentIndex = (index: number) => {
   currentIndex.value = index;
   imageViewerStore.currentIndex = index;
@@ -311,7 +314,6 @@ const syncCurrentIndex = (index: number) => {
 
 const prevImage = () => {
   if (currentIndex.value > 0) {
-    resetImage(true); // 立即重置
     syncCurrentIndex(currentIndex.value - 1);
   } else {
     showTipMessage(t("preview.image.firstImage"));
@@ -320,14 +322,12 @@ const prevImage = () => {
 
 const nextImage = () => {
   if (currentIndex.value < imageList.value.length - 1) {
-    resetImage(true); // 立即重置
     syncCurrentIndex(currentIndex.value + 1);
   } else {
     showTipMessage(t("preview.image.lastImage"));
   }
 };
 
-// 添加键盘事件处理
 const handleKeydown = (e: KeyboardEvent) => {
   switch (e.key) {
     case "ArrowLeft":
@@ -361,18 +361,7 @@ const handleKeydown = (e: KeyboardEvent) => {
   }
 };
 
-// 检查是否有滚动条的函数
-const checkScrollbar = () => {
-  if (!imgContainer.value || !contentScrollbar.value || !imageRef.value) return;
-
-  imgContainer.value.style.height = "auto"; // 先重置为auto以便正确计算
-  // 检查是否有滚动条
-  imgContainer.value.style.height =
-    contentScrollbar.value.scrollHeight > contentScrollbar.value.clientHeight ? "auto" : "100%";
-};
-
 onMounted(async () => {
-  // 显示窗口
   await getCurrentWebviewWindow().show();
 
   await addListener(
@@ -380,30 +369,27 @@ onMounted(async () => {
       const { index } = event.payload;
       imageList.value = imageViewerStore.imageList;
       syncCurrentIndex(index);
-      // 重置图片状态
-      resetImage(true);
     }),
     "update-image"
   );
 
   if (imageViewerStore.isSingleMode) {
-    // 单图模式下不需要设置 imageList 和 currentIndex
     imageList.value = [imageViewerStore.singleImage];
     syncCurrentIndex(0);
   } else {
-    // 多图模式保持原有逻辑
     imageList.value = imageViewerStore.imageList;
     syncCurrentIndex(imageViewerStore.currentIndex);
   }
 
-  // 监听键盘事件
   document.addEventListener("keydown", handleKeydown);
+  window.addEventListener("resize", fitImageToWindow);
 });
 
 onUnmounted(() => {
   document.removeEventListener("keydown", handleKeydown);
   document.removeEventListener("mousemove", handleDrag);
   document.removeEventListener("mouseup", stopDrag);
+  window.removeEventListener("resize", fitImageToWindow);
 });
 </script>
 
@@ -418,22 +404,6 @@ onUnmounted(() => {
   opacity: 0;
 }
 
-/* 自定义滚动条样式 */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-
-::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.2);
-  border-radius: 3px;
-}
-
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-/* 添加以下样式来修改 ActionBar 中的 svg 颜色 */
 :deep(.action-close),
 :deep(.hover-box) {
   svg {
