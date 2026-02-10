@@ -278,7 +278,7 @@ export const useImageViewer = () => {
       imageViewerStore.resetImageList(resolvedList, resolvedIndex, dedupedList);
 
       // 检查图片查看器窗口是否已存在
-      const existingWindow = await WebviewWindow.getByLabel("imageViewer");
+      const existingWindow = await WebviewWindow.getByLabel("previewImage");
 
       if (existingWindow) {
         // 如果窗口已存在，更新图片内容并显示窗口
