@@ -9,7 +9,7 @@
       ]">
       <!-- 顶部标题区域 -->
       <div :class="['flex items-center mb-3', isCollapsed ? 'justify-center px-2' : 'justify-between px-4']">
-        <div v-show="!isCollapsed" class="font-medium">精选关注人(30)</div>
+        <div v-show="!isCollapsed" class="font-medium">关注人({{ followList.length }})</div>
         <n-button text type="primary" @click="toggleCollapse">
           <i-mdi-chevron-left v-if="!isCollapsed" class="w-5 h-5" />
           <i-mdi-chevron-right v-else class="w-5 h-5" />
@@ -30,30 +30,30 @@
                   <img
                     v-if="!isCollapsed"
                     :src="follow.avatar"
-                    :alt="follow.name"
+                    :alt="follow.username"
                     class="w-full h-full rounded-full object-cover cursor-pointer" />
                   <n-popover v-else trigger="hover" placement="right" :show-arrow="false" :delay="200">
                     <!-- 头像作为触发元素 -->
                     <template #trigger>
                       <img
                         :src="follow.avatar"
-                        :alt="follow.name"
+                        :alt="follow.username"
                         class="w-full h-full rounded-full object-cover cursor-pointer" />
                     </template>
                     <!-- 弹出内容，仅在折叠状态下显示，限制长度 -->
                     <div
                       class="px-2 py-1 text-sm rounded max-w-[100px] bg-white text-gray-800 whitespace-nowrap overflow-hidden text-ellipsis">
-                      {{ follow.name }}
+                      {{ follow.username }}
                     </div>
                   </n-popover>
                 </div>
                 <!-- 名称和未读计数（展开状态下显示） -->
                 <div v-show="!isCollapsed" class="flex-1 min-w-0 overflow-hidden">
-                  <div class="text-sm font-medium truncate w-full">{{ follow.name }}</div>
+                  <div class="text-sm font-medium truncate w-full">{{ follow.username }}</div>
                   <div
-                    v-show="follow.unreadCount > 0"
+                    v-show="follow.unseenCount > 0"
                     class="w-fit bg-gray-300 text-gray-700 text-[12px] px-1 py-[2px] rounded-sm truncate">
-                    {{ follow.unreadCount }}个作品未看
+                    {{ follow.unseenCount }}个作品未看
                   </div>
                 </div>
               </div>
@@ -73,6 +73,8 @@
 </template>
 
 <script setup lang="ts">
+import { getFollowingApi } from "@/api/follow";
+
 defineOptions({
   name: "Follow"
 });
@@ -80,25 +82,24 @@ defineOptions({
 // 定义关注列表项的接口
 interface FollowItem {
   id: number;
-  name: string;
+  username: string;
   avatar: string;
-  unreadCount: number;
+  unseenCount: number;
 }
 
 // 展开/缩放状态管理
 const isCollapsed = ref(false);
+// 关注列表数据
+const followList = ref<FollowItem[]>([]);
 
 // 切换展开/缩放状态
 const toggleCollapse = () => {
   isCollapsed.value = !isCollapsed.value;
 };
 
-// 模拟关注列表数据
-const followList = ref<FollowItem[]>([
-  { id: 1, name: "皇甫极", avatar: "https://picsum.photos/id/64/100/100", unreadCount: 0 },
-  { id: 2, name: "中国军号", avatar: "https://picsum.photos/id/65/100/100", unreadCount: 21 },
-  { id: 3, name: "春娇与志明", avatar: "https://picsum.photos/id/66/100/100", unreadCount: 0 }
-]);
+onMounted(async () => {
+  followList.value = await getFollowingApi();
+});
 </script>
 
 <style scoped>

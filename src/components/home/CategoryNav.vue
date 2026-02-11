@@ -20,7 +20,7 @@ defineOptions({
   name: "CategoryNav"
 });
 
-interface Category {
+interface CategoryInfo {
   name: string;
   value: string;
 }
@@ -30,7 +30,7 @@ interface Props {
 }
 
 // 分类列表
-const categories = ref<Category[]>([{ name: "全部", value: "all" }]);
+const categories = ref<CategoryInfo[]>([{ name: "全部", value: "all" }]);
 
 const props = defineProps<Props>();
 

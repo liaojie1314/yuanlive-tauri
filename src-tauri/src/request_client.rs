@@ -70,6 +70,30 @@ impl RequestClient {
         }
     }
 
+    /// 处理路径参数替换
+    /// 将 path 中的 {key} 替换为 path_params 中的 value
+    fn resolve_path(path: &str, path_params: &Option<serde_json::Value>) -> String {
+        let mut resolved_path = path.to_string();
+
+        if let Some(params) = path_params {
+            if let Some(obj) = params.as_object() {
+                for (key, value) in obj {
+                    let placeholder = format!("{{{}}}", key); // 生成 "{key}"
+
+                    // 处理值的字符串形式（去掉 JSON 字符串的引号）
+                    let val_str = if let Some(s) = value.as_str() {
+                        s.to_string()
+                    } else {
+                        value.to_string()
+                    };
+
+                    resolved_path = resolved_path.replace(&placeholder, &val_str);
+                }
+            }
+        }
+        resolved_path
+    }
+
     /// 构建请求的基础方法（处理公共逻辑）
     ///
     /// 处理 URL 构建、日志记录、token 设置和额外请求头等公共逻辑
@@ -81,7 +105,7 @@ impl RequestClient {
     fn build_request_base(
         &self,
         method: http::Method,
-        path: &str,
+        path: String,
         extra_headers: Option<Vec<(&str, &str)>>,
     ) -> reqwest::RequestBuilder {
         let url = format!("{}/{}", self.base_url, path);
@@ -113,7 +137,7 @@ impl RequestClient {
     fn build_request<B: serde::Serialize, C: serde::Serialize>(
         &self,
         method: http::Method,
-        path: &str,
+        path: String,
         body: &Option<B>,
         params: &Option<C>,
         extra_headers: Option<Vec<(&str, &str)>>,
@@ -212,7 +236,7 @@ impl RequestClient {
     ) -> Result<ApiResult<serde_json::Value>, anyhow::Error> {
         let (method, path) = Url::UploadChunk.get_url();
         // 使用 build_request_base 处理公共请求头逻辑
-        let request_builder = self.build_request_base(method, path, None);
+        let request_builder = self.build_request_base(method, path.to_string(), None);
         // 创建表单数据
         let mut form = reqwest::multipart::Form::new();
         form = form.text("fileHash", file_hash.to_string());
@@ -243,9 +267,14 @@ impl RequestClient {
         let params = Some(
             serde_json::json!({ "fileHash": file_hash, "fileName": file_name, "scene": scene }),
         );
-
-        self.base_request(method, path, None::<serde_json::Value>, params)
-            .await
+        self.base_request(
+            method,
+            path,
+            None::<serde_json::Value>,
+            params,
+            None::<serde_json::Value>,
+        )
+        .await
     }
 
     /// 合并分片
@@ -264,8 +293,14 @@ impl RequestClient {
             "scene": scene
         }));
 
-        self.base_request(method, path, body, None::<serde_json::Value>)
-            .await
+        self.base_request(
+            method,
+            path,
+            body,
+            None::<serde_json::Value>,
+            None::<serde_json::Value>,
+        )
+        .await
     }
 
     pub async fn base_request<
@@ -278,6 +313,7 @@ impl RequestClient {
         path: &str,
         body: Option<B>,
         params: Option<C>,
+        path_params: Option<serde_json::Value>,
     ) -> Result<ApiResult<T>, anyhow::Error> {
         let mut retry_count = 0;
         const MAX_RETRY_COUNT: u8 = 2;
@@ -288,15 +324,16 @@ impl RequestClient {
                 info!("🔄 Token expired, automatically refreshing");
                 self.start_refresh_token().await?;
             }
-
+            let resolved_path = Self::resolve_path(path, &path_params);
             // 使用 build_request 构建请求
-            let request_builder = self.build_request(method.clone(), path, &body, &params, None);
+            let request_builder =
+                self.build_request(method.clone(), resolved_path.clone(), &body, &params, None);
 
             // 发送请求
             let response = request_builder.send().await?;
             let result: ApiResult<T> = response.json().await?;
 
-            let url = format!("{}/{}", self.base_url, path);
+            let url = format!("{}/{}", self.base_url, resolved_path);
 
             match result.code {
                 Some(406) => {
@@ -361,7 +398,7 @@ impl RequestClient {
     pub async fn request_stream<B: serde::Serialize, C: serde::Serialize>(
         &mut self,
         method: http::Method,
-        path: &str,
+        path: String,
         body: Option<B>,
         params: Option<C>,
     ) -> Result<reqwest::Response, anyhow::Error> {
@@ -370,7 +407,7 @@ impl RequestClient {
 
         // 使用 build_request 构建请求
         let request_builder =
-            self.build_request(method.clone(), path, &body, &params, extra_headers);
+            self.build_request(method.clone(), path.clone(), &body, &params, extra_headers);
 
         // 发送请求
         let response = request_builder.send().await?;
@@ -403,8 +440,12 @@ impl RequestClient {
         info!("🔄 Starting token refresh");
         let url = format!("{}/{}", self.base_url, Url::RefreshToken.get_url().1);
 
+        let refresh_token = self
+            .refresh_token
+            .clone()
+            .ok_or_else(|| anyhow::anyhow!("Refresh token is missing"))?;
         let body = json!({
-          "refreshToken": self.refresh_token.clone().unwrap()
+          "refreshToken": refresh_token
         });
 
         let request_builder = self.client.request(http::Method::POST, &url);
@@ -454,9 +495,12 @@ impl RequestClient {
         url: Url,
         body: Option<B>,
         params: Option<C>,
+        path_params: Option<serde_json::Value>,
     ) -> Result<Option<T>, anyhow::Error> {
         let (method, path) = url.get_url();
-        let result: ApiResult<T> = self.base_request(method, path, body, params).await?;
+        let result: ApiResult<T> = self
+            .base_request(method, path, body, params, path_params)
+            .await?;
         Ok(result.data)
     }
 }
@@ -464,7 +508,12 @@ impl RequestClient {
 impl Request for RequestClient {
     async fn login(&mut self, login_req: LoginReq) -> Result<Option<AuthResp>, anyhow::Error> {
         let result: Option<AuthResp> = self
-            .request(Url::Login, Some(login_req), None::<serde_json::Value>)
+            .request(
+                Url::Login,
+                Some(login_req),
+                None::<serde_json::Value>,
+                None::<serde_json::Value>,
+            )
             .await?;
 
         if let Some(data) = result.clone() {
@@ -484,6 +533,7 @@ impl Request for RequestClient {
             .request(
                 Url::RefreshToken,
                 Some(refresh_token_req),
+                None::<serde_json::Value>,
                 None::<serde_json::Value>,
             )
             .await?;
@@ -509,6 +559,11 @@ pub enum Url {
     CheckQRStatus,
     GetUserInfo,
     GetLiveCategory,
+    GetTopFiveLive,
+    GetLiveListByCategory,
+    GetFollowing,
+    GetFollowingLive,
+    GetVideoListByUid,
     MessageSendStream,
     MapCoordTranslate,
     MapReverseGeocode,
@@ -533,7 +588,13 @@ impl Url {
             // 用户信息相关
             Url::GetUserInfo => (http::Method::GET, "user/user/getUserInfo"),
             // 直播相关
+            Url::GetTopFiveLive => (http::Method::GET, "live/room/popularRooms"),
             Url::GetLiveCategory => (http::Method::GET, "live/category/firstLevel"),
+            Url::GetLiveListByCategory => (http::Method::GET, "live/category/listByCategory"),
+            Url::GetFollowingLive => (http::Method::GET, "user/follow/following/live"),
+            // 关注相关
+            Url::GetFollowing => (http::Method::GET, "user/follow/following"),
+            Url::GetVideoListByUid => (http::Method::GET, "live/record/getRecordByUid/{uid}"),
             // AI 相关
             Url::MessageSendStream => (http::Method::POST, "ai/chat/stream"),
             // 地图相关
@@ -561,7 +622,13 @@ impl Url {
             // 用户信息相关
             "getUserInfo" => Ok(Url::GetUserInfo),
             // 直播相关
+            "getTopFiveLive" => Ok(Url::GetTopFiveLive),
             "getLiveCategory" => Ok(Url::GetLiveCategory),
+            "getLiveListByCategory" => Ok(Url::GetLiveListByCategory),
+            "getFollowingLive" => Ok(Url::GetFollowingLive),
+            // 关注相关
+            "getFollowing" => Ok(Url::GetFollowing),
+            "getVideoListByUid" => Ok(Url::GetVideoListByUid),
             // AI 相关
             "messageSendStream" => Ok(Url::MessageSendStream),
             // 地图相关
@@ -662,7 +729,12 @@ mod test {
             "operationType": "REGISTER"
         });
         let result: Option<String> = request_client
-            .request(Url::GetCode, Some(req), None::<serde_json::Value>)
+            .request(
+                Url::GetCode,
+                Some(req),
+                None::<serde_json::Value>,
+                None::<serde_json::Value>,
+            )
             .await?;
         println!("{:?}", json!(result).to_string());
         Ok(())

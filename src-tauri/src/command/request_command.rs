@@ -85,13 +85,14 @@ pub async fn request_command(
     url: String,
     body: Option<serde_json::Value>,
     params: Option<serde_json::Value>,
+    path_params: Option<serde_json::Value>,
     app_handle: tauri::AppHandle,
 ) -> Result<Option<serde_json::Value>, String> {
     let mut rc = state.rc.lock().await;
 
     if let Ok(url) = url.parse::<Url>() {
         let result: Result<Option<serde_json::Value>, anyhow::Error> =
-            rc.request(url, body, params).await;
+            rc.request(url, body, params, path_params).await;
         match result {
             Ok(data) => Ok(data),
             Err(e) => {

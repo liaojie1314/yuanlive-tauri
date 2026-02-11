@@ -336,7 +336,6 @@
     v-model:show="showDanmakuReportDialog"
     :danmaku-index="selectedDanmakuIndex"
     @submit-report="handleDanmakuReport" />
-  <!-- New Collection Folder Dialog -->
   <collection-folder-dialog v-model:show="showNewFolderDialog" @create-folder="handleCreateFolder" />
 </template>
 

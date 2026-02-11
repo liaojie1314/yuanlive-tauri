@@ -36,17 +36,6 @@ export type RegisterUserReq = {
   confirmPassword: string;
 };
 
-export type LoginUserReq = {
-  // 账号
-  account: string;
-  // 密码
-  password: string;
-  // 登录方式 PC/MOBILE
-  deviceType: "PC" | "MOBILE";
-  // 授权方式
-  grantType: "CAPTCHA" | "REFRESH_TOKEN" | "PASSWORD" | "MOBILE";
-};
-
 export type ForgetPasswordReq = {
   // 邮箱
   email: string;

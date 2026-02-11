@@ -11,6 +11,8 @@ interface RequestParams {
   body?: any;
   /** 查询参数 */
   params?: Record<string, any>;
+  /** 路径参数 (Path Variable, e.g. /user/{id}) */
+  pathParams?: Record<string, any>;
 }
 
 /**
@@ -49,7 +51,8 @@ export async function request<T = any>(
   const args = {
     url: requestParams.url,
     body: requestParams.body || null,
-    params: requestParams.params || null
+    params: requestParams.params || null,
+    pathParams: requestParams.pathParams || null
   };
 
   // 如果需要重试
