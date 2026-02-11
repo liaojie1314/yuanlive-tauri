@@ -17,14 +17,6 @@ svg {
   background: rgba(19, 152, 127, 0.3); /** 输入框选中文本背景色 */
 }
 
-/* 适用于Firefox */
-* {
-  scrollbar-width: thin;
-  /* 细滚动条 */
-  scrollbar-color: var(--text-secondary) transparent;
-  /* 滑块颜色和轨道颜色 */
-}
-
 .n-modal-mask {
   @include mask-style;
 }
@@ -67,43 +59,3 @@ svg {
   --n-border-hover: 1px solid #13987f !important;
 }
 
-/* 滚动条整体 */
-::-webkit-scrollbar {
-  width: 6px; /* 纵向滚动条宽 */
-  height: 6px; /* 横向滚动条高 */
-}
-
-/* 彻底隐藏上下箭头的“尖尖” */
-::-webkit-scrollbar-button {
-  display: none !important;
-  width: 0;
-  height: 0;
-}
-
-/* 滑块样式 */
-::-webkit-scrollbar-thumb {
-  background-color: var(--text-secondary);
-  /* 滚动条滑块颜色 - 中性灰色 */
-  border-radius: 4px;
-  /* 圆角 */
-  border: 2px solid transparent;
-  /* 边框透明，用于创建间隔效果 */
-  background-clip: content-box;
-  /* 重要：确保背景只绘制在内容区域 */
-}
-
-/*  鼠标悬停滑块 */
-::-webkit-scrollbar-thumb:hover {
-  background-color: #6b7280;
-  /* 悬停时变亮 */
-}
-
-/* 轨道背景 */
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-/* 隐藏角落 */
-::-webkit-scrollbar-corner {
-  background: transparent;
-}

@@ -41,6 +41,8 @@
   --btn-secondary-bg: #f1f1f1;
   --btn-secondary-border: #e3e3e3eb;
   --btn-secondary-hover: #eae9e9;
+  --code-bg: #f6f8fa;
+  --message-render-color: #13987f;
 }
 
 html[data-theme="dark"] {
@@ -79,6 +81,8 @@ html[data-theme="dark"] {
   --btn-secondary-bg: #333333;
   --btn-secondary-border: #444444;
   --btn-secondary-hover: #454545;
+  --code-bg: #1e1e1e;
+  --message-render-color: #52aea3;
 }
 
 /**!修改naive-ui的遮罩层样式*/

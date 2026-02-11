@@ -1,199 +1,106 @@
 <template>
   <div class="message-item mb-4 flex" :class="{ 'justify-end': message.isSelf }">
-    <!-- 对方消息 -->
     <div v-if="!message.isSelf" class="flex gap-2 max-w-[80%]">
-      <div class="flex-shrink-0 w-8 h-8 rounded-full overflow-hidden bg-gray-300">
+      <div class="flex-shrink-0 w-8 h-8 rounded-full overflow-hidden bg-[--line-color]">
         <img :src="message.avatar" :alt="message.sender" class="w-full h-full object-cover" />
       </div>
       <div class="flex-grow min-w-0">
-        <div class="text-sm font-medium text-gray-600 mb-1">{{ message.sender }}</div>
-        <!-- 合并思考内容和回复内容的统一容器 -->
-        <div ref="thinkingContainerRef" class="bg-white rounded-lg shadow-sm overflow-hidden">
-          <!-- 思考内容区域 -->
+        <div class="text-sm font-medium text-[--user-text-color] mb-1">{{ message.sender }}</div>
+
+        <div
+          ref="thinkingContainerRef"
+          class="bg-[--input-area-bg] rounded-lg shadow-sm overflow-hidden border border-[--line-color]">
           <div v-if="message.thinking || message.isThinkingTyping" class="thinking-container">
-            <!-- 思考内容标题栏 -->
             <div
-              class="thinking-header flex items-center justify-between cursor-pointer p-3"
+              class="thinking-header flex items-center justify-between cursor-pointer p-3 border-b border-[--line-color]"
               @click="toggleThinkingExpanded">
               <div class="flex items-center">
-                <span class="text-blue-500 mr-2">🔍</span>
-                <span class="text-gray-600 font-medium text-sm">已思考（用时{{ message.thinkingTime }}秒）</span>
+                <span class="text-[--message-render-color] mr-2">🔍</span>
+                <span class="text-[--user-text-color] font-medium text-sm">
+                  已思考（用时{{ message.thinkingTime }}秒）
+                </span>
               </div>
-              <!-- 使用iconify图标替换字符箭头 -->
               <i-material-symbols-keyboard-arrow-down
-                class="text-gray-500 transition-transform duration-300 text-sm"
+                class="text-[--user-text-color] transition-transform duration-300 text-sm"
                 :class="{ 'rotate-180': isThinkingExpanded }" />
             </div>
-            <!-- 思考内容 -->
             <div v-if="isThinkingExpanded" class="thinking-content">
-              <div class="p-3 pl-4 ml-6" style="border-left: 1px solid #ddd">
+              <div class="p-3 pl-4 ml-6" style="border-left: 2px solid var(--line-color)">
                 <div
                   v-html="renderedThinkingContent"
-                  class="prose prose-xs max-w-none text-gray-500"
+                  class="prose prose-xs max-w-none text-[--text-color] opacity-80"
                   style="word-break: break-word; overflow-wrap: break-word; word-wrap: break-word"></div>
               </div>
             </div>
           </div>
 
-          <!-- 回复内容区域 -->
           <div class="p-3">
-            <!-- 文本消息 -->
             <div v-if="message.type === 'text'" class="text-message">
               <div
                 v-html="renderedContent"
-                class="prose prose-sm max-w-none"
+                class="prose prose-sm max-w-none text-[--text-color]"
                 style="word-break: break-word; overflow-wrap: break-word; word-wrap: break-word"></div>
-              <!-- 打字机效果光标 -->
-              <span v-if="message.isTyping" class="cursor"></span>
+              <span v-if="message.isTyping" class="cursor bg-[--text-color]"></span>
             </div>
-            <!-- 图片消息 -->
-            <div v-else-if="message.type === 'image'" class="image-message">
-              <image-message
-                v-if="typeof message.content === 'string'"
-                :image-url="message.content"
-                @image-click="$emit('image-click', message.content)" />
-              <div
-                class="image-gallery grid gap-2"
-                :class="{
-                  'grid-cols-1': (message.content as string[]).length === 1,
-                  'grid-cols-2': (message.content as string[]).length > 1
-                }">
-                <image-message
-                  v-for="(img, imgIndex) in message.content as string[]"
-                  :key="imgIndex"
-                  :image-url="img"
-                  :max-width="'small'"
-                  @image-click="$emit('image-click', img)" />
-              </div>
-            </div>
-            <!-- 混合消息（图片+文字） -->
+            <div v-else-if="message.type === 'image'" class="image-message"></div>
             <div v-else-if="message.type === 'mixed'" class="mixed-message">
-              <!-- 图片部分 -->
-              <div v-if="(message.content as MixedContent).images.length > 0" class="mb-3">
-                <div
-                  class="image-gallery grid gap-2"
-                  :class="{
-                    'grid-cols-1': (message.content as MixedContent).images.length === 1,
-                    'grid-cols-2': (message.content as MixedContent).images.length > 1
-                  }">
-                  <image-message
-                    v-for="(img, imgIndex) in (message.content as MixedContent).images"
-                    :key="imgIndex"
-                    :image-url="img"
-                    :max-width="'small'"
-                    @image-click="$emit('image-click', img)" />
-                </div>
-              </div>
-              <!-- 文字部分 -->
               <div v-if="(message.content as MixedContent).text" class="text-message">
                 <div
                   v-html="renderedContent"
-                  class="prose prose-sm max-w-none"
+                  class="prose prose-sm max-w-none text-[--text-color]"
                   style="word-break: break-word; overflow-wrap: break-word; word-wrap: break-word"></div>
               </div>
             </div>
           </div>
         </div>
-        <!-- 新增：底部按钮和时间区域 -->
+
         <div class="flex items-center justify-between mt-1">
-          <!-- 左侧按钮组 -->
           <div class="flex items-center gap-2">
-            <!-- 分页按钮 -->
             <div class="flex items-center gap-1">
               <i-material-symbols-keyboard-arrow-left
-                class="text-gray-400 cursor-pointer text-sm"
+                class="text-[--user-text-color] hover:text-[--message-render-color] cursor-pointer text-sm"
                 @click="$emit('prev-message', message.id)" />
-              <span class="text-xs text-gray-400">2/2</span>
+              <span class="text-xs text-[--user-text-color]">2/2</span>
               <i-material-symbols-keyboard-arrow-right
-                class="text-gray-400 cursor-pointer text-sm"
+                class="text-[--user-text-color] hover:text-[--message-render-color] cursor-pointer text-sm"
                 @click="$emit('next-message', message.id)" />
             </div>
-            <!-- 功能按钮组 -->
             <div class="flex items-center gap-2">
               <i-material-symbols-content-copy
-                class="text-gray-400 cursor-pointer text-sm"
+                class="text-[--user-text-color] hover:text-[--message-render-color] cursor-pointer text-sm"
                 @click="$emit('copy-message', message.id)" />
               <i-material-symbols-refresh
-                class="text-gray-400 cursor-pointer text-sm"
+                class="text-[--user-text-color] hover:text-[--message-render-color] cursor-pointer text-sm"
                 @click="$emit('refresh-message', message.id)" />
               <i-material-symbols-thumb-up
-                class="text-gray-400 cursor-pointer text-sm"
+                class="text-[--user-text-color] hover:text-[--message-render-color] cursor-pointer text-sm"
                 @click="$emit('like-message', message.id)" />
               <i-material-symbols-thumb-down
-                class="text-gray-400 cursor-pointer text-sm"
+                class="text-[--user-text-color] hover:text-[--message-render-color] cursor-pointer text-sm"
                 @click="$emit('dislike-message', message.id)" />
               <i-material-symbols-share
-                class="text-gray-400 cursor-pointer text-sm"
+                class="text-[--user-text-color] hover:text-[--message-render-color] cursor-pointer text-sm"
                 @click="$emit('share-message', message.id)" />
             </div>
           </div>
-          <!-- 右侧时间 -->
-          <div class="text-xs text-gray-400">{{ message.time }}</div>
+          <div class="text-xs text-[--user-text-color]">{{ message.time }}</div>
         </div>
       </div>
     </div>
 
-    <!-- 自己消息 -->
     <div v-else class="flex gap-2 max-w-[80%]">
       <div class="flex-grow min-w-0">
-        <div class="bg-blue-500 text-white rounded-lg p-3 shadow-sm">
-          <!-- 文本消息 -->
+        <div class="bg-[--message-render-color] rounded-lg p-3 shadow-sm self-message-bubble">
           <div v-if="message.type === 'text'" class="text-message">
             <div
               v-html="renderedContent"
-              class="prose prose-sm max-w-none text-white"
+              class="prose prose-sm max-w-none"
               style="word-break: break-word; overflow-wrap: break-word; word-wrap: break-word"></div>
           </div>
-          <!-- 图片消息 -->
-          <div v-else-if="message.type === 'image'">
-            <image-message
-              v-if="typeof message.content === 'string'"
-              :image-url="message.content"
-              @image-click="$emit('image-click', message.content as string)" />
-            <div
-              class="image-gallery grid gap-2"
-              :class="{
-                'grid-cols-1': (message.content as string[]).length === 1,
-                'grid-cols-2': (message.content as string[]).length > 1
-              }">
-              <image-message
-                v-for="(img, imgIndex) in message.content as string[]"
-                :key="imgIndex"
-                :image-url="img"
-                :max-width="'small'"
-                @image-click="$emit('image-click', img)" />
-            </div>
-          </div>
-          <!-- 混合消息（图片+文字） -->
-          <div v-else-if="message.type === 'mixed'" class="mixed-message">
-            <!-- 图片部分 -->
-            <div v-if="(message.content as MixedContent).images.length > 0" class="mb-3">
-              <div
-                class="image-gallery grid gap-2"
-                :class="{
-                  'grid-cols-1': (message.content as MixedContent).images.length === 1,
-                  'grid-cols-2': (message.content as MixedContent).images.length > 1
-                }">
-                <image-message
-                  v-for="(img, imgIndex) in (message.content as MixedContent).images"
-                  :key="imgIndex"
-                  :image-url="img"
-                  :max-width="'small'"
-                  @image-click="$emit('image-click', img)" />
-              </div>
-            </div>
-            <!-- 文字部分 -->
-            <div v-if="(message.content as MixedContent).text" class="text-message">
-              <div
-                v-html="renderedContent"
-                class="prose prose-sm max-w-none text-white"
-                style="word-break: break-word; overflow-wrap: break-word; word-wrap: break-word"></div>
-            </div>
-          </div>
         </div>
-        <div class="text-xs text-gray-400 mt-1 text-right">{{ message.time }}</div>
+        <div class="text-xs text-[--user-text-color] mt-1 text-right">{{ message.time }}</div>
       </div>
-      <div class="flex-shrink-0 w-8 h-8 rounded-full overflow-hidden bg-gray-300">
+      <div class="flex-shrink-0 w-8 h-8 rounded-full overflow-hidden bg-[--line-color]">
         <img :src="message.avatar" :alt="message.sender" class="w-full h-full object-cover" />
       </div>
     </div>
@@ -207,6 +114,8 @@ import "highlight.js/styles/github.css";
 import { writeText } from "@tauri-apps/plugin-clipboard-manager";
 
 import { useWindow } from "@/hooks/useWindow";
+import { writeTextFile } from "@tauri-apps/plugin-fs";
+import { save } from "@tauri-apps/plugin-dialog";
 
 const { createWebviewWindow, sendWindowPayload } = useWindow();
 
@@ -276,7 +185,7 @@ const getValidLanguage = (lang: string): string => {
     return languageMap[lowerLang];
   }
 
-  // 尝试匹配语言映射表的键（处理部分匹配，如"javascrip" -> "javascript"）
+  // 尝试匹配语言映射表的键
   for (const [alias, language] of Object.entries(languageMap)) {
     if (alias.startsWith(lowerLang) && hljs.getLanguage(language)) {
       return language;
@@ -438,6 +347,7 @@ const renderedContent = computed(() => {
       // 为代码块添加带有吸顶功能的header
       const preElement = codeElement.parentElement as HTMLElement;
       if (preElement) {
+        preElement.classList.add("hljs-scroll");
         // 创建代码块容器
         const codeContainer = document.createElement("div");
         codeContainer.className = "code-block-container";
@@ -532,8 +442,71 @@ const handleGlobalClick = async (event: MouseEvent) => {
       btn.innerHTML = "❌ 失败";
     }
   }
-  // TODO: 下载逻辑
+  // 下载逻辑
   else if (action === "download") {
+    try {
+      // 1. 获取文件扩展名 (根据语言)
+      const langSpan = container.querySelector(".code-lang");
+      let ext = "txt";
+      if (langSpan && langSpan.textContent) {
+        const lang = langSpan.textContent.trim().toLowerCase();
+        const extMap: Record<string, string> = {
+          javascript: ".js",
+          java: ".java",
+          python: ".py",
+          ruby: ".rb",
+          php: ".php",
+          go: ".go",
+          rust: ".rs",
+          cpp: ".cpp",
+          c: ".c",
+          csharp: ".cs",
+          swift: ".swift",
+          kotlin: ".kt",
+          scala: ".scala",
+          html: ".html",
+          css: ".css",
+          scss: ".scss",
+          less: ".less",
+          json: ".json",
+          yaml: ".yaml",
+          xml: ".xml",
+          sql: ".sql",
+          bash: ".sh",
+          powershell: ".ps1",
+          dockerfile: "", // Dockerfile 通常没有后缀
+          markdown: ".md",
+          typescript: ".ts",
+          vue: ".vue",
+          plaintext: ".txt"
+        };
+        ext = extMap[lang] || lang;
+      }
+
+      // 2. 打开保存对话框
+      const filePath = await save({
+        defaultPath: `code_snippet${ext}`,
+        filters: [
+          {
+            name: "Code Snippet",
+            extensions: [ext, "txt", "*"]
+          }
+        ]
+      });
+
+      // 3. 如果用户选择了路径，则写入文件
+      if (filePath) {
+        await writeTextFile(filePath, content);
+        const originalText = btn.innerHTML;
+        btn.innerHTML = "✅ 已下载";
+        setTimeout(() => (btn.innerHTML = originalText), 2000);
+      }
+    } catch (err) {
+      console.error("下载失败:", err);
+      const originalText = btn.innerHTML;
+      btn.innerHTML = "❌ 失败";
+      setTimeout(() => (btn.innerHTML = originalText), 2000);
+    }
   }
   // 运行逻辑
   else if (action === "run") {
@@ -569,6 +542,8 @@ onUnmounted(() => {
   top: 0;
   z-index: 100;
   backdrop-filter: blur(4px);
+  background-color: var(--input-area-bg);
+  opacity: 0.95;
 }
 
 /* 思考内容折叠/展开动画 */
@@ -599,7 +574,7 @@ onUnmounted(() => {
   & li {
     margin: 0.25rem 0;
     line-height: 1.4;
-    color: #6b7280;
+    color: var(--user-text-color);
   }
 
   /* 嵌套列表样式 */
@@ -662,26 +637,27 @@ onUnmounted(() => {
   border-radius: 3px;
   font-family: "Monaco", "Menlo", "Ubuntu Mono", monospace;
   font-size: 0.8em;
-  color: #0ea5e9;
+  background-color: rgba(175, 243, 255, 0.15);
+  color: var(--message-render-color);
 }
 
 /* 思考内容中的代码块样式 */
 :deep(.thinking-content pre) {
   margin: 0.5em 0;
   padding: 0.75em;
-  background-color: rgba(175, 243, 255, 0.1);
+  background-color: rgba(175, 243, 255, 0.05);
+  border: 1px solid var(--line-color);
   border-radius: 4px;
   overflow: auto;
   font-size: 0.8em;
   line-height: 1.4;
-  border: 1px solid rgba(147, 197, 253, 0.3);
 }
 
 :deep(.thinking-content pre code) {
   background-color: transparent;
   padding: 0;
   border: none;
-  color: #6b7280;
+  color: var(--user-text-color);
 }
 
 /* 思考内容中的标题样式 */
@@ -692,7 +668,7 @@ onUnmounted(() => {
 :deep(.thinking-content h5),
 :deep(.thinking-content h6) {
   margin: 0.75em 0 0.5em;
-  color: #6b7280;
+  color: var(--text-color);
   font-size: 0.9em;
   font-weight: 600;
 }
@@ -725,7 +701,6 @@ onUnmounted(() => {
   white-space: pre-wrap;
   word-break: break-word;
   overflow-wrap: break-word;
-  overflow-x: auto;
   max-width: 100%;
   white-space: pre;
 }
@@ -761,7 +736,7 @@ onUnmounted(() => {
   display: inline-block;
   width: 8px;
   height: 1em;
-  background-color: #6b7280;
+  background-color: var(--text-color);
   margin-left: 2px;
   animation: blink 1s infinite;
   vertical-align: baseline;
@@ -775,7 +750,7 @@ onUnmounted(() => {
 }
 
 :deep(.material-symbols-outlined:hover) {
-  color: #3b82f6;
+  color: var(--message-render-color);
 }
 
 /* 分页按钮样式 */
@@ -837,12 +812,12 @@ onUnmounted(() => {
 :deep(.prose pre) {
   margin: 0.75em 0;
   padding: 0;
-  background-color: #f6f8fa;
+  background-color: var(--code-bg);
+  border: 1px solid var(--line-color);
   border-radius: 6px;
   overflow: auto;
   font-size: 0.875em;
   line-height: 1.5;
-  border: 1px solid #e1e4e8;
   position: relative;
   max-width: 100%;
   overflow-x: auto;
@@ -861,6 +836,7 @@ onUnmounted(() => {
   overflow-x: auto;
   overflow-wrap: normal;
   white-space: pre;
+  color: var(--text-color);
 }
 
 :deep(.prose code) {
@@ -870,6 +846,8 @@ onUnmounted(() => {
   font-family: "Monaco", "Menlo", "Ubuntu Mono", monospace;
   font-size: 0.875em;
   word-break: break-word;
+  background-color: var(--tray-hover);
+  color: var(--message-render-color);
 }
 
 /* 自己消息的 Markdown 样式 */
@@ -899,7 +877,8 @@ onUnmounted(() => {
 
 /* 对方消息的 Markdown 样式 */
 :deep(.bg-white .prose a) {
-  color: #2563eb;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border: 1px solid var(--line-color);
   text-decoration: underline;
 }
 
@@ -922,8 +901,8 @@ onUnmounted(() => {
   justify-content: space-between;
   align-items: center;
   padding: 0.5em 1em;
-  background-color: #f1f3f4;
-  border-bottom: 1px solid #e1e4e8;
+  background-color: var(--tray-bg-color);
+  border-bottom: 1px solid var(--line-color);
   font-size: 0.875em;
   font-weight: 500;
   position: sticky;
@@ -933,7 +912,7 @@ onUnmounted(() => {
 
 /* 代码语言类型样式 */
 :deep(.code-lang) {
-  color: #656d76;
+  color: var(--user-text-color);
   text-transform: capitalize;
   margin-right: 1em;
 }
@@ -962,8 +941,8 @@ onUnmounted(() => {
 
 /* 代码操作按钮悬停样式 */
 :deep(.code-action-btn:hover) {
-  background-color: rgba(0, 0, 0, 0.05);
-  color: #24292f;
+  background-color: var(--tray-hover);
+  color: var(--text-color);
 }
 
 /* 确保代码块内容样式正确 */
@@ -1007,5 +986,63 @@ onUnmounted(() => {
   user-select: none; /* 按钮文字不可选，但按钮本身可点 */
   position: relative;
   z-index: 51;
+}
+</style>
+
+<style>
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.4); /* 默认页面滚动条：半透明黑 */
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(255, 255, 255, 0.6);
+}
+
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* 这会覆盖 scoped 样式中的设置，解决滚动条“找错人”的问题 */
+.code-block-container code,
+.prose pre code {
+  overflow-x: visible !important; /* 禁止 code 产生滚动条 */
+}
+
+.code-block-container pre,
+.prose pre {
+  overflow-x: auto !important; /* 确保滚动条出现在 pre 上 */
+}
+
+.code-block-container pre::-webkit-scrollbar,
+.prose pre::-webkit-scrollbar {
+  height: 8px !important; /* 横向滚动条高度 */
+}
+
+.code-block-container pre::-webkit-scrollbar-thumb,
+.prose pre::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.4) !important; /* 强制白色 */
+  border-radius: 4px;
+  border: 1px solid transparent;
+  background-clip: content-box;
+}
+
+.code-block-container pre::-webkit-scrollbar-thumb:hover,
+.prose pre::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(255, 255, 255, 0.6) !important; /* 悬停更亮 */
+}
+
+.self-message-bubble ::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.4) !important;
 }
 </style>

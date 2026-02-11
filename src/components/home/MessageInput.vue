@@ -488,7 +488,7 @@ const sendMessage = () => {
   attachments.value = [];
 };
 
-const handleResize = ({ width }: any) => {
+const handleResize = ({ width }: { width: number }) => {
   showButtonText.value = width >= 588;
 };
 
