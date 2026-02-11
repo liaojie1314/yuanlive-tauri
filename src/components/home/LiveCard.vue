@@ -6,11 +6,10 @@
     <template #cover>
       <div class="relative w-full aspect-video overflow-hidden">
         <img
-          :src="imageUrl"
+          :src="coverUrl"
           :alt="title"
           class="w-full h-full object-cover transition-transform duration-300 hover:scale-105" />
         <n-badge
-          v-if="isLive"
           type="error"
           class="absolute top-2 left-2 flex items-center gap-1 bg-red-500 text-white px-2 py-0.5 rounded text-xs font-medium"
           processing
@@ -22,31 +21,28 @@
           <n-icon size="14" color="--tray-bg-color">
             <i-mdi-eye-outline class="w-4 h-4" />
           </n-icon>
-          <n-text class="color-[--tray-bg-color]" size="small">{{ viewers }}</n-text>
+          <n-text class="color-[--tray-bg-color]" size="small">{{ hotScore }}</n-text>
         </div>
       </div>
     </template>
     <div class="p-2 flex flex-col gap-1">
       <n-text strong truncate class="text-sm font-medium text-gray-800 truncate">{{ title }}</n-text>
-      <n-text :depth="3" truncate class="text-xs text-gray-500 truncate">{{ author }}</n-text>
+      <n-text :depth="3" truncate class="text-xs text-gray-500 truncate">{{ anchorName }}</n-text>
     </div>
   </n-card>
 </template>
 
 <script setup lang="ts">
 defineOptions({
-  name: "ImageCard"
+  name: "LiveCard"
 });
 
 interface Props {
-  imageUrl: string;
+  coverUrl: string;
   title: string;
-  author: string;
-  viewers: number;
-  isLive?: boolean;
+  anchorName: string;
+  hotScore: number;
 }
 
-withDefaults(defineProps<Props>(), {
-  isLive: false
-});
+defineProps<Props>();
 </script>

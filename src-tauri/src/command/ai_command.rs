@@ -45,19 +45,24 @@ pub async fn ai_message_send_stream(
         let mut rc = state.rc.lock().await;
         let (method, path) = Url::MessageSendStream.get_url();
 
-        rc.request_stream(method, path, Some(body), None::<serde_json::Value>)
-            .await
-            .map_err(|e| {
-                error!("发送流式请求失败: {}", e);
-                let error_event = SseStreamEvent {
-                    request_id: request_id.clone(),
-                    event_type: "error".to_string(),
-                    data: None,
-                    error: Some(e.to_string()),
-                };
-                let _ = on_event.send(error_event);
-                e.to_string()
-            })?
+        rc.request_stream(
+            method,
+            path.to_string(),
+            Some(body),
+            None::<serde_json::Value>,
+        )
+        .await
+        .map_err(|e| {
+            error!("发送流式请求失败: {}", e);
+            let error_event = SseStreamEvent {
+                request_id: request_id.clone(),
+                event_type: "error".to_string(),
+                data: None,
+                error: Some(e.to_string()),
+            };
+            let _ = on_event.send(error_event);
+            e.to_string()
+        })?
     };
 
     info!("SSE 连接已建立，开始监听流式数据...");

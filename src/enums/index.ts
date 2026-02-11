@@ -42,6 +42,16 @@ export enum UrlEnum {
   GET_USER_INFO = "getUserInfo",
   // 获取直播类别
   GET_LIVE_CATEGORY = "getLiveCategory",
+  // 获取人气前5的直播列表
+  GET_TOP_FIVE_LIVE = "getTopFiveLive",
+  // 获取当前直播类别的所有直播列表
+  GET_LIVE_LIST_BY_CATEGORY = "getLiveListByCategory",
+  // 获取当前用户正在直播的关注列表
+  GET_FOLLOWING_LIVE = "getFollowingLive",
+  // 获取用户关注列表
+  GET_FOLLOWING = "getFollowing",
+  // 获取关注的人的视频列表
+  GET_VIDEO_LIST_BY_UID = "getVideoListByUid",
   // 生成登录二维码
   GENERATE_QR_CODE = "generateQRCode",
   // 检测二维码状态

@@ -10,3 +10,36 @@ export async function getLiveCategoryApi() {
     url: UrlEnum.GET_LIVE_CATEGORY
   });
 }
+
+/**
+ * 获取当前用户正在直播的关注列表
+ * @returns 当前用户正在直播的关注列表
+ */
+export async function getFollowingLiveApi() {
+  return await request({
+    url: UrlEnum.GET_FOLLOWING_LIVE
+  });
+}
+
+/**
+ * 获取当前直播类别的所有直播列表
+ * @returns 当前直播类别的所有直播列表
+ */
+export async function getLiveListByCategoryApi(value: string) {
+  return await request({
+    url: UrlEnum.GET_LIVE_LIST_BY_CATEGORY,
+    params: {
+      value
+    }
+  });
+}
+
+/**
+ * 获取人气前5的直播列表
+ * @returns 人气前5的直播列表
+ */
+export async function getTopFiveLiveApi() {
+  return await request({
+    url: UrlEnum.GET_TOP_FIVE_LIVE
+  });
+}

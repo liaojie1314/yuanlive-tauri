@@ -4,17 +4,18 @@
       <!-- 搜索框 -->
       <search-box class="mx-auto mb-10px" />
       <!-- 分类导航 -->
-      <category-nav :active-category="activeCategory" @category-change="handleCategoryChange" />
-      <!-- 大图展示区域（仅在全部分类显示） -->
+      <category-nav
+        :active-category="activeCategory"
+        :active-child-category="activeChildCategory"
+        @category-change="handleCategoryChange" />
       <div v-if="activeCategory === 'all'" class="grid grid-cols-5 gap-4 mt-4">
-        <!-- 主要大图 -->
         <div
           class="relative col-span-3 rounded-lg overflow-hidden bg-black cursor-pointer hover:opacity-90 transition-opacity flex flex-col"
-          @click="navigateToLive(1)">
+          @click="navigateToLive(topLiveList[0].id)">
           <div class="flex-1">
             <img
-              src="https://picsum.photos/id/123/800/450"
-              alt="Featured content"
+              :src="topLiveList[0].coverImg"
+              :alt="topLiveList[0].title"
               class="w-full h-full object-cover"
               loading="lazy" />
           </div>
@@ -24,13 +25,13 @@
               <span class="w-2 h-2 bg-white rounded-full animate-pulse"></span>
               <span>live</span>
             </div>
-            <h3 class="text-lg font-medium mb-2">我就狐狸娇妻 在吗吃饭了吗</h3>
+            <h3 class="text-lg font-medium mb-2">{{ topLiveList[0].title }}</h3>
             <div class="flex items-center gap-4 text-sm">
               <span class="flex items-center gap-1">
                 <i-mdi-eye />
-                9986
+                {{ topLiveList[0].hotScore }}
               </span>
-              <span class="text-gray-300">大怪怪（云顶之弈）</span>
+              <span class="text-gray-300">{{ topLiveList[0].anchorName }}</span>
             </div>
           </div>
         </div>
@@ -38,18 +39,18 @@
         <!-- 右侧小图推荐 -->
         <div class="col-span-2 grid grid-cols-2 grid-rows-2 gap-4 h-full">
           <div
-            v-for="item in sideFeaturedItems"
+            v-for="item in topLiveList.splice(1)"
             :key="item.id"
             class="side-featured-item flex flex-col gap-2 cursor-pointer hover:opacity-90 transition-opacity"
             @click="navigateToLive(item.id)">
             <div class="relative rounded-lg overflow-hidden bg-black flex-1">
-              <img :src="item.imageUrl" :alt="item.title" class="w-full h-full object-cover" loading="lazy" />
+              <img :src="item.coverImg" :alt="item.title" class="w-full h-full object-cover" loading="lazy" />
             </div>
             <div class="flex flex-col gap-1 min-h-[40px]">
               <h4 class="text-sm font-medium truncate">{{ item.title }}</h4>
               <div class="text-xs text-gray-500">
-                <span class="block">{{ item.viewers }}</span>
-                <span class="block">{{ item.author }}</span>
+                <span class="block">{{ item.hotScore }}</span>
+                <span class="block">{{ item.anchorName }}</span>
               </div>
             </div>
           </div>
@@ -64,17 +65,17 @@
           <div class="bg-white rounded-lg h-[110px] flex items-center">
             <n-scrollbar x-scrollable class="ml-4 h-full">
               <div class="flex gap-6 min-w-max py-[10px]">
-                <div v-for="follow in followList" :key="follow.id" class="flex flex-col items-center">
+                <div v-for="follow in followLiveList" :key="follow.roomId" class="flex flex-col items-center">
                   <div class="relative">
                     <img
                       :src="follow.avatar"
-                      :alt="follow.name"
+                      :alt="follow.username"
                       class="w-14 h-14 rounded-full object-cover"
                       loading="lazy" />
                     <div class="absolute bottom-0 right-0 w-3 h-3 bg-red-500 rounded-full border-2 border-white"></div>
                   </div>
                   <div class="mt-1 text-center">
-                    <div class="text-sm font-medium">{{ follow.name }}</div>
+                    <div class="text-sm font-medium">{{ follow.username }}</div>
                   </div>
                 </div>
               </div>
@@ -87,25 +88,22 @@
           <div class="grid grid-cols-3 gap-3">
             <div
               v-for="tag in hotTags"
-              :key="tag.label"
+              :key="tag.name"
               class="bg-white rounded-lg p-[14px] text-center text-sm font-medium cursor-pointer hover:bg-gray-100 transition-colors"
-              @click="handleCategoryChange(tag.value)">
-              {{ tag.label }}
+              @click="handleCategoryChange(tag.value, tag.parentValue)">
+              {{ tag.value }}
             </div>
           </div>
         </div>
       </div>
-
-      <!-- 图片卡片网格 -->
       <div v-if="activeCategory === 'all'" class="text-lg font-medium mb-4 mt-4">更多直播</div>
       <div class="grid grid-cols-4 gap-4 mt-4">
-        <div v-for="item in filteredItems" :key="item.id" class="cursor-pointer" @click="navigateToLive(item.id)">
-          <image-card
-            :image-url="item.imageUrl"
+        <div v-for="item in liveList" :key="item.id" class="cursor-pointer" @click="navigateToLive(item.id)">
+          <live-card
+            :cover-url="item.coverImg"
             :title="item.title"
-            :author="item.author"
-            :viewers="item.viewers"
-            :is-live="item.isLive" />
+            :anchor-name="item.anchorName"
+            :hot-score="item.hotScore" />
         </div>
       </div>
     </div>
@@ -113,203 +111,72 @@
 </template>
 
 <script setup lang="ts">
+import { getTopFiveLiveApi, getFollowingLiveApi, getLiveListByCategoryApi } from "@/api/live";
+
 defineOptions({
   name: "Index"
 });
 
+interface LiveInfo {
+  // 房间ID
+  id: number;
+  // 房间名
+  title: string;
+  // 主播名
+  anchorName: string;
+  // 直播封面
+  coverImg: string;
+  // 人气指数
+  hotScore: number;
+}
+
+interface HotCategoryInfo {
+  name: string;
+  value: string;
+  parentValue: string;
+}
+
+interface FollowLiveInfo {
+  username: string;
+  avatar: string;
+  roomId: number;
+}
+
 const router = useRouter();
+
+// 当前激活分类
+const activeCategory = ref("all");
+const activeChildCategory = ref("all");
+
+// 模拟数据
+const liveList = ref<LiveInfo[]>([]);
+
+// 右侧小图推荐数据
+const topLiveList = ref<LiveInfo[]>([]);
+
+// 我的关注数据
+const followLiveList = ref<FollowLiveInfo[]>([]);
+
+// 热门标签数据，包含显示名称和对应分类值
+const hotTags = ref<HotCategoryInfo[]>([]);
+
+// 分类切换处理
+const handleCategoryChange = async (value: string, parentValue?: string) => {
+  activeCategory.value = parentValue ? parentValue : value;
+  activeChildCategory.value = parentValue ? value : "all";
+  liveList.value = await getLiveListByCategoryApi(value);
+};
 
 // 跳转到直播播放页面
 const navigateToLive = (id: number) => {
   router.push(`/live/${id}`);
 };
 
-// 当前激活分类
-const activeCategory = ref("all");
-
-// 模拟数据
-const items = ref([
-  {
-    id: 1,
-    imageUrl: "https://picsum.photos/id/1/400/300",
-    title: "唱首歌……",
-    author: "李歌者",
-    viewers: 1234,
-    isLive: true,
-    category: "music"
-  },
-  {
-    id: 2,
-    imageUrl: "https://picsum.photos/id/2/400/300",
-    title: "主播碎碎念，乐事一箩筐",
-    author: "十一",
-    viewers: 567,
-    isLive: true,
-    category: "chat"
-  },
-  {
-    id: 3,
-    imageUrl: "https://picsum.photos/id/3/400/300",
-    title: "今天不可以吃的",
-    author: "宁萌",
-    viewers: 890,
-    isLive: false,
-    category: "life"
-  },
-  {
-    id: 4,
-    imageUrl: "https://picsum.photos/id/4/400/300",
-    title: "众筹买黑丝",
-    author: "在下小喵喵",
-    viewers: 1122,
-    isLive: true,
-    category: "anime"
-  },
-  {
-    id: 5,
-    imageUrl: "https://picsum.photos/id/5/400/300",
-    title: "子木正在直播",
-    author: "徐文婧",
-    viewers: 345,
-    isLive: true,
-    category: "dance"
-  },
-  {
-    id: 6,
-    imageUrl: "https://picsum.photos/id/6/400/300",
-    title: "全民K歌",
-    author: "做好自己",
-    viewers: 678,
-    isLive: false,
-    category: "music"
-  },
-  {
-    id: 7,
-    imageUrl: "https://picsum.photos/id/7/400/300",
-    title: "！",
-    author: "大壮_",
-    viewers: 901,
-    isLive: false,
-    category: "chat"
-  },
-  {
-    id: 8,
-    imageUrl: "https://picsum.photos/id/8/400/300",
-    title: "李敏香去付种电池的小姐姐",
-    author: "安娜琪",
-    viewers: 234,
-    isLive: true,
-    category: "life"
-  }
-]);
-
-// 右侧小图推荐数据
-const sideFeaturedItems = ref([
-  {
-    id: 101,
-    imageUrl: "https://picsum.photos/id/9/300/200",
-    title: "国服前十 全阵容讲解运营上分必学",
-    author: "大怪怪",
-    viewers: 500
-  },
-  {
-    id: 102,
-    imageUrl: "https://picsum.photos/id/10/300/200",
-    title: "公务员、事业编刷进行中……",
-    author: "公考一月",
-    viewers: 72
-  },
-  {
-    id: 103,
-    imageUrl: "https://picsum.photos/id/11/300/200",
-    title: "一甲一组单四分尔南",
-    author: "地铁逃生白起",
-    viewers: 986
-  },
-  {
-    id: 104,
-    imageUrl: "https://picsum.photos/id/12/300/200",
-    title: "采山人正在直播",
-    author: "采山人",
-    viewers: 2025
-  }
-]);
-
-// 我的关注数据
-const followList = ref([
-  {
-    id: 201,
-    name: "森森动画",
-    status: "直播中...",
-    avatar: "https://picsum.photos/id/20/100/100",
-    imageUrl: "https://picsum.photos/id/1/400/225",
-    title: "学习动画吗？我教你",
-    viewers: 1234
-  },
-  {
-    id: 202,
-    name: "象棋大师",
-    status: "直播中...",
-    avatar: "https://picsum.photos/id/21/100/100",
-    imageUrl: "https://picsum.photos/id/2/400/225",
-    title: "简单粗暴，专杀不服，绝妙杀招，由你来定",
-    viewers: 567
-  },
-  {
-    id: 203,
-    name: "虚拟偶像",
-    status: "直播中...",
-    avatar: "https://picsum.photos/id/22/100/100",
-    imageUrl: "https://picsum.photos/id/3/400/225",
-    title: "深塔最严厉的主人，进来打个满满意...",
-    viewers: 890
-  },
-  {
-    id: 204,
-    name: "游戏达人",
-    status: "直播中...",
-    avatar: "https://picsum.photos/id/23/100/100",
-    imageUrl: "https://picsum.photos/id/4/400/225",
-    title: "今天玩点不一样的游戏",
-    viewers: 1357
-  },
-  {
-    id: 205,
-    name: "美食主播",
-    status: "直播中...",
-    avatar: "https://picsum.photos/id/24/100/100",
-    imageUrl: "https://picsum.photos/id/5/400/225",
-    title: "教你做一道简单又好吃的家常菜",
-    viewers: 2468
-  }
-]);
-
-// 热门标签数据，包含显示名称和对应分类值
-const hotTags = ref([
-  { label: "舞蹈", value: "dance" },
-  { label: "音乐", value: "music" },
-  { label: "王者荣耀", value: "game" },
-  { label: "和平精英", value: "game" },
-  { label: "无畏契约", value: "game" },
-  { label: "CSGO", value: "game" }
-]);
-
-// 筛选后的项目
-const filteredItems = computed(() => {
-  if (activeCategory.value === "all") {
-    return items.value;
-  }
-  return items.value.filter((item) => item.category === activeCategory.value);
+onMounted(async () => {
+  topLiveList.value = await getTopFiveLiveApi();
+  liveList.value = await getLiveListByCategoryApi(activeCategory.value);
+  followLiveList.value = await getFollowingLiveApi();
 });
-
-// 分类切换处理
-const handleCategoryChange = (category: string) => {
-  activeCategory.value = category;
-};
 </script>
 
-<style scoped>
-:deep(.n-scrollbar-content) {
-  max-width: 100vw;
-}
-</style>
+<style scoped></style>
