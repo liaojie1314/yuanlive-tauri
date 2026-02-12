@@ -1,5 +1,5 @@
 <template>
-  <div class="h-[calc(100%-24px)] flex flex-row bg-[--home-bg-color] w-full overflow-auto">
+  <div class="h-[calc(100%-24px)] flex flex-row w-full overflow-auto">
     <div
       :class="[
         'transition-all duration-300 ease-in-out bg-[--tray-bg-color] border-r border-[--line-color]',

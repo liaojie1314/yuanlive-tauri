@@ -1,42 +1,43 @@
 <template>
   <div class="w-[400px] relative">
     <div
-      class="relative z-1 flex items-center bg-white rounded-lg border border-gray-200 overflow-hidden w-full max-w-3xl mx-auto">
+      class="relative z-1 flex items-center bg-[--bg-popover] rounded-lg border border-[--line-color] overflow-hidden w-full max-w-3xl mx-auto transition-colors duration-300">
       <input
         v-model="searchQuery"
         type="text"
         placeholder="搜索你感兴趣的内容"
-        class="flex-1 px-4 py-2 text-gray-700 rounded-l-md outline-none h-full"
+        class="flex-1 px-4 py-1.7 text-[--text-color] bg-transparent rounded-l-md outline-none h-full"
         @focus="showDropdown = true"
         @blur="handleBlur"
         @keydown.enter="handleSearch" />
-      <!-- 清空按钮 -->
+
       <div
         v-if="searchQuery"
-        class="w-4 h-4 absolute right-25 text-gray-500 hover:text-gray-700 transition-colors rounded-[8px]"
+        class="w-4 h-4 absolute right-23 text-[--action-bar-icon-color] hover:text-[--text-color] transition-colors cursor-pointer flex items-center justify-center"
         @click="clearInput"
         @mousedown.stop>
         <i-mdi-close-circle-outline class="w-4 h-4" />
       </div>
-      <button
-        class="bg-black text-white px-4 py-2 flex items-center gap-1 hover:bg-gray-800 transition-colors h-full whitespace-nowrap"
+
+      <div
+        class="bg-[--text-color] text-[--bg-popover] px-4 py-2.5 flex items-center gap-1 hover:opacity-90 transition-opacity h-full whitespace-nowrap border-l border-[--line-color]"
         @click="handleSearch">
         <i-mdi-magnify class="w-5 h-5" />
-        <n-text class="text-[16px] color-#fff">搜索</n-text>
-      </button>
+        <span class="text-[14px] font-medium">搜索</span>
+      </div>
     </div>
 
-    <!-- 搜索下拉框 -->
     <div
       v-if="showDropdown"
-      class="search-dropdown-container absolute top-full left-1/2 transform -translate-x-1/2 mt-1 z-10 w-full max-w-3xl">
-      <div class="search-dropdown bg-white rounded-lg p-4 overflow-hidden" @mousedown="handleDropdownMousedown">
-        <!-- 搜索历史 -->
-        <div v-if="searchHistory.length > 0" class="mb-2">
+      class="search-dropdown-container absolute top-full left-1/2 transform -translate-x-1/2 mt-1 z-10 w-full max-w-3xl shadow-lg rounded-lg overflow-hidden">
+      <div
+        class="search-dropdown bg-[--bg-popover] p-4 border border-[--line-color]"
+        @mousedown="handleDropdownMousedown">
+        <div v-if="searchHistory.length > 0" class="mb-4">
           <div class="flex justify-between items-center mb-2">
-            <span class="text-gray-700 font-medium">历史记录</span>
+            <span class="text-[--text-color] font-medium text-sm">历史记录</span>
             <div
-              class="text-sm text-gray-500 hover:text-gray-700 flex items-center gap-1 transition-colors"
+              class="text-xs text-[--user-text-color] hover:text-[--text-color] flex items-center gap-1 transition-colors cursor-pointer"
               @click="clearSearchHistory">
               <i-mdi-close-circle-outline class="w-3 h-3" />
               清除记录
@@ -46,59 +47,55 @@
             <div
               v-for="(item, index) in searchHistory"
               :key="index"
-              class="relative px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm cursor-pointer hover:bg-gray-200 transition-colors flex items-center">
+              class="relative group px-3 py-1 bg-[--tray-bg-color] text-[--text-color] rounded-full text-xs cursor-pointer hover:bg-[--tray-hover] transition-colors flex items-center border border-[--line-color]">
               <span @click="handleHistoryClick(item)">{{ item }}</span>
-              <!-- 删除图标 -->
               <div
-                class="absolute right-0 top-[2px] transform -translate-y-1/2 w-3 h-3 rounded-full bg-gray-200 hover:text-gray-700 transition-colors cursor-pointer flex items-center justify-center"
+                class="ml-1 w-3 h-3 rounded-full hover:bg-[--line-color] text-[--user-text-color] hover:text-[--text-color] transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100"
                 @click.stop="deleteSearchHistory(index)"
                 @mousedown.stop>
-                <i-mdi-close class="w-3 h-3" />
+                <i-mdi-close class="w-2.5 h-2.5" />
               </div>
             </div>
           </div>
         </div>
 
-        <!-- 猜你想搜 -->
-        <div class="mb-2">
+        <div class="mb-4">
           <div class="flex justify-between items-center mb-2">
-            <span class="text-gray-700 font-medium">猜你想搜</span>
+            <span class="text-[--text-color] font-medium text-sm">猜你想搜</span>
             <div
-              class="text-sm text-gray-500 hover:text-gray-700 flex items-center gap-1 transition-colors"
+              class="text-xs text-[--user-text-color] hover:text-[--text-color] flex items-center gap-1 transition-colors cursor-pointer"
               @click="handleRefreshSuggestions">
               <i-mdi-refresh class="w-3 h-3" />
               换一换
             </div>
           </div>
           <div class="grid grid-cols-2 gap-2">
-            <span
+            <div
               v-for="(item, index) in searchSuggestions"
               :key="index"
-              class="py-2 px-1 cursor-pointer hover:bg-gray-100 rounded"
+              class="py-1.5 px-2 cursor-pointer hover:bg-[--tray-hover] rounded transition-colors text-sm truncate"
               @click="handleSuggestionClick(item)">
-              <n-text class="text-gray-700" :class="{ 'text-red-500': index < 2 }">{{ item }}</n-text>
-            </span>
+              <span class="text-[--text-color]" :class="{ 'text-red-500 font-medium': index < 2 }">
+                {{ item }}
+              </span>
+            </div>
           </div>
         </div>
 
-        <!-- 最近热搜 -->
         <div>
-          <div class="text-gray-700 font-medium mb-2">最近热搜</div>
+          <div class="text-[--text-color] font-medium mb-2 text-sm">最近热搜</div>
           <div class="space-y-1">
             <div
               v-for="(item, index) in trendingSearches"
               :key="index"
-              class="flex items-center gap-1 cursor-pointer hover:bg-gray-50 px-1 py-2 rounded"
+              class="flex items-center gap-2 cursor-pointer hover:bg-[--tray-hover] px-2 py-1.5 rounded transition-colors"
               @click="handleTrendingClick(item)">
               <span
-                class="w-5 h-5 rounded-full flex items-center justify-center text-xs font-medium"
-                :class="{
-                  'bg-red-500 text-white': index < 3,
-                  'bg-gray-200 text-gray-700': index >= 3
-                }">
+                class="w-4 h-4 rounded text-[10px] flex items-center justify-center font-medium flex-shrink-0"
+                :class="index < 3 ? 'bg-red-500 text-white' : 'bg-[--line-color] text-[--user-text-color]'">
                 {{ index + 1 }}
               </span>
-              <span class="text-gray-700">{{ item }}</span>
+              <span class="text-[--text-color] text-sm truncate">{{ item }}</span>
             </div>
           </div>
         </div>
@@ -108,7 +105,8 @@
 </template>
 
 <script setup lang="ts">
-import { StorageKeyEnum } from "@/enums";
+import { StorageKeyEnum, MittEnum } from "@/enums";
+import { useMitt } from "@/hooks/useMitt";
 
 defineOptions({
   name: "SearchBox"
@@ -150,6 +148,14 @@ const trendingSearches = ref<string[]>([
   "剑来动画第二季定档"
 ]);
 
+watch(
+  searchHistory,
+  (newHistory) => {
+    localStorage.setItem(StorageKeyEnum.SEARCH_HISTORY, JSON.stringify(newHistory));
+  },
+  { deep: true }
+);
+
 // 处理搜索
 const handleSearch = () => {
   if (searchQuery.value.trim()) {
@@ -161,8 +167,9 @@ const handleSearch = () => {
         searchHistory.value.pop();
       }
     }
-    // 执行搜索逻辑
-    console.log("Searching for:", searchQuery.value);
+    // 发送搜索事件
+    useMitt.emit(MittEnum.SEARCH, searchQuery.value);
+    searchQuery.value = "";
     // 关闭下拉框
     showDropdown.value = false;
   }
@@ -198,13 +205,11 @@ const deleteSearchHistory = (index: number) => {
 
 // 刷新搜索建议
 const handleRefreshSuggestions = () => {
-  // 这里可以添加刷新逻辑，比如从服务器获取新的建议
   console.log("Refreshing suggestions");
 };
 
 // 处理输入框失去焦点
 const handleBlur = () => {
-  // 延迟隐藏，以便处理下拉框内的点击事件
   setTimeout(() => {
     if (!isDropdownClicked.value) {
       showDropdown.value = false;
@@ -222,25 +227,10 @@ const handleDropdownMousedown = () => {
 const clearInput = () => {
   searchQuery.value = "";
 };
-
-// 监听搜索历史变化，自动保存到localStorage
-watch(
-  searchHistory,
-  (newHistory) => {
-    localStorage.setItem(StorageKeyEnum.SEARCH_HISTORY, JSON.stringify(newHistory));
-  },
-  { deep: true }
-);
 </script>
 
 <style scoped>
 .search-dropdown-container {
-  width: 100%;
-  overflow-y: auto;
-}
-
-.search-dropdown {
-  border: 1px solid #e5e7eb;
-  border-top: none;
+  z-index: 50;
 }
 </style>

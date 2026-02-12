@@ -589,7 +589,7 @@ impl Url {
             Url::GetUserInfo => (http::Method::GET, "user/user/getUserInfo"),
             // 直播相关
             Url::GetTopFiveLive => (http::Method::GET, "live/room/popularRooms"),
-            Url::GetLiveCategory => (http::Method::GET, "live/category/firstLevel"),
+            Url::GetLiveCategory => (http::Method::GET, "live/category/tree"),
             Url::GetLiveListByCategory => (http::Method::GET, "live/category/listByCategory"),
             Url::GetFollowingLive => (http::Method::GET, "user/follow/following/live"),
             // 关注相关

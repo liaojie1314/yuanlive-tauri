@@ -1,58 +1,62 @@
 <template>
   <div class="flex h-full overflow-hidden">
-    <!-- 左侧关注列表 -->
     <div
       :class="[
         'follow-container',
         isCollapsed ? 'w-[64px]' : 'w-[200px]',
-        'flex flex-col overflow-y-auto select-none overflow-hidden transition-all duration-300'
+        'flex flex-col overflow-y-auto select-none overflow-hidden transition-all duration-300',
+        'bg-[--right-bg-color] border-r border-[--line-color]'
       ]">
-      <!-- 顶部标题区域 -->
       <div :class="['flex items-center mb-3', isCollapsed ? 'justify-center px-2' : 'justify-between px-4']">
-        <div v-show="!isCollapsed" class="font-medium">关注人({{ followList.length }})</div>
+        <div v-show="!isCollapsed" class="font-medium text-[--text-color]">关注人({{ followList.length }})</div>
         <n-button text type="primary" @click="toggleCollapse">
-          <i-mdi-chevron-left v-if="!isCollapsed" class="w-5 h-5" />
-          <i-mdi-chevron-right v-else class="w-5 h-5" />
+          <i-mdi-chevron-left
+            v-if="!isCollapsed"
+            class="w-5 h-5 text-[--action-bar-icon-color] hover:text-[--action-bar-icon-hover]" />
+          <i-mdi-chevron-right
+            v-else
+            class="w-5 h-5 text-[--action-bar-icon-color] hover:text-[--action-bar-icon-hover]" />
         </n-button>
       </div>
 
-      <!-- 关注列表 -->
       <div class="flex-1 overflow-hidden">
         <n-scrollbar class="h-full">
           <div class="flex flex-col gap-[1px] mr-3">
             <div
               v-for="follow in followList"
               :key="follow.id"
-              class="follow-item flex items-center justify-between py-2 hover:bg-gray-50 rounded-lg cursor-pointer overflow-hidden transition-all duration-300">
+              class="follow-item flex items-center justify-between py-2 rounded-lg cursor-pointer overflow-hidden transition-all duration-300 hover:bg-[--bg-left-menu-hover]">
               <div class="flex items-center gap-3 flex-1 min-w-0 overflow-hidden">
-                <!-- 头像区域，折叠时hover显示名称 -->
                 <div class="ml-2 relative w-10 h-10 flex-shrink-0">
                   <img
                     v-if="!isCollapsed"
                     :src="follow.avatar"
                     :alt="follow.username"
-                    class="w-full h-full rounded-full object-cover cursor-pointer" />
-                  <n-popover v-else trigger="hover" placement="right" :show-arrow="false" :delay="200">
-                    <!-- 头像作为触发元素 -->
+                    class="w-full h-full rounded-full object-cover cursor-pointer hover:bg-[--avatar-hover-bg]" />
+                  <n-popover
+                    v-else
+                    trigger="hover"
+                    placement="right"
+                    :show-arrow="false"
+                    :delay="200"
+                    style="padding: 0; background: transparent">
                     <template #trigger>
                       <img
                         :src="follow.avatar"
                         :alt="follow.username"
-                        class="w-full h-full rounded-full object-cover cursor-pointer" />
+                        class="w-full h-full rounded-full object-cover cursor-pointer hover:bg-[--avatar-hover-bg]" />
                     </template>
-                    <!-- 弹出内容，仅在折叠状态下显示，限制长度 -->
                     <div
-                      class="px-2 py-1 text-sm rounded max-w-[100px] bg-white text-gray-800 whitespace-nowrap overflow-hidden text-ellipsis">
+                      class="px-2 py-1 text-sm rounded max-w-[100px] whitespace-nowrap overflow-hidden text-ellipsis bg-[--bg-popover] text-[--text-color] shadow-sm">
                       {{ follow.username }}
                     </div>
                   </n-popover>
                 </div>
-                <!-- 名称和未读计数（展开状态下显示） -->
                 <div v-show="!isCollapsed" class="flex-1 min-w-0 overflow-hidden">
-                  <div class="text-sm font-medium truncate w-full">{{ follow.username }}</div>
+                  <div class="text-sm font-medium truncate w-full text-[--text-color]">{{ follow.username }}</div>
                   <div
                     v-show="follow.unseenCount > 0"
-                    class="w-fit bg-gray-300 text-gray-700 text-[12px] px-1 py-[2px] rounded-sm truncate">
+                    class="w-fit text-[12px] px-1 py-[2px] rounded-sm truncate bg-[--left-item-bg-color] text-[--user-text-color]">
                     {{ follow.unseenCount }}个作品未看
                   </div>
                 </div>
@@ -63,9 +67,8 @@
       </div>
     </div>
 
-    <!-- 右侧视频播放区域 -->
-    <div class="flex-1 bg-gray-100 flex flex-col p-4">
-      <div class="flex-1 bg-black rounded-lg overflow-hidden">
+    <div class="flex-1 flex flex-col p-4 bg-[--home-bg-color]">
+      <div class="flex-1 rounded-lg overflow-hidden bg-black shadow-sm">
         <video-player src="http://vjs.zencdn.net/v/oceans.mp4" :controls="true" :autoplay="false" :muted="false" />
       </div>
     </div>
@@ -107,7 +110,9 @@ onMounted(async () => {
   height: 100%;
   background-color: var(--right-bg-color);
   position: relative;
-  transition: width 0.3s ease;
+  transition:
+    width 0.3s ease,
+    background-color 0.3s ease;
 }
 
 .follow-item {
@@ -118,7 +123,7 @@ onMounted(async () => {
 }
 
 .follow-item:hover {
-  background-color: rgba(0, 0, 0, 0.02);
+  background-color: var(--bg-left-menu-hover);
 }
 
 :deep(.n-scrollbar) {
@@ -136,14 +141,13 @@ onMounted(async () => {
 :deep(.n-scrollbar-rail) {
   opacity: 50% !important;
   transition: opacity 0.3s ease;
+  background-color: transparent;
 }
 
-/* 在缩放状态下隐藏滚动条轨道 */
 .follow-container.w\[56px\] :deep(.n-scrollbar-rail) {
   opacity: 0 !important;
 }
 
-/* 确保文本截断正常工作 */
 .truncate {
   white-space: nowrap;
   overflow: hidden;

@@ -1,5 +1,5 @@
 <template>
-  <div class="p-0 m-0 select-none h-full overflow-hidden flex flex-col bg-[--home-bg-color] text-[--text-color]">
+  <div class="p-0 m-0 select-none h-full overflow-hidden flex flex-col text-[--text-color]">
     <div class="px-4 pt-4">
       <user-info-card v-model:save-login-info="saveLoginInfo" />
     </div>
@@ -59,7 +59,7 @@
       </div>
     </div>
 
-    <div v-if="activeTopTab === 'collection'" class="mx-4 flex flex-col flex-1 min-h-0 bg-[--home-bg-color]">
+    <div v-if="activeTopTab === 'collection'" class="mx-4 flex flex-col flex-1 min-h-0">
       <div class="mb-2 px-1">
         <n-tabs v-model:value="activeSubTab" :tab-active-color="'#ff0050'" :tab-font-size="14">
           <n-tab-pane name="folders" tab="收藏夹" />
@@ -86,7 +86,7 @@
       </template>
     </div>
 
-    <div v-if="activeTopTab === 'like'" class="mx-4 flex flex-col flex-1 min-h-0 bg-[--home-bg-color]">
+    <div v-if="activeTopTab === 'like'" class="mx-4 flex flex-col flex-1 min-h-0">
       <n-scrollbar class="flex-grow" @scroll="handleScroll">
         <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 pb-4">
           <video-card v-for="video in likedVideos" :key="video.id" :video="video" />
