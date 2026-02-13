@@ -92,6 +92,16 @@ const getCommonRoutes = (): Array<RouteRecordRaw> => [
     ]
   },
   {
+    name: "manageVideo",
+    path: "/manageVideo",
+    component: () => import("@/views/manageWindow/Video.vue")
+  },
+  {
+    name: "manageLive",
+    path: "/manageLive",
+    component: () => import("@/views/manageWindow/Live.vue")
+  },
+  {
     name: "about",
     path: "/about",
     component: () => import("@/views/aboutWindow/index.vue")

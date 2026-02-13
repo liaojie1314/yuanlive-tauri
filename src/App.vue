@@ -168,6 +168,7 @@ onMounted(() => {
     normalizeThemeState();
   }
   document.documentElement.dataset.theme = themes.value.content;
+  toggleTheme(themes.value.content);
   window.addEventListener("dragstart", preventDefault);
   addListener(listen("websocket-event", handleWebsocketEvent), "websocket-event");
   // 只在桌面端的主窗口(home)中初始化全局快捷键

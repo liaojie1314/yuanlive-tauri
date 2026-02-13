@@ -2,11 +2,12 @@
   <div
     class="p-5 rounded-lg transition-colors duration-300 light:bg-gradient-to-br light:from-blue-50 light:to-blue-100 dark:bg-[--bg-setting-item] border border-transparent dark:border-[--line-color]">
     <div class="flex items-center gap-5 justify-between">
-      <div class="shrink-0">
+      <div class="shrink-0 relative group">
+        <div class="avatar-border-animation"></div>
         <img
           :src="userInfo?.avatar"
           :alt="`${userInfo?.username}的头像`"
-          class="w-24 h-24 rounded-full border-3 border-white dark:border-[--line-color] shadow-lg object-cover cursor-pointer hover:scale-105 transition-transform"
+          class="relative w-24 h-24 rounded-full border-4 border-transparent object-cover cursor-pointer transition-transform z-10 group-hover:scale-105"
           loading="lazy"
           @click="openEditDialog" />
       </div>
@@ -26,25 +27,17 @@
             class="special-style cursor-pointer transition-colors duration-200 hover:text-blue-500"
             @click="openFollowDialog('following')">
             关注
-            <span class="text-[--text-color] font-medium">{{ userInfo?.userStats.followingCount || 0 }}</span>
+            <span class="text-[--text-color] font-medium">{{ animatedFollowingCount }}</span>
           </span>
-          <span class="text-[--line-color] mx-1">|</span>
-          <span
-            v-if="userInfo?.userStats.followingLiveCount!! > 0"
-            class="special-style cursor-pointer transition-colors duration-200 hover:text-blue-500 text-red-500">
-            {{ userInfo?.userStats.followingLiveCount }}人正在直播
-          </span>
-          <span v-if="userInfo?.userStats.followingLiveCount!! > 0" class="text-[--line-color] mx-1">|</span>
           <span
             class="special-style cursor-pointer transition-colors duration-200 hover:text-blue-500"
             @click="openFollowDialog('followers')">
             粉丝
-            <span class="text-[--text-color] font-medium">{{ userInfo?.userStats.followerCount || 0 }}</span>
+            <span class="text-[--text-color] font-medium">{{ animatedFollowerCount }}</span>
           </span>
-          <span class="text-[--line-color] mx-1">|</span>
           <span class="special-style cursor-pointer transition-colors duration-200 hover:text-blue-500">
             获赞
-            <span class="text-[--text-color] font-medium">{{ userInfo?.userStats.totalLikesReceived || 0 }}</span>
+            <span class="text-[--text-color] font-medium">{{ animatedLikesCount }}</span>
           </span>
         </div>
 
@@ -85,23 +78,26 @@
 
 <script setup lang="ts">
 import { useUserStore } from "@/stores/user";
+import { useNumberAnimation } from "@/hooks/useNumberAnimation";
 
 const { userInfo } = useUserStore();
 
-// 接收父组件的 v-model
 const props = defineProps(["saveLoginInfo"]);
 const emit = defineEmits(["update:saveLoginInfo"]);
+
+const dialogVisible = ref(false);
+const activeTab = ref<"following" | "followers">("following");
+const editDialogVisible = ref(false);
+// 申请主播弹窗状态
+const applyDialogVisible = ref(false);
+const animatedFollowingCount = useNumberAnimation(() => userInfo?.userStats.followingCount || 0);
+const animatedFollowerCount = useNumberAnimation(() => userInfo?.userStats.followerCount || 0);
+const animatedLikesCount = useNumberAnimation(() => userInfo?.userStats.totalLikesReceived || 0);
 
 const saveLoginInfoLocal = computed({
   get: () => props.saveLoginInfo,
   set: (val) => emit("update:saveLoginInfo", val)
 });
-
-const dialogVisible = ref(false);
-const activeTab = ref<"following" | "followers">("following");
-const editDialogVisible = ref(false);
-// 新增：申请主播弹窗状态
-const applyDialogVisible = ref(false);
 
 const openFollowDialog = (tab: "following" | "followers") => {
   activeTab.value = tab;
@@ -112,12 +108,12 @@ const openEditDialog = () => {
   editDialogVisible.value = true;
 };
 
-// 新增：打开申请弹窗
+// 打开申请弹窗
 const openApplyDialog = () => {
   applyDialogVisible.value = true;
 };
 
-// 新增：处理申请提交
+// 处理申请提交
 const handleApplySubmit = (data: any) => {
   console.log("主播申请提交数据:", data);
   // 这里可以做后续逻辑，比如刷新用户信息等
@@ -125,6 +121,44 @@ const handleApplySubmit = (data: any) => {
 </script>
 
 <style scoped lang="scss">
+// 定义 CSS 变量类型，允许浏览器对其进行动画插值
+@property --angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+
+.avatar-border-animation {
+  position: absolute;
+  top: -4px;
+  left: -4px;
+  right: -4px;
+  bottom: -4px;
+  border-radius: 50%;
+  z-index: 0;
+  background: conic-gradient(from var(--angle), #ff4545, #00ff99, #006aff, #ff0095, #ff4545);
+  animation: rotate 3s linear infinite;
+  padding: 3px;
+
+  /* 1. 标准属性 (Standard) - 针对 Firefox 和未来浏览器 */
+  mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+
+  /* 2. WebKit 前缀 (Vendor Prefix) - 针对 Chrome, Safari, Edge */
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+}
+
+@keyframes rotate {
+  to {
+    --angle: 360deg;
+  }
+}
+
 .special-style {
   background: linear-gradient(to right, #ec695c, #61c454) no-repeat left bottom;
   background-size: 0 2px;
