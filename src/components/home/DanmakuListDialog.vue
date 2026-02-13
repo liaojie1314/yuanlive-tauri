@@ -69,118 +69,126 @@ const handleReport = (index: number) => {
   height: 400px;
   display: flex;
   flex-direction: column;
-  background-color: #fff;
+  background-color: var(--bg-modal);
 }
 
 .danmaku-header {
   display: flex;
-  padding: 12px 16px;
-  background-color: #f8fafc;
-  border-bottom: 1px solid #e2e8f0;
-  font-weight: 600;
-  color: #475569;
-  font-size: 14px;
+  padding: 12px 20px;
+  background-color: rgba(255, 255, 255, 0.03);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08); /* 更柔和的边框 */
+  color: var(--user-text-color);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.5px;
 }
 
 .header-item {
   flex: 1;
   text-align: left;
-  font-size: 15px;
 }
 
 .content-item {
   flex: 3;
 }
 
+/* 滚动区域 */
 .danmaku-scroll-container {
   flex: 1;
   overflow: hidden;
+
   :deep(.n-scrollbar-rail) {
-    &.n-scrollbar-rail--vertical {
-      width: 6px;
-      margin-right: 4px;
-    }
+    right: 4px;
+    width: 5px;
     .n-scrollbar-rail__thumb {
-      background-color: #cbd5e1;
-      border-radius: 3px;
+      background-color: rgba(255, 255, 255, 0.2);
       &:hover {
-        background-color: #94a3b8;
+        background-color: rgba(255, 255, 255, 0.4);
       }
     }
   }
 }
 
 .danmaku-list {
-  padding: 0;
+  padding: 4px 0; /* 列表上下留白 */
 }
 
 .danmaku-item {
   display: flex;
   align-items: center;
-  padding: 14px 16px;
-  border-bottom: 1px solid #f1f5f9;
-  transition: background-color 0.2s ease;
+  padding: 10px 20px;
+  border-bottom: 1px solid transparent;
+  transition: all 0.2s ease;
+  position: relative;
 
   &:hover {
-    background-color: #f8fafc;
+    background-color: var(--bg-left-menu-hover);
+
+    .danmaku-actions {
+      opacity: 1;
+      transform: translateX(0);
+    }
   }
 }
 
 .danmaku-time {
-  width: 65px;
-  color: #94a3b8;
-  font-size: 14px;
-  font-weight: 500;
+  width: 70px;
+  color: var(--user-text-color);
+  font-size: 13px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-variant-numeric: tabular-nums;
   flex-shrink: 0;
+  opacity: 0.8;
 }
 
 .danmaku-content {
   flex: 1;
-  color: #1e293b;
+  color: var(--text-color);
   font-size: 14px;
-  margin: 0 16px;
-  line-height: 1.5;
-  word-break: break-word;
+  margin-right: 16px;
+  line-height: 1.6;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .danmaku-actions {
   display: flex;
-  gap: 20px;
+  gap: 12px;
   flex-shrink: 0;
+  opacity: 0.4;
+  transition: all 0.2s ease;
 }
 
 .action-btn {
   cursor: pointer;
-  color: #94a3b8;
-  transition: all 0.2s ease;
+  color: var(--action-bar-icon-color);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-}
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
 
-.like-btn {
   &:hover {
-    color: #ef4444 !important;
-    background-color: rgba(239, 68, 68, 0.1) !important;
+    background-color: rgba(255, 255, 255, 0.1);
+    transform: scale(1.1);
   }
 }
 
-.report-btn {
-  &:hover {
-    color: #f59e0b !important;
-    background-color: rgba(245, 158, 11, 0.1) !important;
-  }
+.like-btn:hover {
+  color: #ef4444 !important;
+  background-color: rgba(239, 68, 68, 0.15) !important;
+}
+
+.report-btn:hover {
+  color: #f59e0b !important;
+  background-color: rgba(245, 158, 11, 0.15) !important;
 }
 
 .filled {
   color: #ef4444;
-}
-
-.iconify-icon {
-  width: 18px;
-  height: 18px;
+  filter: drop-shadow(0 0 2px rgba(239, 68, 68, 0.5)); /* 发光效果 */
 }
 </style>

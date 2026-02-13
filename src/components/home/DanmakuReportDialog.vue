@@ -109,17 +109,24 @@ const handleSubmit = () => {
   gap: 6px;
   cursor: pointer;
   padding: 3px 0;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+
+  &:hover {
+    background-color: var(--bg-left-menu-hover);
+  }
 }
 
 .radio-button {
   width: 18px;
   height: 18px;
-  border: 2px solid #d1d5db;
+  border: 2px solid var(--line-color);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: all 0.2s ease;
+  background-color: transparent;
 
   .radio-inner {
     width: 10px;
@@ -135,7 +142,7 @@ const handleSubmit = () => {
 
 .report-type-label {
   font-size: 13px;
-  color: #374151;
+  color: var(--text-color);
 }
 
 .report-description {
@@ -146,7 +153,9 @@ const handleSubmit = () => {
 .description-input {
   width: 100%;
   padding: 10px;
-  border: 1px solid #d1d5db;
+  background-color: var(--bg-setting-item);
+  border: 1px solid var(--line-color);
+  color: var(--text-color);
   border-radius: 6px;
   font-size: 14px;
   line-height: 1.5;
@@ -155,8 +164,8 @@ const handleSubmit = () => {
   transition: border-color 0.2s ease;
   box-sizing: border-box;
 
-  &::placeholder {
-    color: #9ca3af;
+  &:placeholder {
+    color: var(--user-text-color);
   }
 
   &:focus {
@@ -170,7 +179,8 @@ const handleSubmit = () => {
   right: 12px;
   bottom: 12px;
   font-size: 12px;
-  color: #9ca3af;
+  /* 计数器颜色适配 */
+  color: var(--user-text-color);
 }
 
 .submit-container {
@@ -189,14 +199,17 @@ const handleSubmit = () => {
   font-size: 16px;
   font-weight: 500;
   cursor: pointer;
-  transition: background-color 0.2s ease;
+  transition:
+    background-color 0.2s ease,
+    opacity 0.2s ease;
 
   &:hover:not(:disabled) {
     background-color: #ff1a60;
   }
 
   &:disabled {
-    background-color: #fecdd3;
+    background-color: var(--disabled-color);
+    color: rgba(255, 255, 255, 0.6);
     cursor: not-allowed;
   }
 }

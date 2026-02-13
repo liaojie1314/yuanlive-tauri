@@ -139,7 +139,7 @@
           @mouseenter="handleEmojiSelectorEnter"
           @mouseleave="handleEmojiSelectorLeave">
           <div class="emoji-selector">
-            <div class="emoji-item" v-for="emoji in commonEmojis" :key="emoji" @click="handleEmojiClick(emoji)">
+            <div class="emoji-item" v-for="emoji in emojis" :key="emoji" @click="handleEmojiClick(emoji)">
               {{ emoji }}
             </div>
           </div>
@@ -237,6 +237,7 @@
 </template>
 
 <script setup lang="ts">
+import { emojis } from "@/utils/EmojiUtils";
 import { useDanmakuStore } from "@/stores/danmaku";
 
 defineProps<{
@@ -262,90 +263,6 @@ let danmakuSettingsHideTimer: number | null = null;
 let emojiPickerHideTimer: number | null = null;
 let emojiSelectorHideTimer: number | null = null;
 let settingsChangeDebounceTimer: number | null = null;
-
-// 常用emoji列表，增加数量以展示滚动效果
-const commonEmojis = [
-  "😀",
-  "😃",
-  "😄",
-  "😁",
-  "😆",
-  "😅",
-  "😂",
-  "🤣",
-  "😊",
-  "😇",
-  "🙂",
-  "🙃",
-  "😉",
-  "😌",
-  "😍",
-  "🥰",
-  "😘",
-  "😗",
-  "😙",
-  "😚",
-  "😋",
-  "😛",
-  "😝",
-  "😜",
-  "🤪",
-  "🤨",
-  "🧐",
-  "🤓",
-  "😎",
-  "🤩",
-  "🥳",
-  "😏",
-  "😒",
-  "😞",
-  "😔",
-  "😟",
-  "😕",
-  "🙁",
-  "☹️",
-  "😣",
-  "😖",
-  "😫",
-  "😩",
-  "🥺",
-  "😢",
-  "😭",
-  "😤",
-  "😠",
-  "😡",
-  "🤬",
-  "🤯",
-  "😳",
-  "🥵",
-  "🥶",
-  "😱",
-  "😨",
-  "😰",
-  "😥",
-  "😓",
-  "🤗",
-  "🤔",
-  "🤭",
-  "🤫",
-  "🤥",
-  "🤐",
-  "🤢",
-  "🤮",
-  "🤧",
-  "😷",
-  "🤒",
-  "🤕",
-  "🤑",
-  "🤠",
-  "😈",
-  "👿",
-  "👹",
-  "👺",
-  "🤡",
-  "💩",
-  "👻"
-];
 
 const handleEmojiClick = (emoji: string) => {
   danmakuText.value += emoji;
@@ -622,20 +539,51 @@ onBeforeUnmount(() => {
   position: relative;
 }
 
-.danmaku-settings-panel {
+.danmaku-settings-panel,
+.compact-settings-panel {
   position: absolute;
   bottom: calc(100% + 8px);
   left: 50%;
   transform: translateX(-50%);
   width: 280px;
-  background-color: rgba(0, 0, 0, 0.95);
+  background-color: var(--bg-popover);
+  border: 1px solid var(--line-color);
+  color: var(--text-color);
   border-radius: 12px;
-  backdrop-filter: blur(12px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
   z-index: 1000;
   animation: slideUp 0.3s ease;
   min-width: 228px;
   max-width: min(228px, 95vw);
+
+  .danmaku-input-wrapper {
+    background-color: var(--input-area-bg);
+    border: 1px solid var(--line-color);
+
+    .danmaku-input-field {
+      color: var(--text-color);
+      &::placeholder {
+        color: var(--user-text-color);
+      }
+    }
+
+    .emoji-btn {
+      flex-shrink: 0;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      &:hover {
+        background-color: var(--bg-left-menu-hover);
+      }
+      .emoji-icon {
+        color: var(--action-bar-icon-color);
+      }
+    }
+  }
 }
 
 @keyframes slideUp {
@@ -654,10 +602,11 @@ onBeforeUnmount(() => {
   align-items: center;
   justify-content: space-between;
   padding: 12px 15px;
+  border-bottom: 1px solid var(--line-color);
 }
 
 .settings-title {
-  color: #fff;
+  color: var(--text-color);
   font-size: 13px;
   font-weight: 600;
 }
@@ -668,9 +617,9 @@ onBeforeUnmount(() => {
   justify-content: center;
   padding: 4px 10px;
   cursor: pointer;
-  transition: none;
+  transition: all 0.2s ease;
   border-radius: 4px;
-  color: rgba(255, 255, 255, 0.7);
+  color: var(--user-text-color);
   font-size: 12px;
   gap: 4px;
 
@@ -678,30 +627,17 @@ onBeforeUnmount(() => {
     width: 14px;
     height: 14px;
   }
+
+  &:hover {
+    background-color: var(--bg-left-menu-hover);
+    color: var(--text-color);
+  }
 }
 
 .settings-content {
   padding: 12px 15px;
   overflow-y: auto;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-
-  &::-webkit-scrollbar {
-    width: 4px;
-  }
-
-  &::-webkit-scrollbar-track {
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 2px;
-  }
-
-  &::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.2);
-    border-radius: 2px;
-
-    &:hover {
-      background: rgba(255, 255, 255, 0.3);
-    }
-  }
+  border-top: none;
 }
 
 .settings-item {
@@ -716,14 +652,14 @@ onBeforeUnmount(() => {
 }
 
 .settings-label {
-  color: #fff;
+  color: var(--text-color);
   font-size: 12px;
   min-width: 60px;
   flex-shrink: 0;
 }
 
 .settings-value-right {
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--user-text-color);
   font-size: 12px;
   min-width: 50px;
   flex-shrink: 0;
@@ -735,8 +671,9 @@ onBeforeUnmount(() => {
   flex: 1;
 
   .n-slider-rail {
-    background-color: rgba(255, 255, 255, 0.1);
+    background-color: var(--line-color);
     height: 4px;
+    border-radius: 2px;
   }
 
   .n-slider-rail__fill {
@@ -744,8 +681,10 @@ onBeforeUnmount(() => {
   }
 
   .n-slider-handle {
-    background-color: #fff;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    background-color: var(--bg-popover);
+    box-shadow:
+      0 0 0 1px var(--line-color),
+      0 2px 4px rgba(0, 0, 0, 0.1);
     width: 12px;
     height: 12px;
   }
@@ -759,7 +698,7 @@ onBeforeUnmount(() => {
   transition: all 0.2s ease;
 
   &:hover {
-    background-color: rgba(255, 255, 255, 0.05);
+    background-color: var(--bg-left-menu-hover);
   }
 }
 
@@ -773,14 +712,63 @@ onBeforeUnmount(() => {
   .arrow-icon {
     width: 14px;
     height: 14px;
-    color: rgba(255, 255, 255, 0.6);
+    color: var(--user-text-color);
   }
 }
 
 .settings-divider {
   height: 1px;
-  background-color: rgba(255, 255, 255, 0.1);
+  background-color: var(--line-color);
   margin: 8px 0;
+}
+
+.emoji-selector {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 10px;
+  padding: 12px 0;
+  width: 100%;
+}
+
+.emoji-item {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  color: var(--text-color);
+
+  &:hover {
+    background-color: var(--bg-left-menu-hover);
+    transform: scale(1.2);
+  }
+}
+
+.control-switch {
+  transform: scale(0.8);
+  --n-switch-button-color: #fff;
+  --n-switch-button-color-active: #fff;
+  /* 轨道适配 */
+  --n-switch-background-color: var(--line-color);
+  --n-switch-background-color-active: #ff0050;
+  transition: all 0.3s ease;
+}
+
+:deep(.n-scrollbar) {
+  width: 100%;
+  height: 239px;
+  --n-scrollbar-width: 4px;
+  --n-scrollbar-thumb-background-color: var(--disabled-color);
+  --n-scrollbar-thumb-background-color-hover: var(--user-text-color);
+  --n-scrollbar-track-background-color: transparent;
+}
+
+:deep(.n-scrollbar-rail__scrollbar) {
+  width: 3px !important;
 }
 
 .emoji-picker-wrapper {
@@ -790,24 +778,32 @@ onBeforeUnmount(() => {
   z-index: 1000;
 }
 
-.danmaku-input {
-  flex: 1;
-  padding: 8px 40px 8px 80px;
-  border-radius: 20px;
-  border: none;
+.danmaku-input-section {
+  padding: 4px 0;
+}
+
+.danmaku-input-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 4px;
   background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 18px;
+  padding: 2px 6px;
+  border: 1px solid transparent;
+}
+
+.danmaku-input-field {
+  flex: 1;
+  border: none;
+  background: transparent;
   color: #fff;
-  font-size: 13px;
+  font-size: 11px;
   outline: none;
-  transition: all 0.3s ease;
-  min-width: 0;
+  padding: 4px 2px;
+  max-width: 110px;
 
   &::placeholder {
     color: rgba(255, 255, 255, 0.5);
-  }
-
-  &:focus {
-    background-color: rgba(255, 255, 255, 0.15);
   }
 }
 
@@ -903,6 +899,12 @@ onBeforeUnmount(() => {
   }
 }
 
+.emoji-icon {
+  width: 16px;
+  height: 16px;
+  color: #fff;
+}
+
 .compact-danmaku-btn {
   width: 32px;
   height: 32px;
@@ -922,77 +924,24 @@ onBeforeUnmount(() => {
   }
 }
 
-.compact-settings-panel {
-  position: absolute;
-  bottom: calc(100% + 8px);
-  left: 50%;
-  transform: translateX(-50%);
-  width: 280px;
-  background-color: rgba(0, 0, 0, 0.95);
-  border-radius: 12px;
-  backdrop-filter: blur(12px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
-  z-index: 1000;
-  animation: slideUp 0.3s ease;
-  min-width: 228px;
-  max-width: min(228px, 95vw);
-}
-
-.control-switch {
-  transform: scale(0.8);
-  --n-switch-button-color: #fff;
-  --n-switch-button-color-active: #ff0050;
-  --n-switch-background-color: rgba(255, 255, 255, 0.2);
-  --n-switch-background-color-active: rgba(255, 0, 80, 0.8);
-  transition: all 0.3s ease;
-}
-
-.danmaku-input-section {
-  padding: 4px 0;
-}
-
-.danmaku-input-wrapper {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  background-color: rgba(255, 255, 255, 0.1);
-  border-radius: 18px;
-  padding: 2px 6px;
-}
-
-.emoji-btn {
-  width: 24px;
-  height: 24px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  border-radius: 50%;
-  transition: all 0.2s ease;
-
-  &:hover {
-    background-color: rgba(255, 255, 255, 0.15);
-  }
-}
-
-.emoji-icon {
-  width: 16px;
-  height: 16px;
-  color: #fff;
-}
-
-.danmaku-input-field {
+.danmaku-input {
   flex: 1;
+  padding: 8px 40px 8px 80px;
+  border-radius: 20px;
   border: none;
-  background: transparent;
+  background-color: rgba(255, 255, 255, 0.1);
   color: #fff;
-  font-size: 11px;
+  font-size: 13px;
   outline: none;
-  padding: 4px 2px;
-  max-width: 110px;
+  transition: all 0.3s ease;
+  min-width: 0;
 
   &::placeholder {
     color: rgba(255, 255, 255, 0.5);
+  }
+
+  &:focus {
+    background-color: rgba(255, 255, 255, 0.15);
   }
 }
 
@@ -1014,47 +963,5 @@ onBeforeUnmount(() => {
   &:active {
     transform: scale(0.95);
   }
-}
-
-:deep(.n-scrollbar) {
-  width: 100%;
-  height: 239px;
-}
-
-.emoji-selector {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 10px;
-  padding: 12px 0;
-  width: 100%;
-}
-
-.emoji-item {
-  width: 28px;
-  height: 28px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 18px;
-  cursor: pointer;
-  border-radius: 4px;
-  transition: all 0.2s ease;
-
-  &:hover {
-    background-color: rgba(255, 255, 255, 0.15);
-    transform: scale(1.2);
-  }
-}
-
-/* 自定义naiveui滚动条样式 */
-:deep(.n-scrollbar) {
-  --n-scrollbar-width: 4px;
-  --n-scrollbar-thumb-background-color: rgba(255, 255, 255, 0.2);
-  --n-scrollbar-thumb-background-color-hover: rgba(255, 255, 255, 0.3);
-  --n-scrollbar-track-background-color: rgba(255, 255, 255, 0.05);
-}
-
-:deep(.n-scrollbar-rail__scrollbar) {
-  width: 3px !important;
 }
 </style>

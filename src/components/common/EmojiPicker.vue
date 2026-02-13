@@ -11,126 +11,10 @@
 </template>
 
 <script setup lang="ts">
-import { NScrollbar } from "naive-ui";
+import { emojis } from "@/utils/EmojiUtils";
 
 // Emits
 const emit = defineEmits<(e: "select-emoji", emoji: string) => void>();
-
-// Emoji list
-const emojis = [
-  "😀",
-  "😃",
-  "😄",
-  "😁",
-  "😆",
-  "😅",
-  "🤣",
-  "😂",
-  "🙂",
-  "🙃",
-  "😉",
-  "😊",
-  "😇",
-  "🥰",
-  "😍",
-  "🤩",
-  "😘",
-  "😗",
-  "😚",
-  "😙",
-  "😋",
-  "😛",
-  "😝",
-  "😜",
-  "🤪",
-  "🤨",
-  "🧐",
-  "🤓",
-  "😎",
-  "🥸",
-  "🤩",
-  "🥳",
-  "😏",
-  "😒",
-  "😞",
-  "😔",
-  "😟",
-  "😕",
-  "🙁",
-  "☹️",
-  "😣",
-  "😖",
-  "😫",
-  "😩",
-  "🥺",
-  "😢",
-  "😭",
-  "😤",
-  "😠",
-  "😡",
-  "🤬",
-  "🤯",
-  "😳",
-  "🥵",
-  "🥶",
-  "😱",
-  "😨",
-  "😰",
-  "😥",
-  "😓",
-  "🤗",
-  "🤔",
-  "🤭",
-  "🤫",
-  "🤥",
-  "😶",
-  "😐",
-  "😑",
-  "😬",
-  "🙄",
-  "😯",
-  "😦",
-  "😧",
-  "😮",
-  "😲",
-  "🥱",
-  "😴",
-  "🤤",
-  "😪",
-  "😵",
-  "🤐",
-  "🥴",
-  "🤢",
-  "🤮",
-  "🤧",
-  "😷",
-  "🤒",
-  "🤕",
-  "🤑",
-  "🤠",
-  "😈",
-  "👿",
-  "👹",
-  "👺",
-  "🤡",
-  "💩",
-  "👻",
-  "💀",
-  "☠️",
-  "👽",
-  "👾",
-  "🤖",
-  "🎃",
-  "😺",
-  "😸",
-  "😹",
-  "😻",
-  "😼",
-  "😽",
-  "🙀",
-  "😿",
-  "😾"
-];
 
 // Methods
 const handleEmojiClick = (emoji: string) => {
@@ -146,10 +30,10 @@ const handleEmojiClick = (emoji: string) => {
   transform: translateX(-50%);
   width: 320px;
   height: 200px;
-  background-color: rgba(0, 0, 0, 0.9);
+  background-color: var(--bg-popover);
+  border: 1px solid var(--line-color);
   border-radius: 12px;
-  backdrop-filter: blur(12px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
   z-index: 1000;
   overflow: hidden;
 }
@@ -157,17 +41,16 @@ const handleEmojiClick = (emoji: string) => {
 .emoji-picker-content {
   height: 100%;
   padding: 8px;
-
   :deep(.n-scrollbar-rail) {
     width: 6px;
+    background-color: transparent;
   }
 
-  :deep(.n-scrollbar-thumb) {
-    background: rgba(255, 255, 255, 0.3);
+  :deep(.n-scrollbar-rail__scrollbar) {
+    background-color: var(--disabled-color) !important;
     border-radius: 3px;
-
     &:hover {
-      background: rgba(255, 255, 255, 0.5);
+      background-color: var(--user-text-color) !important;
     }
   }
 }
@@ -188,10 +71,12 @@ const handleEmojiClick = (emoji: string) => {
   cursor: pointer;
   font-size: 20px;
   border-radius: 4px;
-  transition: background-color 0.2s ease;
+  transition: all 0.2s ease;
+  color: var(--text-color);
 
   &:hover {
-    background-color: rgba(255, 255, 255, 0.1);
+    background-color: var(--bg-left-menu-hover);
+    transform: scale(1.2);
   }
 }
 </style>

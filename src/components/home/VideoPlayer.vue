@@ -38,7 +38,7 @@
     <!-- Right Side Interaction Panel -->
     <div v-if="!videoStore.clearScreen" class="interaction-panel" @click.stop>
       <!-- Avatar -->
-      <n-tooltip placement="left" trigger="hover">
+      <n-tooltip placement="left" trigger="hover" :raw="true">
         <template #trigger>
           <div class="interaction-item avatar-item">
             <div class="avatar-container">
@@ -50,7 +50,7 @@
       </n-tooltip>
 
       <!-- Like Button -->
-      <n-tooltip placement="left" trigger="hover">
+      <n-tooltip placement="left" trigger="hover" :raw="true">
         <template #trigger>
           <div class="interaction-item like-item" @click="toggleLike">
             <div class="interaction-icon like-icon" :class="{ liked: isLiked }">
@@ -63,7 +63,7 @@
       </n-tooltip>
 
       <!-- Comment Button -->
-      <n-tooltip placement="left" trigger="hover">
+      <n-tooltip placement="left" trigger="hover" :raw="true">
         <template #trigger>
           <div class="interaction-item comment-item" @click="toggleComment">
             <div class="interaction-icon comment-icon">
@@ -82,7 +82,7 @@
         :raw="true"
         :show-arrow="false"
         :show="showCollectionTooltip"
-        @show="showCollectionTooltip = true">
+        @update:show="(v) => (showCollectionTooltip = v)">
         <template #trigger>
           <div class="interaction-item favorite-item" @mouseleave="hideCollectTooltip()" @click="toggleFavorite">
             <div class="interaction-icon favorite-icon" :class="{ favorited: isFavorited }">
@@ -129,7 +129,7 @@
         :raw="true"
         :show-arrow="false"
         :show="showShareTooltip"
-        @show="showShareTooltip = true">
+        @update:show="(v) => (showShareTooltip = v)">
         <template #trigger>
           <div class="interaction-item share-item" @click="toggleShare" @mouseleave="showShareTooltip = false">
             <div class="interaction-icon share-icon">
@@ -153,7 +153,7 @@
       </n-tooltip>
 
       <!-- Listen to Video Button -->
-      <n-tooltip placement="left" trigger="hover">
+      <n-tooltip placement="left" trigger="hover" :raw="true">
         <template #trigger>
           <div class="interaction-item listen-item" @click="toggleShare">
             <div class="interaction-icon listen-icon">
@@ -172,7 +172,7 @@
         :raw="true"
         :show-arrow="false"
         :show="showMoreTooltip"
-        @show="showMoreTooltip = true">
+        @update:show="(v) => (showMoreTooltip = v)">
         <template #trigger>
           <div class="more-item" @click="toggleMoreOptions" @mouseleave="showMoreTooltip = false">
             <div class="more-icon">
@@ -1904,10 +1904,11 @@ defineExpose({
   left: 0;
   margin-top: 10px;
   padding: 15px;
-  background-color: rgba(0, 0, 0, 0.9);
+  background-color: var(--bg-popover);
+  border: 1px solid var(--line-color);
+  color: var(--text-color);
   border-radius: 12px;
-  backdrop-filter: blur(12px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
   width: 280px;
   z-index: 1000;
 }
@@ -1922,16 +1923,17 @@ defineExpose({
 
 .settings-label {
   display: block;
-  color: #fff;
+  color: var(--text-color);
   font-size: 14px;
   margin-bottom: 8px;
 }
 
 .settings-slider {
   width: 100%;
-  --n-slider-bar-background: rgba(255, 255, 255, 0.3);
-  --n-slider-rail-background: rgba(255, 255, 255, 0.1);
-  --n-slider-handle-background: #fff;
+  --n-slider-bar-background: var(--primary-color, #ff0050) !important;
+  --n-slider-rail-background: var(--line-color) !important;
+  --n-slider-handle-background: var(--bg-popover) !important;
+  --n-slider-handle-box-shadow: 0 0 0 2px var(--line-color) !important;
 }
 
 // Progress Bar
@@ -2160,8 +2162,13 @@ defineExpose({
 
 // Tooltip content style
 .tooltip-content {
-  padding: 6px;
+  padding: 10px;
   font-size: 16px;
+  background-color: var(--bg-popover);
+  color: var(--text-color);
+  border: 1px solid var(--line-color);
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
 // Responsive Design for small windows
@@ -2325,15 +2332,19 @@ defineExpose({
   width: 40px;
   height: 120px;
   z-index: 101;
-  background-color: white;
+  background-color: var(--bg-popover);
+  box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.2);
+  border: 1px solid var(--line-color);
   border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.5);
 
   :deep(.n-slider) {
     height: 90% !important;
+  }
+  :deep(.n-slider-rail) {
+    background-color: var(--line-color) !important;
   }
 }
 
@@ -2425,11 +2436,11 @@ defineExpose({
 // Collection Tooltip Styles
 .collection-tooltip {
   width: 200px;
-  background-color: rgba(0, 0, 0, 0.8);
+  background-color: var(--bg-popover);
+  border: 1px solid var(--line-color);
   border-radius: 8px;
   padding: 12px;
-  backdrop-filter: blur(10px);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
 }
 
 .collection-header {
@@ -2438,7 +2449,7 @@ defineExpose({
   align-items: center;
   font-size: 14px;
   font-weight: 600;
-  color: #fff;
+  color: var(--text-color);
   margin-bottom: 12px;
 }
 
@@ -2449,7 +2460,7 @@ defineExpose({
 .new-folder-btn {
   padding: 4px 12px;
   background-color: transparent;
-  color: #fff;
+  color: var(--action-bar-icon-color);
   border: none;
   border-radius: 4px;
   cursor: pointer;
@@ -2459,7 +2470,8 @@ defineExpose({
 }
 
 .new-folder-btn:hover {
-  background-color: rgba(255, 255, 255, 0.1);
+  background-color: var(--bg-left-menu-hover);
+  color: var(--text-color);
 }
 
 .no-collections {
@@ -2468,7 +2480,7 @@ defineExpose({
   align-items: center;
   justify-content: center;
   padding: 20px 0;
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--user-text-color);
 }
 
 .no-collections-icon {
@@ -2495,7 +2507,11 @@ defineExpose({
   border-radius: 6px;
   transition: all 0.3s ease;
   margin-bottom: 6px;
-  background-color: rgba(255, 255, 255, 0.05);
+  background-color: var(--left-item-bg-color);
+}
+
+.collection-item:hover {
+  background-color: var(--bg-left-menu-hover);
 }
 
 .folder-info {
@@ -2508,17 +2524,17 @@ defineExpose({
   width: 12px;
   height: 12px;
   margin-right: 6px;
-  color: #fff;
+  color: var(--action-bar-icon-color);
 }
 
 .folder-name {
-  color: #fff;
+  color: var(--text-color);
   font-size: 12px;
   margin-right: 6px;
 }
 
 .folder-count {
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--user-text-color);
   font-size: 10px;
 }
 
@@ -2530,8 +2546,8 @@ defineExpose({
 .footer-btn {
   flex: 1;
   padding: 8px;
-  background-color: rgba(255, 255, 255, 0.05);
-  color: #fff;
+  background-color: var(--left-item-bg-color);
+  color: var(--text-color);
   border: none;
   border-radius: 6px;
   cursor: pointer;
@@ -2542,15 +2558,16 @@ defineExpose({
 }
 
 .only-collect-btn {
-  background-color: rgba(255, 255, 255, 0.1);
+  background-color: var(--left-item-bg-color);
 }
 
 .only-collect-btn:hover {
-  background-color: rgba(255, 255, 255, 0.2);
+  background-color: var(--bg-left-menu-hover);
 }
 
 .collect-to-folder-btn {
   background-color: #ff0050;
+  color: #fff;
 }
 
 .collect-to-folder-btn:hover {
@@ -2562,21 +2579,21 @@ defineExpose({
   display: flex;
   gap: 8px;
   padding: 8px;
-  background-color: rgba(0, 0, 0, 0.8);
+  background-color: var(--bg-popover);
+  border: 1px solid var(--line-color);
   border-radius: 8px;
-  backdrop-filter: blur(10px);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
 }
 
 .share-btn {
   display: flex;
   align-items: center;
   padding: 5px;
-  background-color: rgba(255, 255, 255, 0.1);
+  background-color: var(--left-item-bg-color);
+  color: var(--text-color);
   border-radius: 6px;
   cursor: pointer;
   transition: all 0.3s ease;
-  color: #fff;
 }
 
 .share-btn-text {
@@ -2585,13 +2602,13 @@ defineExpose({
 }
 
 .share-btn:hover {
-  background-color: rgba(255, 255, 255, 0.2);
+  background-color: var(--bg-left-menu-hover);
 }
 
 .share-btn-icon {
   width: 24px !important;
   height: 24px !important;
-  color: #fff;
+  color: var(--action-bar-icon-color) !important;
 }
 
 // More Tooltip Styles
@@ -2601,10 +2618,10 @@ defineExpose({
   align-items: center;
   gap: 12px;
   padding: 12px;
-  background-color: rgba(0, 0, 0, 0.8);
+  background-color: var(--bg-popover);
+  border: 1px solid var(--line-color);
   border-radius: 8px;
-  backdrop-filter: blur(10px);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
 }
 
 .more-btn {
@@ -2615,7 +2632,7 @@ defineExpose({
   gap: 6px;
   cursor: pointer;
   transition: all 0.3s ease;
-  color: #fff;
+  color: var(--text-color);
   background: transparent;
   border: none;
   padding: 0;
@@ -2625,7 +2642,7 @@ defineExpose({
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background-color: rgba(255, 255, 255, 0.1);
+  background-color: var(--left-item-bg-color);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2633,7 +2650,7 @@ defineExpose({
 }
 
 .more-btn:hover .more-btn-icon-container {
-  background-color: rgba(255, 255, 255, 0.2);
+  background-color: var(--bg-left-menu-hover);
 }
 
 .more-btn-text {
@@ -2645,7 +2662,7 @@ defineExpose({
 .more-btn-icon {
   width: 20px !important;
   height: 20px !important;
-  color: #fff;
+  color: var(--action-bar-icon-color) !important;
 }
 
 // 推荐按钮特殊样式
@@ -2655,6 +2672,10 @@ defineExpose({
 
 .recommend-btn:hover .more-btn-icon-container {
   background-color: #00e676;
+}
+
+.recommend-btn .more-btn-icon {
+  color: #fff !important;
 }
 
 .danmaku-content {
@@ -2769,5 +2790,22 @@ defineExpose({
 // 修改全局样式
 :deep(.square-checkbox.n-checkbox .n-checkbox-box) {
   border-radius: 2px;
+}
+</style>
+
+<style>
+/* 适配 Tooltip 主体 */
+.n-tooltip {
+  background-color: var(--bg-popover) !important;
+  color: var(--text-color) !important;
+  border: 1px solid var(--line-color) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2) !important;
+  border-radius: 4px !important;
+}
+
+/* 适配 Tooltip 箭头 (Arrow) */
+.n-tooltip .n-tooltip__arrow {
+  background: var(--bg-popover) !important;
+  box-shadow: -1px -1px 0 0 var(--line-color) !important;
 }
 </style>

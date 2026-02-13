@@ -165,7 +165,6 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, h, onMounted, onUnmounted } from "vue";
 import { type SelectOption, NEllipsis } from "naive-ui";
 import { open } from "@tauri-apps/plugin-dialog";
 import { convertFileSrc, invoke } from "@tauri-apps/api/core";
@@ -191,7 +190,6 @@ const { handleScreenshot } = useGlobalShortcut();
 const { createWebviewWindow } = useWindow();
 const appWindow = WebviewWindow.getCurrent();
 
-// 类型定义
 interface Attachment {
   type: "image" | "file";
   path: string; // 原始文件路径 (用于发送/预览)
@@ -209,7 +207,6 @@ interface Props {
   status?: "loading" | "streaming" | "normal";
 }
 
-// 状态变量
 const messageText = ref("");
 const attachments = ref<Attachment[]>([]);
 const isThinkActive = ref(false);
@@ -232,7 +229,6 @@ const emit =
     ) => void
   >();
 
-// 模型选项配置
 const modelOptions = [
   { label: "auto", value: "auto" },
   {
@@ -259,14 +255,12 @@ const modelOptions = [
   { label: "前往设置添加模型", value: "settings" }
 ];
 
-// 计算属性
 const isBtnDisabled = computed(() => {
   if (props.status === "loading") return true;
   if (props.status === "streaming") return false;
   return !messageText.value.trim() && attachments.value.length === 0;
 });
 
-// 定义支持的视频格式
 const VIDEO_EXTS = ["mp4", "avi", "mov", "mkv", "wmv", "flv", "webm", "m4v"];
 
 /**
