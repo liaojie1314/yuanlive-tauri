@@ -5,22 +5,19 @@
     </div>
 
     <div class="mx-4 mt-4 mb-2 bg-[--tray-bg-color] p-4 rounded-lg shadow-sm border border-[--line-color]">
-      <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-5">
+      <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
         <div
           class="flex flex-col items-center justify-center p-3 rounded-lg hover:bg-[--tray-hover] cursor-pointer transition-colors"
-          @click="createWebviewWindow('live2d', 'live2d', 100, 400)">
+          @click="showUploadDialog = true">
+          <!-- @click="createWebviewWindow('live2d', 'live2d', 100, 400)"> -->
           <i-mdi-video-plus class="text-xl text-blue-500 mb-1"></i-mdi-video-plus>
           <span class="text-sm text-[--user-text-color]">发布视频</span>
         </div>
         <div
-          class="flex flex-col items-center justify-center p-3 rounded-lg hover:bg-[--tray-hover] cursor-pointer transition-colors">
+          class="flex flex-col items-center justify-center p-3 rounded-lg hover:bg-[--tray-hover] cursor-pointer transition-colors"
+          @click="createWebviewWindow('视频管理', 'manageVideo', 1200, 720, '', true, 800, 500)">
           <i-mdi-video class="text-xl text-green-500 mb-1"></i-mdi-video>
           <span class="text-sm text-[--user-text-color]">视频管理</span>
-        </div>
-        <div
-          class="flex flex-col items-center justify-center p-3 rounded-lg hover:bg-[--tray-hover] cursor-pointer transition-colors">
-          <i-mdi-chart-bar class="text-xl text-purple-500 mb-1"></i-mdi-chart-bar>
-          <span class="text-sm text-[--user-text-color]">作品数据</span>
         </div>
         <div
           class="flex flex-col items-center justify-center p-3 rounded-lg hover:bg-[--tray-hover] cursor-pointer transition-colors"
@@ -29,7 +26,8 @@
           <span class="text-sm text-[--user-text-color]">开直播</span>
         </div>
         <div
-          class="flex flex-col items-center justify-center p-3 rounded-lg hover:bg-[--tray-hover] cursor-pointer transition-colors">
+          class="flex flex-col items-center justify-center p-3 rounded-lg hover:bg-[--tray-hover] cursor-pointer transition-colors"
+          @click="createWebviewWindow('直播数据', 'manageLive', 1200, 720, '', true, 800, 500)">
           <i-mdi-chart-line class="text-xl text-orange-500 mb-1"></i-mdi-chart-line>
           <span class="text-sm text-[--user-text-color]">直播数据</span>
         </div>
@@ -113,6 +111,7 @@
     </div>
 
     <collection-folder-dialog v-model:show="showCreateDialog" @create-folder="handleCreateFolder" />
+    <upload-video-dialog v-model:show="showUploadDialog" />
   </div>
 </template>
 
@@ -158,6 +157,7 @@ const likedVideos = ref<Video[]>([]);
 const currentPage = ref(1);
 const isLoading = ref(false);
 const hasMore = ref(true);
+const showUploadDialog = ref(false);
 const pageSize = 12;
 
 // 处理创建收藏夹
