@@ -135,7 +135,9 @@ export enum TauriCommandEnum {
   // 取消目录扫描
   CANCEL_DIRECTORY_SCAN = "cancel_directory_scan",
   // 系统tts发声
-  SPEAK_SYSTEM = "speak_system"
+  SPEAK_SYSTEM = "speak_system",
+  // 提取视频封面
+  EXTRACT_VIDEO_COVER = "extract_video_cover"
 }
 
 /** pinia存储的名称 */

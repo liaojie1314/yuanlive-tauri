@@ -3,17 +3,11 @@
     <div
       :class="[
         'transition-all duration-300 ease-in-out bg-[--tray-bg-color] border-r border-[--line-color]',
-        isHistoryCollapsed ? 'w-[55px]' : 'w-[20%] min-w-[200px]  '
+        isHistoryCollapsed ? 'w-[55px]' : 'w-[20%] min-w-[200px]'
       ]">
       <chat-history-list
         :active-chat-id="activeChatId"
         :is-collapsed="isHistoryCollapsed"
-        @new-chat="handleNewChat"
-        @select-chat="handleSelectChat"
-        @rename-chat="handleRenameChat"
-        @share-chat="handleShareChat"
-        @delete-chat="handleDeleteChat"
-        @clear-all="handleClearAll"
         @toggle-collapse="handleToggleCollapse" />
     </div>
 
@@ -22,20 +16,47 @@
         'w-[80%] lg:w-[60%] flex flex-col transition-all duration-300 ease-in-out min-w-0',
         isHistoryCollapsed ? 'w-[calc(100%-55px)] lg:w-[calc(100%-55px)]' : ''
       ]">
-      <div
-        ref="chatMessagesRef"
-        class="chat-messages flex-1 overflow-y-auto flex justify-center scrollbar-thin scrollbar-thumb-[--disabled-color] scrollbar-track-transparent">
-        <div class="w-full max-w-[1000px] p-4">
-          <message-render
-            v-for="(message, index) in messages"
-            :key="index"
-            :message="message"
-            @image-click="handleImageClick" />
+      <n-scrollbar ref="scrollbarRef" class="flex-1">
+        <div ref="scrollContentRef" class="flex flex-col items-center w-full">
+          <div class="w-full max-w-[1000px]">
+            <message-item
+              v-for="msg in messages"
+              :key="msg.id"
+              :message="msg"
+              :selection-mode="isMessageSelectionMode"
+              :selected="selectedMessageIds.has(msg.id)"
+              @enter-multi-select="handleEnterMessageMultiSelect"
+              @toggle-select="handleToggleMessageSelect"
+              @resend-message="handleResend"
+              @copy-message="handleCopy"
+              @refresh-message="handleRefresh" />
+          </div>
         </div>
-      </div>
+      </n-scrollbar>
 
-      <div class="py-1 flex justify-center">
-        <message-input @send-message="handleSendMessage" />
+      <div class="py-1 flex justify-center w-full bg-[--tray-bg-color]">
+        <message-input
+          v-if="!isMessageSelectionMode"
+          :status="chatStatus"
+          @send-message="handleSendMessage"
+          @cancel-stream="handleCancelAiResponse" />
+
+        <div
+          v-else
+          class="w-full max-w-[800px] flex items-center justify-between bg-[--input-area-bg] rounded-lg p-4 m-1 border border-[--line-color] shadow-sm transition-all">
+          <div class="text-sm font-medium text-[--user-text-color]">
+            已选择
+            <span class="text-blue-500 mx-1">{{ selectedMessageIds.size }}</span>
+            条消息
+          </div>
+
+          <div class="flex items-center gap-4">
+            <n-button quaternary @click="cancelMessageSelection">取消</n-button>
+            <n-button type="error" :disabled="selectedMessageIds.size === 0" @click="handleBatchDeleteMessages">
+              删除选中
+            </n-button>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -47,377 +68,361 @@
 </template>
 
 <script setup lang="ts">
-defineOptions({
-  name: "AiChat"
-});
+import type { ScrollbarInst } from "naive-ui";
+import type { MessageData } from "@/types/chat";
+import { messageCancelStream } from "@/utils/RequestUtils";
 
-// 混合类型消息的内容结构
-interface MixedContent {
-  text: string;
-  images: string[];
-}
+defineOptions({ name: "AiChat" });
 
-// 消息类型定义
-interface Message {
-  id: number;
-  sender: string;
-  content: string | string[] | MixedContent;
-  type: "text" | "image" | "mixed";
-  time: string;
-  isSelf: boolean;
-  avatar: string;
-  isTyping?: boolean;
-  rawContent?: string;
-  thinking?: string;
-  thinkingTime?: number;
-  isThinkingExpanded?: boolean;
-  // 思考内容打字机相关字段
-  thinkingContent?: string;
-  isThinkingTyping?: boolean;
-  thinkingRawContent?: string;
-}
-
-// 激活的聊天ID
+const chatStatus = ref<"loading" | "streaming" | "normal">("normal");
 const activeChatId = ref<string>("1");
-// 历史记录是否折叠
 const isHistoryCollapsed = ref<boolean>(false);
-// 模拟聊天消息数据
-const messages = ref<Message[]>([]);
-// 聊天消息区域引用，用于自动滚动
-const chatMessagesRef = ref<HTMLElement | null>(null);
+const scrollbarRef = ref<ScrollbarInst | null>(null);
+const scrollContentRef = ref<HTMLElement | null>(null);
+const isMessageSelectionMode = ref(false);
+const selectedMessageIds = ref<Set<string | number>>(new Set());
+const messages = ref<MessageData[]>([]);
 
-// 处理折叠/展开历史记录
-const handleToggleCollapse = () => {
-  isHistoryCollapsed.value = !isHistoryCollapsed.value;
+// 触发多选模式，并默认选中当前右键的消息
+const handleEnterMessageMultiSelect = (id: string | number) => {
+  isMessageSelectionMode.value = true;
+  selectedMessageIds.value.add(id);
 };
 
-// 滚动到聊天底部
-const scrollToBottom = () => {
-  // 使用nextTick确保DOM已经更新
-  nextTick(() => {
-    if (chatMessagesRef.value) {
-      // 确保滚动到最底部
-      chatMessagesRef.value.scrollTop = chatMessagesRef.value.scrollHeight;
+// 切换单条消息的选中状态
+const handleToggleMessageSelect = (id: string | number) => {
+  if (selectedMessageIds.value.has(id)) {
+    selectedMessageIds.value.delete(id);
+  } else {
+    selectedMessageIds.value.add(id);
+  }
+};
+
+// 取消多选模式
+const cancelMessageSelection = () => {
+  isMessageSelectionMode.value = false;
+  selectedMessageIds.value.clear();
+};
+
+// 批量删除选中的消息
+const handleBatchDeleteMessages = () => {
+  if (selectedMessageIds.value.size === 0) return;
+
+  window.$dialog.warning({
+    content: `确定要删除选中的 ${selectedMessageIds.value.size} 条消息吗？`,
+    positiveText: "删除",
+    negativeText: "取消",
+    onPositiveClick: () => {
+      // 从本地列表中移除选中的消息
+      messages.value = messages.value.filter((msg) => !selectedMessageIds.value.has(msg.id));
+      // TODO: 这里可以调用后端 API 删除数据库中的消息记录
+
+      // 删除完成后退出多选模式
+      cancelMessageSelection();
     }
   });
 };
 
-// 打字机效果函数 - 支持思考内容和消息内容的顺序渲染
-const typingEffect = (messageId: number, fullText: string, delay: number = 30, thinkingText: string = "") => {
-  const messageIndex = messages.value.findIndex((msg) => msg.id === messageId);
-  if (messageIndex === -1) return;
-
-  const message = messages.value[messageIndex];
-  // 只处理文本类型消息
-  if (message.type !== "text") return;
-
-  // 1. 首先处理思考内容的打字机效果
-  const renderThinkingContent = () => {
-    if (!thinkingText) {
-      // 如果没有思考内容，直接渲染消息内容
-      renderMessageContent();
-      return;
-    }
-
-    // 初始化思考内容状态
-    message.thinkingRawContent = thinkingText;
-    message.thinkingContent = "";
-    message.isThinkingTyping = true;
-
-    let thinkingIndex = 0;
-    let lastTime = 0;
-
-    const thinkingAnimation = (timestamp: number) => {
-      if (!lastTime || timestamp - lastTime >= delay) {
-        if (thinkingIndex < thinkingText.length) {
-          // 逐字添加思考内容
-          message.thinkingContent = thinkingText.substring(0, thinkingIndex + 1);
-          thinkingIndex++;
-          lastTime = timestamp;
-          // 每次更新内容后滚动到底部
-          scrollToBottom();
-          requestAnimationFrame(thinkingAnimation);
-        } else {
-          // 思考内容打字结束
-          message.isThinkingTyping = false;
-          // 思考内容渲染完成后，开始渲染消息内容
-          renderMessageContent();
-        }
-      } else {
-        requestAnimationFrame(thinkingAnimation);
-      }
-    };
-
-    requestAnimationFrame(thinkingAnimation);
-  };
-
-  // 2. 处理消息内容的打字机效果
-  const renderMessageContent = () => {
-    let currentIndex = 0;
-    message.rawContent = fullText;
-    message.content = "";
-    message.isTyping = true;
-
-    let lastTime = 0;
-
-    const messageAnimation = (timestamp: number) => {
-      if (!lastTime || timestamp - lastTime >= delay) {
-        if (currentIndex < fullText.length) {
-          // 逐字添加消息内容
-          message.content = fullText.substring(0, currentIndex + 1);
-          currentIndex++;
-          lastTime = timestamp;
-          // 每次更新内容后滚动到底部
-          scrollToBottom();
-          requestAnimationFrame(messageAnimation);
-        } else {
-          // 消息内容打字结束
-          message.isTyping = false;
-          // 打字结束后滚动到底部
-          scrollToBottom();
-        }
-      } else {
-        requestAnimationFrame(messageAnimation);
-      }
-    };
-
-    requestAnimationFrame(messageAnimation);
-  };
-
-  // 开始渲染思考内容
-  renderThinkingContent();
+const handleToggleCollapse = () => {
+  isHistoryCollapsed.value = !isHistoryCollapsed.value;
 };
 
-// 处理发送消息
-const handleSendMessage = (message: {
-  type: "text" | "image" | "mixed";
-  content: string | string[] | { text: string; images: string[] };
+const scrollToBottom = () => {
+  nextTick(() => {
+    if (scrollbarRef.value && scrollContentRef.value) {
+      // scrollContentRef.value.scrollHeight 获取的是内部所有消息叠加的总高度
+      scrollbarRef.value.scrollTo({
+        top: scrollContentRef.value.scrollHeight
+      });
+    }
+  });
+};
+
+// const initTestData = () => {
+//   messages.value = [
+//     // 1. 用户消息
+//     {
+//       id: 1,
+//       role: "user",
+//       sender: "我",
+//       avatar: "https://picsum.photos/id/1006/100/100",
+//       content: "请给我写一个 Vue3 的计数器组件，并解释一下原理。",
+//       time: "10:00"
+//     },
+//     // 2. AI 消息：带深度思考 + Markdown 代码
+//     {
+//       id: 2,
+//       role: "assistant",
+//       sender: "DeepSeek",
+//       avatar: "https://picsum.photos/id/1005/100/100",
+//       time: "10:01",
+//       thinking: `用户想要一个 Vue3 计数器组件。
+// 1. 我需要使用 <script setup> 语法。
+// 2. 需要引入 ref。
+// 3. 需要解释响应式原理。`,
+//       thinkingTime: 5,
+//       content: `好的，这是一个简单的 **Vue 3 计数器** 示例：
+
+// \`\`\`vue
+// <template>
+//   <button @click="count++">Count is: {{ count }}</button>
+// </template>
+
+// <script setup>
+// import { ref } from 'vue';
+// const count = ref(0);
+// <\/script>
+// \`\`\`
+
+// **原理：**
+// 使用 \`ref\` 创建响应式数据，Vue 会自动追踪依赖并在数据变化时更新 DOM。`,
+//       currentVersion: 2,
+//       versionCount: 3
+//     },
+//     // 3. AI 消息：混合内容 (图文混排)
+//     {
+//       id: 3,
+//       role: "assistant",
+//       sender: "AI助手",
+//       avatar: "https://picsum.photos/id/1011/100/100",
+//       time: "10:05",
+//       // 适配器会自动处理这种对象结构
+//       content: {
+//         text: "这是你要的风景图片，非常壮观：",
+//         images: ["https://picsum.photos/id/1018/800/400", "https://picsum.photos/id/1015/800/400"]
+//       }
+//     },
+//     // 4. 测试视频组件
+//     {
+//       id: 4,
+//       role: "assistant",
+//       sender: "AI助手",
+//       avatar: "https://picsum.photos/id/1005/100/100",
+//       time: "10:06",
+//       content: {
+//         text: "这是一段测试视频（Big Buck Bunny）：",
+//         videos: ["https://www.w3schools.com/html/mov_bbb.mp4"]
+//       }
+//     },
+
+//     // 5. 测试音频组件
+//     {
+//       id: 5,
+//       role: "assistant",
+//       sender: "AI助手",
+//       avatar: "https://picsum.photos/id/1005/100/100",
+//       time: "10:07",
+//       content: {
+//         text: "这是一段测试音频消息：",
+//         audios: ["https://www.w3schools.com/html/horse.mp3"]
+//       }
+//     }
+//   ];
+// };
+
+const currentRequestId = ref<string | null>(null); // 记录当前请求 ID 用于取消
+
+// const handleSendMessage = async (payload: {
+//   type: string;
+//   content: string | any;
+//   options: { useReasoning: boolean; useNetwork: boolean };
+// }) => {
+//   if (chatStatus.value !== "normal") return;
+
+//   // 1. 构造用户消息并推入列表
+//   const userMsg: MessageData = {
+//     id: Date.now(),
+//     role: "user",
+//     sender: "我",
+//     avatar: "https://picsum.photos/id/1006/100/100",
+//     content: payload.content,
+//     time: new Date().toLocaleTimeString()
+//   };
+//   messages.value.push(userMsg);
+//   scrollToBottom();
+
+//   // 2. 初始化 AI 响应状态
+//   chatStatus.value = "loading";
+//   const aiMsgId = Date.now() + 1;
+//   const aiMsg = ref<MessageData>({
+//     id: aiMsgId,
+//     role: "assistant",
+//     sender: "AI助手",
+//     avatar: "https://picsum.photos/id/1005/100/100",
+//     time: new Date().toLocaleTimeString(),
+//     thinking: "",
+//     content: "",
+//     thinkingTime: 0
+//   });
+//   messages.value.push(aiMsg.value);
+//   scrollToBottom();
+
+//   // 提取纯文本内容
+//   const textContent = typeof payload.content === "string" ? payload.content : (payload.content as any).text || "";
+
+//   // 3. 发送流式请求
+//   try {
+//     // 调用接口并记录返回的 Promise 逻辑（如果需要 requestId，需确保接口已返回）
+//     // 假设 messageSendStream 内部生成了 requestId 并通过某种方式暴露，
+//     // 或者你可以预生成 requestId 传给接口。
+//     const requestId = `ai-stream-${Date.now()}`;
+//     currentRequestId.value = requestId;
+
+//     await messageSendStream(
+//       {
+//         conversationId: activeChatId.value,
+//         content: textContent,
+//         useContext: true,
+//         useReasoning: payload.options.useReasoning,
+//         useNetwork: payload.options.useNetwork
+//       },
+//       {
+//         onChunk: (chunk: string) => {
+//           if (chatStatus.value === "loading") chatStatus.value = "streaming";
+//           aiMsg.value.content += chunk;
+//         },
+//         onDone: (fullContent: string) => {
+//           chatStatus.value = "normal";
+//           currentRequestId.value = null;
+//           console.log("消息：", fullContent);
+//         },
+//         onError: (error: string) => {
+//           chatStatus.value = "normal";
+//           currentRequestId.value = null;
+//           aiMsg.value.content += `\n\n**请求失败:** ${error}`;
+//         }
+//       }
+//     );
+//   } catch (error) {
+//     chatStatus.value = "normal";
+//     currentRequestId.value = null;
+//   }
+// };
+
+/**
+ * 取消当前 AI 消息生成
+ */
+const handleCancelAiResponse = async () => {
+  if (currentRequestId.value) {
+    if (currentRequestId.value) {
+      try {
+        await messageCancelStream(currentRequestId.value);
+      } catch (err) {
+        console.error("取消请求失败:", err);
+      } finally {
+        // 无论后端取消是否成功，前端先恢复状态
+        chatStatus.value = "normal";
+        currentRequestId.value = null;
+        const lastMsg = messages.value[messages.value.length - 1];
+        if (lastMsg && lastMsg.role === "assistant") {
+          lastMsg.content += "\n\n*[已停止生成]*";
+        }
+      }
+    } else {
+      // 兜底：如果没有请求 ID 但状态不对，也要强行重置
+      chatStatus.value = "normal";
+    }
+  }
+};
+
+const handleResend = (data: { id: string | number; content: string }) => {
+  // 1. 找到这条消息在列表中的索引
+  const index = messages.value.findIndex((m) => m.id === data.id);
+  if (index === -1) return;
+  // 2. 删除该消息及其之后的所有消息 (重新开始这一段对话)
+  // 如果你只想修改这一条而不影响后面的，可以只修改内容，但通常重发意味着逻辑覆盖
+  messages.value.splice(index);
+  // 3. 调用原有的发送逻辑，传入修改后的内容
+  // 假设你的 payload 格式是 { content: { text: string } }
+  handleSendMessage({
+    type: "text",
+    content: data.content,
+    options: {
+      useReasoning: false, // 可以根据需要获取状态
+      useNetwork: false
+    }
+  });
+};
+
+const handleSendMessage = (payload: {
+  type: string;
+  content: string;
+  options: { useReasoning: boolean; useNetwork: boolean };
 }) => {
-  const newMessage: Message = {
-    id: messages.value.length + 1,
+  // 1. 构造用户消息
+  const userMsg: MessageData = {
+    id: Date.now(),
+    role: "user",
     sender: "我",
-    content: message.content,
-    type: message.type,
-    time: new Date().toLocaleTimeString("zh-CN", { hour: "2-digit", minute: "2-digit" }),
-    isSelf: true,
-    avatar: "https://picsum.photos/id/1006/100/100"
+    avatar: "https://picsum.photos/id/1006/100/100",
+    content: payload.content,
+    time: new Date().toLocaleTimeString()
   };
 
-  messages.value.push(newMessage);
-  console.log(newMessage);
-  // 发送消息后滚动到底部
+  messages.value.push(userMsg);
   scrollToBottom();
 
-  // 模拟AI回复
-  setTimeout(() => {
-    let aiContent: string | string[] | MixedContent;
-    let aiType: "text" | "image" | "mixed";
+  // 2. 模拟 AI 回复
+  simulateAiStreamResponse();
+};
 
-    // 根据用户消息类型生成不同的AI回复
-    if (message.type === "image" || message.type === "mixed") {
-      // 模拟图片相关回复，使用混合类型回复
-      const markdownContent = `这是一个关于图片的**AI回复**。
+// 模拟流式输出 (不再需要复杂的 typingEffect，只需更新数据)
+// 找到 simulateAiStreamResponse 或你实际对接后端的流式接收函数
+const simulateAiStreamResponse = () => {
+  const aiMsgId = Date.now() + 1;
+  const aiMsg = ref<MessageData>({
+    id: aiMsgId,
+    role: "assistant",
+    sender: "AI助手",
+    avatar: "https://picsum.photos/id/1005/100/100",
+    time: new Date().toLocaleTimeString(),
+    thinking: "",
+    content: "",
+    thinkingTime: 0
+  });
 
-我看到你发送了图片，我可以：
-- 分析图片内容
-- 提供相关信息
-- 进行图像编辑
+  // 1. 消息对象刚插入时，调用一次滚动到底部 (保留这里)
+  messages.value.push(aiMsg.value);
+  scrollToBottom();
 
-\`\`\`javascript
-// 图片处理示例
-function processImage(imageUrl) {
-  console.log("Processing image:", imageUrl);
-  // 图像处理逻辑
-}
-\`\`\``;
+  const fullThinking = "正在分析用户意图...\n用户似乎在测试流式输出功能。\n检查组件响应速度...";
+  const fullContent =
+    "流式输出测试成功！\n\n```python\nprint('Hello World')\n```\n\n你可以看到思考过程先出现，然后是正文逐字显示。";
 
-      aiContent = {
-        text: markdownContent,
-        images: ["https://picsum.photos/id/1016/600/400"]
-      };
-      aiType = "mixed";
+  let tIndex = 0;
+  let cIndex = 0;
 
-      // 模拟思考内容
-      const thinkingContent = `我需要分析用户的问题并提供详细的解答。首先，我应该考虑用户可能需要的信息类型，然后组织内容结构，确保回答清晰易懂。
-
-1. 理解问题：用户需要关于大文件分片上传的最佳实践建议
-2. 分析选项：
-   - Worker：适合处理计算密集型任务，如文件分片和哈希计算
-   - rAF：适合与浏览器渲染同步的任务，如动画更新
-3. 结论：Worker更适合大文件分片上传，因为它可以避免阻塞主线程，提高页面响应速度。`;
-
-      const aiReply: Message = {
-        id: messages.value.length + 1,
-        sender: "AI助手",
-        content: "", // 初始为空，通过打字机效果填充
-        type: "text", // 混合消息的文本部分使用打字机效果
-        time: new Date().toLocaleTimeString("zh-CN", { hour: "2-digit", minute: "2-digit" }),
-        isSelf: false,
-        avatar: "https://picsum.photos/id/1005/100/100",
-        isTyping: false,
-        rawContent: markdownContent,
-        thinking: thinkingContent,
-        thinkingTime: 16,
-        isThinkingExpanded: true,
-        thinkingContent: "",
-        isThinkingTyping: false,
-        thinkingRawContent: thinkingContent
-      };
-      messages.value.push(aiReply);
-      // 添加AI回复后滚动到底部
-      scrollToBottom();
-
-      // 启动打字机效果 - 传入思考内容，实现顺序渲染
-      typingEffect(aiReply.id, markdownContent, 30, thinkingContent);
+  // 阶段 1: 输出思考过程
+  const thinkInterval = setInterval(() => {
+    if (tIndex < fullThinking.length) {
+      aiMsg.value.thinking += fullThinking[tIndex];
+      aiMsg.value.thinkingTime = Math.floor(tIndex / 5);
+      tIndex++;
     } else {
-      // 模拟文本回复，使用markdown格式
-      const markdownContent = `这是一个**AI回复**。
-
-你可以使用：
-- 粗体文本
-- 列表项
-- 代码块
-
-下面是一个完整的HTML示例，你可以点击运行按钮查看效果：
-
-\`\`\`html
-<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>测试运行按钮</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f0f0f0;
-            margin: 0;
-            padding: 20px;
-        }
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-            background-color: white;
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        }
-        h1 {
-            color: #333;
-            text-align: center;
-        }
-        p {
-            font-size: 16px;
-            line-height: 1.6;
-            color: #666;
-        }
-        .button {
-            display: inline-block;
-            padding: 10px 20px;
-            background-color: #4CAF50;
-            color: white;
-            text-decoration: none;
-            border-radius: 4px;
-            margin-top: 20px;
-        }
-        .button:hover {
-            background-color: #45a049;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1>测试运行按钮功能</h1>
-        <p>这是一个完整的HTML页面，用于测试运行按钮功能。</p>
-        <p>如果您看到此页面，说明运行按钮工作正常！</p>
-        <a href="#" class="button">点击我</a>
-    </div>
-</body>
-</html>
-\`\`\``;
-
-      aiContent = "";
-      aiType = "text";
-
-      // 模拟思考内容
-      const thinkingContent = `我需要生成一个关于用户问题的详细回答。首先，我应该理解用户的需求，然后组织内容结构，确保回答清晰、全面且易于理解。
-
-1. 理解用户问题：用户发送了一条文本消息，需要AI生成相关回复
-2. 确定回答类型：这是一个普通的文本回复，需要使用Markdown格式增强可读性
-3. 组织内容：
-   - 提供清晰的标题和段落结构
-   - 包含示例代码块
-   - 使用列表和强调等Markdown特性
-4. 确保回答质量：检查语法、逻辑和信息准确性`;
-
-      const aiReply: Message = {
-        id: messages.value.length + 1,
-        sender: "AI助手",
-        content: aiContent,
-        type: aiType,
-        time: new Date().toLocaleTimeString("zh-CN", { hour: "2-digit", minute: "2-digit" }),
-        isSelf: false,
-        avatar: "https://picsum.photos/id/1005/100/100",
-        isTyping: false,
-        rawContent: markdownContent,
-        thinking: thinkingContent,
-        thinkingTime: 12,
-        isThinkingExpanded: true,
-        thinkingContent: "",
-        isThinkingTyping: false,
-        thinkingRawContent: thinkingContent
-      };
-      messages.value.push(aiReply);
-      // 添加AI回复后滚动到底部
-      scrollToBottom();
-
-      // 启动打字机效果 - 传入思考内容，实现顺序渲染
-      typingEffect(aiReply.id, markdownContent, 30, thinkingContent);
+      clearInterval(thinkInterval);
+      startContentStream();
     }
-  }, 1000);
+  }, 50);
+
+  // 阶段 2: 输出正文
+  const startContentStream = () => {
+    const contentInterval = setInterval(() => {
+      if (cIndex < fullContent.length) {
+        scrollToBottom();
+        aiMsg.value.content += fullContent[cIndex];
+        cIndex++;
+      } else {
+        clearInterval(contentInterval);
+      }
+    }, 30);
+  };
 };
 
-// 处理图片点击
-const handleImageClick = (imageUrl: string) => {
-  // 这里可以实现图片放大查看功能
-  console.log("Image clicked:", imageUrl);
-  // 后续可以集成图片预览组件
-};
+const handleCopy = (id: string) => console.log("Copy", id);
+const handleRefresh = (id: string) => console.log("Refresh", id);
 
-// 处理新建对话
-const handleNewChat = () => {
-  console.log("New chat clicked");
-  // 后续可以实现新建对话的逻辑
-};
-
-// 处理选择对话
-const handleSelectChat = (id: string) => {
-  console.log("Select chat:", id);
-  activeChatId.value = id;
-  // 后续可以实现加载对话内容的逻辑
-};
-
-// 处理重命名对话
-const handleRenameChat = (id: string, newTitle: string) => {
-  console.log("Rename chat:", id, "to", newTitle);
-  // 后续可以实现重命名对话的逻辑
-};
-
-// 处理分享对话
-const handleShareChat = (id: string) => {
-  console.log("Share chat:", id);
-  // 后续可以实现分享对话的逻辑
-};
-
-// 处理删除对话
-const handleDeleteChat = (id: string) => {
-  console.log("Delete chat:", id);
-  // 后续可以实现删除对话的逻辑
-};
-
-// 处理清空所有历史
-const handleClearAll = () => {
-  console.log("Clear all history");
-  // 后续可以实现清空所有历史的逻辑
-};
+onMounted(() => {
+  // initTestData();
+  scrollToBottom();
+});
 </script>

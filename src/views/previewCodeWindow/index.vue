@@ -202,13 +202,22 @@ const onContainerResize = ({ width }: { width: number }) => {
 // 1. 初始化
 onMounted(async () => {
   await getCurrentWebviewWindow().show();
-  // 从窗口payload中获取初始代码
-  const payloadContent = (await getWindowPayload<{ content?: string }>("previewCode"))?.content || "";
-  console.log("payloadContent", payloadContent);
+  interface PreviewPayload {
+    content?: string;
+    lang?: LangType; // 'html' | 'vue' | 'react'
+  }
+  // 获取 payload，包含 content 和 lang
+  const payload = await getWindowPayload<PreviewPayload>("previewCode");
+  const payloadContent = payload?.content || "";
+  const payloadLang = payload?.lang;
+  console.log("payload", payload);
+  // 处理代码内容（去除 markdown 代码块标记）
   code.value = payloadContent.replace(/^```[a-z]*\n?/i, "").replace(/\n?```$/, "");
 
-  // 初始自动检测语言
-  if (code.value) {
+  // 设置语言：如果有明确传入的 lang 则使用，否则根据内容自动检测
+  if (payloadLang && ["html", "vue", "react"].includes(payloadLang)) {
+    language.value = payloadLang;
+  } else if (code.value) {
     detectLanguage(code.value);
   }
   runPreview();

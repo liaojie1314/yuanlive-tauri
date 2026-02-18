@@ -197,12 +197,6 @@ interface Attachment {
   name: string; // 文件名
 }
 
-interface MixedContent {
-  text: string;
-  images: string[];
-  files: string[];
-}
-
 interface Props {
   status?: "loading" | "streaming" | "normal";
 }
@@ -221,13 +215,10 @@ const props = withDefaults(defineProps<Props>(), {
   status: "normal"
 });
 
-const emit =
-  defineEmits<
-    (
-      e: "send-message",
-      message: { type: "text" | "image" | "mixed"; content: string | string[] | MixedContent }
-    ) => void
-  >();
+const emit = defineEmits<{
+  (e: "send-message", payload: any): void;
+  (e: "cancel-stream"): void;
+}>();
 
 const modelOptions = [
   { label: "auto", value: "auto" },
@@ -446,37 +437,72 @@ const handleCameraConfirm = (base64Photo: string) => {
 };
 
 const sendMessage = () => {
+  // 1. 处理取消生成逻辑
+  if (props.status === "streaming" || props.status === "loading") {
+    emit("cancel-stream");
+    return;
+  }
   if (isBtnDisabled.value) return;
+
   const text = messageText.value.trim();
-  const imagePaths = attachments.value.filter((item) => item.type === "image").map((item) => item.path);
-  const filePaths = attachments.value.filter((item) => item.type === "file").map((item) => item.path);
 
-  let msgType: "text" | "image" | "mixed" = "text";
-  let msgContent: string | string[] | MixedContent = text;
+  // 2. 定义媒体类型检测正则
+  // 视频后缀
+  const VIDEO_EXT_REGEX = /\.(mp4|avi|mov|mkv|wmv|flv|webm|m4v)$/i;
+  // 音频后缀
+  const AUDIO_EXT_REGEX = /\.(mp3|wav|ogg|aac|flac|m4a)$/i;
 
-  const hasAttachments = imagePaths.length > 0 || filePaths.length > 0;
+  // 3. 重新分类附件
+  const imagePaths: string[] = [];
+  const videoPaths: string[] = [];
+  const audioPaths: string[] = [];
+  const filePaths: string[] = [];
 
-  if (hasAttachments && text) {
-    msgType = "mixed";
-    msgContent = { text, images: imagePaths, files: filePaths };
-  } else if (imagePaths.length > 0 && filePaths.length === 0) {
-    msgType = "image";
-    msgContent = imagePaths;
-  } else if (filePaths.length > 0 && imagePaths.length === 0 && !text) {
-    msgType = "mixed"; // 纯文件也走 mixed 结构
-    msgContent = { text: "", images: [], files: filePaths };
-  } else if (hasAttachments) {
-    msgType = "mixed";
-    msgContent = { text, images: imagePaths, files: filePaths };
-  } else {
-    msgType = "text";
+  attachments.value.forEach((item) => {
+    // 转换路径
+    const assetUrl = item.previewUrl?.startsWith("blob:") ? item.previewUrl : convertFileSrc(item.path);
+
+    if (item.type === "image") {
+      imagePaths.push(assetUrl);
+    } else {
+      // 检查文件类型
+      if (VIDEO_EXT_REGEX.test(item.name)) {
+        videoPaths.push(assetUrl);
+      } else if (AUDIO_EXT_REGEX.test(item.name)) {
+        audioPaths.push(assetUrl);
+      } else {
+        filePaths.push(assetUrl);
+      }
+    }
+  });
+
+  // 4. 构造标准化的混合消息体 (MixedContent)
+  let msgContent: any = {
+    text: text,
+    images: imagePaths.length > 0 ? imagePaths : undefined,
+    videos: videoPaths.length > 0 ? videoPaths : undefined,
+    audios: audioPaths.length > 0 ? audioPaths : undefined,
+    files: filePaths.length > 0 ? filePaths : undefined // 纯文件
+  };
+
+  // 5. 简化类型：如果只有纯文本，就不发对象了
+  const hasAttachments = imagePaths.length + videoPaths.length + audioPaths.length + filePaths.length > 0;
+
+  if (!hasAttachments && text) {
     msgContent = text;
   }
 
-  emit("send-message", {
-    type: msgType,
-    content: msgContent
-  });
+  // 6. 发送消息
+  const finalMessage = {
+    type: hasAttachments ? "mixed" : "text",
+    content: msgContent,
+    options: {
+      useReasoning: isThinkActive.value,
+      useNetwork: isSearchActive.value
+    }
+  };
+
+  emit("send-message", finalMessage);
 
   messageText.value = "";
   attachments.value = [];

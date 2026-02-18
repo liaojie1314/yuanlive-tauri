@@ -5321,6 +5321,7 @@ dependencies = [
  "heck 0.5.0",
  "http",
  "http-range",
+ "image 0.25.9",
  "jni",
  "libc",
  "log",
@@ -7655,7 +7656,7 @@ dependencies = [
 
 [[package]]
 name = "yuanlive-tauri"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "anyhow",
  "async-walkdir",

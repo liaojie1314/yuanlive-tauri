@@ -23,34 +23,68 @@
       </n-button>
     </div>
 
-    <div v-if="!isCollapsed" class="flex items-center justify-between px-3 py-2 border-y border-[--line-color]">
-      <div class="flex items-center gap-2 text-sm font-medium text-[--user-text-color]">
-        <i-mdi-history class="w-4 h-4" />
-        <span>历史对话</span>
-      </div>
+    <div
+      v-if="!isCollapsed"
+      class="flex items-center justify-between px-3 py-2 border-y border-[--line-color] transition-colors"
+      :class="{ 'bg-[--tray-hover]': isSelectionMode }">
+      <template v-if="!isSelectionMode">
+        <div class="flex items-center gap-2 text-sm font-medium text-[--user-text-color]">
+          <i-mdi-history class="w-4 h-4" />
+          <span>历史对话</span>
+        </div>
+        <div class="flex items-center gap-1">
+          <n-button
+            quaternary
+            circle
+            size="small"
+            class="text-[--action-bar-icon-color] hover:text-[--text-color]"
+            title="多选"
+            @click="isSelectionMode = true">
+            <i-mdi-playlist-check class="w-4 h-4" />
+          </n-button>
+          <n-dropdown trigger="click" placement="bottom-end" :options="clearMenuOptions" @select="handleMenuSelect">
+            <n-button
+              quaternary
+              circle
+              size="small"
+              :bordered="false"
+              class="text-[--action-bar-icon-color] hover:text-[--text-color] hover:bg-[--tray-hover]">
+              <i-mdi-delete-outline class="w-4 h-4" />
+            </n-button>
+          </n-dropdown>
+        </div>
+      </template>
 
-      <n-dropdown trigger="click" placement="bottom-end" :options="clearMenuOptions" @select="handleMenuSelect">
-        <n-button
-          quaternary
-          circle
-          :bordered="false"
-          class="text-[--action-bar-icon-color] hover:text-[--text-color] hover:bg-[--tray-hover]">
-          <i-mdi-delete-outline class="w-4 h-4" />
-        </n-button>
-      </n-dropdown>
+      <template v-else>
+        <div class="flex items-center gap-2 text-sm font-medium text-[--user-text-color]">
+          <n-checkbox :checked="isAllSelected" @update:checked="handleSelectAll" size="small" />
+          <span class="text-xs">已选 {{ selectedIds.size }} 项</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <n-button size="tiny" type="error" ghost :disabled="selectedIds.size === 0" @click="handleBatchDelete">
+            删除
+          </n-button>
+          <n-button size="tiny" quaternary @click="cancelSelection">取消</n-button>
+        </div>
+      </template>
     </div>
 
     <n-scrollbar v-if="!isCollapsed" class="flex-1">
-      <div v-for="(group, index) in historyGroups" :key="index" class="p-3">
+      <div v-for="(group, index) in displayGroups" :key="index" class="p-3">
         <div class="text-xs text-[--user-text-color] mb-2 font-medium opacity-80">{{ group.date }}</div>
 
         <div v-for="(item, itemIndex) in group.items" :key="itemIndex">
           <chat-history-item
             :title="item.title"
             :active="item.id === activeChatId"
+            :selection-mode="isSelectionMode"
+            :selected="selectedIds.has(item.id)"
+            :is-pinned="item.isPinned"
             @click="handleChatClick(item.id)"
+            @enter-multi-select="handleEnterMultiSelect(item.id)"
+            @toggle-select="handleToggleSelect(item.id)"
             @rename="handleRename(item.id, $event)"
-            @share="handleShare(item.id)"
+            @toggle-pin="handleTogglePin(item.id)"
             @delete="handleDelete(item.id)" />
         </div>
       </div>
@@ -63,6 +97,7 @@ interface ChatItem {
   id: string;
   title: string;
   date: string;
+  isPinned?: boolean;
 }
 
 // 定义日期分组类型
@@ -71,22 +106,17 @@ interface HistoryGroup {
   items: ChatItem[];
 }
 
-// Props
-const props = defineProps<{
+defineProps<{
   activeChatId?: string;
   isCollapsed?: boolean;
 }>();
-
-// 使用props避免未使用警告
-const { activeChatId } = props;
-
-// Emits
 const emit = defineEmits<{
   "new-chat": [];
   "select-chat": [id: string];
   "rename-chat": [id: string, newTitle: string];
-  "share-chat": [id: string];
+  "toggle-pin-chat": [id: string, isPinned: boolean];
   "delete-chat": [id: string];
+  "batch-delete-chat": [ids: string[]];
   "clear-all": [];
   "toggle-collapse": [];
 }>();
@@ -117,6 +147,119 @@ const historyGroups = ref<HistoryGroup[]>([
   }
 ]);
 
+const isSelectionMode = ref(false);
+const selectedIds = ref<Set<string>>(new Set());
+
+// 扁平化获取所有历史记录 ID，用于全选
+const allChatIds = computed(() => {
+  return historyGroups.value.flatMap((group) => group.items.map((item) => item.id));
+});
+
+// 是否全选状态
+const isAllSelected = computed(() => {
+  return allChatIds.value.length > 0 && selectedIds.value.size === allChatIds.value.length;
+});
+
+const displayGroups = computed(() => {
+  const pinnedItems: ChatItem[] = [];
+  const regularGroups: HistoryGroup[] = [];
+
+  // 遍历所有历史记录，将置顶的单独抽出
+  historyGroups.value.forEach((group) => {
+    const unpinnedItems: ChatItem[] = [];
+    group.items.forEach((item) => {
+      if (item.isPinned) {
+        pinnedItems.push(item);
+      } else {
+        unpinnedItems.push(item);
+      }
+    });
+    // 只保留还有非置顶数据的普通日期分组
+    if (unpinnedItems.length > 0) {
+      regularGroups.push({ ...group, items: unpinnedItems });
+    }
+  });
+
+  const result: HistoryGroup[] = [];
+  // 如果存在置顶项目，将其作为第一个分组压入
+  if (pinnedItems.length > 0) {
+    result.push({ date: "置顶", items: pinnedItems });
+  }
+  // 追加其他普通日期分组
+  result.push(...regularGroups);
+
+  return result;
+});
+
+// 4. 新增置顶/取消置顶的处理逻辑
+const handleTogglePin = (id: string) => {
+  historyGroups.value.forEach((group) => {
+    const item = group.items.find((i) => i.id === id);
+    if (item) {
+      item.isPinned = !item.isPinned;
+      // 通知外层（或后端）状态改变
+      emit("toggle-pin-chat", id, item.isPinned);
+    }
+  });
+};
+
+// 退出多选
+const cancelSelection = () => {
+  isSelectionMode.value = false;
+  selectedIds.value.clear();
+};
+
+// 切换单个选中状态
+const handleToggleSelect = (id: string) => {
+  if (selectedIds.value.has(id)) {
+    selectedIds.value.delete(id);
+  } else {
+    selectedIds.value.add(id);
+  }
+};
+
+// 触发全选/取消全选
+const handleSelectAll = (checked: boolean) => {
+  if (checked) {
+    selectedIds.value = new Set(allChatIds.value);
+  } else {
+    selectedIds.value.clear();
+  }
+};
+
+// 批量删除
+const handleBatchDelete = () => {
+  window.$dialog.warning({
+    content: `确认删除选中的 ${selectedIds.value.size} 个对话吗？`,
+    positiveText: "确认",
+    negativeText: "取消",
+    onPositiveClick: () => {
+      // 1. 本地更新视图
+      historyGroups.value = historyGroups.value
+        .map((group) => {
+          return {
+            ...group,
+            items: group.items.filter((item) => !selectedIds.value.has(item.id))
+          };
+        })
+        .filter((group) => group.items.length > 0);
+
+      // 2. 派发事件通知外层或接口
+      emit("batch-delete-chat", Array.from(selectedIds.value));
+
+      // 3. 退出多选模式
+      cancelSelection();
+    }
+  });
+};
+
+// 处理从右键菜单进入多选模式
+const handleEnterMultiSelect = (id: string) => {
+  isSelectionMode.value = true;
+  // 自动勾选当前触发右键菜单的那一项，体验更好
+  selectedIds.value.add(id);
+};
+
 // 处理新建对话
 const handleNewChat = () => {
   emit("new-chat");
@@ -137,11 +280,6 @@ const handleRename = (id: string, newTitle: string) => {
     }
   });
   emit("rename-chat", id, newTitle);
-};
-
-// 处理分享对话
-const handleShare = (id: string) => {
-  emit("share-chat", id);
 };
 
 // 处理菜单选择（用于清空历史）
@@ -197,3 +335,9 @@ const clearMenuOptions = [
   }
 ];
 </script>
+
+<style scoped lang="scss">
+:deep(.n-checkbox .n-checkbox-box) {
+  border-radius: 2px;
+}
+</style>

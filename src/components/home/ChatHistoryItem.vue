@@ -1,21 +1,24 @@
 <template>
-  <context-menu :menu="contextMenuOptions" @select="handleContextMenuSelect">
+  <context-menu :menu="selectionMode ? [] : contextMenuOptions" @select="handleContextMenuSelect">
     <div class="relative group px-2 py-1">
       <div
-        class="flex items-center justify-between p-2 rounded-lg cursor-pointer transition-colors duration-200"
+        class="flex items-center p-2 rounded-lg cursor-pointer transition-colors duration-200 gap-2"
         :class="[
-          /* 悬停和激活状态背景适配 */
-          active ? 'bg-[--bg-left-active]' : 'hover:bg-[--tray-hover]'
+          /* 多选模式下不显示高亮背景，防止视觉干扰 */
+          active && !selectionMode ? 'bg-[--bg-left-active]' : 'hover:bg-[--tray-hover]'
         ]"
-        @click="$emit('click')">
-        <div
-          v-if="!isRenaming"
-          class="text-sm truncate select-none transition-colors"
-          :class="[
-            /* 文字颜色适配 */
-            active ? 'text-[--left-active-text-color] font-medium' : 'text-[--text-color]'
-          ]">
-          {{ title }}
+        @click="selectionMode ? $emit('toggle-select') : $emit('click')">
+        <div v-if="selectionMode" class="flex-shrink-0 flex items-center" @click.stop="$emit('toggle-select')">
+          <n-checkbox :checked="selected" size="small" />
+        </div>
+
+        <div v-if="!isRenaming" class="flex items-center flex-1 min-w-0">
+          <div
+            class="text-sm truncate select-none transition-colors"
+            :class="[active && !selectionMode ? 'text-[--left-active-text-color] font-medium' : 'text-[--text-color]']">
+            {{ title }}
+          </div>
+          <i-mdi-pin class="w-3 h-3 ml-2 flex-shrink-0 text-[--action-bar-icon-color] opacity-70" v-if="isPinned" />
         </div>
 
         <div v-else class="flex-1" @click.stop>
@@ -29,6 +32,7 @@
         </div>
 
         <n-dropdown
+          v-if="!selectionMode"
           trigger="click"
           :options="menuOptions"
           :show-arrow="false"
@@ -38,7 +42,6 @@
           <div
             class="w-6 h-6 flex items-center justify-center rounded-md transition-colors opacity-0 group-hover:opacity-100"
             :class="[
-              /* 激活状态下图标常驻显示，否则只在 group-hover 显示 */
               active ? 'opacity-100 text-[--left-active-text-color]' : 'text-[--action-bar-icon-color]',
               'hover:bg-[--tray-hover]'
             ]">
@@ -51,81 +54,59 @@
 </template>
 
 <script setup lang="ts">
+import type { NInput } from "naive-ui";
+
 const props = defineProps<{
   title: string;
   id?: string;
   active?: boolean;
+  selectionMode?: boolean;
+  selected?: boolean;
+  isPinned?: boolean;
 }>();
 
-// 定义事件
 const emit = defineEmits<{
   (e: "click"): void;
+  (e: "toggle-select"): void;
+  (e: "enter-multi-select"): void;
   (e: "rename", newTitle: string): void;
-  (e: "share"): void;
+  (e: "toggle-pin"): void;
   (e: "delete"): void;
 }>();
 
-// 重命名状态
 const isRenaming = ref(false);
-// 编辑标题
 const editTitle = ref(props.title);
-// 重命名输入框引用
 const renameInputRef = ref<InstanceType<typeof NInput> | null>(null);
 
-// 1. 定义操作菜单选项 (Naive UI Dropdown 使用)
-const menuOptions = [
-  {
-    label: "重命名",
-    key: "rename"
-  },
-  {
-    label: "分享",
-    key: "share"
-  },
-  {
-    label: "删除",
-    key: "delete"
-  }
-];
+const menuOptions = computed(() => [
+  { label: "多选", key: "multi-select" },
+  { label: "重命名", key: "rename" },
+  { label: props.isPinned ? "取消置顶" : "置顶", key: "toggle-pin" },
+  { label: "删除", key: "delete" }
+]);
 
-// 2. 定义右键菜单选项 (ContextMenu 组件使用)
-const contextMenuOptions = [
-  {
-    label: "重命名",
-    key: "rename"
-  },
-  {
-    label: "分享",
-    key: "share"
-  },
-  {
-    label: "删除",
-    key: "delete",
-    disabled: false // 可以根据需要设置是否禁用
-  }
-];
+const contextMenuOptions = computed(() => [
+  { label: "多选", key: "multi-select" },
+  { label: "重命名", key: "rename" },
+  { label: props.isPinned ? "取消置顶" : "置顶", key: "toggle-pin" },
+  { label: "删除", key: "delete", disabled: false }
+]);
 
-// 处理菜单选项选择 (下拉菜单)
-const handleMenuSelect = (key: string) => {
-  executeAction(key);
-};
-
-// 3. 处理右键菜单选择
-// 注意：ContextMenu 组件的 select 事件通常返回点击的 item 对象
+const handleMenuSelect = (key: string) => executeAction(key);
 const handleContextMenuSelect = (item: any) => {
-  if (item && item.key) {
-    executeAction(item.key);
-  }
+  if (item && item.key) executeAction(item.key);
 };
 
-// 4. 统一执行动作的函数
 const executeAction = (key: string) => {
   switch (key) {
+    case "multi-select":
+      emit("enter-multi-select");
+      break;
     case "rename":
       handleRenameClick();
       break;
-    case "share":
-      emit("share");
+    case "toggle-pin":
+      emit("toggle-pin");
       break;
     case "delete":
       emit("delete");
@@ -133,28 +114,26 @@ const executeAction = (key: string) => {
   }
 };
 
-// 开始重命名
 const handleRenameClick = () => {
   isRenaming.value = true;
   editTitle.value = props.title;
-  // 等待DOM更新后聚焦输入框
-  nextTick(() => {
-    renameInputRef.value?.focus();
-  });
+  nextTick(() => renameInputRef.value?.focus());
 };
 
-// 确认重命名
 const handleRenameConfirm = () => {
   const newTitle = editTitle.value.trim();
-  if (newTitle && newTitle !== props.title) {
-    emit("rename", newTitle);
-  }
+  if (newTitle && newTitle !== props.title) emit("rename", newTitle);
   isRenaming.value = false;
 };
 
-// 取消重命名
 const handleRenameCancel = () => {
   isRenaming.value = false;
   editTitle.value = props.title;
 };
 </script>
+
+<style scoped lang="scss">
+:deep(.n-checkbox .n-checkbox-box) {
+  border-radius: 2px;
+}
+</style>

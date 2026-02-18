@@ -236,6 +236,8 @@ fn get_invoke_handlers() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Se
     #[cfg(desktop)]
     use desktop::tts::speak_system;
     #[cfg(desktop)]
+    use desktop::video_cover::extract_video_cover;
+    #[cfg(desktop)]
     use desktop::window_payload::{get_window_payload, push_window_payload};
 
     tauri::generate_handler![
@@ -280,5 +282,7 @@ fn get_invoke_handlers() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Se
         cancel_directory_scan,
         #[cfg(desktop)]
         speak_system,
+        #[cfg(desktop)]
+        extract_video_cover,
     ]
 }
