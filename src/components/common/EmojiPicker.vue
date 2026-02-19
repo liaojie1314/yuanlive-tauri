@@ -13,10 +13,8 @@
 <script setup lang="ts">
 import { emojis } from "@/utils/EmojiUtils";
 
-// Emits
 const emit = defineEmits<(e: "select-emoji", emoji: string) => void>();
 
-// Methods
 const handleEmojiClick = (emoji: string) => {
   emit("select-emoji", emoji);
 };

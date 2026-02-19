@@ -333,6 +333,7 @@ import { SelfieSegmentation } from "@mediapipe/selfie_segmentation";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 
 import { TauriCommandEnum } from "@/enums";
+import { useWindow } from "@/hooks/useWindow";
 
 type SignalingProtocol = "srs-json" | "whip";
 const CANVAS_W = 1920;
@@ -444,6 +445,8 @@ let selfieSegmentation: SelfieSegmentation | null = null;
 const bgImage = new Image();
 bgImage.src = "";
 
+const { createWebviewWindow } = useWindow();
+
 // 监听模式变化
 watch(
   currentMode,
@@ -486,6 +489,7 @@ const handleStreamToggle = async () => {
     await stopEverything();
   } else {
     await startEverything();
+    await createWebviewWindow("弹幕", "danmaku", 400, 720, "", false);
   }
 };
 

@@ -65,6 +65,11 @@ const getCommonRoutes = (): Array<RouteRecordRaw> => [
     component: () => import("@/views/recordWindow/index.vue")
   },
   {
+    name: "danmaku",
+    path: "/danmaku",
+    component: () => import("@/views/recordWindow/Danmaku.vue")
+  },
+  {
     name: "setting",
     path: "/setting",
     component: () => import("@/views/settingWindow/index.vue"),
