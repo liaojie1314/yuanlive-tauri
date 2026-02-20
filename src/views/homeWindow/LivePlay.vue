@@ -1,6 +1,6 @@
 <template>
   <div
-    class="live-play-container relative w-full h-full bg-black flex select-none"
+    class="live-play-container relative w-full h-full bg-[--home-bg-color] flex select-none"
     :class="{ 'more-gifts-open': moreGiftsVisible }">
     <div
       :class="[
@@ -10,40 +10,40 @@
       ]">
       <div
         data-tauri-drag-region
-        class="top-info-bar w-full h-12 bg-black/80 flex items-center justify-between px-2 z-999">
+        class="top-info-bar w-full h-12 bg-[--tray-bg-color] flex items-center justify-between px-2 z-999 border-b border-[--line-color]">
         <div class="flex items-center gap-3">
           <div
             @click="handleBack"
-            class="w-10 h-10 rounded-full bg-black/50 flex items-center justify-center text-white hover:bg-black/80 transition-colors"
+            class="w-10 h-10 rounded-full bg-[--bg-left-menu] flex items-center justify-center text-[--action-bar-icon-color] hover:bg-[--bg-left-menu-hover] transition-colors cursor-pointer"
             aria-label="返回">
             <i-mdi-arrow-left class="w-6 h-6" />
           </div>
 
-          <div class="host-info flex items-center gap-3 bg-black/50 backdrop-blur-sm px-2 py-1 rounded-full">
+          <div class="host-info flex items-center gap-3 bg-[--bg-left-menu] backdrop-blur-sm px-2 py-1 rounded-full">
             <div class="avatar w-8 h-8 rounded-full overflow-hidden border-2 border-red-500">
               <img src="https://picsum.photos/id/1/100/100" alt="主播头像" class="w-full h-full object-cover" />
             </div>
             <div class="host-info-text flex flex-col">
-              <div class="host-name text-white font-medium">千年 (万年之主)</div>
-              <div class="host-stats flex items-center gap-2 text-white/70 text-xs">
+              <div class="host-name text-[--text-color] font-medium">千年 (万年之主)</div>
+              <div class="host-stats flex items-center gap-2 text-[--user-text-color] text-xs">
                 <i-mdi-heart-outline class="w-3 h-3" />
                 <span>2.9万</span>
               </div>
             </div>
             <div
-              class="follow-btn bg-red-500 text-white text-xs px-3 py-1 rounded-full hover:bg-red-600 transition-colors">
+              class="follow-btn bg-red-500 text-white text-xs px-3 py-1 rounded-full hover:bg-red-600 transition-colors cursor-pointer">
               关注
             </div>
             <div
-              class="group-btn bg-green-500 text-white text-xs px-3 py-1 rounded-full hover:bg-green-600 transition-colors">
+              class="group-btn bg-green-500 text-white text-xs px-3 py-1 rounded-full hover:bg-green-600 transition-colors cursor-pointer">
               加粉丝团
             </div>
             <div
-              class="vip-btn bg-purple-500 text-white text-xs px-3 py-1 rounded-full hover:bg-purple-600 transition-colors">
+              class="vip-btn bg-purple-500 text-white text-xs px-3 py-1 rounded-full hover:bg-purple-600 transition-colors cursor-pointer">
               加会员
             </div>
             <div
-              class="more-btn w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-white/20 transition-colors">
+              class="more-btn w-8 h-8 rounded-full bg-[--left-item-bg-color] flex items-center justify-center text-[--action-bar-icon-color] hover:bg-[--action-bar-icon-hover] transition-colors cursor-pointer">
               <i-mdi-dots-horizontal class="w-5 h-5" />
             </div>
           </div>
@@ -54,20 +54,22 @@
             <div
               v-for="(user, index) in audienceList.slice(0, 3)"
               :key="user.id"
-              class="w-8 h-8 rounded-full border-2 border-white overflow-hidden"
+              class="w-8 h-8 rounded-full border-2 border-[--tray-bg-color] overflow-hidden"
               :style="{ zIndex: 3 - index }">
               <img :src="user.avatar" :alt="user.name" class="w-full h-full object-cover" />
             </div>
           </div>
 
-          <div v-if="chatCollapsed" class="flex items-center gap-2 bg-black/50 backdrop-blur-sm px-3 py-1 rounded-full">
-            <span class="audience-count text-white font-medium">{{ audienceCount }}</span>
+          <div
+            v-if="chatCollapsed"
+            class="flex items-center gap-2 bg-[--bg-left-menu] backdrop-blur-sm px-3 py-1 rounded-full">
+            <span class="audience-count text-[--text-color] font-medium">{{ audienceCount }}</span>
           </div>
 
           <div
             v-if="chatCollapsed"
             @click="toggleChat"
-            class="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-white/20 transition-colors cursor-pointer">
+            class="w-8 h-8 rounded-full bg-[--left-item-bg-color] flex items-center justify-center text-[--action-bar-icon-color] hover:bg-[--action-bar-icon-hover] transition-colors cursor-pointer">
             <i-mdi-chevron-right class="w-5 h-5" />
           </div>
         </div>
@@ -160,11 +162,14 @@
         </div>
       </div>
 
-      <div class="gift-area w-full h-20 bg-black/90 flex items-center p-2 z-999">
-        <div v-resize="calculateVisibleGiftCount" class="gift-list bg-amber flex items-center flex-1 rounded-md">
+      <div
+        class="gift-area w-full h-20 bg-[--tray-bg-color] flex items-center p-2 z-999 border-t border-[--line-color]">
+        <div
+          v-resize="calculateVisibleGiftCount"
+          class="gift-list bg-[--tray-bg-color] flex items-center flex-1 rounded-md">
           <div class="gifts-container flex items-center overflow-hidden w-full">
             <n-popover
-              v-for="(gift, index) in displayGifts"
+              v-for="gift in displayGifts"
               :key="gift.id"
               trigger="hover"
               placement="top"
@@ -174,9 +179,6 @@
               <template #trigger>
                 <div
                   class="gift-item-container flex flex-col items-center cursor-pointer flex-1 h-full relative overflow-visible transition-all duration-300">
-                  <div
-                    v-if="index > 0"
-                    class="gift-divider absolute left-0 top-1/2 transform -translate-y-1/2 h-10 w-[1px] bg-white/20"></div>
                   <div
                     class="gift-item-content flex flex-col items-center justify-center h-full px-2 transition-all duration-300">
                     <div class="gift-icon rounded-full flex items-center justify-center mb-1">
@@ -190,15 +192,15 @@
                         stroke-width="2"
                         stroke-linecap="round"
                         stroke-linejoin="round"
-                        class="text-white">
+                        class="text-[--text-color]">
                         <path :d="gift.path" />
                       </svg>
                     </div>
                     <div
-                      class="gift-name text-white text-xs truncate max-w-full text-center transition-all duration-300">
+                      class="gift-name text-[--text-color] text-xs truncate max-w-full text-center transition-all duration-300">
                       {{ gift.name }}
                     </div>
-                    <div class="gift-cost text-white text-xs opacity-70">{{ gift.cost }}钻</div>
+                    <div class="gift-cost text-[--user-text-color] text-xs">{{ gift.cost }}钻</div>
                   </div>
                   <div
                     class="gift-send-btn-container transition-all duration-300 opacity-0 transform translate-y-2 flex justify-center">
@@ -210,13 +212,14 @@
                   </div>
                 </div>
               </template>
-              <div class="gift-amount-popover bg-black/90 backdrop-blur-sm p-3 rounded-lg border border-white/10">
+              <div
+                class="gift-amount-popover bg-[--bg-popover] backdrop-blur-sm p-3 rounded-lg border border-[--line-color] shadow-lg">
                 <div class="gift-amount-grid grid grid-cols-4 gap-2">
                   <div
                     v-for="amount in amountOptions"
                     :key="amount.value"
                     @click="sendGiftWithAmount(gift, amount.value)"
-                    class="amount-btn cursor-pointer px-4 py-2 bg-white/10 text-white rounded-full transition-all">
+                    class="amount-btn cursor-pointer px-4 py-2 bg-[--bg-left-menu-hover] text-[--text-color] rounded-full transition-all hover:bg-[--bg-menu-hover]">
                     {{ amount.label }}
                   </div>
                 </div>
@@ -227,26 +230,11 @@
               v-if="showMoreBtn"
               class="gift-item-container gift-more-container flex flex-col items-center cursor-pointer flex-1 h-full relative"
               @click="toggleMoreGifts">
-              <div
-                v-if="displayGifts.length > 0"
-                class="gift-divider absolute left-0 top-1/2 transform -translate-y-1/2 h-10 w-[1px] bg-white/20"></div>
               <div class="gift-item gift-more flex flex-col items-center justify-center h-full px-2">
                 <div class="gift-icon rounded-full flex items-center justify-center mb-1">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="24"
-                    height="24"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    class="text-white">
-                    <path d="M12 5v14M5 12h14" />
-                  </svg>
+                  <i-mdi-plus class="h-6 w-6 text-[--text-color]" />
                 </div>
-                <div class="gift-name text-white text-xs truncate text-center">更多</div>
+                <div class="gift-name text-[--text-color] text-xs truncate text-center">更多</div>
               </div>
             </div>
           </div>
@@ -279,30 +267,15 @@
       <div
         v-if="moreGiftsVisible"
         :class="[
-          'more-gifts-popup absolute bottom-25 bg-black/95 backdrop-blur-sm rounded-lg border border-white/10 z-1000',
+          'more-gifts-popup absolute bottom-25 bg-[--bg-popover] backdrop-blur-sm rounded-lg border border-[--line-color] z-1000 shadow-xl',
           chatCollapsed ? 'right-0' : 'right-[25%]'
         ]"
         style="width: 320px; max-height: 380px">
-        <div class="more-gifts-header flex items-center justify-between px-4 py-3 border-b border-white/10">
-          <h3 class="text-white font-medium">更多礼物</h3>
-          <div
+        <div class="more-gifts-header flex items-center justify-between px-4 py-3 border-b border-[--line-color]">
+          <h3 class="text-[--text-color] font-medium">更多礼物</h3>
+          <i-mdi-close
             @click="closeMoreGifts"
-            class="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-white/20 transition-colors cursor-pointer"
-            aria-label="关闭">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round">
-              <line x1="18" y1="6" x2="6" y2="18" />
-              <line x1="6" y1="6" x2="18" y2="18" />
-            </svg>
-          </div>
+            class="w-4 h-4 p-2 rounded-full bg-[--left-item-bg-color] flex items-center justify-center text-[--action-bar-icon-color] hover:bg-[--action-bar-icon-hover] transition-colors cursor-pointer" />
         </div>
 
         <div class="more-gifts-content p-2">
@@ -318,7 +291,7 @@
                 v-model:show="popoverVisible[gift.id]">
                 <template #trigger>
                   <div
-                    class="gift-item-container flex flex-col items-center cursor-pointer p-2 bg-white/5 rounded-md hover:bg-white/10">
+                    class="gift-item-container flex flex-col items-center cursor-pointer p-2 bg-[--bg-left-menu-hover] rounded-md hover:bg-[--bg-menu-hover]">
                     <div class="gift-icon rounded-full flex items-center justify-center my-1">
                       <svg
                         :xmlns="gift.icon"
@@ -330,14 +303,14 @@
                         stroke-width="2"
                         stroke-linecap="round"
                         stroke-linejoin="round"
-                        class="text-white">
+                        class="text-[--text-color]">
                         <path :d="gift.path" />
                       </svg>
                     </div>
-                    <div class="gift-name text-white text-xs truncate max-w-full text-center">
+                    <div class="gift-name text-[--text-color] text-xs truncate max-w-full text-center">
                       {{ gift.name }}
                     </div>
-                    <div class="gift-cost text-white text-xs opacity-70">{{ gift.cost }}钻</div>
+                    <div class="gift-cost text-[--user-text-color] text-xs">{{ gift.cost }}钻</div>
                     <div class="gift-send-btn-container mt-2">
                       <div
                         class="gift-send-btn bg-red-500 text-white text-xs font-medium py-1 px-4 rounded-md w-full cursor-pointer hover:bg-red-600 transition-colors text-center"
@@ -347,13 +320,14 @@
                     </div>
                   </div>
                 </template>
-                <div class="gift-amount-popover bg-black/90 backdrop-blur-sm p-3 rounded-lg border border-white/10">
+                <div
+                  class="gift-amount-popover bg-[--bg-popover] backdrop-blur-sm p-3 rounded-lg border border-[--line-color] shadow-lg">
                   <div class="gift-amount-grid grid grid-cols-4 gap-2">
                     <div
                       v-for="amount in amountOptions"
                       :key="amount.value"
                       @click="sendGiftWithAmount(gift, amount.value)"
-                      class="amount-btn px-4 py-2 bg-white/10 text-white rounded-full transition-all cursor-pointer hover:bg-white/20">
+                      class="amount-btn px-4 py-2 bg-[--bg-left-menu-hover] text-[--text-color] rounded-full transition-all cursor-pointer hover:bg-[--bg-menu-hover]">
                       {{ amount.label }}
                     </div>
                   </div>
@@ -367,24 +341,25 @@
       <div
         v-if="rechargeVisible"
         :class="[
-          'recharge-popup absolute bottom-25 bg-black/98 rounded-lg border border-white/10 z-1000 overflow-hidden',
+          'recharge-popup absolute bottom-25 bg-[--bg-modal] rounded-lg border border-[--line-color] z-1000 overflow-hidden shadow-xl',
           chatCollapsed ? 'right-0' : 'right-[25%]'
         ]"
         style="width: 500px; max-height: 340px">
-        <div class="recharge-header flex items-center justify-between px-4 py-3 bg-black">
-          <h3 class="text-lg font-bold text-white">钻石充值</h3>
+        <div
+          class="recharge-header flex items-center justify-between px-4 py-3 bg-[--bg-popover] border-b border-[--line-color]">
+          <h3 class="text-lg font-bold text-[--text-color]">钻石充值</h3>
           <div class="flex items-center gap-4">
-            <span class="text-sm text-white">余额 {{ balance }} 钻石</span>
+            <span class="text-sm text-[--text-color]">余额 {{ balance }} 钻石</span>
             <div
               @click="closeRecharge"
-              class="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-red-500 transition-all cursor-pointer"
+              class="w-8 h-8 rounded-full bg-[--left-item-bg-color] flex items-center justify-center text-[--action-bar-icon-color] hover:bg-red-500 hover:text-white transition-all cursor-pointer"
               aria-label="关闭">
               <i-mdi-close />
             </div>
           </div>
         </div>
 
-        <div class="recharge-amounts px-3 bg-black">
+        <div class="recharge-amounts px-3 bg-[--bg-popover] pt-3 pb-3">
           <div class="grid grid-cols-4 gap-3">
             <div
               v-for="(option, index) in rechargeOptions"
@@ -394,10 +369,14 @@
                 'recharge-option cursor-pointer rounded-md py-3 px-2 text-center transition-all duration-200 transform hover:scale-105',
                 selectedAmount === option.diamonds
                   ? 'bg-red-500 text-white font-bold shadow-lg'
-                  : 'bg-gray-800 text-white hover:bg-gray-700'
+                  : 'bg-[--bg-setting-item] text-[--text-color] hover:bg-[--bg-menu-hover]'
               ]">
               <div class="text-sm">{{ option.diamonds }}钻石</div>
-              <div class="text-xs">¥{{ option.price }}</div>
+              <div
+                class="text-xs mt-1 opacity-80"
+                :class="selectedAmount === option.diamonds ? 'text-white' : 'text-[--user-text-color]'">
+                ¥{{ option.price }}
+              </div>
             </div>
             <div
               @click="selectAmount(0)"
@@ -405,24 +384,28 @@
                 'recharge-option cursor-pointer rounded-md py-3 px-2 text-center transition-all duration-200 transform hover:scale-105',
                 selectedAmount === 0
                   ? 'bg-red-500 text-white font-bold shadow-lg'
-                  : 'bg-gray-800 text-white hover:bg-gray-700'
+                  : 'bg-[--bg-setting-item] text-[--text-color] hover:bg-[--bg-menu-hover]'
               ]">
               <div class="text-sm">自定义金额</div>
-              <div class="text-xs">最高100万元</div>
+              <div
+                class="text-xs mt-1 opacity-80"
+                :class="selectedAmount === 0 ? 'text-white' : 'text-[--user-text-color]'">
+                最高100万元
+              </div>
             </div>
           </div>
         </div>
 
-        <div class="recharge-payment py-2 px-3 bg-black border-t border-gray-800">
-          <h4 class="text-md font-medium text-white mb-4">扫码支付</h4>
+        <div class="recharge-payment py-2 px-3 bg-[--bg-popover] border-t border-[--line-color]">
+          <h4 class="text-md font-medium text-[--text-color] mb-1">扫码支付</h4>
           <div class="payment-content flex flex-row gap-4 items-center">
             <div class="qrcode-container bg-white rounded-sm shadow-lg">
-              <i-material-symbols-qr-code class="w-20! h-20!" />
+              <i-material-symbols-qr-code class="w-20! h-20! text-black" />
             </div>
 
             <div class="payment-info flex flex-col gap-2 flex-1">
               <div class="amount-info text-left">
-                <div class="text-sm text-white">应付金额</div>
+                <div class="text-sm text-[--text-color]">应付金额</div>
                 <div class="text-xl font-bold text-red-500 mt-1">
                   ¥{{ rechargeOptions.find((opt) => opt.diamonds === selectedAmount)?.price || 0 }}
                 </div>
@@ -430,16 +413,16 @@
 
               <div class="payment-methods flex flex-col gap-2 w-full">
                 <div class="methods-icons flex items-center gap-3">
-                  <div class="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center">
+                  <div class="w-8 h-8 rounded-full bg-[--left-item-bg-color] flex items-center justify-center">
                     <i-material-symbols-live-tv class="text-blue-400" style="font-size: 20px" />
                   </div>
-                  <div class="text-xs text-white/80">直播专属支付方式</div>
+                  <div class="text-xs text-[--user-text-color]">直播专属支付方式</div>
                 </div>
               </div>
             </div>
           </div>
 
-          <div class="recharge-footer p-4 bg-black border-t border-gray-800 mt-4">
+          <div class="recharge-footer p-4 bg-[--bg-popover] border-t border-[--line-color] mt-4">
             <button
               @click="handleRechargeSubmit"
               class="w-full bg-gradient-to-r from-orange-500 to-red-500 text-white font-bold py-3 px-4 rounded-lg hover:from-orange-600 hover:to-red-600 transition-all duration-200 transform hover:scale-105 shadow-lg">
@@ -452,157 +435,48 @@
 
     <div
       v-if="!chatCollapsed"
-      class="chat-container w-1/4 h-full bg-black/95 border-l border-white/10 flex flex-col transition-all duration-300 ease-in-out">
-      <div class="chat-header flex items-center justify-between p-3 border-b border-white/10 overflow-hidden">
+      class="chat-container w-1/4 h-full bg-[--right-bg-color] border-l border-[--line-color] flex flex-col transition-all duration-300 ease-in-out">
+      <div class="chat-header flex items-center justify-between p-3 border-b border-[--line-color] overflow-hidden">
         <div class="flex items-center gap-2 whitespace-nowrap overflow-hidden flex-1">
-          <i-mdi-account-group class="text-white flex-shrink-0" />
-          <span class="text-white font-medium whitespace-nowrap truncate">在线观众 · {{ audienceCount }}</span>
-          <i-mdi-information-outline class="text-white/70 text-xs flex-shrink-0" />
+          <i-mdi-account-group class="text-[--action-bar-icon-color] flex-shrink-0" />
+          <span class="text-[--text-color] font-medium whitespace-nowrap truncate">在线观众 · {{ audienceCount }}</span>
+          <i-mdi-information-outline class="text-[--user-text-color] text-xs flex-shrink-0" />
         </div>
         <div
           @click="toggleChat"
-          class="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-white/20 transition-colors cursor-pointer flex-shrink-0">
+          class="w-8 h-8 rounded-full bg-[--left-item-bg-color] flex items-center justify-center text-[--action-bar-icon-color] hover:bg-[--action-bar-icon-hover] transition-colors cursor-pointer flex-shrink-0">
           <i-mdi-chevron-left class="w-5 h-5" />
         </div>
       </div>
 
-      <div class="chat-tabs flex border-b border-white/10 min-w-0">
-        <div
-          v-for="tab in chatTabs"
-          :key="tab.id"
-          @click="activeTab = tab.id"
-          :class="[
-            'flex-1 py-2 text-center text-sm transition-colors whitespace-nowrap min-w-0',
-            activeTab === tab.id ? 'text-white font-medium border-b-2 border-red-500' : 'text-white/70 hover:text-white'
-          ]">
-          <div class="flex items-center justify-center min-w-0">
-            <span class="truncate">{{ tab.name }}</span>
-            <span v-if="tab.count !== undefined" class="text-xs text-white/50 ml-1 flex-shrink-0">
-              ({{ tab.count }})
-            </span>
-          </div>
-        </div>
-      </div>
-
-      <div class="chat-content flex-grow flex flex-col overflow-hidden">
-        <div
-          class="audience-list h-[155px] overflow-hidden transition-all duration-300 hover:h-1/2"
-          @mouseenter="showUserCard = true"
-          @mouseleave="handleAudienceListLeave">
-          <n-scrollbar height="100%" ref="audienceScrollbar">
-            <div class="p-2">
-              <div
-                v-for="(user, index) in audienceList"
-                :key="user.id"
-                class="audience-item flex items-center gap-2 py-2 px-3 hover:bg-white/5 rounded-md">
-                <div
-                  :class="[
-                    'w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-bold',
-                    index === 0
-                      ? 'bg-yellow-500'
-                      : index === 1
-                        ? 'bg-gray-300 text-gray-800'
-                        : index === 2
-                          ? 'bg-amber-700'
-                          : 'bg-white/10'
-                  ]">
-                  {{ index + 1 }}
-                </div>
-                <div class="w-8 h-8 rounded-full overflow-hidden">
-                  <img :src="user.avatar" :alt="user.name" class="w-full h-full object-cover" />
-                </div>
-                <div class="flex-1 min-w-0">
-                  <div class="text-white text-sm flex items-center gap-1 min-w-0">
-                    <span class="truncate">{{ user.name }}</span>
-                    <span v-if="user.medals && user.medals.length > 0" class="text-xs text-gray-300 flex-shrink-0">
-                      {{ user.medals.join(" ") }}
-                    </span>
-                  </div>
-                  <div class="text-white/70 text-xs">{{ user.level }}</div>
-                </div>
-              </div>
-            </div>
-          </n-scrollbar>
-        </div>
-
-        <div class="message-list flex-1 overflow-hidden border-t border-white/10 transition-all duration-300 relative">
+      <chat-panel :audience-list="audienceList" :chat-messages="chatMessages" @send-message="handleSendMessage">
+        <template #user-info-card>
           <div
-            v-if="showUserCard"
-            class="user-info-card absolute top-0 left-0 right-0 z-10 transition-all duration-300">
-            <div
-              class="user-info-content flex items-center justify-between p-2 bg-black/80 backdrop-blur-md border-b border-white/10">
-              <div class="flex items-center gap-2">
-                <div class="w-8 h-8 rounded-full overflow-hidden">
-                  <img src="https://picsum.photos/id/1027/100/100" alt="用户头像" class="w-full h-full object-cover" />
-                </div>
-                <div>
-                  <div class="text-white text-sm font-medium">元渊</div>
-                  <div class="text-white/70 text-xs">Lv.12</div>
-                </div>
+            class="user-info-content flex items-center justify-between p-2 bg-[--bg-popover] backdrop-blur-md border-b border-[--line-color]">
+            <div class="flex items-center gap-2">
+              <div class="w-8 h-8 rounded-full overflow-hidden">
+                <img src="https://picsum.photos/id/1027/100/100" alt="用户头像" class="w-full h-full object-cover" />
               </div>
-              <div class="text-white/70 text-xs">0</div>
-            </div>
-          </div>
-
-          <n-scrollbar height="100%">
-            <div class="p-2">
-              <div class="system-message text-center py-2">
-                <div class="inline-block px-3 py-1 bg-white/5 text-white/70 text-xs rounded-lg">
-                  欢迎来到直播间！抖音严禁未成年人直播或礼物消费。严禁违法违规、低俗色情、吸烟酗酒、人身伤害等直播内容。理性消费，如主播在直播中以不当方式诱导消费，请谨慎辨别。切勿私下交易，以防人财两失，谨防网络诈骗。
-                </div>
-              </div>
-
-              <div v-for="(message, index) in chatMessages" :key="index" class="message-item py-2">
-                <div class="flex items-start gap-2">
-                  <div class="w-6 h-6 rounded-full overflow-hidden flex-shrink-0">
-                    <img :src="message.avatar" :alt="message.user" class="w-full h-full object-cover" />
-                  </div>
-                  <div class="flex-1 min-w-0">
-                    <div class="flex items-center gap-1">
-                      <span class="text-white text-xs font-medium truncate">{{ message.user }}</span>
-                      <span v-if="message.level" class="text-white/50 text-xs flex-shrink-0">{{ message.level }}</span>
-                    </div>
-                    <div class="text-white text-sm mt-1 word-break-all">{{ message.content }}</div>
-                  </div>
-                </div>
+              <div>
+                <div class="text-[--text-color] text-sm font-medium">元渊</div>
+                <div class="text-[--user-text-color] text-xs">Lv.12</div>
               </div>
             </div>
-          </n-scrollbar>
-        </div>
-      </div>
-
-      <div class="chat-input-area p-3 border-t border-white/10">
-        <div class="danmaku-input-wrapper">
-          <div class="emoji-btn" @mouseenter="showEmojiPickerHover" @mouseleave="hideEmojiPickerHover">
-            <i-mdi-emoticon-outline class="emoji-icon" />
+            <div class="text-[--user-text-color] text-xs">0</div>
           </div>
-          <input
-            v-model="messageInput"
-            type="text"
-            placeholder="与大家互动一下..."
-            class="danmaku-input-field"
-            @keyup.enter="sendMessage" />
-          <div class="send-btn" @click="sendMessage">
-            <i-mdi-send class="send-icon" />
-          </div>
-
-          <div
-            v-if="showEmojiPicker"
-            class="emoji-picker-wrapper"
-            @mouseenter="handleEmojiPickerEnter"
-            @mouseleave="handleEmojiPickerLeave">
-            <emoji-picker @select-emoji="handleSelectEmoji" />
-          </div>
-        </div>
-      </div>
+        </template>
+      </chat-panel>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
+import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
 import mpegts from "mpegts.js";
 
 const router = useRouter();
+let unlistenResize: (() => void) | null = null;
+const appWindow = WebviewWindow.getCurrent();
 const videoRef = ref<HTMLVideoElement | null>(null);
 let flvPlayer: mpegts.Player | null = null;
 
@@ -621,13 +495,6 @@ const selectedAmount = ref(60);
 // 用户余额
 const balance = ref(0);
 
-// 聊天输入相关状态
-const showEmojiPicker = ref(false);
-let emojiPickerHideTimer: number | null = null;
-// 控制用户信息卡片的显示/隐藏
-const showUserCard = ref(false);
-// 观众列表滚动条引用
-const audienceScrollbar = ref<any>(null);
 // 视频控制相关状态
 const isPlaying = ref(true);
 const volume = ref(70);
@@ -659,16 +526,7 @@ let animationElements: HTMLElement[] = [];
 
 // 聊天相关状态
 const chatCollapsed = ref(false);
-const activeTab = ref("all");
 const audienceCount = ref(1492);
-const messageInput = ref("");
-
-// 聊天标签页
-const chatTabs = [
-  { id: "all", name: "全部" },
-  { id: "contributor", name: "1000贡献用户", count: 0 },
-  { id: "vip", name: "高等级用户" }
-];
 
 // 当前用户信息
 const currentUser = {
@@ -811,7 +669,6 @@ const remainingGifts = computed(() => {
 
 // 切换更多礼物弹窗
 const toggleMoreGifts = () => {
-  // 关闭充值弹窗
   rechargeVisible.value = false;
   moreGiftsVisible.value = !moreGiftsVisible.value;
 };
@@ -1002,17 +859,10 @@ const showMoreBtn = computed(() => {
 
 // 计算可显示的礼物数量
 const calculateVisibleGiftCount = ({ width }: { width: number }) => {
-  // 获取礼物列表宽度
   const giftListWidth = width;
-  // 单个礼物项最小宽度（包含图标、文字和内边距）
   const minGiftWidth = 80;
-
-  // 计算可显示的礼物数量
   let count = Math.floor(giftListWidth / minGiftWidth);
-
-  // 确保至少显示2个礼物和1个更多按钮
   count = Math.max(count, 2);
-
   visibleGiftCount.value = count;
 };
 
@@ -1023,7 +873,6 @@ const handleBack = () => {
 
 // 处理充值按钮点击
 const handleRechargeClick = () => {
-  // 关闭更多礼物弹窗
   moreGiftsVisible.value = false;
   rechargeVisible.value = !rechargeVisible.value;
 };
@@ -1041,18 +890,13 @@ const selectAmount = (diamonds: number) => {
 // 处理充值提交
 const handleRechargeSubmit = () => {
   console.log(`充值 ${selectedAmount.value} 钻石`);
-  // 这里可以添加充值提交的逻辑，比如调用API等
-  // 充值成功后可以关闭弹窗并更新余额
   closeRecharge();
 };
 
 // 赠送礼物带数量
 const sendGiftWithAmount = (gift: any, amount: number) => {
   console.log(`赠送礼物：${gift.name} x ${amount}`);
-  // 这里可以添加礼物发送的逻辑，比如调用API等
-  // 发送成功后可以添加礼物动画效果
   createGiftAnimation(gift, amount);
-  // 关闭对应的popover
   popoverVisible.value[gift.id] = false;
 };
 
@@ -1061,7 +905,6 @@ const createGiftAnimation = (gift: any, amount: number) => {
   const container = document.querySelector(".gift-animation-container");
   if (!container) return;
 
-  // 创建礼物动画元素
   const animationEl = document.createElement("div");
   animationEl.className = "gift-animation-item absolute";
   animationEl.innerHTML = `
@@ -1075,7 +918,6 @@ const createGiftAnimation = (gift: any, amount: number) => {
     </div>
   `;
 
-  // 设置初始位置
   animationEl.style.bottom = "10%";
   animationEl.style.left = "50px";
   animationEl.style.transform = "translateY(100%)";
@@ -1085,7 +927,6 @@ const createGiftAnimation = (gift: any, amount: number) => {
   container.appendChild(animationEl);
   animationElements.push(animationEl);
 
-  // 使用requestAnimationFrame触发动画
   const startAnimation = () => {
     animationEl.style.transition = "all 0.5s cubic-bezier(0.17, 0.55, 0.55, 1)";
     animationEl.style.transform = "translateY(-50px)";
@@ -1097,7 +938,6 @@ const createGiftAnimation = (gift: any, amount: number) => {
   });
   animationFrameIds.push(animationId1);
 
-  // 移除动画元素
   const removeAnimation = () => {
     animationEl.style.transition = "all 0.5s ease-out";
     animationEl.style.transform = "translateY(-100px)";
@@ -1107,7 +947,6 @@ const createGiftAnimation = (gift: any, amount: number) => {
       setTimeout(() => {
         if (animationEl.parentNode) {
           animationEl.parentNode.removeChild(animationEl);
-          // 从数组中移除
           const index = animationElements.indexOf(animationEl);
           if (index > -1) {
             animationElements.splice(index, 1);
@@ -1125,36 +964,17 @@ const createGiftAnimation = (gift: any, amount: number) => {
 const toggleChat = () => {
   chatCollapsed.value = !chatCollapsed.value;
 };
-const sendMessage = () => {
-  if (!messageInput.value.trim()) return;
 
-  // 添加新消息到聊天列表
+const handleSendMessage = (content: string) => {
   chatMessages.value.push({
     user: currentUser.name,
     level: currentUser.level,
     avatar: "https://picsum.photos/id/1025/100/100",
-    content: messageInput.value
+    content: content
   });
-
-  // 清空输入框
-  messageInput.value = "";
 };
 
-// 处理观众列表鼠标离开事件
-const handleAudienceListLeave = () => {
-  showUserCard.value = false;
-  // 滚动到顶部，显示前三名观众
-  setTimeout(() => {
-    if (audienceScrollbar.value) {
-      audienceScrollbar.value.scrollTo({
-        top: 0,
-        behavior: "smooth"
-      });
-    }
-  }, 300); // 等待动画完成后再滚动
-};
-
-// 视频控制逻辑：直接操作 videoRef 元素
+// 视频控制逻辑
 const togglePlay = () => {
   if (videoRef.value) {
     if (isPlaying.value) {
@@ -1165,7 +985,6 @@ const togglePlay = () => {
   }
 };
 
-// 刷新视频：重建播放器
 const refreshVideo = () => {
   if (flvPlayer) {
     flvPlayer.unload();
@@ -1177,110 +996,63 @@ const refreshVideo = () => {
 
 const toggleScreenRotation = () => {
   isScreenRotated.value = !isScreenRotated.value;
-  // 实际应用中这里会实现屏幕旋转的逻辑
-  console.log("Toggle screen rotation:", isScreenRotated.value);
+
+  if (videoRef.value) {
+    // 开启 CSS 过渡，使旋转动画更平滑
+    videoRef.value.style.transition = "transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)";
+    if (isScreenRotated.value) {
+      const parent = videoRef.value.parentElement;
+      let scale = 1;
+      // 旋转90度后，视频的视觉宽度变成了原高度，视觉高度变成了原宽度。
+      // 在宽屏(横屏)布局下，直接旋转会导致视频的顶部和底部超出容器范围。
+      // 这里的逻辑：通过计算 容器高度 / 容器宽度 得到缩放比，使其等比缩放并完美居中(Contain)适应当前播放器区域。
+      if (parent && parent.clientWidth > 0) {
+        scale = parent.clientHeight / parent.clientWidth;
+      }
+      // 逆时针旋转 90 度并应用缩放（如果是顺时针需求，可以改成 rotate(90deg)）
+      videoRef.value.style.transform = `rotate(-90deg) scale(${scale})`;
+    } else {
+      // 恢复到初始未旋转的状态
+      videoRef.value.style.transform = "rotate(0deg) scale(1)";
+    }
+  }
 };
+
 const toggleDanmakuSettings = () => {
-  // 实际应用中这里会打开弹幕设置面板
   console.log("Toggle danmaku settings");
 };
 
 const toggleGiftSettings = () => {
-  // 实际应用中这里会打开礼物设置面板
   console.log("Toggle gift settings");
 };
 
 const toggleMiniWindow = () => {
-  // 实际应用中这里会切换到小窗模式
   console.log("Toggle mini window");
 };
 
 const toggleWindowFullscreen = () => {
-  // 实际应用中这里会切换到窗口全屏模式
   console.log("Toggle window fullscreen");
 };
 
 // 全屏逻辑
-const toggleFullscreen = () => {
-  if (!videoRef.value) return;
-
-  if (!document.fullscreenElement) {
-    if (videoRef.value.requestFullscreen) {
-      videoRef.value.requestFullscreen();
-    } else if ((videoRef.value as any).webkitRequestFullscreen) {
-      (videoRef.value as any).webkitRequestFullscreen();
-    } else if ((videoRef.value as any).mozRequestFullScreen) {
-      (videoRef.value as any).mozRequestFullScreen();
-    } else if ((videoRef.value as any).msRequestFullscreen) {
-      (videoRef.value as any).msRequestFullscreen();
-    }
-  } else {
-    if (document.exitFullscreen) {
-      document.exitFullscreen();
-    } else if ((document as any).webkitExitFullscreen) {
-      (document as any).webkitExitFullscreen();
-    } else if ((document as any).mozCancelFullScreen) {
-      (document as any).mozCancelFullScreen();
-    } else if ((document as any).msExitFullscreen) {
-      (document as any).msExitFullscreen();
-    }
-  }
+const toggleFullscreen = async () => {
+  const nextState = !isFullscreen.value;
+  await appWindow.setFullscreen(nextState);
+  isFullscreen.value = nextState;
 };
 
 // 切换清晰度
 const switchResolution = (key: string) => {
   currentResolution.value = key === "auto" ? "自动" : key.toUpperCase();
   console.log("Switch resolution to:", key);
-  // 实际应用中这里会切换视频源
 };
 
-// 音量逻辑：直接操作 videoRef.value.volume
+// 音量逻辑
 const setVolume = (newVolume: number) => {
   volume.value = newVolume;
   if (videoRef.value) {
     videoRef.value.volume = newVolume / 100;
   }
-};
-
-// Emoji选择器相关逻辑
-const showEmojiPickerHover = () => {
-  showEmojiPicker.value = true;
-  if (emojiPickerHideTimer) {
-    clearTimeout(emojiPickerHideTimer);
-    emojiPickerHideTimer = null;
-  }
-};
-
-const hideEmojiPickerHover = () => {
-  if (emojiPickerHideTimer) {
-    clearTimeout(emojiPickerHideTimer);
-  }
-  emojiPickerHideTimer = window.setTimeout(() => {
-    showEmojiPicker.value = false;
-    emojiPickerHideTimer = null;
-  }, 100);
-};
-
-const handleEmojiPickerEnter = () => {
-  if (emojiPickerHideTimer) {
-    clearTimeout(emojiPickerHideTimer);
-    emojiPickerHideTimer = null;
-  }
-};
-
-const handleEmojiPickerLeave = () => {
-  if (emojiPickerHideTimer) {
-    clearTimeout(emojiPickerHideTimer);
-  }
-  emojiPickerHideTimer = window.setTimeout(() => {
-    showEmojiPicker.value = false;
-    emojiPickerHideTimer = null;
-  }, 100);
-};
-
-const handleSelectEmoji = (emoji: string) => {
-  messageInput.value += emoji;
-  showEmojiPicker.value = false;
 };
 
 onMounted(() => {
@@ -1346,6 +1118,20 @@ onMounted(() => {
 
   document.addEventListener("click", handleClickOutside);
 
+  // 初始化全屏状态
+  appWindow.isFullscreen().then((state) => {
+    isFullscreen.value = state;
+  });
+
+  // 监听窗口大小变化（用于捕获用户按 ESC 键或通过系统快捷键退出全屏的情况）
+  appWindow
+    .onResized(async () => {
+      isFullscreen.value = await appWindow.isFullscreen();
+    })
+    .then((unlisten) => {
+      unlistenResize = unlisten;
+    });
+
   // 清理事件监听
   onUnmounted(() => {
     document.removeEventListener("click", handleClickOutside);
@@ -1375,6 +1161,11 @@ onUnmounted(() => {
 
   // 清理事件监听
   window.removeEventListener("resize", () => {});
+
+  // 清理 Tauri 窗口事件监听
+  if (unlistenResize) {
+    unlistenResize();
+  }
 });
 </script>
 
@@ -1468,88 +1259,6 @@ onUnmounted(() => {
   font-size: 12px;
   color: #fff;
   margin-left: 8px;
-}
-.danmaku-input-wrapper {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  background-color: rgba(255, 255, 255, 0.1);
-  border-radius: 18px;
-  padding: 6px;
-  position: relative;
-  width: 100%;
-}
-
-.emoji-btn {
-  width: 28px;
-  height: 28px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  border-radius: 50%;
-  transition: all 0.2s ease;
-
-  &:hover {
-    background-color: rgba(255, 255, 255, 0.15);
-  }
-}
-
-.emoji-icon {
-  width: 18px;
-  height: 18px;
-  color: #fff;
-}
-
-.danmaku-input-field {
-  flex: 1;
-  border: none;
-  background: transparent;
-  color: #fff;
-  font-size: 13px;
-  outline: none;
-  padding: 6px 0;
-  max-width: none;
-  width: 100%;
-
-  &::placeholder {
-    color: rgba(255, 255, 255, 0.5);
-  }
-}
-
-.send-btn {
-  width: 28px;
-  height: 28px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background-color: #ff0050;
-  color: #fff;
-  border: none;
-  border-radius: 50%;
-  cursor: pointer;
-  transition: all 0.3s ease;
-
-  &:hover {
-    background-color: #ff1a60;
-    transform: scale(1.05);
-  }
-
-  &:active {
-    transform: scale(0.95);
-  }
-}
-
-.send-icon {
-  width: 16px;
-  height: 16px;
-}
-
-.emoji-picker-wrapper {
-  position: absolute;
-  bottom: 100%;
-  left: 0;
-  z-index: 1000;
 }
 
 .live-play-container {
