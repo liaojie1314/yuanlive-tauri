@@ -1,7 +1,7 @@
 <template>
   <div ref="ContextMenuRef">
     <slot></slot>
-    <Teleport to="body">
+    <Teleport to="body" :disabled="ignoreTeleport">
       <transition-group @beforeEnter="handleBeforeEnter" @enter="handleEnter">
         <div
           v-if="!isMobile() && showMenu"
@@ -89,12 +89,14 @@ type Props = {
   content?: Record<string, any>;
   menu?: any[];
   specialMenu?: any[];
+  ignoreTeleport?: boolean;
 };
 
 const props = withDefaults(defineProps<Props>(), {
   content: () => ({}),
   menu: () => [],
-  specialMenu: () => []
+  specialMenu: () => [],
+  ignoreTeleport: false
 });
 
 // 使用计算属性过滤显示的菜单项
