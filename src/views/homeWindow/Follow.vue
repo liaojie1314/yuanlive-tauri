@@ -67,9 +67,27 @@
       </div>
     </div>
 
-    <div class="flex-1 flex flex-col p-4 bg-[--home-bg-color]">
-      <div class="flex-1 rounded-lg overflow-hidden bg-black shadow-sm">
-        <video-player src="http://vjs.zencdn.net/v/oceans.mp4" :controls="true" :autoplay="false" :muted="false" />
+    <div class="flex-1 py-4 pl-4 pr-2 bg-[--home-bg-color] overflow-hidden">
+      <div
+        ref="fullscreenWrapperRef"
+        class="fullscreen-wrapper w-full h-full flex flex-row relative rounded-lg overflow-hidden bg-black shadow-sm"
+        :class="{ 'is-fullscreen': isFullscreen }">
+        <div class="flex-1 relative h-full">
+          <video-player
+            src="http://vjs.zencdn.net/v/oceans.mp4"
+            :controls="true"
+            :autoplay="false"
+            :muted="false"
+            :is-panel-open="showSidePanel"
+            @open-panel="handleOpenPanel"
+            @toggle-fullscreen="handleToggleFullscreen" />
+        </div>
+
+        <video-side-panel
+          v-model:show="showSidePanel"
+          v-model:tab="activePanelTab"
+          class="side-panel-transition"
+          :class="{ 'fullscreen-overlay': isFullscreen }" />
       </div>
     </div>
   </div>
@@ -77,6 +95,7 @@
 
 <script setup lang="ts">
 import { getFollowingApi } from "@/api/follow";
+import { useFullscreen } from "@/hooks/useFullscreen";
 
 defineOptions({
   name: "Follow"
@@ -95,9 +114,33 @@ const isCollapsed = ref(false);
 // 关注列表数据
 const followList = ref<FollowItem[]>([]);
 
+const showSidePanel = ref(false);
+const activePanelTab = ref<"detail" | "comment">("comment");
+const fullscreenWrapperRef = ref<HTMLElement | null>(null);
+const { isFullscreen, toggleFullscreen } = useFullscreen(fullscreenWrapperRef);
+
+// 处理全屏切换逻辑
+const handleToggleFullscreen = () => {
+  toggleFullscreen();
+};
+
+// 接收播放器抛出的事件来打开侧边栏，并切换到对应的 Tab
+const handleOpenPanel = (...args: any[]) => {
+  isCollapsed.value = true;
+  const tabName = (args[0] || "comment") as "detail" | "comment";
+  // 如果面板已经是打开状态，且点击的是当前的 Tab，则关闭面板
+  if (showSidePanel.value && activePanelTab.value === tabName) {
+    showSidePanel.value = false;
+  } else {
+    // 否则，切换到对应的 Tab 并打开面板
+    activePanelTab.value = tabName;
+    showSidePanel.value = true;
+  }
+};
+
 // 切换展开/缩放状态
 const toggleCollapse = () => {
-  isCollapsed.value = !isCollapsed.value;
+  if (!showSidePanel.value) isCollapsed.value = !isCollapsed.value;
 };
 
 onMounted(async () => {
@@ -124,6 +167,27 @@ onMounted(async () => {
 
 .follow-item:hover {
   background-color: var(--bg-left-menu-hover);
+}
+
+.fullscreen-wrapper {
+  transition: all 0.3s ease;
+}
+
+/* 侧边栏动画与基础样式 */
+.side-panel-transition {
+  position: relative;
+  z-index: 100;
+  height: 100%;
+}
+
+.fullscreen-wrapper.is-fullscreen {
+  border-radius: 0 !important;
+}
+
+.fullscreen-overlay {
+  position: relative !important;
+  height: 100%;
+  box-shadow: -4px 0 24px rgba(0, 0, 0, 0.6) !important;
 }
 
 :deep(.n-scrollbar) {

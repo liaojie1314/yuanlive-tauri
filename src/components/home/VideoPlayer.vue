@@ -1,353 +1,347 @@
 <template>
-  <div class="video-player-container" :class="{ paused: !isPlaying }" @click="handleContainerClick">
-    <div ref="videoContainerRef" class="video-container"></div>
-
-    <!-- Danmaku Container -->
-    <div v-if="danmakuStore.enabled" ref="danmakuContainerRef" class="danmaku-container">
-      <div
-        v-for="danmaku in activeDanmakus"
-        :key="danmaku.id"
-        class="danmaku-item danmaku-scroll"
-        :style="{
-          fontSize: `${danmakuStore.fontSize}px`,
-          opacity: danmakuStore.opacity / 100,
-          '--speed': danmakuStore.speed,
-          top: danmaku.top,
-          marginLeft: danmaku.horizontalOffset ? `${danmaku.horizontalOffset}px` : '0px'
-        }"
-        @mouseenter="showDanmakuActions(danmaku.id)"
-        @mouseleave="hideDanmakuActions()"
-        @click.stop>
-        <span class="danmaku-content">{{ danmaku.content }}</span>
-        <div v-if="hoveredDanmakuId === danmaku.id" class="danmaku-actions">
-          <span
-            class="danmaku-action-btn like-btn"
-            :class="{ liked: danmaku.isLiked }"
-            @click="toggleDanmakuLike(danmaku.id)"
-            title="点赞">
-            <i-material-symbols-favorite v-if="danmaku.isLiked" class="iconify-icon" />
-            <i-material-symbols-favorite-outline v-else class="iconify-icon" />
-          </span>
-          <span class="danmaku-action-btn report-btn" @click="openDanmakuReportDialog(danmaku.id)" title="举报">
-            <i-mdi-alert-outline class="iconify-icon" />
-          </span>
-        </div>
-      </div>
-    </div>
-
-    <!-- Right Side Interaction Panel -->
-    <div v-if="!videoStore.clearScreen" class="interaction-panel" @click.stop>
-      <!-- Avatar -->
-      <n-tooltip placement="left" trigger="hover" :raw="true">
-        <template #trigger>
-          <div class="interaction-item avatar-item">
-            <div class="avatar-container">
-              <img src="https://picsum.photos/60/60" alt="Avatar" class="avatar" />
-            </div>
-          </div>
-        </template>
-        <div class="tooltip-content">用户信息</div>
-      </n-tooltip>
-
-      <!-- Like Button -->
-      <n-tooltip placement="left" trigger="hover" :raw="true">
-        <template #trigger>
-          <div class="interaction-item like-item" @click="toggleLike">
-            <div class="interaction-icon like-icon" :class="{ liked: isLiked }">
-              <i-material-symbols-favorite class="iconify-icon" />
-            </div>
-            <div class="interaction-count">{{ likeCount }}</div>
-          </div>
-        </template>
-        <div class="tooltip-content">点赞</div>
-      </n-tooltip>
-
-      <!-- Comment Button -->
-      <n-tooltip placement="left" trigger="hover" :raw="true">
-        <template #trigger>
-          <div class="interaction-item comment-item" @click="toggleComment">
-            <div class="interaction-icon comment-icon">
-              <i-material-symbols-chat-outline class="iconify-icon" />
-            </div>
-            <div class="interaction-count">{{ commentCount }}</div>
-          </div>
-        </template>
-        <div class="tooltip-content">评论</div>
-      </n-tooltip>
-
-      <!-- Favorite Button -->
-      <n-tooltip
-        placement="left"
-        trigger="hover"
-        :raw="true"
-        :show-arrow="false"
-        :show="showCollectionTooltip"
-        @update:show="(v) => (showCollectionTooltip = v)">
-        <template #trigger>
-          <div class="interaction-item favorite-item" @mouseleave="hideCollectTooltip()" @click="toggleFavorite">
-            <div class="interaction-icon favorite-icon" :class="{ favorited: isFavorited }">
-              <i-material-symbols-star class="iconify-icon" />
-            </div>
-            <div class="interaction-count">{{ favoriteCount }}</div>
-          </div>
-        </template>
-        <div class="collection-tooltip" @mouseenter="showCollectTooltip()" @mouseleave="showCollectionTooltip = false">
-          <div class="collection-header">
-            <span>选择收藏夹</span>
-            <div class="new-folder-btn" @click="onNewFolderClick">+ 新建</div>
-          </div>
-          <div v-if="collectionFolders.length === 0" class="no-collections">
-            <div class="no-collections-icon">
-              <i-material-symbols-folder-outline class="iconify-icon" />
-            </div>
-            <div class="no-collections-text">暂无收藏夹~</div>
-          </div>
-          <div v-else class="collection-list">
-            <div v-for="folder in collectionFolders" :key="folder.id" class="collection-item">
-              <div class="folder-info">
-                <i-material-symbols-folder class="iconify-icon folder-icon" />
-                <div class="folder-name">{{ folder.name }}</div>
-                <div class="folder-count">{{ folder.count }}</div>
-              </div>
-              <n-checkbox
-                class="square-checkbox"
-                v-model:checked="folder.isSelected"
-                @update:checked="updateSelectedFolder(folder.id, $event)" />
-            </div>
-          </div>
-          <div class="collection-footer">
-            <div class="footer-btn only-collect-btn" @click="onlyCollectVideo">仅收藏视频</div>
-            <div class="footer-btn collect-to-folder-btn" @click="collectToFolder">收藏至收藏夹</div>
-          </div>
-        </div>
-      </n-tooltip>
-
-      <!-- Share Button -->
-      <n-tooltip
-        placement="left"
-        trigger="hover"
-        :raw="true"
-        :show-arrow="false"
-        :show="showShareTooltip"
-        @update:show="(v) => (showShareTooltip = v)">
-        <template #trigger>
-          <div class="interaction-item share-item" @click="toggleShare" @mouseleave="showShareTooltip = false">
-            <div class="interaction-icon share-icon">
-              <i-material-symbols-share-outline class="iconify-icon" />
-            </div>
-            <div class="interaction-count">{{ shareCount }}</div>
-          </div>
-        </template>
-        <div class="share-tooltip" @mouseenter="showShareTooltip = true" @mouseleave="showShareTooltip = false">
-          <div class="share-btn copy-link-btn" @click="copyLink">
-            <i-material-symbols-link class="iconify-icon share-btn-icon" />
-            <span class="share-btn-text">复制链接</span>
-          </div>
-          <div class="share-btn download-btn" @click="downloadVideo">
-            <i-material-symbols-download class="iconify-icon share-btn-icon" />
-          </div>
-          <div class="share-btn qr-code-btn" @click="showQRCode">
-            <i-material-symbols-qr-code class="iconify-icon share-btn-icon" />
-          </div>
-        </div>
-      </n-tooltip>
-
-      <!-- Listen to Video Button -->
-      <n-tooltip placement="left" trigger="hover" :raw="true">
-        <template #trigger>
-          <div class="interaction-item listen-item" @click="toggleShare">
-            <div class="interaction-icon listen-icon">
-              <i-material-symbols-headphones class="iconify-icon" />
-            </div>
-            <div class="interaction-count">听视频</div>
-          </div>
-        </template>
-        <div class="tooltip-content">听视频</div>
-      </n-tooltip>
-
-      <!-- More Icon -->
-      <n-tooltip
-        placement="left-end"
-        trigger="hover"
-        :raw="true"
-        :show-arrow="false"
-        :show="showMoreTooltip"
-        @update:show="(v) => (showMoreTooltip = v)">
-        <template #trigger>
-          <div class="more-item" @click="toggleMoreOptions" @mouseleave="showMoreTooltip = false">
-            <div class="more-icon">
-              <i-material-symbols-more-horiz class="iconify-icon more-icon" />
-            </div>
-          </div>
-        </template>
-        <div class="more-tooltip" @mouseenter="showMoreTooltip = true" @mouseleave="showMoreTooltip = false">
-          <button class="more-btn recommend-btn" @click="recommendVideo">
-            <div class="more-btn-icon-container">
-              <i-material-symbols-thumb-up class="iconify-icon more-btn-icon" />
-            </div>
-            <span class="more-btn-text">推荐</span>
-          </button>
-          <button class="more-btn dislike-btn" @click="dislikeVideo">
-            <div class="more-btn-icon-container">
-              <i-material-symbols-thumb-down class="iconify-icon more-btn-icon" />
-            </div>
-            <span class="more-btn-text">不感兴趣</span>
-          </button>
-          <button class="more-btn unfollow-btn" @click="unfollowCreator">
-            <div class="more-btn-icon-container">
-              <i-material-symbols-person-remove class="iconify-icon more-btn-icon" />
-            </div>
-            <span class="more-btn-text">取消关注</span>
-          </button>
-          <button class="more-btn report-btn" @click="reportVideo">
-            <div class="more-btn-icon-container">
-              <i-material-symbols-warning class="iconify-icon more-btn-icon" />
-            </div>
-            <span class="more-btn-text">举报</span>
-          </button>
-          <button class="more-btn shortcuts-btn" @click="showShortcuts">
-            <div class="more-btn-icon-container">
-              <i-material-symbols-keyboard class="iconify-icon more-btn-icon" />
-            </div>
-            <span class="more-btn-text">快捷键列表</span>
-          </button>
-        </div>
-      </n-tooltip>
-    </div>
-
-    <!-- Center Pause Icon -->
-    <div v-if="showPauseOverlay" class="pause-overlay" @click.stop="togglePlay">
-      <div class="pause-icon-container">
-        <i-material-symbols-play-arrow-rounded class="pause-icon" />
-      </div>
-    </div>
-
-    <!-- Progress Bar -->
-    <div class="progress-bar-container" @click.stop>
-      <n-slider
-        v-model:value="currentTime"
-        :max="duration"
-        :step="0.1"
-        :tooltip="false"
-        @update:value="seek"
-        class="progress-bar"
-        :show-input="false"
-        :show-tooltip="false" />
-    </div>
-
-    <!-- Custom Controls -->
-    <div class="custom-controls" @click.stop>
-      <!-- Left Controls: Play Button and Progress -->
-      <div v-resize="checkLeftControlsWidth" class="left-controls">
-        <!-- Play/Pause Button -->
-        <div class="control-item" @click="togglePlay">
-          <span class="control-icon play-icon">
-            <i-material-symbols-pause-rounded v-if="isPlaying" class="iconify-icon" />
-            <i-material-symbols-play-arrow-rounded v-else class="iconify-icon" />
-          </span>
-        </div>
-
-        <!-- Playback Progress -->
-        <div class="control-item">
-          <span class="progress-text">
-            {{ formatTime(currentTime) }}
-            <span v-if="!isLeftControlsCompact">/ {{ formatTime(duration) }}</span>
-          </span>
-        </div>
-
-        <!-- Danmaku Input -->
-        <danmaku-input
-          class="control-item"
-          :is-enabled="true"
-          :is-danmaku-enabled="danmakuStore.enabled"
-          @send-danmaku="sendDanmaku"
-          @toggle-danmaku="toggleDanmaku"
-          @toggle-danmaku-list="toggleDanmakuList" />
+  <context-menu
+    class="video-context-wrapper"
+    :menu="videoMenuOptions"
+    :ignore-teleport="isFullscreen"
+    @select="handleMenuSelect">
+    <div class="video-player-container" :class="{ paused: !isPlaying }" @click="handleContainerClick">
+      <div ref="videoContainerRef" class="video-container"></div>
+      <div v-if="isFullscreen" class="exit-fullscreen-btn" @click.stop="toggleFullscreen">
+        <i-mdi-chevron-left class="iconify-icon" />
+        <span>退出全屏</span>
       </div>
 
-      <!-- Right Controls: All Other Controls -->
-      <div class="right-controls">
-        <!-- Autoplay Toggle -->
-        <div class="control-item">
-          <span class="control-text">连播</span>
-          <n-switch v-model:value="videoStore.autoplay" @update:value="toggleAutoplay" class="control-switch" />
-        </div>
+      <!-- Danmaku Container -->
+      <div v-if="danmakuStore.enabled" ref="danmakuContainerRef" class="danmaku-container">
+        <div
+          v-for="danmaku in activeDanmakus"
+          :key="danmaku.id"
+          class="danmaku-item danmaku-scroll"
+          :style="{
+            fontSize: `${danmakuStore.fontSize}px`,
+            opacity: danmakuStore.opacity / 100,
+            '--speed': danmakuStore.speed,
+            top: danmaku.top,
+            marginLeft: danmaku.horizontalOffset ? `${danmaku.horizontalOffset}px` : '0px'
+          }"
+          @mouseenter="showDanmakuActions(danmaku.id)"
+          @mouseleave="hideDanmakuActions()"
+          @click.stop>
+          <span class="danmaku-content">{{ danmaku.content }}</span>
 
-        <!-- Clear Screen Toggle -->
-        <div class="control-item">
-          <span class="control-text">清屏</span>
-          <n-switch v-model:value="videoStore.clearScreen" @update:value="toggleClearScreen" class="control-switch" />
-        </div>
-
-        <!-- Resolution Control -->
-        <div class="control-item">
-          <n-dropdown :options="resolutionOptions" @select="switchResolution">
-            <div class="control-icon">{{ videoStore.resolution }}</div>
-          </n-dropdown>
-        </div>
-
-        <!-- Playback Rate Control -->
-        <div class="control-item">
-          <n-dropdown :options="playbackRateOptions" @select="setPlaybackRate">
-            <div class="control-icon">{{ videoStore.playbackRate }}x</div>
-          </n-dropdown>
-        </div>
-
-        <!-- Mini Window Toggle -->
-        <div class="control-item" @click="toggleMiniWindow">
-          <span class="control-icon" :class="{ active: isMiniWindow }">
-            <i-mdi-dock-window class="iconify-icon" />
-          </span>
-        </div>
-
-        <!-- Volume Control -->
-        <div class="control-item volume-control">
-          <div @click="toggleMute" @mouseenter="showVolumeSlider = true" @mouseleave="showVolumeSlider = false">
-            <span class="control-icon">
-              <i-ph-speaker-slash v-if="videoStore.muted || videoStore.volume === 0" class="iconify-icon" />
-              <i-ph-speaker-low v-else-if="videoStore.volume / 100 < 0.5" class="iconify-icon" />
-              <i-ph-speaker-high v-else class="iconify-icon" />
+          <div v-if="hoveredDanmakuId === danmaku.id" class="danmaku-actions">
+            <span
+              class="danmaku-action-btn like-btn"
+              :class="{ liked: danmaku.isLiked }"
+              @click="toggleDanmakuLike(danmaku.id)"
+              title="点赞">
+              <i-material-symbols-favorite v-if="danmaku.isLiked" class="iconify-icon" />
+              <i-material-symbols-favorite-outline v-else class="iconify-icon" />
+            </span>
+            <span class="danmaku-action-btn report-btn" @click="openDanmakuReportDialog(danmaku.id)" title="举报">
+              <i-mdi-alert-outline class="iconify-icon" />
             </span>
           </div>
-          <div
-            class="volume-slider-container"
-            v-show="showVolumeSlider"
-            @mouseenter="showVolumeSlider = true"
-            @mouseleave="showVolumeSlider = false">
-            <n-slider v-model:value="videoStore.volume" :min="0" :max="100" @update:value="setVolume" vertical />
+        </div>
+      </div>
+
+      <!-- Right Side Interaction Panel -->
+      <div v-if="!videoStore.clearScreen" class="interaction-panel" @click.stop>
+        <n-tooltip placement="left" trigger="hover" :raw="true">
+          <template #trigger>
+            <div class="interaction-item avatar-item" @click="emit('open-panel', 'detail')">
+              <div class="avatar-container">
+                <img src="https://picsum.photos/60/60" alt="Avatar" class="avatar" />
+              </div>
+            </div>
+          </template>
+          <div class="tooltip-content">用户信息</div>
+        </n-tooltip>
+
+        <n-tooltip placement="left" trigger="hover" :raw="true">
+          <template #trigger>
+            <div class="interaction-item like-item" @click="toggleLike">
+              <div class="interaction-icon like-icon" :class="{ liked: isLiked }">
+                <i-material-symbols-favorite class="iconify-icon" />
+              </div>
+              <div class="interaction-count">{{ likeCount }}</div>
+            </div>
+          </template>
+          <div class="tooltip-content">点赞</div>
+        </n-tooltip>
+
+        <n-tooltip placement="left" trigger="hover" :raw="true">
+          <template #trigger>
+            <div class="interaction-item comment-item" @click="emit('open-panel', 'comment')">
+              <div class="interaction-icon comment-icon">
+                <i-material-symbols-chat-outline class="iconify-icon" />
+              </div>
+              <div class="interaction-count">{{ commentCount }}</div>
+            </div>
+          </template>
+          <div class="tooltip-content">评论</div>
+        </n-tooltip>
+
+        <n-tooltip
+          placement="left"
+          trigger="hover"
+          :raw="true"
+          :show-arrow="false"
+          v-model:show="showCollectionTooltip">
+          <template #trigger>
+            <div class="interaction-item favorite-item" @click="toggleFavorite">
+              <div class="interaction-icon favorite-icon" :class="{ favorited: isFavorited }">
+                <i-material-symbols-star class="iconify-icon" />
+              </div>
+              <div class="interaction-count">{{ favoriteCount }}</div>
+            </div>
+          </template>
+
+          <div class="collection-tooltip">
+            <div class="collection-header">
+              <span>选择收藏夹</span>
+              <div class="new-folder-btn" @click="onNewFolderClick">+ 新建</div>
+            </div>
+            <div v-if="collectionFolders.length === 0" class="no-collections">
+              <div class="no-collections-icon">
+                <i-material-symbols-folder-outline class="iconify-icon" />
+              </div>
+              <div class="no-collections-text">暂无收藏夹~</div>
+            </div>
+            <div v-else class="collection-list">
+              <div v-for="folder in collectionFolders" :key="folder.id" class="collection-item">
+                <div class="folder-info">
+                  <i-material-symbols-folder class="iconify-icon folder-icon" />
+                  <div class="folder-name">{{ folder.name }}</div>
+                  <div class="folder-count">{{ folder.count }}</div>
+                </div>
+                <n-checkbox
+                  class="square-checkbox"
+                  v-model:checked="folder.isSelected"
+                  @update:checked="updateSelectedFolder(folder.id, $event)" />
+              </div>
+            </div>
+
+            <div class="collection-footer">
+              <div class="footer-btn only-collect-btn" @click="onlyCollectVideo">仅收藏视频</div>
+              <div class="footer-btn collect-to-folder-btn" @click="collectToFolder">收藏至收藏夹</div>
+            </div>
           </div>
+        </n-tooltip>
+
+        <n-tooltip placement="left" trigger="hover" :raw="true" :show-arrow="false" v-model:show="showShareTooltip">
+          <template #trigger>
+            <div class="interaction-item share-item" @click="toggleShare">
+              <div class="interaction-icon share-icon">
+                <i-material-symbols-share-outline class="iconify-icon" />
+              </div>
+              <div class="interaction-count">{{ shareCount }}</div>
+            </div>
+          </template>
+          <div class="share-tooltip">
+            <div class="share-btn copy-link-btn" @click="copyLink">
+              <i-material-symbols-link class="iconify-icon share-btn-icon" />
+              <span class="share-btn-text">复制链接</span>
+            </div>
+            <div class="share-btn download-btn" @click="downloadVideo">
+              <i-material-symbols-download class="iconify-icon share-btn-icon" />
+            </div>
+            <div class="share-btn qr-code-btn" @click="showQRCode">
+              <i-material-symbols-qr-code class="iconify-icon share-btn-icon" />
+            </div>
+          </div>
+        </n-tooltip>
+
+        <n-tooltip placement="left" trigger="hover" :raw="true">
+          <template #trigger>
+            <div class="interaction-item listen-item" @click="toggleShare">
+              <div class="interaction-icon listen-icon">
+                <i-material-symbols-headphones class="iconify-icon" />
+              </div>
+              <div class="interaction-count">听视频</div>
+            </div>
+          </template>
+          <div class="tooltip-content">听视频</div>
+        </n-tooltip>
+
+        <n-tooltip placement="left-end" trigger="hover" :raw="true" :show-arrow="false" v-model:show="showMoreTooltip">
+          <template #trigger>
+            <div class="more-item" @click="toggleMoreOptions">
+              <div class="more-icon">
+                <i-material-symbols-more-horiz class="iconify-icon more-icon" />
+              </div>
+            </div>
+          </template>
+          <div class="more-tooltip">
+            <button class="more-btn recommend-btn" @click="recommendVideo">
+              <div class="more-btn-icon-container">
+                <i-material-symbols-thumb-up class="iconify-icon more-btn-icon" />
+              </div>
+              <span class="more-btn-text">推荐</span>
+            </button>
+
+            <button class="more-btn dislike-btn" @click="dislikeVideo">
+              <div class="more-btn-icon-container">
+                <i-material-symbols-thumb-down class="iconify-icon more-btn-icon" />
+              </div>
+              <span class="more-btn-text">不感兴趣</span>
+            </button>
+            <button class="more-btn unfollow-btn" @click="unfollowCreator">
+              <div class="more-btn-icon-container">
+                <i-material-symbols-person-remove class="iconify-icon more-btn-icon" />
+              </div>
+              <span class="more-btn-text">取消关注</span>
+            </button>
+
+            <button class="more-btn report-btn" @click="reportVideo">
+              <div class="more-btn-icon-container">
+                <i-material-symbols-warning class="iconify-icon more-btn-icon" />
+              </div>
+              <span class="more-btn-text">举报</span>
+            </button>
+
+            <button class="more-btn shortcuts-btn" @click="showShortcuts">
+              <div class="more-btn-icon-container">
+                <i-material-symbols-keyboard class="iconify-icon more-btn-icon" />
+              </div>
+              <span class="more-btn-text">快捷键列表</span>
+            </button>
+          </div>
+        </n-tooltip>
+      </div>
+
+      <!-- Center Pause Icon -->
+      <div v-if="showPauseOverlay" class="pause-overlay" @click.stop="togglePlay">
+        <div class="pause-icon-container">
+          <i-material-symbols-play-arrow-rounded class="pause-icon" />
+        </div>
+      </div>
+
+      <!-- Progress Bar -->
+      <div class="progress-bar-container" @click.stop>
+        <n-slider
+          v-model:value="currentTime"
+          :max="duration"
+          :step="0.1"
+          :tooltip="false"
+          @update:value="seek"
+          class="progress-bar"
+          :show-input="false"
+          :show-tooltip="false" />
+      </div>
+
+      <!-- Custom Controls -->
+      <div class="custom-controls" @click.stop>
+        <!-- Left Controls: Play Button and Progress -->
+        <div v-resize="checkLeftControlsWidth" class="left-controls">
+          <!-- Play/Pause Button -->
+          <div class="control-item" @click="togglePlay">
+            <span class="control-icon play-icon">
+              <i-material-symbols-pause-rounded v-if="isPlaying" class="iconify-icon" />
+              <i-material-symbols-play-arrow-rounded v-else class="iconify-icon" />
+            </span>
+          </div>
+
+          <!-- Playback Progress -->
+          <div class="control-item">
+            <span class="progress-text">
+              {{ formatTime(currentTime) }}
+              <span v-if="!isLeftControlsCompact">/ {{ formatTime(duration) }}</span>
+            </span>
+          </div>
+
+          <!-- Danmaku Input -->
+          <danmaku-input
+            class="control-item"
+            :is-enabled="true"
+            :is-danmaku-enabled="danmakuStore.enabled"
+            @send-danmaku="sendDanmaku"
+            @toggle-danmaku="toggleDanmaku"
+            @toggle-danmaku-list="toggleDanmakuList" />
         </div>
 
-        <!-- Fullscreen Button -->
-        <div class="control-item" @click="toggleFullscreen">
-          <span class="control-icon fullscreen-icon">
-            <i-mdi-fullscreen-exit v-if="isFullscreen" class="iconify-icon" />
-            <i-mdi-fullscreen v-else class="iconify-icon" />
-          </span>
+        <div class="right-controls">
+          <div class="control-item" v-show="!isPanelOpen || isFullscreen">
+            <span class="control-text">连播</span>
+            <n-switch v-model:value="videoStore.autoplay" @update:value="toggleAutoplay" class="control-switch" />
+          </div>
+          <div class="control-item" v-show="!isPanelOpen || isFullscreen">
+            <span class="control-text">清屏</span>
+            <n-switch v-model:value="videoStore.clearScreen" @update:value="toggleClearScreen" class="control-switch" />
+          </div>
+          <div class="control-item">
+            <n-dropdown :options="resolutionOptions" @select="switchResolution">
+              <div class="control-icon">{{ videoStore.resolution }}</div>
+            </n-dropdown>
+          </div>
+
+          <!-- Playback Rate Control -->
+          <div class="control-item">
+            <n-dropdown :options="playbackRateOptions" @select="setPlaybackRate">
+              <div class="control-icon">{{ videoStore.playbackRate }}x</div>
+            </n-dropdown>
+          </div>
+
+          <!-- Mini Window Toggle -->
+          <div class="control-item" @click="toggleMiniWindow">
+            <span class="control-icon" :class="{ active: isMiniWindow }">
+              <i-mdi-dock-window class="iconify-icon" />
+            </span>
+          </div>
+
+          <!-- Volume Control -->
+          <div class="control-item volume-control">
+            <div @click="toggleMute" @mouseenter="showVolumeSlider = true" @mouseleave="showVolumeSlider = false">
+              <span class="control-icon">
+                <i-ph-speaker-slash v-if="videoStore.muted || videoStore.volume === 0" class="iconify-icon" />
+                <i-ph-speaker-low v-else-if="videoStore.volume / 100 < 0.5" class="iconify-icon" />
+                <i-ph-speaker-high v-else class="iconify-icon" />
+              </span>
+            </div>
+
+            <div
+              class="volume-slider-container"
+              v-show="showVolumeSlider"
+              @mouseenter="showVolumeSlider = true"
+              @mouseleave="showVolumeSlider = false">
+              <n-slider v-model:value="videoStore.volume" :min="0" :max="100" @update:value="setVolume" vertical />
+            </div>
+          </div>
+
+          <!-- Fullscreen Button -->
+          <div class="control-item" @click="toggleFullscreen">
+            <span class="control-icon fullscreen-icon">
+              <i-mdi-fullscreen-exit v-if="isFullscreen" class="iconify-icon" />
+              <i-mdi-fullscreen v-else class="iconify-icon" />
+            </span>
+          </div>
         </div>
       </div>
     </div>
-  </div>
+  </context-menu>
+
   <danmaku-list-dialog
     v-model:show="showDanmakuListDialog"
     :danmaku-list="danmakuList"
     @open-report="openDanmakuReportDialog" />
+
   <danmaku-report-dialog
     v-model:show="showDanmakuReportDialog"
     :danmaku-index="selectedDanmakuIndex"
     @submit-report="handleDanmakuReport" />
+
   <collection-folder-dialog v-model:show="showNewFolderDialog" @create-folder="handleCreateFolder" />
 </template>
 
 <script setup lang="ts">
 import videojs from "video.js";
 import "video.js/dist/video-js.css";
-
 import { useVideoStore } from "@/stores/video";
 import { useDanmakuStore } from "@/stores/danmaku";
-import { getMemoryMonitor, cleanupMemory, type CleanupResource } from "@/utils/MemoryMonitor.ts";
+import { useFullscreen } from "@/hooks/useFullscreen";
 
-// Props
+const { isFullscreen } = useFullscreen();
+
 const props = defineProps<{
   src: string;
   poster?: string;
@@ -357,9 +351,9 @@ const props = defineProps<{
   muted?: boolean;
   loop?: boolean;
   preload?: "none" | "metadata" | "auto";
+  isPanelOpen?: boolean;
 }>();
 
-// Emits
 const emit = defineEmits<{
   (e: "ready", player: any): void;
   (e: "play"): void;
@@ -374,6 +368,8 @@ const emit = defineEmits<{
   (e: "danmaku-toggle", value: boolean): void;
   (e: "danmaku-settings-change", settings: any): void;
   (e: "danmaku-list-toggle"): void;
+  (e: "open-panel", tab: "detail" | "comment"): void;
+  (e: "toggle-fullscreen"): void;
 }>();
 
 // Danmaku Types
@@ -397,7 +393,6 @@ const hoveredDanmakuId = ref<string | null>(null);
 // States for custom controls
 const isMiniWindow = ref(false);
 const isPlaying = ref(false);
-const isFullscreen = ref(false);
 const playbackRates = [0.5, 0.75, 1.0, 1.25, 1.5, 2.0];
 
 // Interaction Panel States
@@ -409,7 +404,6 @@ const favoriteCount = ref(183);
 const shareCount = ref(9);
 
 // Collection Folder States
-let enterCollectionTooltip = false;
 const showCollectionTooltip = ref(false);
 const collectionFolders = ref([{ id: 1, name: "12", count: 0, isSelected: true }]);
 const showNewFolderDialog = ref(false);
@@ -575,6 +569,32 @@ const activeDanmakus = ref<Danmaku[]>([]);
 const danmakuStore = useDanmakuStore();
 const videoStore = useVideoStore();
 
+const videoMenuOptions = ref([
+  { label: "播放 / 暂停", action: "play-pause" },
+  { label: "静音 / 取消静音", action: "mute" },
+  { label: "画中画模式", action: "pip" },
+  { label: "全屏 / 退出全屏", action: "fullscreen" }
+]);
+
+// 处理右键菜单项的点击事件
+const handleMenuSelect = (item: any) => {
+  // item 就是我们在 videoMenuOptions 中定义的对象
+  switch (item.action) {
+    case "play-pause":
+      togglePlay(); // 调用你写好的播放暂停方法
+      break;
+    case "mute":
+      toggleMute(); // 调用你写好的静音方法
+      break;
+    case "pip":
+      toggleMiniWindow(); // 调用画中画/小窗方法
+      break;
+    case "fullscreen":
+      toggleFullscreen(); // 调用全屏方法
+      break;
+  }
+};
+
 // Open report dialog
 const openDanmakuReportDialog = (arg: number | string) => {
   if (typeof arg === "number") {
@@ -728,47 +748,8 @@ const resolutionOptions = [
 
 // 全屏切换
 const toggleFullscreen = () => {
-  if (!playerRef.value) return;
-
-  if (isFullscreen.value) {
-    // 退出全屏
-    if (document.exitFullscreen) {
-      document.exitFullscreen();
-    } else if ((document as any).webkitExitFullscreen) {
-      (document as any).webkitExitFullscreen();
-    } else if ((document as any).mozCancelFullScreen) {
-      (document as any).mozCancelFullScreen();
-    } else if ((document as any).msExitFullscreen) {
-      (document as any).msExitFullscreen();
-    }
-  } else {
-    // 进入全屏
-    const videoElement = playerRef.value.el();
-    if (videoElement.requestFullscreen) {
-      videoElement.requestFullscreen();
-    } else if ((videoElement as any).webkitRequestFullscreen) {
-      (videoElement as any).webkitRequestFullscreen();
-    } else if ((videoElement as any).mozRequestFullScreen) {
-      (videoElement as any).mozRequestFullScreen();
-    } else if ((videoElement as any).msRequestFullscreen) {
-      (videoElement as any).msRequestFullscreen();
-    }
-  }
+  emit("toggle-fullscreen");
 };
-
-// 监听全屏状态变化
-document.addEventListener("fullscreenchange", () => {
-  isFullscreen.value = !!document.fullscreenElement;
-});
-document.addEventListener("webkitfullscreenchange", () => {
-  isFullscreen.value = !!(document as any).webkitFullscreenElement;
-});
-document.addEventListener("mozfullscreenchange", () => {
-  isFullscreen.value = !!(document as any).mozFullScreenElement;
-});
-document.addEventListener("MSFullscreenChange", () => {
-  isFullscreen.value = !!(document as any).msFullscreenElement;
-});
 
 // 音量控制
 const setVolume = (newVolume: number) => {
@@ -798,11 +779,6 @@ const setPlaybackRate = (key: number) => {
 const toggleLike = () => {
   isLiked.value = !isLiked.value;
   likeCount.value += isLiked.value ? 1 : -1;
-};
-
-const toggleComment = () => {
-  // 打开评论面板逻辑
-  console.log("Toggle comment panel");
 };
 
 const toggleFavorite = () => {
@@ -934,21 +910,6 @@ const handleCreateFolder = (name: string, isPublic: boolean) => {
   });
   selectedFolderId.value = newId;
   console.log("Create new folder", name, isPublic);
-};
-
-const showCollectTooltip = () => {
-  enterCollectionTooltip = true;
-  showCollectionTooltip.value = true;
-};
-
-const hideCollectTooltip = () => {
-  setTimeout(() => {
-    if (!enterCollectionTooltip) {
-      showCollectionTooltip.value = false;
-      return;
-    }
-    enterCollectionTooltip = false;
-  }, 100);
 };
 
 // Custom control methods
@@ -1195,69 +1156,18 @@ const switchResolution = (key: string) => {
   }
 };
 
-const toggleMiniWindow = () => {
-  isMiniWindow.value = !isMiniWindow.value;
-  if (playerRef.value) {
-    if (isMiniWindow.value) {
-      // Create mini window
-      const miniWindow = document.createElement("div");
-      miniWindow.className = "video-mini-window";
-      miniWindow.style.position = "fixed";
-      miniWindow.style.bottom = "100px";
-      miniWindow.style.right = "20px";
-      miniWindow.style.width = "320px";
-      miniWindow.style.height = "180px";
-      miniWindow.style.backgroundColor = "#000";
-      miniWindow.style.borderRadius = "8px";
-      miniWindow.style.boxShadow = "0 4px 20px rgba(0, 0, 0, 0.8)";
-      miniWindow.style.zIndex = "9999";
-      miniWindow.style.cursor = "move";
+const toggleMiniWindow = async () => {
+  if (!playerRef.value) return;
 
-      // Append player to mini window
-      if (videoContainerRef.value) {
-        const playerElement = videoContainerRef.value.querySelector(".video-js");
-        if (playerElement) {
-          miniWindow.appendChild(playerElement);
-          document.body.appendChild(miniWindow);
-
-          // Make mini window draggable
-          let isDragging = false;
-          let startX = 0;
-          let startY = 0;
-
-          miniWindow.addEventListener("mousedown", (e) => {
-            isDragging = true;
-            startX = e.clientX - miniWindow.offsetLeft;
-            startY = e.clientY - miniWindow.offsetTop;
-          });
-
-          document.addEventListener("mousemove", (e) => {
-            if (!isDragging) return;
-            miniWindow.style.left = `${e.clientX - startX}px`;
-            miniWindow.style.top = `${e.clientY - startY}px`;
-            miniWindow.style.bottom = "auto";
-            miniWindow.style.right = "auto";
-          });
-
-          document.addEventListener("mouseup", () => {
-            isDragging = false;
-          });
-        }
-      }
+  try {
+    // 检查当前是否已经在系统画中画模式
+    if (playerRef.value.isInPictureInPicture()) {
+      await playerRef.value.exitPictureInPicture(); // 退出小窗
     } else {
-      // Return player to original container
-      const miniWindow = document.querySelector(".video-mini-window");
-      if (miniWindow && videoContainerRef.value) {
-        const playerElement = miniWindow.querySelector(".video-js");
-        if (playerElement) {
-          videoContainerRef.value.appendChild(playerElement);
-          document.body.removeChild(miniWindow);
-        }
-      }
+      await playerRef.value.requestPictureInPicture(); // 呼出系统级小窗
     }
-
-    // Update player size
-    playerRef.value.trigger("resize");
+  } catch (error) {
+    console.error("画中画功能调用失败，可能环境不支持:", error);
   }
 };
 
@@ -1456,7 +1366,18 @@ onMounted(() => {
     };
     player.on("loadedmetadata", loadedmetadataHandler);
     eventListeners.set("loadedmetadata", loadedmetadataHandler);
+    const enterPipHandler = () => {
+      isMiniWindow.value = true;
+    };
 
+    player.on("enterpictureinpicture", enterPipHandler);
+    eventListeners.set("enterpictureinpicture", enterPipHandler);
+    // 监听退出系统画中画
+    const leavePipHandler = () => {
+      isMiniWindow.value = false;
+    };
+    player.on("leavepictureinpicture", leavePipHandler);
+    eventListeners.set("leavepictureinpicture", leavePipHandler);
     const loadeddataHandler = () => {
       console.log("Video data loaded successfully");
 
@@ -1531,35 +1452,10 @@ let animationFrameIds: number[] = [];
 
 // Cleanup
 onBeforeUnmount(() => {
-  const cleanupResources: CleanupResource[] = [];
-
   if (playerRef.value) {
-    // Prepare event listeners for cleanup
-    eventListeners.forEach((handler, eventName) => {
-      cleanupResources.push({
-        type: "eventListener",
-        reference: {
-          target: playerRef.value!,
-          eventName,
-          handler
-        }
-      });
-      playerRef.value!.off(eventName, handler);
-    });
-    eventListeners.clear();
-
     playerRef.value.dispose();
     playerRef.value = null;
   }
-
-  // Prepare danmaku timers for cleanup
-  danmakuTimers.forEach((timer) => {
-    cleanupResources.push({
-      type: "timer",
-      reference: timer
-    });
-    clearTimeout(timer);
-  });
   danmakuTimers.clear();
 
   // Clear animation frames
@@ -1577,13 +1473,6 @@ onBeforeUnmount(() => {
   // Reset line management state
   lineDanmakus.clear();
   currentLineIndex.value = 0;
-
-  // Use the new cleanupMemory function with resources array
-  cleanupMemory("VideoPlayer", cleanupResources);
-
-  // Trigger manual memory check
-  const memoryMonitor = getMemoryMonitor();
-  memoryMonitor.manualCheck();
 });
 
 // Update player when src changes
@@ -1638,6 +1527,12 @@ defineExpose({
 </script>
 
 <style scoped lang="scss">
+.video-context-wrapper {
+  width: 100%;
+  height: 100%;
+  display: block; /* 确保包裹层撑满父级 */
+}
+
 .video-player-container {
   width: 100%;
   height: 100%;
@@ -1648,6 +1543,43 @@ defineExpose({
   position: relative;
   overflow: hidden;
   border-radius: 0;
+}
+
+.exit-fullscreen-btn {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background-color: rgba(0, 0, 0, 0.5);
+  color: white;
+  padding: 8px 16px 8px 12px;
+  border-radius: 20px;
+  cursor: pointer;
+  z-index: 200; /* 确保在最顶层 */
+  backdrop-filter: blur(4px);
+  transition: all 0.3s ease;
+  font-size: 14px;
+  opacity: 0.8;
+
+  &:hover {
+    background-color: rgba(0, 0, 0, 0.8);
+    opacity: 1;
+    transform: scale(1.05);
+  }
+
+  .iconify-icon {
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+  }
+}
+
+.fullscreen-wrapper:fullscreen {
+  .interaction-panel {
+    gap: 30px;
+  }
 }
 
 .pause-overlay {
@@ -2438,7 +2370,7 @@ defineExpose({
   width: 200px;
   background-color: var(--bg-popover);
   border: 1px solid var(--line-color);
-  border-radius: 8px;
+  border-radius: 4px;
   padding: 12px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
 }
@@ -2581,7 +2513,7 @@ defineExpose({
   padding: 8px;
   background-color: var(--bg-popover);
   border: 1px solid var(--line-color);
-  border-radius: 8px;
+  border-radius: 4px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
 }
 
@@ -2620,7 +2552,7 @@ defineExpose({
   padding: 12px;
   background-color: var(--bg-popover);
   border: 1px solid var(--line-color);
-  border-radius: 8px;
+  border-radius: 4px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
 }
 
@@ -2794,8 +2726,7 @@ defineExpose({
 </style>
 
 <style>
-/* 适配 Tooltip 主体 */
-.n-tooltip {
+.n-popover.n-tooltip {
   background-color: var(--bg-popover) !important;
   color: var(--text-color) !important;
   border: 1px solid var(--line-color) !important;
@@ -2803,9 +2734,7 @@ defineExpose({
   border-radius: 4px !important;
 }
 
-/* 适配 Tooltip 箭头 (Arrow) */
-.n-tooltip .n-tooltip__arrow {
-  background: var(--bg-popover) !important;
-  box-shadow: -1px -1px 0 0 var(--line-color) !important;
+.n-popover.n-tooltip .n-popover-arrow {
+  background-color: var(--bg-popover) !important;
 }
 </style>
