@@ -7,15 +7,15 @@
         'flex flex-col overflow-y-auto select-none overflow-hidden transition-all duration-300',
         'bg-[--right-bg-color] border-r border-[--line-color]'
       ]">
-      <div :class="['flex items-center mb-3', isCollapsed ? 'justify-center px-2' : 'justify-between px-4']">
+      <div :class="['flex items-center mb-3', isCollapsed ? 'justify-center' : 'justify-between']">
         <div v-show="!isCollapsed" class="font-medium text-[--text-color]">关注人({{ followList.length }})</div>
         <n-button text type="primary" @click="toggleCollapse">
           <i-mdi-chevron-left
             v-if="!isCollapsed"
-            class="w-5 h-5 text-[--action-bar-icon-color] hover:text-[--action-bar-icon-hover]" />
+            class="w-5 h-5 p-2 text-[--action-bar-icon-color] hover:bg-[--action-bar-icon-hover] hover:rounded-100%" />
           <i-mdi-chevron-right
             v-else
-            class="w-5 h-5 text-[--action-bar-icon-color] hover:text-[--action-bar-icon-hover]" />
+            class="w-5 h-5 p-2 text-[--action-bar-icon-color] hover:bg-[--action-bar-icon-hover] hover:rounded-100%" />
         </n-button>
       </div>
 
@@ -24,8 +24,10 @@
           <div class="flex flex-col gap-[1px] mr-3">
             <div
               v-for="follow in followList"
-              :key="follow.id"
-              class="follow-item flex items-center justify-between py-2 rounded-lg cursor-pointer overflow-hidden transition-all duration-300 hover:bg-[--bg-left-menu-hover]">
+              :key="follow.followUserId"
+              class="follow-item flex items-center justify-between py-2 rounded-lg cursor-pointer overflow-hidden transition-all duration-300 hover:bg-[--bg-left-menu-hover]"
+              :class="{ 'bg-[--bg-left-menu-hover]': activeUserId === follow.followUserId }"
+              @click="handleSelectUser(follow)">
               <div class="flex items-center gap-3 flex-1 min-w-0 overflow-hidden">
                 <div class="ml-2 relative w-10 h-10 flex-shrink-0">
                   <img
@@ -74,18 +76,20 @@
         :class="{ 'is-fullscreen': isFullscreen }">
         <div class="flex-1 relative h-full">
           <video-player
-            src="http://vjs.zencdn.net/v/oceans.mp4"
+            v-if="currentVideo"
             :controls="true"
-            :autoplay="false"
+            :autoplay="true"
             :muted="false"
             :is-panel-open="showSidePanel"
             @open-panel="handleOpenPanel"
             @toggle-fullscreen="handleToggleFullscreen" />
+          <div v-else class="w-full h-full flex items-center justify-center text-gray-500">暂无视频</div>
         </div>
 
         <video-side-panel
           v-model:show="showSidePanel"
           v-model:tab="activePanelTab"
+          :user-id="activeUserId"
           class="side-panel-transition"
           :class="{ 'fullscreen-overlay': isFullscreen }" />
       </div>
@@ -94,26 +98,21 @@
 </template>
 
 <script setup lang="ts">
-import { getFollowingApi } from "@/api/follow";
+import { MittEnum } from "@/enums";
+import { useMitt } from "@/hooks/useMitt";
 import { useFullscreen } from "@/hooks/useFullscreen";
+import { getFollowingApi, type VideoItem, type FollowItem } from "@/api/follow";
 
 defineOptions({
   name: "Follow"
 });
 
-// 定义关注列表项的接口
-interface FollowItem {
-  id: number;
-  username: string;
-  avatar: string;
-  unseenCount: number;
-}
-
 // 展开/缩放状态管理
 const isCollapsed = ref(false);
 // 关注列表数据
 const followList = ref<FollowItem[]>([]);
-
+const activeUserId = ref<number | null>(null); // 当前选中的关注用户ID
+const currentVideo = ref<VideoItem | null>(null); // 当前正在播放的视频数据
 const showSidePanel = ref(false);
 const activePanelTab = ref<"detail" | "comment">("comment");
 const fullscreenWrapperRef = ref<HTMLElement | null>(null);
@@ -143,8 +142,45 @@ const toggleCollapse = () => {
   if (!showSidePanel.value) isCollapsed.value = !isCollapsed.value;
 };
 
+// 接收侧边栏传来的视频选择事件
+const handlePlayVideo = (video: VideoItem) => {
+  currentVideo.value = video;
+};
+
+const handleSelectUser = (user: any) => {
+  if (activeUserId.value === user.followUserId) {
+    if (!showSidePanel.value) {
+      showSidePanel.value = true;
+      activePanelTab.value = "detail";
+    }
+    return;
+  }
+  activeUserId.value = user.followUserId;
+};
+
 onMounted(async () => {
-  followList.value = await getFollowingApi();
+  useMitt.on(MittEnum.PLAY_VIDEO, handlePlayVideo);
+
+  try {
+    followList.value = await getFollowingApi();
+  } catch (_) {
+    followList.value = [];
+  } finally {
+    if (!followList.value || followList.value.length === 0) {
+      followList.value = [
+        { followUserId: 101, username: "模拟用户A", avatar: "https://picsum.photos/60/60?1", unseenCount: 2 },
+        { followUserId: 102, username: "模拟用户B", avatar: "https://picsum.photos/60/60?2", unseenCount: 0 }
+      ];
+    }
+    // 初始化选中第一个用户
+    if (followList.value.length > 0) {
+      handleSelectUser(followList.value[0]);
+    }
+  }
+});
+
+onUnmounted(() => {
+  useMitt.off(MittEnum.PLAY_VIDEO, handlePlayVideo);
 });
 </script>
 

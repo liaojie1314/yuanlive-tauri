@@ -14,6 +14,8 @@ export enum UploadSceneEnum {
 export enum MittEnum {
   /** 搜索 */
   SEARCH = "search",
+  /** 播放视频 */
+  PLAY_VIDEO = "PLAY_VIDEO",
   /** 全局文件拖拽 */
   GLOBAL_FILES_DROP = "globalFilesDrop",
   /** 更新提示 */

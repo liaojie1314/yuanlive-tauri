@@ -25,7 +25,7 @@ export async function getFollowingLiveApi() {
  * 获取当前直播类别的所有直播列表
  * @returns 当前直播类别的所有直播列表
  */
-export async function getLiveListByCategoryApi(value: string) {
+export async function getLiveListByCategoryApi(value?: string) {
   return await request({
     url: UrlEnum.GET_LIVE_LIST_BY_CATEGORY,
     params: {

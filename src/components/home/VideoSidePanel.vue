@@ -19,16 +19,46 @@
 
       <div class="panel-content">
         <div v-show="activeTab === 'detail'" class="h-full w-full">
-          <n-scrollbar class="h-full">
+          <n-scrollbar class="h-full" @scroll="handleDetailScroll">
             <div class="p-4 text-[--text-color]">
-              <div class="flex items-center gap-3 mb-4">
-                <img src="https://picsum.photos/60/60" class="w-10 h-10 rounded-full" />
-                <div>
-                  <div class="font-medium">视频作者名称</div>
-                  <div class="text-xs text-[--user-text-color]">刚刚发布 · 广东</div>
+              <div class="flex items-center justify-between mb-4">
+                <div class="font-medium text-[15px]">视频作者名称</div>
+
+                <button class="follow-btn" :class="{ 'is-followed': isFollowed }" @click="toggleFollow">
+                  {{ isFollowed ? "已关注" : "关注" }}
+                </button>
+              </div>
+
+              <p class="text-sm mb-6 leading-relaxed">
+                这里是视频的详情描述内容，可能包含一些标签或者说明文字，描述视频的精彩之处...
+              </p>
+
+              <div class="video-grid">
+                <div v-for="video in videoList" :key="video.id" class="video-card group" @click="onVideoClick(video)">
+                  <img :src="video.coverUrl" class="video-cover" />
+
+                  <div v-if="!video.isPlaying" class="video-mask"></div>
+
+                  <div v-if="!video.isPlaying" class="like-info">
+                    <i-ph-heart-fill class="text-white w-3 h-3" />
+                    <span>{{ video.likeCount }}</span>
+                  </div>
+
+                  <div v-if="video.isPlaying" class="playing-status">
+                    <div class="playing-bars">
+                      <span></span>
+                      <span></span>
+                      <span></span>
+                    </div>
+                    <span class="playing-text">播放中</span>
+                  </div>
                 </div>
               </div>
-              <p class="text-sm">这里是视频的详情描述内容...</p>
+
+              <div v-if="isLoadingMore" class="loading-more">
+                <i-mdi-loading class="animate-spin" />
+                加载中...
+              </div>
             </div>
           </n-scrollbar>
         </div>
@@ -159,8 +189,13 @@
 import { open } from "@tauri-apps/plugin-dialog";
 import { convertFileSrc } from "@tauri-apps/api/core";
 
+import { MittEnum } from "@/enums";
+import { useMitt } from "@/hooks/useMitt";
+import { getVideoListByUidApi, type VideoItem } from "@/api/follow";
+
 const props = defineProps<{
   show: boolean;
+  userId: number | null;
   tab: "detail" | "comment";
 }>();
 
@@ -169,6 +204,8 @@ const emit = defineEmits<{
   "update:tab": [value: "detail" | "comment"];
 }>();
 
+const videoList = ref<VideoItem[]>([]);
+
 const activeTab = computed({
   get: () => props.tab,
   set: (val) => emit("update:tab", val)
@@ -176,6 +213,32 @@ const activeTab = computed({
 
 const handleClose = () => {
   emit("update:show", false);
+};
+
+const isFollowed = ref(true);
+const toggleFollow = () => {
+  if (isFollowed.value) {
+    // TODO: 取消关注并通知重新获取关注列表
+  }
+  isFollowed.value = !isFollowed.value;
+};
+
+const isLoadingMore = ref(false);
+
+// 监听滚动到底部加载更多
+const handleDetailScroll = (e: Event) => {
+  const target = e.target as HTMLElement;
+  // 触底判定：滚动距离 + 视口高度 >= 滚动条总高度 - 阈值
+  if (target.scrollTop + target.clientHeight >= target.scrollHeight - 50) {
+    loadMoreVideos();
+  }
+};
+
+const loadMoreVideos = () => {
+  if (isLoadingMore.value) return;
+  isLoadingMore.value = true;
+
+  // TODO: 加载更多视频
 };
 
 interface CommentUser {
@@ -294,7 +357,6 @@ const handleImageUpload = async () => {
     });
 
     if (selected) {
-      // 适配 Tauri v1 (string) 和 v2 (string | null) 的返回类型
       uploadImagePath = Array.isArray(selected) ? selected[0] : selected;
       // 将本地绝对路径转换为可在 webview 渲染的协议 url
       uploadImagePreview.value = convertFileSrc(uploadImagePath);
@@ -317,7 +379,7 @@ const submitComment = () => {
     id: Date.now(),
     user: { username: "我", avatar: "https://picsum.photos/60/60" },
     content: commentText.value,
-    image: uploadImagePreview.value, // 如果有图片
+    image: uploadImagePreview.value,
     time: "刚刚",
     location: "本地",
     likes: 0,
@@ -331,6 +393,61 @@ const submitComment = () => {
   showEmojiPicker.value = false;
 };
 
+const fetchVideos = async (userId: number) => {
+  try {
+    videoList.value = await getVideoListByUidApi(userId);
+  } catch (_) {
+    videoList.value = [];
+  } finally {
+    if (!videoList.value || videoList.value.length === 0) {
+      videoList.value = [
+        {
+          id: Date.now(), // 保证ID唯一
+          videoUrl: "http://vjs.zencdn.net/v/oceans.mp4",
+          coverUrl: `https://picsum.photos/150/200?random=${userId}`, // 根据用户ID换封面
+          likeCount: 2070,
+          commentCount: 120,
+          shareCount: 50,
+          collectCount: 300,
+          isPlaying: true // 默认第一个是播放状态
+        },
+        {
+          id: Date.now() + 1,
+          videoUrl: "http://vjs.zencdn.net/v/oceans.mp4", // 模拟另一个视频
+          coverUrl: `https://picsum.photos/150/200?random=${userId + 1}`,
+          likeCount: 8033,
+          commentCount: 10,
+          shareCount: 2,
+          collectCount: 15,
+          isPlaying: false
+        }
+      ];
+    }
+    if (videoList.value.length > 0) {
+      useMitt.emit(MittEnum.PLAY_VIDEO, videoList.value[0]);
+    }
+  }
+};
+
+// 点击视频网格项
+const onVideoClick = (clickedVideo: VideoItem) => {
+  // 将所有视频设为非播放状态，当前点击的设为播放状态
+  videoList.value.forEach((v) => (v.isPlaying = false));
+  clickedVideo.isPlaying = true;
+
+  useMitt.emit(MittEnum.PLAY_VIDEO, clickedVideo);
+};
+
+watch(
+  () => props.userId,
+  (newId) => {
+    if (newId) {
+      fetchVideos(newId);
+    }
+  },
+  { immediate: true }
+);
+
 onMounted(() => {
   document.addEventListener("click", closeEmojiPicker);
 });
@@ -341,6 +458,8 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped lang="scss">
+@use "sass:list";
+
 .video-side-panel {
   --panel-width: 320px;
   width: 0;
@@ -437,6 +556,156 @@ onBeforeUnmount(() => {
 .panel-content {
   flex: 1;
   overflow: hidden;
+}
+
+.follow-btn {
+  padding: 4px 16px;
+  background-color: #ff0050;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background-color: #ff3366;
+  }
+
+  &.is-followed {
+    background-color: var(--bg-setting-item);
+    color: var(--user-text-color);
+    border: 1px solid var(--line-color);
+    padding: 3px 15px; /* 减去边框的宽度保持视觉一致 */
+
+    &:hover {
+      background-color: var(--bg-left-menu-hover);
+    }
+  }
+}
+
+.video-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  padding-bottom: 20px;
+}
+
+.video-card {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 3 / 4; /* 保持类似手机视频的竖屏比例 */
+  border-radius: 6px;
+  overflow: hidden;
+  cursor: pointer;
+  background-color: var(--bg-setting-item);
+
+  .video-cover {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+  }
+
+  &:hover .video-cover {
+    transform: scale(1.05);
+  }
+
+  .video-mask {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 40px;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.6), transparent);
+    pointer-events: none;
+  }
+
+  .like-info {
+    position: absolute;
+    bottom: 6px;
+    left: 8px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    color: #fff;
+    font-size: 12px;
+    font-weight: 500;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  }
+}
+
+/* 播放中动画样式与模糊蒙层 */
+.playing-status {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  /* 加深黑色蒙层 */
+  border-radius: 6px;
+  background-color: rgba(0, 0, 0, 0.5);
+  /* 添加毛玻璃模糊效果，让背景封面虚化，质感拉满 */
+  backdrop-filter: blur(4px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  z-index: 10;
+
+  .playing-text {
+    color: #fff;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 1px;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.6);
+  }
+}
+
+.playing-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  height: 16px;
+
+  span {
+    display: block;
+    width: 3px;
+    background-color: #fff;
+    border-radius: 2px;
+    animation: bounce 0.8s infinite ease-in-out alternate;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+  }
+
+  $bars-heights: 12px, 16px, 10px;
+  @for $i from 1 through list.length($bars-heights) {
+    span:nth-child(#{$i}) {
+      height: list.nth($bars-heights, $i);
+      animation-delay: ($i - 1) * 0.3s;
+    }
+  }
+}
+
+@keyframes bounce {
+  0% {
+    transform: scaleY(0.4);
+  }
+  100% {
+    transform: scaleY(1);
+  }
+}
+
+.loading-more {
+  text-align: center;
+  padding: 10px 0;
+  color: var(--user-text-color);
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
 }
 
 .comment-item {
@@ -688,7 +957,6 @@ onBeforeUnmount(() => {
   }
 }
 
-/* Emoji 弹出层定位 */
 .emoji-picker-popup {
   position: absolute !important;
   bottom: calc(100% + 10px) !important;

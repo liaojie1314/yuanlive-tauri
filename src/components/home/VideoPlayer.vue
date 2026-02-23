@@ -336,6 +336,10 @@
 <script setup lang="ts">
 import videojs from "video.js";
 import "video.js/dist/video-js.css";
+
+import { MittEnum } from "@/enums";
+import { useMitt } from "@/hooks/useMitt";
+import { type VideoItem } from "@/api/follow";
 import { useVideoStore } from "@/stores/video";
 import { useDanmakuStore } from "@/stores/danmaku";
 import { useFullscreen } from "@/hooks/useFullscreen";
@@ -343,7 +347,6 @@ import { useFullscreen } from "@/hooks/useFullscreen";
 const { isFullscreen } = useFullscreen();
 
 const props = defineProps<{
-  src: string;
   poster?: string;
   title?: string;
   autoplay?: boolean;
@@ -385,6 +388,7 @@ interface Danmaku {
   horizontalOffset?: number; // 水平偏移量，用于避免同时出现的弹幕重叠
 }
 
+const currentVideo = ref<VideoItem | null>(null);
 const videoContainerRef = ref<HTMLDivElement | null>(null);
 const playerRef = ref<any>(null);
 const danmakuContainerRef = ref<HTMLDivElement | null>(null);
@@ -397,11 +401,11 @@ const playbackRates = [0.5, 0.75, 1.0, 1.25, 1.5, 2.0];
 
 // Interaction Panel States
 const isLiked = ref(false);
-const likeCount = ref(413);
-const commentCount = ref(23);
+const likeCount = ref(0);
+const commentCount = ref(0);
 const isFavorited = ref(false);
-const favoriteCount = ref(183);
-const shareCount = ref(9);
+const favoriteCount = ref(0);
+const shareCount = ref(0);
 
 // Collection Folder States
 const showCollectionTooltip = ref(false);
@@ -1142,13 +1146,12 @@ const toggleDanmakuList = () => {
   showDanmakuListDialog.value = true;
 };
 
-// Switch resolution
+// 切换清晰度
 const switchResolution = (key: string) => {
   videoStore.setResolution(key);
-  if (playerRef.value && props.src) {
-    // 假设不同分辨率对应不同URL，实际需根据业务逻辑调整
-    const newSrc = `${props.src}?resolution=${key}`;
-    playerRef.value.src(newSrc);
+  if (playerRef.value && currentVideo.value?.videoUrl) {
+    const newSrc = `${currentVideo.value.videoUrl}?resolution=${key}`;
+    playerRef.value.src({ src: newSrc, type: "video/mp4" });
     playerRef.value.load();
     if (isPlaying.value) {
       playerRef.value.play();
@@ -1171,37 +1174,41 @@ const toggleMiniWindow = async () => {
   }
 };
 
-// Initialize video.js player
+useMitt.on(MittEnum.PLAY_VIDEO, (video: VideoItem) => {
+  currentVideo.value = video;
+  // 更新右侧面板统计数据
+  likeCount.value = video.likeCount || 0;
+  commentCount.value = video.commentCount || 0;
+  favoriteCount.value = video.collectCount || 0;
+  shareCount.value = video.shareCount || 0;
+  // isLiked.value = video.watched || false;
+
+  // 通知 video.js 切换播放源并播放
+  if (playerRef.value && video.videoUrl) {
+    playerRef.value.src({
+      src: video.videoUrl,
+      type: "video/mp4" // 如果有不同格式可以动态判断
+    });
+    playerRef.value.load();
+    playerRef.value.play();
+  }
+});
+
 onMounted(() => {
   if (!videoContainerRef.value) return;
-
-  // Create video element
   const videoElement = document.createElement("video");
   videoElement.classList.add("video-js");
   videoElement.classList.add("vjs-big-play-centered");
   videoContainerRef.value.appendChild(videoElement);
 
-  // Validate video source
-  if (!props.src) {
-    console.error("Video source is required");
-    emit("error", { code: "NO_SOURCE", message: "Video source is required" });
-    return;
-  }
-
-  // Player options
   const options: any = {
-    controls: false, // 隐藏自带控制栏
+    controls: false,
     autoplay: props.autoplay || false,
     muted: videoStore.muted,
     loop: props.loop || false,
-    preload: props.preload || "metadata", // 使用metadata预加载以提高性能
+    preload: props.preload || "metadata",
     poster: props.poster || "",
-    sources: [
-      {
-        src: props.src,
-        type: "video/mp4"
-      }
-    ],
+    sources: [],
     fluid: true,
     responsive: true,
     language: "zh-CN",
@@ -1211,30 +1218,18 @@ onMounted(() => {
   };
 
   try {
-    // Initialize player
     const player = videojs(videoElement, options);
     playerRef.value = player;
-
-    // Set initial volume from videoStore
     player.volume(videoStore.volume / 100);
     player.muted(videoStore.muted);
-
-    // Emit ready event
     emit("ready", player);
-
-    // Event listeners with proper cleanup tracking
     const playHandler = () => {
       isPlaying.value = true;
       showPauseOverlay.value = false;
       emit("play");
-
-      // Resume all danmaku timers when video plays
       activeDanmakus.value.forEach((danmaku) => {
-        // Only resume if danmaku has remaining duration (was paused)
         if (danmaku.remainingDuration !== undefined && danmaku.remainingDuration > 0) {
-          // Set a new timer with remaining duration
           const timer = setTimeout(() => {
-            // Only remove if not currently hovered
             if (hoveredDanmakuId.value !== danmaku.id) {
               const index = activeDanmakus.value.findIndex((d) => d.id === danmaku.id);
               if (index !== -1) {
@@ -1243,11 +1238,7 @@ onMounted(() => {
               danmakuTimers.delete(danmaku.id);
             }
           }, danmaku.remainingDuration);
-
-          // Store the timer reference
           danmakuTimers.set(danmaku.id, timer);
-
-          // Clear remaining duration since timer is now active
           danmaku.remainingDuration = undefined;
         }
       });
@@ -1259,14 +1250,9 @@ onMounted(() => {
       isPlaying.value = false;
       showPauseOverlay.value = true;
       emit("pause");
-
-      // Pause all danmaku timers when video pauses
       danmakuTimers.forEach((timer, danmakuId) => {
-        // Clear the timer
         clearTimeout(timer);
         danmakuTimers.delete(danmakuId);
-
-        // Calculate remaining duration
         const danmaku = activeDanmakus.value.find((d) => d.id === danmakuId);
         if (danmaku && danmaku.startTime) {
           const elapsed = Date.now() - danmaku.startTime;
@@ -1280,18 +1266,12 @@ onMounted(() => {
 
     const endedHandler = () => {
       emit("ended");
-
-      // Reset danmaku state for replaying
       displayedDanmakuIds.clear();
       activeDanmakus.value = [];
-
-      // Clear all danmaku timers
       danmakuTimers.forEach((timer) => {
         clearTimeout(timer);
       });
       danmakuTimers.clear();
-
-      // Reset line management state
       lineDanmakus.clear();
       currentLineIndex.value = 0;
     };
@@ -1304,8 +1284,6 @@ onMounted(() => {
     };
     player.on("error", errorHandler);
     eventListeners.set("error", errorHandler);
-
-    // Track if we've already reset the danmaku state for this play session
     let hasResetThisSession = false;
 
     const timeupdateHandler = () => {
@@ -1314,38 +1292,23 @@ onMounted(() => {
       currentTime.value = current;
       duration.value = total;
       emit("timeupdate", current, total);
-
-      // Reset danmaku state when video starts playing from the beginning, but only once per session
       if (current < 0.5 && !hasResetThisSession) {
         displayedDanmakuIds.clear();
         activeDanmakus.value = [];
-
-        // Clear all danmaku timers
         danmakuTimers.forEach((timer) => {
           clearTimeout(timer);
         });
         danmakuTimers.clear();
-
-        // Reset line management state
         lineDanmakus.clear();
         currentLineIndex.value = 0;
-
-        // Mark as reset for this session
         hasResetThisSession = true;
-      }
-      // Reset the flag when video is not at the beginning anymore
-      else if (current >= 0.5) {
+      } else if (current >= 0.5) {
         hasResetThisSession = false;
-      }
-      // Limit the size of displayedDanmakuIds to prevent memory leak
-      else if (displayedDanmakuIds.size > 1000) {
-        // Keep only the most recent 500 danmaku IDs
+      } else if (displayedDanmakuIds.size > 1000) {
         const idsToKeep = Array.from(displayedDanmakuIds).slice(-500);
         displayedDanmakuIds.clear();
         idsToKeep.forEach((id) => displayedDanmakuIds.add(id));
       }
-
-      // Update active danmakus based on current time
       updateActiveDanmakus();
     };
     player.on("timeupdate", timeupdateHandler);
@@ -1474,27 +1437,6 @@ onBeforeUnmount(() => {
   lineDanmakus.clear();
   currentLineIndex.value = 0;
 });
-
-// Update player when src changes
-watch(
-  () => props.src,
-  (newSrc) => {
-    // Clear displayed danmaku IDs when video source changes
-    displayedDanmakuIds.clear();
-    // Clear active danmakus
-    activeDanmakus.value = [];
-    // Clear all danmaku timers
-    danmakuTimers.forEach((timer) => {
-      clearTimeout(timer);
-    });
-    danmakuTimers.clear();
-
-    if (playerRef.value) {
-      playerRef.value.src(newSrc);
-      playerRef.value.load();
-    }
-  }
-);
 
 // Update poster when props changes
 watch(
