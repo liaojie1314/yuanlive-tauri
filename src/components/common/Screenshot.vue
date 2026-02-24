@@ -112,8 +112,8 @@
 import type { Ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { emitTo } from "@tauri-apps/api/event";
-import { writeImage } from "@tauri-apps/plugin-clipboard-manager";
 import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
+import { writeImage } from "@tauri-apps/plugin-clipboard-manager";
 
 import { TauriCommandEnum } from "@/enums";
 import { isMac } from "@/utils/PlatformUtils";
@@ -136,49 +136,48 @@ type ScreenConfig = {
 const { t } = useI18n();
 const appWindow = WebviewWindow.getCurrent();
 
+let drawTools: any;
+const magnifierWidth: number = 120; // 放大镜的宽度
+const magnifierHeight: number = 120; // 放大镜的高度
+const zoomFactor: number = 3; // 放大的倍数
+// 定义一个全局变量用于存储动画帧 ID
+let rafId: number | null = null;
+// 截屏图片
+let screenshotImage: HTMLImageElement;
+let isImageLoaded: boolean = false;
+// 性能优化：鼠标移动事件节流（仅 macOS）
+let mouseMoveThrottleId: number | null = null;
+// 存储取消监听的函数
+let unlistenCapture: (() => void) | null = null;
+let unlistenCaptureReset: (() => void) | null = null;
+
 // 图像层
 const imgCanvas: Ref<HTMLCanvasElement | null> = ref(null);
 const imgCtx: Ref<CanvasRenderingContext2D | null> = ref(null);
-
 // 蒙版层
 const maskCanvas: Ref<HTMLCanvasElement | null> = ref(null);
 const maskCtx: Ref<CanvasRenderingContext2D | null> = ref(null);
-
 // 绘图层
 const drawCanvas: Ref<HTMLCanvasElement | null> = ref(null);
 const drawCtx: Ref<CanvasRenderingContext2D | null> = ref(null);
-let drawTools: any;
 // 是否可撤回
 const canUndo = ref(false);
-
 // 放大镜
 const magnifier: Ref<HTMLDivElement | null> = ref(null);
 const magnifierCanvas: Ref<HTMLCanvasElement | null> = ref(null);
 const magnifierCtx: Ref<CanvasRenderingContext2D | null> = ref(null);
-const magnifierWidth: number = 120; // 放大镜的宽度
-const magnifierHeight: number = 120; // 放大镜的高度
-const zoomFactor: number = 3; // 放大的倍数
-
 // 按钮组
 const buttonGroup: Ref<HTMLDivElement | null> = ref(null);
 const showButtonGroup: Ref<boolean> = ref(false); // 控制按钮组显示
-
 // 选区拖动区域
 const selectionArea: Ref<HTMLDivElement | null> = ref(null);
 const selectionAreaStyle: Ref<any> = ref({});
 const isDragging: Ref<boolean> = ref(false);
 const dragOffset: Ref<{ x: number; y: number }> = ref({ x: 0, y: 0 });
-
 // 圆角控制器样式
 const borderRadiusControllerStyle: Ref<any> = ref({});
-// 定义一个全局变量用于存储动画帧 ID
-let rafId: number | null = null;
 // 防止重复初始化的锁
 const isInitializing = ref(false);
-// 存储取消监听的函数
-let unlistenCapture: (() => void) | null = null;
-let unlistenCaptureReset: (() => void) | null = null;
-
 // resize相关
 const isResizing: Ref<boolean> = ref(false);
 const resizeDirection: Ref<string> = ref("");
@@ -191,10 +190,8 @@ const resizeStartPosition: Ref<{ x: number; y: number; width: number; height: nu
     left: 0,
     top: 0
   });
-
 // 圆角控制
 const borderRadius: Ref<number> = ref(0);
-
 // 截屏信息
 const screenConfig: Ref<ScreenConfig> = ref({
   startX: 0,
@@ -207,18 +204,10 @@ const screenConfig: Ref<ScreenConfig> = ref({
   width: 0,
   height: 0
 });
-
-// 截屏图片
-let screenshotImage: HTMLImageElement;
-let isImageLoaded: boolean = false;
-
 // 当前选择的绘图工具
 const currentDrawTool: Ref<string | null> = ref(null);
 
-// 性能优化：鼠标移动事件节流（仅 macOS）
-let mouseMoveThrottleId: number | null = null;
-
-// 窗口状态恢复函数
+/** 窗口状态恢复函数 */
 const restoreWindowState = async () => {
   await appWindow.hide();
 };
@@ -295,7 +284,7 @@ const drawImgCanvas = (type: string) => {
   }
 };
 
-// 重置绘图工具状态
+/** 重置绘图工具状态 */
 const resetDrawTools = () => {
   currentDrawTool.value = null;
   if (drawTools) {
@@ -322,6 +311,7 @@ const resetDrawTools = () => {
   console.log("绘图工具已重置");
 };
 
+/** 初始化绘图canvas */
 const initCanvas = async () => {
   // 如果正在初始化中，直接忽略本次请求，防止双重加载
   if (isInitializing.value) {
@@ -484,6 +474,10 @@ const bindEvents = () => {
   console.log("✅ 事件监听已重新绑定");
 };
 
+/**
+ * 处理放大镜鼠标移动事件
+ * @param event 鼠标事件对象
+ */
 const handleMagnifierMouseMove = (event: MouseEvent) => {
   if (!magnifier.value || !imgCanvas.value || !imgCtx.value) return;
 
@@ -570,6 +564,10 @@ const handleMagnifierMouseMove = (event: MouseEvent) => {
   magnifierCtx.value.stroke();
 };
 
+/**
+ * 处理蒙层鼠标按下事件
+ * @param event 鼠标事件对象
+ */
 const handleMaskMouseDown = (event: MouseEvent) => {
   // 禁止未加载或已存在选区时操作
   if (!isImageLoaded || showButtonGroup.value) return;
@@ -601,6 +599,8 @@ const handleMaskMouseDown = (event: MouseEvent) => {
 
 /**
  * 核心渲染帧函数
+ * @param currentX 当前鼠标 X 坐标（已缩放）
+ * @param currentY 当前鼠标 Y 坐标（已缩放）
  * @param drawBorder 是否绘制边框 (拖动选区时为 false，因为 DOM 元素已有边框)
  */
 const renderMaskFrame = (currentX: number, currentY: number, drawBorder: boolean = true) => {
@@ -638,6 +638,10 @@ const renderMaskFrame = (currentX: number, currentY: number, drawBorder: boolean
   }
 };
 
+/**
+ * 处理蒙层鼠标移动事件
+ * @param event 鼠标事件对象
+ */
 const handleMaskMouseMove = (event: MouseEvent) => {
   handleMagnifierMouseMove(event);
 
@@ -655,6 +659,10 @@ const handleMaskMouseMove = (event: MouseEvent) => {
   });
 };
 
+/**
+ * 处理蒙层鼠标松开事件
+ * @param event 鼠标事件对象
+ */
 const handleMaskMouseUp = (event: MouseEvent) => {
   if (!screenConfig.value.isDrawing) return;
 
@@ -683,7 +691,7 @@ const handleMaskMouseUp = (event: MouseEvent) => {
   }
 };
 
-// 计算矩形区域工具栏位置
+/** 计算矩形区域工具栏位置 */
 const updateButtonGroupPosition = () => {
   // 增加 imgCanvas 检查
   if (!buttonGroup.value || !imgCanvas.value) return;
@@ -742,7 +750,7 @@ const updateButtonGroupPosition = () => {
   updateSelectionAreaPosition();
 };
 
-// 更新选区拖动区域位置
+/** 更新选区拖动区域位置 */
 const updateSelectionAreaPosition = () => {
   if (!selectionArea.value) return;
 
@@ -767,7 +775,11 @@ const updateSelectionAreaPosition = () => {
   updateBorderRadiusControllerPosition(minX, minY);
 };
 
-// 更新圆角控制器位置
+/**
+ * 更新圆角控制器位置
+ * @param selectionLeft 选区左边界（CSS像素）
+ * @param selectionTop 选区上边界（CSS像素）
+ */
 const updateBorderRadiusControllerPosition = (selectionLeft: number, selectionTop: number) => {
   if (!imgCanvas.value) return;
 
@@ -799,7 +811,10 @@ const updateBorderRadiusControllerPosition = (selectionLeft: number, selectionTo
   };
 };
 
-// 选区拖动开始
+/**
+ * 处理选区拖动开始事件
+ * @param event 鼠标事件对象
+ */
 const handleSelectionDragStart = (event: MouseEvent) => {
   // 如果有绘图工具处于激活状态，禁止拖动
   if (currentDrawTool.value) {
@@ -825,7 +840,10 @@ const handleSelectionDragStart = (event: MouseEvent) => {
   console.log("开始拖动，隐藏按钮组");
 };
 
-// 选区拖动移动
+/**
+ * 处理选区拖动移动事件
+ * @param event 鼠标事件对象
+ */
 const handleSelectionDragMove = (event: MouseEvent) => {
   // 必须检查 imgCanvas 是否存在
   if (!isDragging.value || !imgCanvas.value) return;
@@ -872,7 +890,7 @@ const handleSelectionDragMove = (event: MouseEvent) => {
   }
 };
 
-// 选区拖动结束
+/** 处理选区拖动结束事件 */
 const handleSelectionDragEnd = () => {
   isDragging.value = false;
 
@@ -892,7 +910,11 @@ const handleSelectionDragEnd = () => {
   console.log("拖动结束，显示按钮组");
 };
 
-// resize开始
+/**
+ * 处理选区拖动开始事件
+ * @param event 鼠标事件对象
+ * @param direction 拖动方向（nw, ne, sw, se, n, e）
+ */
 const handleResizeStart = (event: MouseEvent, direction: string) => {
   // 如果有绘图工具处于激活状态，禁止resize
   if (currentDrawTool.value) {
@@ -921,7 +943,10 @@ const handleResizeStart = (event: MouseEvent, direction: string) => {
   document.addEventListener("mouseup", handleResizeEnd);
 };
 
-// resize移动
+/**
+ * 处理选区拖动移动事件
+ * @param event 鼠标事件对象
+ */
 const handleResizeMove = (event: MouseEvent) => {
   // 必须检查 imgCanvas 是否存在
   if (!isResizing.value || !imgCanvas.value) return;
@@ -1020,7 +1045,7 @@ const handleResizeMove = (event: MouseEvent) => {
   }
 };
 
-// resize结束
+/** 处理选区拖动结束事件 */
 const handleResizeEnd = () => {
   isResizing.value = false;
   resizeDirection.value = "";
@@ -1042,7 +1067,10 @@ const handleResizeEnd = () => {
   });
 };
 
-// 圆角变化处理
+/**
+ * 处理圆角变化事件
+ * @param event 事件对象
+ */
 const handleBorderRadiusChange = (event: Event) => {
   const target = event.target as HTMLInputElement;
   borderRadius.value = parseInt(target.value, 10);
@@ -1053,6 +1081,11 @@ const handleBorderRadiusChange = (event: Event) => {
 
 /**
  * 绘制矩形尺寸文本
+ * @param context 2D 渲染上下文
+ * @param x 矩形左上角 x 坐标
+ * @param y 矩形左上角 y 坐标
+ * @param width 矩形宽度
+ * @param height 矩形高度
  */
 const drawSizeText = (context: CanvasRenderingContext2D, x: number, y: number, width: number, height: number) => {
   if (context) {
@@ -1075,9 +1108,7 @@ const drawSizeText = (context: CanvasRenderingContext2D, x: number, y: number, w
   }
 };
 
-/**
- * 绘制蒙版
- */
+/** 绘制蒙版 */
 const drawMask = () => {
   console.log("drawMask");
   if (maskCtx.value && maskCanvas.value) {
@@ -1090,7 +1121,7 @@ const drawMask = () => {
   }
 };
 
-// 重绘蒙版为透明选区 + 无描边，避免与 DOM 选区边框重复
+/** 重绘蒙版为透明选区 + 无描边，避免与 DOM 选区边框重复 */
 const redrawSelection = () => {
   if (!maskCtx.value || !maskCanvas.value) return;
 
@@ -1121,9 +1152,7 @@ const redrawSelection = () => {
   }
 };
 
-/**
- * 初始化放大镜
- */
+/** 初始化放大镜 */
 const initMagnifier = () => {
   if (magnifierCanvas.value) {
     magnifierCanvas.value.width = magnifierWidth;
@@ -1132,6 +1161,7 @@ const initMagnifier = () => {
   }
 };
 
+/** 确认选区 */
 const confirmSelection = async () => {
   // 立即隐藏放大镜，防止被截取到
   if (magnifier.value) {
@@ -1276,6 +1306,7 @@ const confirmSelection = async () => {
   }
 };
 
+/** 重置截图工具 */
 const resetScreenshot = async () => {
   try {
     // 1. 停止动画帧
@@ -1336,7 +1367,7 @@ const resetScreenshot = async () => {
   }
 };
 
-// 全局鼠标点击处理，用于取消绘图工具
+/** 全局鼠标点击处理，用于取消绘图工具 */
 const handleGlobalMouseDown = (event: MouseEvent) => {
   // 只有在绘图工具激活且按钮组显示时才考虑处理
   if (!currentDrawTool.value || !showButtonGroup.value) return;
@@ -1347,23 +1378,26 @@ const handleGlobalMouseDown = (event: MouseEvent) => {
   }
 };
 
+/** 全局键盘事件处理，用于取消截图 */
 const handleKeyDown = (event: KeyboardEvent) => {
   if (event.key === "Escape") {
     resetScreenshot();
   }
 };
 
+/** 全局右键点击处理，用于取消截图 */
 const handleRightClick = (event: MouseEvent) => {
   // 阻止默认右键菜单
   event.preventDefault();
   resetScreenshot();
 };
 
+/** 取消选区 */
 const cancelSelection = () => {
   resetScreenshot();
 };
 
-// 截图处理函数
+/** 截图处理函数 */
 const handleScreenshot = () => {
   // 每次开始截图时重置所有状态
   resetDrawTools();

@@ -176,6 +176,9 @@ import { useGlobalShortcut } from "@/hooks/useGlobalShortcut.ts";
 
 const { t } = useI18n();
 const sendOptions = useSendOptions();
+const settingStore = useSettingStore();
+const { getDefaultShortcuts } = useGlobalShortcut();
+
 // 快捷键配置管理
 type ShortcutConfig = {
   key: "screenshot" | "openMainPanel" | "colorPicker";
@@ -189,10 +192,7 @@ type ShortcutConfig = {
   displayName: string;
 };
 
-const settingStore = useSettingStore();
-const { getDefaultShortcuts } = useGlobalShortcut();
 const isMacPlatform = isMac();
-
 // 统一的快捷键配置
 const shortcutConfigs: Record<string, ShortcutConfig> = {
   screenshot: {
@@ -229,13 +229,6 @@ const shortcutConfigs: Record<string, ShortcutConfig> = {
     displayName: t("setting.shortcut.colorPicker")
   }
 };
-
-watchEffect(() => {
-  shortcutConfigs.screenshot.displayName = t("setting.shortcut.screenshot");
-  shortcutConfigs.colorPicker.displayName = t("setting.shortcut.colorPicker");
-  shortcutConfigs.openMainPanel.displayName = t("setting.shortcut.panelSwitch");
-});
-
 // 向后兼容的别名（仅保留模板中使用的）
 const screenshotShortcut = shortcutConfigs.screenshot.value;
 const colorPickerShortcut = shortcutConfigs.colorPicker.value;
@@ -245,11 +238,14 @@ const openMainPanelShortcutRegistered = shortcutConfigs.openMainPanel.isRegister
 
 // 全局快捷键开关状态
 const globalShortcutEnabled = ref(settingStore.shortcuts?.globalEnabled ?? false);
-
 // 发送消息快捷键单独处理
 const sendMessageShortcut = ref(settingStore.chat?.sendKey);
 
-// 将快捷键转换为平台对应的显示文本
+/**
+ * 将快捷键转换为平台对应的显示文本
+ * @param shortcut 原始快捷键字符串
+ * @returns 格式化后的显示文本
+ */
 const formatShortcutDisplay = (shortcut: string) => {
   if (isMacPlatform) {
     // Mac 平台特殊处理：按照标准顺序排列修饰键
@@ -309,7 +305,12 @@ const openMainPanelShortcutDisplay = computed(() => {
   return formatShortcutDisplay(openMainPanelShortcut.value);
 });
 
-// 通用的store变化监听
+/**
+ * 创建一个通用的快捷键配置监听器
+ * @param config 快捷键配置项
+ * @param storeGetter 从 store 中获取当前值的函数
+ * @returns 取消监听函数
+ */
 const createShortcutWatcher = (config: ShortcutConfig, storeGetter: () => string | undefined) => {
   return watch(
     storeGetter,
@@ -328,28 +329,10 @@ createShortcutWatcher(shortcutConfigs.screenshot, () => settingStore.shortcuts?.
 createShortcutWatcher(shortcutConfigs.colorPicker, () => settingStore.shortcuts?.colorPicker);
 createShortcutWatcher(shortcutConfigs.openMainPanel, () => settingStore.shortcuts?.openMainPanel);
 
-watch(
-  () => settingStore.chat?.sendKey,
-  (newValue) => {
-    if (newValue) {
-      sendMessageShortcut.value = newValue;
-    }
-  },
-  { immediate: true }
-);
-
-// 监听 store 中全局快捷键开关状态变化
-watch(
-  () => settingStore.shortcuts?.globalEnabled,
-  (newValue) => {
-    if (newValue !== undefined) {
-      globalShortcutEnabled.value = newValue;
-    }
-  },
-  { immediate: true }
-);
-
-// 通用的快捷键绑定检查
+/**
+ * 检查指定快捷键配置是否已注册
+ * @param config 快捷键配置项
+ */
 const checkShortcutRegistration = async (config: ShortcutConfig) => {
   // 如果全局快捷键被关闭，则显示为未绑定状态
   if (!globalShortcutEnabled.value) {
@@ -360,7 +343,11 @@ const checkShortcutRegistration = async (config: ShortcutConfig) => {
   config.isRegistered.value = await isRegistered(config.value.value);
 };
 
-// 通用的快捷键输入处理
+/**
+ * 创建一个通用的快捷键输入处理函数
+ * @param config 快捷键配置项
+ * @returns 事件处理函数
+ */
 const createShortcutInputHandler = (config: ShortcutConfig) => {
   return (event: KeyboardEvent) => {
     if (!config.isCapturing.value || !globalShortcutEnabled.value) return;
@@ -409,7 +396,11 @@ const handleShortcutInput = createShortcutInputHandler(shortcutConfigs.screensho
 const handleColorPickerShortcutInput = createShortcutInputHandler(shortcutConfigs.colorPicker);
 const handleOpenMainPanelShortcutInput = createShortcutInputHandler(shortcutConfigs.openMainPanel);
 
-// 通用的焦点处理
+/**
+ * 创建一个通用的焦点处理函数
+ * @param config 快捷键配置项
+ * @returns 焦点处理函数
+ */
 const createFocusHandler = (config: ShortcutConfig) => {
   return async () => {
     // 如果全局快捷键被关闭，则不允许进入编辑模式
@@ -423,6 +414,17 @@ const createFocusHandler = (config: ShortcutConfig) => {
   };
 };
 
+// 创建具体的焦点处理函数
+const handleScreenshotFocus = createFocusHandler(shortcutConfigs.screenshot);
+const handleColorPickerFocus = createFocusHandler(shortcutConfigs.colorPicker);
+const handleOpenMainPanelFocus = createFocusHandler(shortcutConfigs.openMainPanel);
+
+/**
+ * 创建一个通用的失去焦点处理函数
+ * @param config 快捷键配置项
+ * @param saveFunction 保存快捷键的函数
+ * @returns 失去焦点处理函数
+ */
 const createBlurHandler = (config: ShortcutConfig, saveFunction: () => Promise<void>) => {
   return async () => {
     config.isCapturing.value = false;
@@ -435,12 +437,7 @@ const createBlurHandler = (config: ShortcutConfig, saveFunction: () => Promise<v
   };
 };
 
-// 创建具体的焦点处理函数
-const handleScreenshotFocus = createFocusHandler(shortcutConfigs.screenshot);
-const handleColorPickerFocus = createFocusHandler(shortcutConfigs.colorPicker);
-const handleOpenMainPanelFocus = createFocusHandler(shortcutConfigs.openMainPanel);
-
-// 处理发送消息快捷键失去焦点事件（自动保存）
+/** 处理发送消息快捷键失去焦点事件（自动保存） */
 const handleSendMessageBlur = async () => {
   // 如果快捷键有变化，则保存
   const currentSendKey = settingStore.chat?.sendKey || "Enter";
@@ -449,7 +446,10 @@ const handleSendMessageBlur = async () => {
   }
 };
 
-// 通用的保存快捷键方法
+/** 创建一个通用的保存快捷键方法
+ * @param config 快捷键配置项
+ * @returns 保存快捷键函数
+ */
 const createSaveShortcutFunction = (config: ShortcutConfig) => {
   return async () => {
     try {
@@ -481,7 +481,16 @@ const createSaveShortcutFunction = (config: ShortcutConfig) => {
   };
 };
 
-// 通用的重置快捷键方法
+// 创建具体的保存函数
+const saveScreenshotShortcut = createSaveShortcutFunction(shortcutConfigs.screenshot);
+const saveColorPickerShortcut = createSaveShortcutFunction(shortcutConfigs.colorPicker);
+const saveOpenMainPanelShortcut = createSaveShortcutFunction(shortcutConfigs.openMainPanel);
+
+/** 创建一个通用的重置快捷键方法
+ * @param config 快捷键配置项
+ * @param saveFunction 保存快捷键的函数
+ * @returns 重置快捷键函数
+ */
 const createResetShortcutFunction = (config: ShortcutConfig, saveFunction: () => Promise<void>) => {
   return async () => {
     // 如果全局快捷键被关闭，则不执行重置操作
@@ -492,11 +501,6 @@ const createResetShortcutFunction = (config: ShortcutConfig, saveFunction: () =>
     await saveFunction();
   };
 };
-
-// 创建具体的保存函数
-const saveScreenshotShortcut = createSaveShortcutFunction(shortcutConfigs.screenshot);
-const saveColorPickerShortcut = createSaveShortcutFunction(shortcutConfigs.colorPicker);
-const saveOpenMainPanelShortcut = createSaveShortcutFunction(shortcutConfigs.openMainPanel);
 
 // 创建具体的重置函数
 const resetScreenshotShortcut = createResetShortcutFunction(shortcutConfigs.screenshot, saveScreenshotShortcut);
@@ -511,7 +515,9 @@ const handleScreenshotBlur = createBlurHandler(shortcutConfigs.screenshot, saveS
 const handleColorPickerBlur = createBlurHandler(shortcutConfigs.colorPicker, saveColorPickerShortcut);
 const handleOpenMainPanelBlur = createBlurHandler(shortcutConfigs.openMainPanel, saveOpenMainPanelShortcut);
 
-// 处理全局快捷键开关切换
+/** 处理全局快捷键开关切换
+ * @param enabled 全局快捷键是否开启
+ */
 const handleGlobalShortcutToggle = async (enabled: boolean) => {
   try {
     console.log(`[Setting] 全局快捷键开关切换为: ${enabled ? "开启" : "关闭"}`);
@@ -528,7 +534,7 @@ const handleGlobalShortcutToggle = async (enabled: boolean) => {
   }
 };
 
-// 保存发送消息快捷键设置
+/** 保存发送消息快捷键设置 */
 const saveSendMessageShortcut = async () => {
   try {
     // 保存到 pinia store
@@ -542,7 +548,11 @@ const saveSendMessageShortcut = async () => {
   }
 };
 
-// 通用的事件监听器创建
+/**
+ * 创建一个通用的事件监听器，用于监听快捷键注册状态变化
+ * @param config 快捷键配置项
+ * @returns 取消监听函数
+ */
 const createRegistrationListener = (config: ShortcutConfig) => {
   return listen(config.registrationEventName, (event: any) => {
     const { shortcut, registered } = event.payload;
@@ -557,6 +567,33 @@ const createRegistrationListener = (config: ShortcutConfig) => {
     }
   });
 };
+
+watch(
+  () => settingStore.chat?.sendKey,
+  (newValue) => {
+    if (newValue) {
+      sendMessageShortcut.value = newValue;
+    }
+  },
+  { immediate: true }
+);
+
+// 监听 store 中全局快捷键开关状态变化
+watch(
+  () => settingStore.shortcuts?.globalEnabled,
+  (newValue) => {
+    if (newValue !== undefined) {
+      globalShortcutEnabled.value = newValue;
+    }
+  },
+  { immediate: true }
+);
+
+watchEffect(() => {
+  shortcutConfigs.screenshot.displayName = t("setting.shortcut.screenshot");
+  shortcutConfigs.colorPicker.displayName = t("setting.shortcut.colorPicker");
+  shortcutConfigs.openMainPanel.displayName = t("setting.shortcut.panelSwitch");
+});
 
 onMounted(async () => {
   // 检查所有快捷键的绑定状态

@@ -76,31 +76,10 @@ const isComplete = computed(() => digits.value.every((digit) => digit !== ""));
 // 将数组转换为字符串
 const pinValue = computed(() => digits.value.join(""));
 
-// 监听输入变化，更新modelValue
-watch(pinValue, (newValue) => {
-  emit("update:modelValue", newValue);
-  if (isComplete.value) {
-    emit("complete", newValue);
-  }
-});
-
-// 监听modelValue变化，更新digits
-watch(
-  () => props.modelValue,
-  (newValue) => {
-    if (newValue) {
-      const chars = newValue.split("");
-      digits.value = Array(props.length)
-        .fill("")
-        .map((_, i) => chars[i] || "");
-    } else {
-      digits.value = Array(props.length).fill("");
-    }
-  },
-  { immediate: true }
-);
-
-/** 处理PIN输入 */
+/**
+ * 处理PIN输入
+ * @param index 当前输入框索引
+ */
 const handleInput = (index: number) => {
   // 确保只输入一个字符
   if (digits.value[index].length > 1) {
@@ -115,7 +94,11 @@ const handleInput = (index: number) => {
   }
 };
 
-/** 处理PIN键盘事件 */
+/**
+ * 处理键盘事件
+ * @param event 键盘事件
+ * @param index 当前输入框索引
+ */
 const handleKeydown = (event: KeyboardEvent, index: number) => {
   // 处理退格键
   if (event.key === "Backspace") {
@@ -126,7 +109,11 @@ const handleKeydown = (event: KeyboardEvent, index: number) => {
   }
 };
 
-/** 处理粘贴事件 */
+/**
+ * 处理粘贴事件
+ * @param event 粘贴事件
+ * @param index 当前输入框索引
+ */
 const handlePaste = (event: ClipboardEvent, index: number) => {
   // 阻止默认粘贴行为
   event.preventDefault();
@@ -151,16 +138,40 @@ const handlePaste = (event: ClipboardEvent, index: number) => {
   }
 };
 
-// 提供清空方法
+/** 提供清空方法 */
 const clear = () => {
   digits.value = Array(props.length).fill("");
   pinInputs.value[0]?.focus();
 };
 
-// 提供聚焦方法
+/** 提供聚焦方法 */
 const focus = () => {
   pinInputs.value[0]?.focus();
 };
+
+// 监听输入变化，更新modelValue
+watch(pinValue, (newValue) => {
+  emit("update:modelValue", newValue);
+  if (isComplete.value) {
+    emit("complete", newValue);
+  }
+});
+
+// 监听modelValue变化，更新digits
+watch(
+  () => props.modelValue,
+  (newValue) => {
+    if (newValue) {
+      const chars = newValue.split("");
+      digits.value = Array(props.length)
+        .fill("")
+        .map((_, i) => chars[i] || "");
+    } else {
+      digits.value = Array(props.length).fill("");
+    }
+  },
+  { immediate: true }
+);
 
 // 暴露方法给父组件
 defineExpose({

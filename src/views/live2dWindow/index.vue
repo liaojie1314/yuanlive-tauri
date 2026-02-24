@@ -29,12 +29,20 @@ import { LogicalPosition } from "@tauri-apps/api/window";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { TauriCommandEnum } from "@/enums";
 
+const appWindow = getCurrentWebviewWindow();
+
 // 挂载 PIXI 到 window (插件必需)
 (window as any).PIXI = PIXI;
+let bubbleTimer: any = null;
+let typingTimer: any = null;
+let lipSyncInterval: any = null;
+const synth = window.speechSynthesis; // 浏览器原生TTS
+
+let isDragging = false;
+let dragOffset = { x: 0, y: 0 };
 
 const canvasRef = ref<HTMLCanvasElement | null>(null);
 const live2dModel = ref<any>(null);
-const appWindow = getCurrentWebviewWindow();
 
 // 气泡相关
 const showBubble = ref(false);
@@ -45,19 +53,14 @@ const isScrolling = ref(false);
 const scrollDuration = ref("5s");
 const isTyping = ref(false);
 
-let bubbleTimer: any = null;
-let typingTimer: any = null;
-
 // 音频与口型相关
 const audioContext = shallowRef<AudioContext | null>(null);
 const audioSource = shallowRef<AudioBufferSourceNode | null>(null);
-let lipSyncInterval: any = null;
-const synth = window.speechSynthesis; // 浏览器原生TTS
 
-// --- 核心逻辑：拖拽窗口 ---
-let isDragging = false;
-let dragOffset = { x: 0, y: 0 };
-
+/**
+ * 开始拖拽窗口
+ * @param e 鼠标事件对象，包含初始点击位置
+ */
 const startDrag = (e: MouseEvent) => {
   isDragging = true;
   dragOffset = { x: e.clientX, y: e.clientY };
@@ -65,6 +68,10 @@ const startDrag = (e: MouseEvent) => {
   window.addEventListener("pointerup", stopDrag);
 };
 
+/**
+ * 处理窗口拖拽
+ * @param e 指针事件对象，包含当前鼠标位置
+ */
 const handleDrag = async (e: PointerEvent) => {
   if (!isDragging) return;
 
@@ -85,13 +92,14 @@ const handleDrag = async (e: PointerEvent) => {
   await appWindow.setPosition(new LogicalPosition(newX, newY));
 };
 
+/** 停止拖拽窗口 */
 const stopDrag = () => {
   isDragging = false;
   window.removeEventListener("pointermove", handleDrag);
   window.removeEventListener("pointerup", stopDrag);
 };
 
-// --- 核心逻辑：音频管理 (清理与停止) ---
+/** 停止Speaking */
 const stopSpeaking = () => {
   // 1. 停止后端音频
   if (audioSource.value) {
@@ -115,7 +123,10 @@ const stopSpeaking = () => {
   }
 };
 
-// --- 核心逻辑：播放后端音频 (精准口型) ---
+/**
+ * 播放后端音频 (精准口型)
+ * @param audioData 音频数据，Uint8Array 格式
+ */
 const playAudioWithLipSync = async (audioData: Uint8Array) => {
   stopSpeaking(); // 先清理
 
@@ -161,7 +172,10 @@ const playAudioWithLipSync = async (audioData: Uint8Array) => {
   }
 };
 
-// --- 核心逻辑：播放系统 TTS (降级方案 - 随机口型) ---
+/**
+ * 播放系统 TTS (降级方案 - 随机口型)
+ * @param text 要播放的文本
+ */
 const playSystemTTS = async (text: string) => {
   stopSpeaking(); // 先清理
   // 1. 尝试使用浏览器原生 API
@@ -186,6 +200,10 @@ const playSystemTTS = async (text: string) => {
   await invokeRustTTS(text);
 };
 
+/**
+ * 调用 Rust 后端 TTS
+ * @param text 要播放的文本
+ */
 const invokeRustTTS = async (text: string) => {
   try {
     // 开始模拟口型 (因为系统 TTS 不给回调，我们只能估算时间)
@@ -208,6 +226,11 @@ const invokeRustTTS = async (text: string) => {
   }
 };
 
+/**
+ * 自动识别文本语言
+ * @param text 要识别的文本
+ * @returns 识别到的语言，"zh" 或 "en"
+ */
 const detectLanguage = (text: string): string => {
   // 正则表达式：只要包含任何中文字符，就认为是中文
   if (/[\u4e00-\u9fa5]/.test(text)) {
@@ -217,7 +240,7 @@ const detectLanguage = (text: string): string => {
   return "en";
 };
 
-// 随机口型
+/** 开始随机口型动画 */
 const startRandomLipSync = () => {
   if (lipSyncInterval) clearInterval(lipSyncInterval);
   lipSyncInterval = setInterval(() => {
@@ -227,7 +250,11 @@ const startRandomLipSync = () => {
   }, 100);
 };
 
-// --- 核心逻辑：打字机 ---
+/**
+ * 打字机效果
+ * @param text 要打字的文本
+ * @param onComplete 打字完成回调
+ */
 const typeWriter = (text: string, onComplete: () => void) => {
   if (typingTimer) clearInterval(typingTimer);
   bubbleText.value = "";
@@ -248,7 +275,7 @@ const typeWriter = (text: string, onComplete: () => void) => {
   }, speed);
 };
 
-// --- 核心逻辑：跑马灯计算 ---
+/** 检查是否需要跑马灯效果 */
 const checkScroll = () => {
   if (!textRef.value || !containerRef.value) return;
   const textWidth = textRef.value.scrollWidth;
@@ -266,6 +293,7 @@ const checkScroll = () => {
   }
 };
 
+/** 跑马灯滚动结束后，延迟隐藏气泡 */
 const onScrollEnd = () => {
   if (bubbleTimer) clearTimeout(bubbleTimer);
   bubbleTimer = setTimeout(() => {
@@ -273,7 +301,10 @@ const onScrollEnd = () => {
   }, 2000);
 };
 
-// --- 主交互函数 ---
+/**
+ * 主交互函数：播放文本
+ * @param text 要播放的文本
+ */
 const speak = async (text: string) => {
   showBubble.value = true;
   isScrolling.value = false;

@@ -61,7 +61,7 @@ const { checkWinExist, resizeWindow } = useWindow();
 const globalStore = useGlobalStore();
 const { showTray } = storeToRefs(globalStore);
 
-// 监听托盘窗口尺寸调整事件
+/** 监听托盘窗口尺寸调整事件 */
 const handleTrayResize = async () => {
   const homeWindow = await WebviewWindow.getByLabel("home");
   await resizeWindow("tray", 130, homeWindow ? 138 : 48);

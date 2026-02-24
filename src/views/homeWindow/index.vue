@@ -53,7 +53,7 @@
 
         <div v-if="activeCategory === 'all'" class="grid grid-cols-2 gap-6 mt-8">
           <div>
-            <div class="text-lg font-medium mb-4">我的关注</div>
+            <div class="text-lg font-medium mb-4">{{ $t("home.index.myFollow") }}</div>
             <div class="bg-[--tray-bg-color] rounded-lg h-[110px] flex items-center transition-colors duration-300">
               <n-scrollbar x-scrollable class="m-4 h-full">
                 <div class="flex gap-6 min-w-max py-[10px]">
@@ -77,7 +77,7 @@
           </div>
 
           <div>
-            <div class="text-lg font-medium mb-4">热门标签</div>
+            <div class="text-lg font-medium mb-4">{{ $t("home.index.hotTags") }}</div>
             <div class="grid grid-cols-3 gap-3">
               <div
                 v-for="tag in hotTags"
@@ -90,7 +90,7 @@
           </div>
         </div>
 
-        <div v-if="activeCategory === 'all'" class="text-lg font-medium mb-4 mt-4">更多直播</div>
+        <div v-if="activeCategory === 'all'" class="text-lg font-medium mb-4 mt-4">{{ $t("home.index.moreLive") }}</div>
 
         <div class="grid grid-cols-4 gap-4 mt-4">
           <div v-for="item in liveList" :key="item.id" class="cursor-pointer" @click="navigateToLive(item.id)">
@@ -109,19 +109,17 @@
 <script setup lang="ts">
 import { MittEnum } from "@/enums";
 import { useMitt } from "@/hooks/useMitt";
-import { getTopFiveLiveApi, getFollowingLiveApi, getLiveListByCategoryApi } from "@/api/live";
+import {
+  getTopFiveLiveApi,
+  getFollowingLiveApi,
+  getLiveListByCategoryApi,
+  type LiveItem,
+  type FollowLiveItem
+} from "@/api/live";
 
 defineOptions({
   name: "Index"
 });
-
-interface LiveInfo {
-  id: number;
-  title: string;
-  anchorName: string;
-  coverImg: string;
-  hotScore: number;
-}
 
 interface HotCategoryInfo {
   id: number;
@@ -130,21 +128,15 @@ interface HotCategoryInfo {
   parentValue: string;
 }
 
-interface FollowLiveInfo {
-  username: string;
-  avatar: string;
-  roomId: number;
-}
-
 const router = useRouter();
 
 // 当前激活分类
 const activeCategory = ref("all");
 const activeChildCategory = ref("all");
 
-const liveList = ref<LiveInfo[]>([]);
-const topLiveList = ref<LiveInfo[]>([]);
-const followLiveList = ref<FollowLiveInfo[]>([]);
+const liveList = ref<LiveItem[]>([]);
+const topLiveList = ref<LiveItem[]>([]);
+const followLiveList = ref<FollowLiveItem[]>([]);
 const hotTags = ref<HotCategoryInfo[]>([]);
 // 搜索状态控制
 const isSearching = ref(false);
@@ -153,16 +145,31 @@ const currentSearchQuery = ref("");
 const bigLive = computed(() => topLiveList.value[0] || {});
 const sideLiveList = computed(() => topLiveList.value.slice(1));
 
-// 分类切换处理
+/**
+ * 分类切换处理
+ * @param parentValue 父分类值
+ * @param childValue 子分类值，默认"all"表示不筛选子分类
+ */
 const handleCategoryChange = async (parentValue: string, childValue: string = "all") => {
   activeCategory.value = parentValue;
   activeChildCategory.value = childValue;
   liveList.value = await getLiveListByCategoryApi(childValue !== "all" ? childValue : parentValue);
 };
 
-// 跳转到直播播放页面
+/**
+ * 跳转至直播播放页面
+ * @param id 直播ID
+ */
 const navigateToLive = (id: number) => {
   router.push(`/live/${id}`);
+};
+
+/**
+ * 返回首页处理
+ */
+const handleBackToHome = () => {
+  isSearching.value = false;
+  currentSearchQuery.value = "";
 };
 
 useMitt.on(MittEnum.SEARCH, (keyword: string) => {
@@ -170,12 +177,6 @@ useMitt.on(MittEnum.SEARCH, (keyword: string) => {
   currentSearchQuery.value = keyword;
   isSearching.value = true;
 });
-
-// 返回首页处理
-const handleBackToHome = () => {
-  isSearching.value = false;
-  currentSearchQuery.value = "";
-};
 
 onMounted(async () => {
   topLiveList.value = await getTopFiveLiveApi();

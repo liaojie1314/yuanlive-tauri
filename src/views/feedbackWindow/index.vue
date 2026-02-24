@@ -124,10 +124,19 @@ const message = useMessage();
 const settingStore = useSettingStore();
 const { themes } = storeToRefs(settingStore);
 const appWindow = getCurrentWebviewWindow();
+
+const imageCounts = 3;
+const rules = {
+  content: {
+    required: true,
+    message: t("feedback.rule.content"),
+    trigger: ["input", "blur"]
+  }
+};
+
 const formRef = ref<FormInst | null>(null);
 const loading = ref(false);
 const fileList = ref<UploadFileInfo[]>([]);
-const imageCounts = 3;
 
 const formModel = reactive({
   type: "bug", // 默认选中bug
@@ -143,24 +152,26 @@ const deviceInfo = reactive({
   webviewVersion: navigator.userAgent
 });
 
-const rules = {
-  content: {
-    required: true,
-    message: t("feedback.rule.content"),
-    trigger: ["input", "blur"]
-  }
-};
-
 const naiveTheme = computed(() => (themes.value.content === ThemeEnum.DARK ? darkTheme : lightTheme));
 
+/** 关闭反馈窗口 */
 const closeWindow = () => appWindow.close();
 
+/**
+ * 自定义上传函数，模拟上传延迟
+ * @param param0 上传选项，包含完成回调
+ */
 const customUpload = ({ onFinish }: UploadCustomRequestOptions) => {
   setTimeout(onFinish, 500);
 };
 
+/** 上传前校验，始终返回 true */
 const beforeUpload = () => true;
 
+/**
+ * 提交反馈表单
+ * @param e 事件对象，用于阻止默认提交行为
+ */
 const submitFeedback = async (e: MouseEvent) => {
   e.preventDefault();
   formRef.value?.validate((errors) => {
@@ -192,7 +203,6 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-/* 针对 Webkit 滚动条的微调，让它看起来更细腻 */
 :deep(.n-scrollbar-rail) {
   width: 5px !important;
   right: 2px !important;

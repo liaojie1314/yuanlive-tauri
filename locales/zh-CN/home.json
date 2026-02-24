@@ -1,4 +1,9 @@
 {
+  "index": {
+    "myFollow": "我的关注",
+    "hotTags": "热门标签",
+    "moreLive": "更多直播"
+  },
   "profileEdit": {
     "toast": {
       "avatarUpdateSuccess": "头像更新成功"

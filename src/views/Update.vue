@@ -36,8 +36,10 @@
 <script setup lang="ts">
 import { useI18n } from "vue-i18n";
 import { changeColor } from "seemly";
-import { relaunch } from "@tauri-apps/plugin-process";
 import { check } from "@tauri-apps/plugin-updater";
+import { relaunch } from "@tauri-apps/plugin-process";
+
+const { t } = useI18n();
 
 // 'github' | 'gitee'
 const PLATFORM: "github" | "gitee" = "github";
@@ -49,7 +51,6 @@ const updating = ref(false);
 const percentage = ref(0);
 const total = ref(0);
 const downloaded = ref(0);
-const { t } = useI18n();
 
 /**
  * 智能解析 Release Body
@@ -129,9 +130,7 @@ const setupCommitList = async (version: string) => {
   }
 };
 
-/**
- * 执行更新操作
- */
+/** 执行更新操作 */
 const doUpdate = async () => {
   updating.value = true;
   try {

@@ -95,18 +95,17 @@ import { convertFileSrc } from "@tauri-apps/api/core";
 import { getCurrentWebviewWindow, WebviewWindow } from "@tauri-apps/api/webviewWindow";
 
 import { useTauriListener } from "@/hooks/useTauriListener";
-import { useVideoViewerStore } from "@/stores/videoViewer.ts";
+import { useVideoViewerStore } from "@/stores/videoViewer";
 
 const { t } = useI18n();
 const { addListener } = useTauriListener();
 const videoViewerStore = useVideoViewerStore();
 const appWindow = WebviewWindow.getCurrent();
+
 // 支持的视频文件扩展名
 const supportedVideoExtensions = [".mp4", ".avi", ".mov", ".mkv", ".wmv", ".flv", ".webm", ".m4v"];
 
-// 初始化数据
 const videoList = ref<string[]>([]);
-
 const currentIndex = ref(0);
 const isPlaying = ref(false);
 const isMuted = ref(false);
@@ -119,7 +118,6 @@ const videoHeight = ref(0);
 // 当前显示的视频URL（统一使用列表模式）
 const currentVideo = computed(() => {
   const videoUrl = videoList.value[currentIndex.value] || "";
-
   // 如果是本地文件路径，使用 Tauri 的 convertFileSrc 来转换
   if (videoUrl && !videoUrl.startsWith("http")) {
     return convertFileSrc(videoUrl);
@@ -152,7 +150,6 @@ const canGoPrevious = computed(() => {
     // 网络视频：检查是否不是第一个
     return currentIndex.value > 0;
   }
-
   // 本地视频：总是返回true，具体判断在点击时进行
   return true;
 });
@@ -166,35 +163,38 @@ const canGoNext = computed(() => {
     // 网络视频：检查是否不是最后一个
     return currentIndex.value < videoList.value.length - 1;
   }
-
   // 本地视频：总是返回true，具体判断在点击时进行
   return true;
 });
 
-// 检查文件是否为视频文件
+/**
+ * 检查文件是否为视频文件
+ * @param filename 文件名
+ * @returns 是否为视频文件
+ */
 const isVideoFile = (filename: string) => {
   const ext = filename.toLowerCase().substring(filename.lastIndexOf("."));
   return supportedVideoExtensions.includes(ext);
 };
 
-// 获取当前视频所在文件夹的所有视频文件
+/**
+ * 获取当前视频所在文件夹的所有视频文件
+ * @param currentVideoPath 当前视频路径
+ * @returns 视频文件路径数组
+ */
 const getVideosFromCurrentFolder = async (currentVideoPath: string) => {
   try {
     if (!currentVideoPath || currentVideoPath.startsWith("http")) {
       return [];
     }
-
     const folderPath = await dirname(currentVideoPath);
-
     // 使用绝对路径读取目录
     const entries = await readDir(folderPath);
-
     const videoFiles = await Promise.all(
       entries
         .filter((entry) => entry.isFile && isVideoFile(entry.name))
         .map(async (entry) => await join(folderPath, entry.name))
     );
-
     return videoFiles.sort(); // 按文件名排序
   } catch (error) {
     console.warn("获取文件夹视频文件失败:", error);
@@ -202,7 +202,7 @@ const getVideosFromCurrentFolder = async (currentVideoPath: string) => {
   }
 };
 
-// 播放/暂停视频
+/** 播放/暂停视频 */
 const playPause = () => {
   if (videoRef.value) {
     if (videoRef.value.paused) {
@@ -222,7 +222,7 @@ const playPause = () => {
   }
 };
 
-// 静音/取消静音
+/** 静音/取消静音 */
 const muteUnmute = () => {
   if (videoRef.value) {
     videoRef.value.muted = !videoRef.value.muted;
@@ -230,7 +230,7 @@ const muteUnmute = () => {
   }
 };
 
-// 自动播放视频
+/** 视频加载完成后：自动播放视频 */
 const onVideoLoaded = () => {
   if (videoRef.value) {
     // 获取视频原始尺寸
@@ -249,7 +249,7 @@ const onVideoLoaded = () => {
   }
 };
 
-// 视频播放结束事件
+/** 视频播放结束事件 */
 const onVideoEnded = () => {
   isPlaying.value = false;
   // 播放结束不自动切下一条
@@ -258,17 +258,17 @@ const onVideoEnded = () => {
   }
 };
 
-// 视频暂停事件
+/** 视频暂停事件 */
 const onVideoPaused = () => {
   isPlaying.value = false;
 };
 
-// 视频播放事件
+/** 视频播放事件 */
 const onVideoPlay = () => {
   isPlaying.value = true;
 };
 
-// 切换到上一个视频
+/** 切换到上一个视频 */
 const previousVideo = async () => {
   if (!canGoPrevious.value) return;
 
@@ -313,7 +313,7 @@ const previousVideo = async () => {
   });
 };
 
-// 切换到下一个视频
+/** 切换到下一个视频 */
 const nextVideo = async () => {
   if (!canGoNext.value) return;
 
@@ -358,7 +358,10 @@ const nextVideo = async () => {
   });
 };
 
-// 显示提示信息
+/**
+ * 显示视频提示信息
+ * @param message 提示消息内容
+ */
 const showVideoTip = (message: string) => {
   tipText.value = message;
   showTip.value = true;

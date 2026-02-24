@@ -1,4 +1,9 @@
 {
+  "index": {
+    "myFollow": "My Follow",
+    "hotTags": "Hot Tags",
+    "moreLive": "More Live"
+  },
   "profileEdit": {
     "toast": {
       "avatarUpdateSuccess": "Avatar updated"

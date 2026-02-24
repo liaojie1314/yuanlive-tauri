@@ -28,5 +28,12 @@
     "tipFirst": "已经是第一个视频了",
     "tipPlayingNext": "正在播放下一个视频",
     "tipLast": "已经是最后一个视频了"
+  },
+  "file": {
+    "renderError": "文件渲染错误",
+    "renderErrorTip": "可能是文件损坏或加密",
+    "docTip": "暂不支持 .doc 格式，请转换为 .docx",
+    "pptTip": "暂不支持 .ppt 格式，请转换为 .pptx",
+    "otherTip": "暂不支持预览该文件格式"
   }
 }

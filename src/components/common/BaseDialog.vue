@@ -25,7 +25,9 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from "vue";
+defineOptions({
+  name: "BaseDialog"
+});
 
 interface Props {
   show: boolean;
@@ -45,19 +47,18 @@ const emit = defineEmits<{
   close: [];
 }>();
 
-// 双向绑定
 const show = computed({
   get: () => props.show,
   set: (value) => emit("update:show", value)
 });
 
-// 关闭对话框
+/** 关闭对话框 */
 const closeDialog = () => {
   show.value = false;
   emit("close");
 };
 
-// 点击遮罩层关闭
+/** 点击遮罩层关闭 */
 const handleOverlayClick = () => {
   closeDialog();
 };

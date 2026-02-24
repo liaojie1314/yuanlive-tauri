@@ -63,5 +63,42 @@
     "showMainPanel": "Show main panel",
     "setting": "Setting",
     "exit": "Exit"
+  },
+  "searchBox": {
+    "search": "Search",
+    "history": "History",
+    "clear": "Clear history",
+    "guess": "Guess you want to search",
+    "refresh": "Refresh guess",
+    "trending": "Trending searches",
+    "placeholder": "Search for something"
+  },
+  "danmakuInput": {
+    "settings": "settings",
+    "reset": "reset",
+    "opacity": "opacity",
+    "displayArea": "area",
+    "fontSize": "font size",
+    "speed": "speed",
+    "danmakuList": "danmaku list",
+    "placeholder": "Send a friendly danmaku",
+    "danmakuSwitch": "danmaku switch",
+    "send": "send",
+    "fontSizeOptions": {
+      "extraSmall": "ex-small",
+      "small": "small",
+      "medium": "medium",
+      "large": "large",
+      "extraLarge": "ex-large"
+    },
+    "speedOptions": {
+      "slower": "slower",
+      "medium": "medium",
+      "faster": "faster"
+    },
+    "displayAreaOptions": {
+      "oneLine": "one line",
+      "twoLines": "two lines"
+    }
   }
 }

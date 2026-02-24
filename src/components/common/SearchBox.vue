@@ -5,7 +5,7 @@
       <input
         v-model="searchQuery"
         type="text"
-        placeholder="搜索你感兴趣的内容"
+        :placeholder="$t('components.searchBox.placeholder')"
         class="flex-1 px-4 py-1.7 text-[--text-color] bg-transparent rounded-l-md outline-none h-full"
         @focus="showDropdown = true"
         @blur="handleBlur"
@@ -23,7 +23,7 @@
         class="bg-[--text-color] text-[--bg-popover] px-4 py-2.5 flex items-center gap-1 hover:opacity-90 transition-opacity h-full whitespace-nowrap border-l border-[--line-color]"
         @click="handleSearch">
         <i-mdi-magnify class="w-5 h-5" />
-        <span class="text-[14px] font-medium">搜索</span>
+        <span class="text-[14px] font-medium">{{ $t("components.searchBox.search") }}</span>
       </div>
     </div>
 
@@ -35,12 +35,12 @@
         @mousedown="handleDropdownMousedown">
         <div v-if="searchHistory.length > 0" class="mb-4">
           <div class="flex justify-between items-center mb-2">
-            <span class="text-[--text-color] font-medium text-sm">历史记录</span>
+            <span class="text-[--text-color] font-medium text-sm">{{ $t("components.searchBox.history") }}</span>
             <div
               class="text-xs text-[--user-text-color] hover:text-[--text-color] flex items-center gap-1 transition-colors cursor-pointer"
               @click="clearSearchHistory">
               <i-mdi-close-circle-outline class="w-3 h-3" />
-              清除记录
+              {{ $t("components.searchBox.clear") }}
             </div>
           </div>
           <div class="flex flex-wrap gap-2">
@@ -61,12 +61,12 @@
 
         <div class="mb-4">
           <div class="flex justify-between items-center mb-2">
-            <span class="text-[--text-color] font-medium text-sm">猜你想搜</span>
+            <span class="text-[--text-color] font-medium text-sm">{{ $t("components.searchBox.guess") }}</span>
             <div
               class="text-xs text-[--user-text-color] hover:text-[--text-color] flex items-center gap-1 transition-colors cursor-pointer"
               @click="handleRefreshSuggestions">
               <i-mdi-refresh class="w-3 h-3" />
-              换一换
+              {{ $t("components.searchBox.refresh") }}
             </div>
           </div>
           <div class="grid grid-cols-2 gap-2">
@@ -83,7 +83,7 @@
         </div>
 
         <div>
-          <div class="text-[--text-color] font-medium mb-2 text-sm">最近热搜</div>
+          <div class="text-[--text-color] font-medium mb-2 text-sm">{{ $t("components.searchBox.trending") }}</div>
           <div class="space-y-1">
             <div
               v-for="(item, index) in trendingSearches"
@@ -119,7 +119,10 @@ const showDropdown = ref(false);
 // 用于跟踪是否点击了下拉框内容
 const isDropdownClicked = ref(false);
 
-// 搜索历史记录
+/**
+ * 获取搜索历史记录
+ * @returns 搜索历史记录数组
+ */
 const getSearchHistory = (): string[] => {
   const stored = localStorage.getItem(StorageKeyEnum.SEARCH_HISTORY);
   return stored ? JSON.parse(stored) : [];
@@ -148,15 +151,7 @@ const trendingSearches = ref<string[]>([
   "剑来动画第二季定档"
 ]);
 
-watch(
-  searchHistory,
-  (newHistory) => {
-    localStorage.setItem(StorageKeyEnum.SEARCH_HISTORY, JSON.stringify(newHistory));
-  },
-  { deep: true }
-);
-
-// 处理搜索
+/** 处理搜索 */
 const handleSearch = () => {
   if (searchQuery.value.trim()) {
     // 添加到搜索历史
@@ -175,40 +170,52 @@ const handleSearch = () => {
   }
 };
 
-// 处理历史记录点击
+/**
+ * 处理历史记录点击
+ * @param item 点击的历史记录项
+ */
 const handleHistoryClick = (item: string) => {
   searchQuery.value = item;
   handleSearch();
 };
 
-// 处理搜索建议点击
+/**
+ * 处理搜索建议点击
+ * @param item 点击的搜索建议项
+ */
 const handleSuggestionClick = (item: string) => {
   searchQuery.value = item;
   handleSearch();
 };
 
-// 处理热搜点击
+/**
+ * 处理热搜点击
+ * @param item 点击的热搜项
+ */
 const handleTrendingClick = (item: string) => {
   searchQuery.value = item;
   handleSearch();
 };
 
-// 清除搜索历史
+/** 清除搜索历史 */
 const clearSearchHistory = () => {
   searchHistory.value = [];
 };
 
-// 删除单个搜索历史
+/**
+ * 删除单个搜索历史
+ * @param index 要删除的历史记录索引
+ */
 const deleteSearchHistory = (index: number) => {
   searchHistory.value.splice(index, 1);
 };
 
-// 刷新搜索建议
+/** 刷新搜索建议 */
 const handleRefreshSuggestions = () => {
   console.log("Refreshing suggestions");
 };
 
-// 处理输入框失去焦点
+/** 处理输入框失去焦点 */
 const handleBlur = () => {
   setTimeout(() => {
     if (!isDropdownClicked.value) {
@@ -218,15 +225,23 @@ const handleBlur = () => {
   }, 150);
 };
 
-// 处理下拉框内容点击
+/** 处理下拉框内容点击 */
 const handleDropdownMousedown = () => {
   isDropdownClicked.value = true;
 };
 
-// 清空输入框
+/** 清空输入框 */
 const clearInput = () => {
   searchQuery.value = "";
 };
+
+watch(
+  searchHistory,
+  (newHistory) => {
+    localStorage.setItem(StorageKeyEnum.SEARCH_HISTORY, JSON.stringify(newHistory));
+  },
+  { deep: true }
+);
 </script>
 
 <style scoped>

@@ -11,14 +11,28 @@ export async function getLiveCategoryApi() {
   });
 }
 
+export interface FollowLiveItem {
+  username: string;
+  avatar: string;
+  roomId: number;
+}
+
 /**
  * 获取当前用户正在直播的关注列表
  * @returns 当前用户正在直播的关注列表
  */
 export async function getFollowingLiveApi() {
-  return await request({
+  return await request<FollowLiveItem[]>({
     url: UrlEnum.GET_FOLLOWING_LIVE
   });
+}
+
+export interface LiveItem {
+  id: number;
+  title: string;
+  anchorName: string;
+  coverImg: string;
+  hotScore: number;
 }
 
 /**
@@ -26,7 +40,7 @@ export async function getFollowingLiveApi() {
  * @returns 当前直播类别的所有直播列表
  */
 export async function getLiveListByCategoryApi(value?: string) {
-  return await request({
+  return await request<LiveItem[]>({
     url: UrlEnum.GET_LIVE_LIST_BY_CATEGORY,
     params: {
       value
@@ -39,7 +53,7 @@ export async function getLiveListByCategoryApi(value?: string) {
  * @returns 人气前5的直播列表
  */
 export async function getTopFiveLiveApi() {
-  return await request({
+  return await request<LiveItem[]>({
     url: UrlEnum.GET_TOP_FIVE_LIVE
   });
 }

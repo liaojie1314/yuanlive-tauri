@@ -165,16 +165,48 @@ import { darkTheme, FormInst, lightTheme } from "naive-ui";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 
 import { ThemeEnum } from "@/enums";
+import { useSettingStore } from "@/stores/setting";
 import { forgetPasswordApi, getCodeApi } from "@/api/auth";
 import { noSideSpace, validateAlphaNumeric, validateMinLength, validateSpecialChar } from "@/utils/ValidateUtils";
-import { useSettingStore } from "@/stores/setting";
 
 const { t } = useI18n();
 const settingStore = useSettingStore();
 const { themes } = storeToRefs(settingStore);
-const naiveTheme = computed(() => (themes.value.content === ThemeEnum.DARK ? darkTheme : lightTheme));
+
 // 验证码计时器的唯一ID
 const EMAIL_TIMER_ID = "email_verification_timer";
+// 邮箱校验规则
+const emailRules = {
+  email: [
+    { required: true, message: t("auth.forget.rules.emailRequired"), trigger: "blur" },
+    {
+      pattern: /^[a-zA-Z0-9_-]+@[a-zA-Z0-9_-]+(\.[a-zA-Z0-9_-]+)+$/,
+      message: t("auth.forget.rules.emailFormat"),
+      trigger: "blur"
+    }
+  ],
+  emailCode: [
+    { required: true, message: t("auth.forget.rules.codeRequired"), trigger: "input" },
+    { min: 6, max: 6, message: t("auth.forget.rules.codeLength"), trigger: "blur" }
+  ]
+};
+// 密码校验规则
+const passwordRules = {
+  password: [
+    { required: true, message: t("auth.forget.rules.passwordRequired"), trigger: "blur" },
+    { min: 6, max: 16, message: t("auth.forget.rules.passwordLength"), trigger: "blur" }
+  ],
+  confirmPassword: [
+    { required: true, message: t("auth.forget.rules.confirmRequired"), trigger: "blur" },
+    {
+      validator: (_: any, value: string) => {
+        return value === passwordForm.value.password;
+      },
+      message: t("auth.forget.rules.confirmMismatch"),
+      trigger: "blur"
+    }
+  ]
+};
 // 倒计时定时器 Worker
 const timerWorker = new Worker(new URL("@/workers/timer.worker.ts", import.meta.url));
 
@@ -196,22 +228,6 @@ const verifyLoading = ref(false);
 // 发送验证码loading状态
 const sendingEmailCode = ref(false);
 
-// 邮箱校验规则
-const emailRules = {
-  email: [
-    { required: true, message: t("auth.forget.rules.emailRequired"), trigger: "blur" },
-    {
-      pattern: /^[a-zA-Z0-9_-]+@[a-zA-Z0-9_-]+(\.[a-zA-Z0-9_-]+)+$/,
-      message: t("auth.forget.rules.emailFormat"),
-      trigger: "blur"
-    }
-  ],
-  emailCode: [
-    { required: true, message: t("auth.forget.rules.codeRequired"), trigger: "input" },
-    { min: 6, max: 6, message: t("auth.forget.rules.codeLength"), trigger: "blur" }
-  ]
-};
-
 // 第二步密码表单
 const passwordFormRef = ref<FormInst | null>(null);
 const passwordForm = ref({
@@ -220,39 +236,19 @@ const passwordForm = ref({
 });
 const submitLoading = ref(false);
 
-// 密码校验规则
-const passwordRules = {
-  password: [
-    { required: true, message: t("auth.forget.rules.passwordRequired"), trigger: "blur" },
-    { min: 6, max: 16, message: t("auth.forget.rules.passwordLength"), trigger: "blur" }
-  ],
-  confirmPassword: [
-    { required: true, message: t("auth.forget.rules.confirmRequired"), trigger: "blur" },
-    {
-      validator: (_: any, value: string) => {
-        return value === passwordForm.value.password;
-      },
-      message: t("auth.forget.rules.confirmMismatch"),
-      trigger: "blur"
-    }
-  ]
-};
+const naiveTheme = computed(() => (themes.value.content === ThemeEnum.DARK ? darkTheme : lightTheme));
 
 // 下一步按钮禁用状态
 const nextDisabled = computed(() => {
   return !(formData.value.email && formData.value.emailCode);
 });
 
-/**
- * 上一步
- */
+/** 上一步 */
 const goBack = () => {
   currentStep.value = 1;
 };
 
-/**
- * 发送邮箱验证码
- */
+/** 发送邮箱验证码 */
 const sendEmailCode = async () => {
   // 邮箱校验
   if (!formData.value.email) {
@@ -298,9 +294,7 @@ const sendEmailCode = async () => {
   }
 };
 
-/**
- * 验证邮箱
- */
+/** 验证邮箱 */
 const verifyEmail = async () => {
   if (!formRef.value) return;
 
@@ -316,9 +310,7 @@ const verifyEmail = async () => {
   }
 };
 
-/**
- * 提交新密码
- */
+/** 提交新密码 */
 const submitNewPassword = async () => {
   if (!passwordFormRef.value) return;
 

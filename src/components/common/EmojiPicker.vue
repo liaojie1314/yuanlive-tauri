@@ -13,8 +13,16 @@
 <script setup lang="ts">
 import { emojis } from "@/utils/EmojiUtils";
 
+defineOptions({
+  name: "EmojiPicker"
+});
+
 const emit = defineEmits<(e: "select-emoji", emoji: string) => void>();
 
+/**
+ * 处理点击表情事件
+ * @param emoji 点击的表情
+ */
 const handleEmojiClick = (emoji: string) => {
   emit("select-emoji", emoji);
 };

@@ -28,5 +28,12 @@
     "tipFirst": "This is the first video",
     "tipPlayingNext": "Now playing next video",
     "tipLast": "This is the last video"
+  },
+  "file": {
+    "renderError": "File render error",
+    "renderErrorTip": "Possible file corruption or encryption",
+    "docTip": "No preview support for .doc format, please convert to .docx",
+    "pptTip": "No preview support for .ppt format, please convert to .pptx",
+    "otherTip": "No preview support for this file format"
   }
 }

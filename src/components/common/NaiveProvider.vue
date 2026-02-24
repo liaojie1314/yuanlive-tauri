@@ -1,7 +1,29 @@
+<template>
+  <n-config-provider
+    :theme-overrides="globalTheme === ThemeEnum.DARK ? darkThemeOverrides : lightThemeOverrides"
+    :theme="globalTheme"
+    :locale="zhCN"
+    :date-locale="dateZhCN">
+    <n-loading-bar-provider>
+      <n-dialog-provider>
+        <n-notification-provider :max="notifyMax">
+          <n-message-provider :max="messageMax">
+            <n-modal-provider>
+              <slot></slot>
+              <naive-provider-content />
+            </n-modal-provider>
+          </n-message-provider>
+        </n-notification-provider>
+      </n-dialog-provider>
+    </n-loading-bar-provider>
+  </n-config-provider>
+</template>
+
 <script setup lang="ts">
-import { darkTheme, lightTheme, dateZhCN, zhCN, type GlobalThemeOverrides } from "naive-ui";
-import { ThemeEnum } from "@/enums";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
+import { darkTheme, lightTheme, dateZhCN, zhCN, type GlobalThemeOverrides } from "naive-ui";
+
+import { ThemeEnum } from "@/enums";
 
 defineOptions({ name: "NaiveProvider" });
 
@@ -10,18 +32,9 @@ const { notifyMax, messageMax } = defineProps<{
   messageMax?: number;
 }>();
 
-/** 监听深色主题颜色变化 */
-const globalTheme = ref<any>("dark");
-const pattern = ref(ThemeEnum.OS);
-const prefers = matchMedia("(prefers-color-scheme: dark)");
 // 定义不需要显示消息提示的窗口
 const noMessageWindows = ["tray"];
-
-/** 跟随系统主题模式切换主题 */
-const followOS = () => {
-  globalTheme.value = prefers.matches ? darkTheme : lightTheme;
-  document.documentElement.dataset.theme = prefers.matches ? ThemeEnum.DARK : ThemeEnum.LIGHT;
-};
+const prefers = matchMedia("(prefers-color-scheme: dark)");
 
 const commonTheme: GlobalThemeOverrides = {
   Input: {
@@ -124,7 +137,17 @@ const darkThemeOverrides: GlobalThemeOverrides = {
   }
 };
 
-// 挂载naive组件的方法至window, 以便在路由钩子函数和请求函数里面调用
+/** 监听深色主题颜色变化 */
+const globalTheme = ref<any>("dark");
+const pattern = ref(ThemeEnum.OS);
+
+/** 跟随系统主题模式切换主题 */
+const followOS = () => {
+  globalTheme.value = prefers.matches ? darkTheme : lightTheme;
+  document.documentElement.dataset.theme = prefers.matches ? ThemeEnum.DARK : ThemeEnum.LIGHT;
+};
+
+/** 挂载naive组件的方法至window, 以便在路由钩子函数和请求函数里面调用 */
 const registerNaiveTools = () => {
   window.$loadingBar = useLoadingBar();
   window.$dialog = useDialog();
@@ -181,26 +204,5 @@ watchEffect(() => {
   }
 });
 </script>
-
-<template>
-  <n-config-provider
-    :theme-overrides="globalTheme === ThemeEnum.DARK ? darkThemeOverrides : lightThemeOverrides"
-    :theme="globalTheme"
-    :locale="zhCN"
-    :date-locale="dateZhCN">
-    <n-loading-bar-provider>
-      <n-dialog-provider>
-        <n-notification-provider :max="notifyMax">
-          <n-message-provider :max="messageMax">
-            <n-modal-provider>
-              <slot></slot>
-              <naive-provider-content />
-            </n-modal-provider>
-          </n-message-provider>
-        </n-notification-provider>
-      </n-dialog-provider>
-    </n-loading-bar-provider>
-  </n-config-provider>
-</template>
 
 <style scoped></style>

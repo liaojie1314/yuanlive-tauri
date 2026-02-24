@@ -5,8 +5,9 @@
 import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { useTauriListener } from "@/hooks/useTauriListener";
 
-const appWindow = WebviewWindow.getCurrent();
 const { addListener } = useTauriListener();
+const appWindow = WebviewWindow.getCurrent();
+
 const isCapturing = ref(false);
 
 watchEffect(() => {

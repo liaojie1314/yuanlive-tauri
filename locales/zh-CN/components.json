@@ -63,5 +63,42 @@
     "showMainPanel": "显示主界面",
     "setting": "设置",
     "exit": "退出"
+  },
+  "searchBox": {
+    "search": "搜索",
+    "history": "历史记录",
+    "clear": "清除记录",
+    "guess": "猜你想搜",
+    "refresh": "换一换",
+    "trending": "最近热搜",
+    "placeholder": "搜索你感兴趣的内容"
+  },
+  "danmakuInput": {
+    "settings": "弹幕设置",
+    "reset": "恢复默认",
+    "opacity": "不透明度",
+    "displayArea": "显示区域",
+    "fontSize": "字体大小",
+    "speed": "弹幕速度",
+    "danmakuList": "弹幕列表",
+    "placeholder": "发一条友好的弹幕吧",
+    "danmakuSwitch": "弹幕开关",
+    "send": "发送",
+    "fontSizeOptions": {
+      "extraSmall": "超小",
+      "small": "小号",
+      "medium": "中号",
+      "large": "大号",
+      "extraLarge": "超大"
+    },
+    "speedOptions": {
+      "slower": "较慢",
+      "medium": "适中",
+      "faster": "较快"
+    },
+    "displayAreaOptions": {
+      "oneLine": "一行",
+      "twoLines": "两行"
+    }
   }
 }

@@ -90,29 +90,12 @@ const settingStore = useSettingStore();
 const { themes } = storeToRefs(settingStore);
 const { getWindowPayload } = useWindow();
 
-const code = ref("");
-const previewUrl = ref("");
-const language = ref<LangType>("html"); // 当前选中的语言
-const editorRef = shallowRef();
-const containerRef = ref<HTMLElement | null>(null);
-const leftWidth = ref(500); // 默认宽度
-const isDragging = ref(false);
 const MIN_WIDTH = 350; // 最小宽度限制
 const languageOptions = [
   { label: "HTML", value: "html" },
   { label: "Vue 3", value: "vue" },
   { label: "React", value: "react" }
 ];
-
-const monacoTheme = computed(() => (themes.value.content === ThemeEnum.DARK ? "vs-dark" : "vs"));
-const naiveTheme = computed(() => (themes.value.content === ThemeEnum.DARK ? darkTheme : lightTheme));
-
-// 根据选中的语言，决定 Monaco 编辑器的高亮模式
-const monacoLang = computed(() => {
-  if (language.value === "react") return "javascript";
-  return "html"; // Vue 和 HTML 都使用 HTML 模式高亮即可
-});
-
 const editorOptions = {
   automaticLayout: true,
   fontSize: 14,
@@ -123,7 +106,24 @@ const editorOptions = {
   tabSize: 2
 };
 
-// 2. 运行预览：将编辑器代码生成 HTML Blob
+const code = ref("");
+const previewUrl = ref("");
+const language = ref<LangType>("html"); // 当前选中的语言
+const containerRef = ref<HTMLElement | null>(null);
+const leftWidth = ref(500); // 默认宽度
+const isDragging = ref(false);
+const editorRef = shallowRef();
+
+const monacoTheme = computed(() => (themes.value.content === ThemeEnum.DARK ? "vs-dark" : "vs"));
+const naiveTheme = computed(() => (themes.value.content === ThemeEnum.DARK ? darkTheme : lightTheme));
+
+// 根据选中的语言，决定 Monaco 编辑器的高亮模式
+const monacoLang = computed(() => {
+  if (language.value === "react") return "javascript";
+  return "html"; // Vue 和 HTML 都使用 HTML 模式高亮即可
+});
+
+/** 运行预览：将编辑器代码生成 HTML Blob 并加载到 iframe 中 */
 const runPreview = () => {
   if (previewUrl.value) URL.revokeObjectURL(previewUrl.value);
 
@@ -134,7 +134,7 @@ const runPreview = () => {
   previewUrl.value = URL.createObjectURL(blob);
 };
 
-// 3. 编辑器挂载完成回调：绑定快捷键
+/** 编辑器挂载完成回调：绑定快捷键 */
 const handleEditorMount = (editor: any) => {
   editorRef.value = editor;
   editor.addCommand(2048 | 49, () => {
@@ -142,7 +142,7 @@ const handleEditorMount = (editor: any) => {
   });
 };
 
-// 辅助函数：根据代码内容猜测语言
+/** 根据代码内容猜测语言类型 */
 const detectLanguage = (content: string) => {
   if (content.includes("export default function") || content.includes("import React")) {
     language.value = "react";
@@ -153,6 +153,7 @@ const detectLanguage = (content: string) => {
   }
 };
 
+/** 开始拖拽：调整左侧宽度 */
 const startDrag = () => {
   isDragging.value = true;
   window.addEventListener("mousemove", onDrag);
@@ -160,6 +161,7 @@ const startDrag = () => {
   document.body.style.cursor = "col-resize"; // 强制光标样式
 };
 
+/** 拖拽中：实时更新左侧宽度 */
 const onDrag = (e: MouseEvent) => {
   if (!containerRef.value) return;
   const containerRect = containerRef.value.getBoundingClientRect();
@@ -174,6 +176,7 @@ const onDrag = (e: MouseEvent) => {
   leftWidth.value = newWidth;
 };
 
+/** 拖拽结束：停止监听事件 */
 const stopDrag = () => {
   isDragging.value = false;
   window.removeEventListener("mousemove", onDrag);
@@ -184,6 +187,10 @@ const stopDrag = () => {
   if (editorRef.value) editorRef.value.layout();
 };
 
+/**
+ * 容器宽度变化时：自动调整左侧宽度
+ * @param param0 容器宽度变化事件参数
+ */
 const onContainerResize = ({ width }: { width: number }) => {
   // 如果正在拖拽中，暂时不自动调整，避免冲突
   if (isDragging.value) return;
@@ -199,7 +206,6 @@ const onContainerResize = ({ width }: { width: number }) => {
   }
 };
 
-// 1. 初始化
 onMounted(async () => {
   await getCurrentWebviewWindow().show();
   interface PreviewPayload {

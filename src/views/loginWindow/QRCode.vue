@@ -1,6 +1,5 @@
 <template>
   <n-config-provider :theme="naiveTheme" data-tauri-drag-region class="login-box size-full rounded-8px select-none">
-    <!--顶部操作栏-->
     <action-bar :max-w="false" proxy data-tauri-drag-region />
 
     <n-flex justify="center" class="mt-15px" data-tauri-drag-region>
@@ -72,16 +71,16 @@
 
 <script setup lang="ts">
 import { useI18n } from "vue-i18n";
-import { darkTheme, lightTheme } from "naive-ui";
 import { invoke } from "@tauri-apps/api/core";
+import { darkTheme, lightTheme } from "naive-ui";
 
 import router from "@/router";
-import { StorageKeyEnum, TauriCommandEnum, ThemeEnum } from "@/enums";
-import { generateQRCodeApi, checkQRStatusApi } from "@/api/auth";
 import { useWindow } from "@/hooks/useWindow";
 import { useGlobalStore } from "@/stores/global";
 import { useSettingStore } from "@/stores/setting";
 import { getEnhancedFingerprint } from "@/services/fingerprint";
+import { generateQRCodeApi, checkQRStatusApi } from "@/api/auth";
+import { StorageKeyEnum, TauriCommandEnum, ThemeEnum } from "@/enums";
 
 const { t } = useI18n();
 const { createWebviewWindow } = useWindow();
@@ -89,12 +88,12 @@ const globalStore = useGlobalStore();
 const settingStore = useSettingStore();
 const { showTray } = storeToRefs(globalStore);
 const { themes } = storeToRefs(settingStore);
-const naiveTheme = computed(() => (themes.value.content === ThemeEnum.DARK ? darkTheme : lightTheme));
 
 type LoadTextKey = "loading" | "refreshing" | "scanHint" | "login" | "retry" | "authPending";
 type ScanStatusTextKey = "success" | "error" | "auth" | "expired" | "fetchFailed" | "generateFail" | "generalError";
+const MAX_POLL_DURATION = 5 * 60 * 1000; // 5分钟超时，防止长时间占用内存
+
 const loadTextKey = ref<LoadTextKey>("loading");
-const loadText = computed(() => t(`auth.qr.loadText.${loadTextKey.value}`));
 const loading = ref(true);
 const refreshing = ref(false); // 是否正在刷新
 const qrCodeValue = ref("");
@@ -107,7 +106,6 @@ const qrErrorCorrectionLevel = ref("H" as const);
 // 轮训相关
 const pollInterval = ref<NodeJS.Timeout | null>(null);
 const pollStartAt = ref<number | null>(null);
-const MAX_POLL_DURATION = 5 * 60 * 1000; // 5分钟超时，防止长时间占用内存
 const pollingRequesting = ref(false);
 const confirmedHandled = ref(false);
 const scanStatus = ref<{
@@ -117,11 +115,13 @@ const scanStatus = ref<{
   show: boolean;
 }>({ status: "success", icon: "success", textKey: "", show: false });
 
+const naiveTheme = computed(() => (themes.value.content === ThemeEnum.DARK ? darkTheme : lightTheme));
+const loadText = computed(() => t(`auth.qr.loadText.${loadTextKey.value}`));
 const scanStatusText = computed(() =>
   scanStatus.value.textKey ? t(`auth.qr.overlay.${scanStatus.value.textKey}`) : ""
 );
 
-// 刷新二维码
+/** 刷新二维码 */
 const refreshQRCode = async () => {
   if (scanStatus.value.textKey !== "error" && scanStatus.value.textKey !== "auth") return;
   refreshing.value = true;
@@ -142,6 +142,7 @@ const refreshQRCode = async () => {
   await handleQRCode();
 };
 
+/** 开始轮询 */
 const startPolling = () => {
   if (pollInterval.value) clearInterval(pollInterval.value);
   pollStartAt.value = Date.now();
@@ -188,9 +189,7 @@ const startPolling = () => {
   }, 2000);
 };
 
-/**
- * 清除轮询
- */
+/** 清除轮询 */
 const clearPolling = () => {
   if (pollInterval.value) {
     clearInterval(pollInterval.value);
@@ -223,9 +222,7 @@ const handleConfirmed = async (res: any) => {
   }
 };
 
-/**
- * 处理二维码显示和刷新
- */
+/** 处理二维码显示和刷新 */
 const handleQRCode = async () => {
   try {
     qrCodeResp.value = await generateQRCodeApi();
@@ -251,9 +248,7 @@ const handleQRCode = async () => {
   }
 };
 
-/**
- * 处理认证中状态
- */
+/** 处理认证中状态 */
 const handleAuth = () => {
   loading.value = false;
   scanStatus.value = {
@@ -267,7 +262,7 @@ const handleAuth = () => {
 
 /**
  * 处理失败场景
- * @param key 错误类型
+ * @param key 错误类型, 默认值为 "generalError"
  */
 const handleError = (key: ScanStatusTextKey = "generalError") => {
   loading.value = false;

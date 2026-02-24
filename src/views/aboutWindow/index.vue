@@ -81,9 +81,7 @@ const handleMouseMove = (event: MouseEvent) => {
   });
 };
 
-/**
- * 处理鼠标离开事件，将元素旋转角度重置为 0
- */
+/** 处理鼠标离开事件，将元素旋转角度重置为 0 */
 const handleMouseLeave = () => {
   window.requestAnimationFrame(() => {
     if (element.value) {

@@ -3,6 +3,22 @@ import { useI18n } from "vue-i18n";
 import { isWindows } from "@/utils/PlatformUtils";
 import { MacOsKeyEnum, WinKeyEnum } from "@/enums";
 
+const langOptions = [
+  {
+    label: "Automatic",
+    value: "AUTO"
+  },
+  {
+    label: "简体中文",
+    value: "zh-CN"
+  },
+  {
+    label: "English",
+    value: "en"
+  }
+];
+
+/** 侧边栏选项 */
 const useSideOptions = () => {
   const { t } = useI18n();
 
@@ -48,6 +64,7 @@ const useSendOptions = () => {
     }
   ]);
 };
+
 /** 字体 */
 const useFontOptions = () => {
   const { t } = useI18n();
@@ -62,20 +79,5 @@ const useFontOptions = () => {
     }
   ]);
 };
-
-const langOptions = [
-  {
-    label: "Automatic",
-    value: "AUTO"
-  },
-  {
-    label: "简体中文",
-    value: "zh-CN"
-  },
-  {
-    label: "English",
-    value: "en"
-  }
-];
 
 export { useSideOptions, useSendOptions, useFontOptions, langOptions };

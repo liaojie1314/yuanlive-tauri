@@ -111,24 +111,13 @@ import { useWindow } from "@/hooks/useWindow.ts";
 import { useSettingStore } from "@/stores/setting.ts";
 import { handRelativeTime } from "@/utils/TimeUtils";
 
-const PLATFORM: "github" | "gitee" = "github";
-const REPO_OWNER = "liaojie1314";
-const REPO_NAME = "yuanlive-tauri";
-
 const settingStore = useSettingStore();
 const { t } = useI18n();
 const { createWebviewWindow, resizeWindow, setResizable } = useWindow();
 
-const commitLog = ref<{ message: string; icon: string }[]>([]);
-const newCommitLog = ref<{ message: string; icon: string }[]>([]);
-const text = ref(t("update.checkUpdate.updateNow"));
-const currentVersion = ref("");
-const newVersion = ref("");
-const loading = ref(false);
-const logVisible = ref(false);
-const versionTime = ref("");
-const newVersionTime = ref("");
-
+const PLATFORM: "github" | "gitee" = "github";
+const REPO_OWNER = "liaojie1314";
+const REPO_NAME = "yuanlive-tauri";
 const commitTypeMap: { [key: string]: string } = {
   feat: "comet",
   fix: "bug",
@@ -142,6 +131,16 @@ const commitTypeMap: { [key: string]: string } = {
   revert: "right-arrow-curving-left",
   chore: "hammer-and-wrench"
 };
+
+const commitLog = ref<{ message: string; icon: string }[]>([]);
+const newCommitLog = ref<{ message: string; icon: string }[]>([]);
+const text = ref(t("update.checkUpdate.updateNow"));
+const currentVersion = ref("");
+const newVersion = ref("");
+const loading = ref(false);
+const logVisible = ref(false);
+const versionTime = ref("");
+const newVersionTime = ref("");
 
 /**
  * 根据 commit message 获取图标类型
@@ -255,9 +254,7 @@ const getCommitLog = async (version: string, isNew = false) => {
   }
 };
 
-/**
- * 执行更新
- */
+/** 执行更新 */
 const doUpdate = async () => {
   if (!(await confirm(t("update.checkUpdate.confirmUpdate")))) {
     return;
@@ -271,9 +268,7 @@ const doUpdate = async () => {
   });
 };
 
-/**
- * 忽略更新
- */
+/** 忽略更新 */
 const dismissUpdate = async () => {
   if (!(await confirm(t("update.checkUpdate.confirmIgnore")))) {
     return;
@@ -283,9 +278,7 @@ const dismissUpdate = async () => {
   checkUpdateWindow?.close();
 };
 
-/**
- * 检查更新
- */
+/** 检查更新 */
 const checkUpdate = async () => {
   await check()
     .then(async (e) => {
@@ -301,9 +294,7 @@ const checkUpdate = async () => {
     });
 };
 
-/**
- * 移动窗口到底部右侧
- */
+/** 移动窗口到底部右侧 */
 const moveWindowToBottomRight = async () => {
   try {
     const checkUpdateWindow = await WebviewWindow.getByLabel("checkUpdate");
@@ -321,9 +312,7 @@ const moveWindowToBottomRight = async () => {
   }
 };
 
-/**
- * 切换日志可见性
- */
+/** 切换日志可见性 */
 const toggleLogVisible = async () => {
   logVisible.value = !logVisible.value;
 
@@ -341,9 +330,7 @@ const toggleLogVisible = async () => {
   await moveWindowToBottomRight();
 };
 
-/**
- * 初始化检查更新窗口
- */
+/** 初始化检查更新窗口 */
 const init = async () => {
   await moveWindowToBottomRight();
   loading.value = true;

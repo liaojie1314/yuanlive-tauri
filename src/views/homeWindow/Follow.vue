@@ -90,6 +90,7 @@
           v-model:show="showSidePanel"
           v-model:tab="activePanelTab"
           :user-id="activeUserId"
+          :user-name="activeUserName"
           class="side-panel-transition"
           :class="{ 'fullscreen-overlay': isFullscreen }" />
       </div>
@@ -112,6 +113,9 @@ const isCollapsed = ref(false);
 // 关注列表数据
 const followList = ref<FollowItem[]>([]);
 const activeUserId = ref<number | null>(null); // 当前选中的关注用户ID
+const activeUserName = computed(() => {
+  return activeUserId.value ? followList.value.find((f) => f.followUserId === activeUserId.value)?.username || "" : "";
+});
 const currentVideo = ref<VideoItem | null>(null); // 当前正在播放的视频数据
 const showSidePanel = ref(false);
 const activePanelTab = ref<"detail" | "comment">("comment");

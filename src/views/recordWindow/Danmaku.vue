@@ -139,7 +139,10 @@ const chatMessages = ref([
   }
 ]);
 
-// 接收 ChatArea 发送的消息
+/**
+ * 处理发送消息事件
+ * @param content 消息内容
+ */
 const handleSendMessage = (content: string) => {
   chatMessages.value.push({
     user: "1111",

@@ -54,28 +54,18 @@ import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 
 import router from "@/router";
 import { useSideOptions } from "./config.ts";
-import { useSettingStore } from "@/stores/setting.ts";
 import Foot from "@/views/settingWindow/Foot.vue";
+import { useSettingStore } from "@/stores/setting.ts";
 
+const { t } = useI18n();
 const settingStore = useSettingStore();
-const skeleton = ref(true);
 const { page } = storeToRefs(settingStore);
 const sideOptions = useSideOptions();
-const { t } = useI18n();
+
+const skeleton = ref(true);
 /**当前选中的元素 默认选中itemsTop的第一项*/
 const activeItem = ref<string>("/general");
 const title = ref<string>("");
-
-watch(
-  sideOptions,
-  (options) => {
-    if (!options.length) return;
-    const current = options.find((item) => item.url === activeItem.value) ?? options[0];
-    activeItem.value = current.url;
-    title.value = current.label;
-  },
-  { immediate: true }
-);
 
 /**
  * 统一跳转路由方法
@@ -89,6 +79,17 @@ const pageJumps = (url: string) => {
   }
   router.push(url);
 };
+
+watch(
+  sideOptions,
+  (options) => {
+    if (!options.length) return;
+    const current = options.find((item) => item.url === activeItem.value) ?? options[0];
+    activeItem.value = current.url;
+    title.value = current.label;
+  },
+  { immediate: true }
+);
 
 onMounted(async () => {
   await getCurrentWebviewWindow().show();

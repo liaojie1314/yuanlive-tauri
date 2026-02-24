@@ -12,27 +12,26 @@ import { listen } from "@tauri-apps/api/event";
 import { exit } from "@tauri-apps/plugin-process";
 import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
 
-import { EventEnum, MittEnum, ThemeEnum, WsResponseMessageEnum } from "@/enums";
-import { useSettingStore } from "@/stores/setting";
 import { useUserStore } from "@/stores/user";
+import { useSettingStore } from "@/stores/setting";
 import { loadLanguage } from "@/services/i18n";
 import { ConnectionState } from "@/services/webSocketRust";
-import { isDesktop, isMobile, isWindows10 } from "@/utils/PlatformUtils";
 import { useMitt } from "@/hooks/useMitt";
 import { useWindow } from "@/hooks/useWindow";
 import { useTauriListener } from "@/hooks/useTauriListener";
 import { useGlobalShortcut } from "@/hooks/useGlobalShortcut";
+import { isDesktop, isMobile, isWindows10 } from "@/utils/PlatformUtils";
+import { EventEnum, MittEnum, ThemeEnum, WsResponseMessageEnum } from "@/enums";
 
+const { t } = useI18n();
 const settingStore = useSettingStore();
 const userStore = useUserStore();
-const { addListener } = useTauriListener();
-// 全局快捷键管理
-const { initializeGlobalShortcut, cleanupGlobalShortcut } = useGlobalShortcut();
 const { initTheme, normalizeThemeState, toggleTheme } = settingStore;
 const { themes, page } = storeToRefs(settingStore);
-const appWindow = WebviewWindow.getCurrent();
+const { addListener } = useTauriListener();
 const { sendWindowPayload, createWebviewWindow } = useWindow();
-const { t } = useI18n();
+const { initializeGlobalShortcut, cleanupGlobalShortcut } = useGlobalShortcut();
+const appWindow = WebviewWindow.getCurrent();
 
 let lastWsConnectionState: string | null = null;
 

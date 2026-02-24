@@ -5,8 +5,8 @@
     <div class="flex-1 w-full relative overflow-hidden bg-[#f0f0f0]">
       <div v-if="renderError" class="size-full flex flex-col items-center justify-center text-gray-500 gap-3">
         <i-mdi-alert-circle class="w-12 h-12 text-red-400" />
-        <div class="text-sm">文件渲染失败</div>
-        <div class="text-xs opacity-70">可能是文件损坏或加密</div>
+        <div class="text-sm">{{ t("preview.file.renderError") }}</div>
+        <div class="text-xs opacity-70">{{ t("preview.file.renderErrorTip") }}</div>
       </div>
 
       <VueOfficeDocx
@@ -67,12 +67,12 @@ import "@vue-office/excel/lib/v3/index.css";
 import "github-markdown-css/github-markdown.css";
 import "highlight.js/styles/atom-one-dark.css";
 
-import { reactive, computed, onMounted, ref } from "vue";
-import { listen } from "@tauri-apps/api/event";
-import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
-import { readFile } from "@tauri-apps/plugin-fs";
-import MarkdownIt from "markdown-it";
 import hljs from "highlight.js";
+import MarkdownIt from "markdown-it";
+import { useI18n } from "vue-i18n";
+import { listen } from "@tauri-apps/api/event";
+import { readFile } from "@tauri-apps/plugin-fs";
+import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 
 import VueOfficeDocx from "@vue-office/docx/lib/v3/vue-office-docx.mjs";
 import VueOfficeExcel from "@vue-office/excel/lib/v3/vue-office-excel.mjs";
@@ -81,6 +81,23 @@ import VueOfficePptx from "@vue-office/pptx/lib/v3/vue-office-pptx.mjs";
 
 import { useWindow } from "@/hooks/useWindow";
 import { useTauriListener } from "@/hooks/useTauriListener";
+
+const { t } = useI18n();
+const { getWindowPayload } = useWindow();
+const { addListener } = useTauriListener();
+
+type PayloadData = {
+  uid: string;
+  conversationId: string;
+  resourceFile: {
+    fileName: string;
+    absolutePath: string | undefined;
+    nativePath: string | undefined;
+    url: string;
+    type: { ext: string; mime?: string } | undefined;
+    localExists: boolean;
+  };
+};
 
 const mdParser = new MarkdownIt({
   html: true,
@@ -129,19 +146,6 @@ const CODE_EXTS = [
   "bat"
 ];
 
-type PayloadData = {
-  uid: string;
-  conversationId: string;
-  resourceFile: {
-    fileName: string;
-    absolutePath: string | undefined;
-    nativePath: string | undefined;
-    url: string;
-    type: { ext: string; mime?: string } | undefined;
-    localExists: boolean;
-  };
-};
-
 const uiData = reactive({
   payload: {
     uid: "",
@@ -184,14 +188,20 @@ const isShowExcel = computed(() => ["xlsx", "xls"].includes(fileExt.value));
 const isShowPpt = computed(() => ["pptx"].includes(fileExt.value));
 const isShowMd = computed(() => ["md", "markdown"].includes(fileExt.value));
 const isShowCode = computed(() => CODE_EXTS.includes(fileExt.value));
-const isShowText = computed(() => TEXT_EXTS.includes(fileExt.value)); // ✅ 新增判断
+const isShowText = computed(() => TEXT_EXTS.includes(fileExt.value));
 
+/** 获取文件预览错误信息 */
 const getErrorMessage = () => {
-  if (fileExt.value === "doc") return "暂不支持 .doc 格式，请转换为 .docx";
-  if (fileExt.value === "ppt") return "暂不支持 .ppt 格式，请转换为 .pptx";
-  return "暂不支持预览该文件格式";
+  if (fileExt.value === "doc") return t("preview.file.docTip");
+  if (fileExt.value === "ppt") return t("preview.file.pptTip");
+  return t("preview.file.otherTip");
 };
 
+/**
+ * 更新文件预览内容
+ * @param absolutePath 文件绝对路径
+ * @param exists 文件是否存在本地
+ */
 const updateFile = async (absolutePath: string, exists: boolean) => {
   uiData.fileLoading = true;
   uiData.fileBuffer = null;
@@ -199,13 +209,10 @@ const updateFile = async (absolutePath: string, exists: boolean) => {
   mdHtml.value = "";
   txtContent.value = ""; // 重置
   renderError.value = false;
-
   try {
     let rawText = "";
-
     if (exists && absolutePath) {
       const uint8Array = await readFile(absolutePath);
-
       //如果是代码、Markdown 或 纯文本，则解码为字符串
       if (isShowCode.value || isShowMd.value || isShowText.value) {
         const decoder = new TextDecoder("utf-8");
@@ -216,11 +223,13 @@ const updateFile = async (absolutePath: string, exists: boolean) => {
     } else {
       if ((isShowCode.value || isShowMd.value || isShowText.value) && uiData.payload.resourceFile.url) {
         const res = await fetch(uiData.payload.resourceFile.url);
-        if (!res.ok) throw new Error("网络请求失败");
+        if (!res.ok) {
+          renderError.value = true;
+          return;
+        }
         rawText = await res.text();
       }
     }
-
     // 根据类型分发处理
     if (isShowMd.value && rawText) {
       mdHtml.value = mdParser.render(rawText);
@@ -239,8 +248,6 @@ const updateFile = async (absolutePath: string, exists: boolean) => {
     else if (isShowText.value && rawText) {
       txtContent.value = rawText;
     }
-
-    console.log("文件加载成功");
   } catch (error) {
     console.error("读取文件出错：", error);
     renderError.value = true;
@@ -249,14 +256,14 @@ const updateFile = async (absolutePath: string, exists: boolean) => {
   }
 };
 
+/** 组件渲染完成 */
 const onRendered = () => console.log("渲染完成");
+
+/** 组件渲染失败 */
 const handleRenderError = (e: any) => {
-  console.error("组件渲染失败", e);
+  console.error("组件渲染失败:", e);
   renderError.value = true;
 };
-
-const { getWindowPayload } = useWindow();
-const { addListener } = useTauriListener();
 
 onMounted(async () => {
   const webviewWindow = getCurrentWebviewWindow();
@@ -264,7 +271,6 @@ onMounted(async () => {
 
   await addListener(
     listen(`${label}:update`, (event: any) => {
-      console.log("预览窗口收到更新:", event);
       const payload: PayloadData = event.payload.payload;
       Object.assign(uiData.payload, payload);
       updateFile(payload.resourceFile.absolutePath || "", payload.resourceFile.localExists);
@@ -275,14 +281,12 @@ onMounted(async () => {
   try {
     const payload = await getWindowPayload<PayloadData>(label);
     if (payload) {
-      console.log("预览窗口初始载荷:", payload);
       Object.assign(uiData.payload, payload);
       updateFile(payload.resourceFile.absolutePath || "", payload.resourceFile.localExists);
     }
   } catch (error) {
     console.error("获取 Payload 失败:", error);
   }
-
   await webviewWindow.show();
 });
 </script>

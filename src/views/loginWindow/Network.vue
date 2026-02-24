@@ -1,6 +1,5 @@
 <template>
   <n-config-provider :theme="naiveTheme" data-tauri-drag-region class="login-box size-full rounded-8px select-none">
-    <!--顶部操作栏-->
     <action-bar :max-w="false" proxy data-tauri-drag-region />
 
     <n-flex vertical :size="12" align="center" class="pt-10px">
@@ -119,7 +118,6 @@ import { useSettingStore } from "@/stores/setting";
 const { t } = useI18n();
 const settingStore = useSettingStore();
 const { themes } = storeToRefs(settingStore);
-const naiveTheme = computed(() => (themes.value.content === ThemeEnum.DARK ? darkTheme : lightTheme));
 
 type ProxySettings = {
   apiType: string;
@@ -144,6 +142,7 @@ const savedProxy = reactive<ProxySettings>({
   wsSuffix: ""
 });
 
+const naiveTheme = computed(() => (themes.value.content === ThemeEnum.DARK ? darkTheme : lightTheme));
 // HTTP配置选项
 const apiOptions = computed(() => [
   {
@@ -187,9 +186,7 @@ const handleTab = async (tab: string) => {
   }
 };
 
-/**
- * 保存代理配置
- */
+/** 保存代理配置 */
 const handleSave = async () => {
   try {
     if (
@@ -227,6 +224,10 @@ const handleSave = async () => {
   }
 };
 
+/**
+ * 更新Tauri配置
+ * @param proxySettings 代理配置
+ */
 const updateTauriSettings = async (proxySettings: ProxySettings) => {
   const baseUrl =
     proxySettings.apiType + "://" + proxySettings.apiIp + ":" + proxySettings.apiPort + proxySettings.apiSuffix;

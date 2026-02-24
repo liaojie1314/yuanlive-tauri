@@ -85,6 +85,10 @@ import { isMobile } from "@/utils/PlatformUtils";
 import { useViewport } from "@/hooks/useViewport.ts";
 import { useContextMenu } from "@/hooks/useContextMenu.ts";
 
+defineOptions({
+  name: "ContextMenu"
+});
+
 type Props = {
   content?: Record<string, any>;
   menu?: any[];
@@ -92,11 +96,32 @@ type Props = {
   ignoreTeleport?: boolean;
 };
 
+/** 获取视口的宽高 */
+const { vw, vh } = useViewport();
+
 const props = withDefaults(defineProps<Props>(), {
   content: () => ({}),
   menu: () => [],
   specialMenu: () => [],
   ignoreTeleport: false
+});
+const emit = defineEmits(["select", "menu-show"]);
+
+const ContextMenuRef = useTemplateRef("ContextMenuRef");
+/** 判断是否传入了menu */
+const isNull = computed(() => props.menu === void 0);
+/** 获取鼠标位置和是否显示右键菜单 */
+const { x, y, showMenu } = useContextMenu(ContextMenuRef, isNull);
+
+/** 定义右键菜单尺寸 */
+const w = ref(0);
+const h = ref(0);
+// 二级菜单状态
+const showSubmenu = ref(false);
+const activeSubmenu = ref<any[]>([]);
+const submenuPosition = ref({
+  left: "0px",
+  top: "0px"
 });
 
 // 使用计算属性过滤显示的菜单项
@@ -119,36 +144,7 @@ const visibleSpecialMenu = computed(() => {
   });
 });
 
-/** 判断是否传入了menu */
-const isNull = computed(() => props.menu === void 0);
-const ContextMenuRef = useTemplateRef("ContextMenuRef");
-const emit = defineEmits(["select", "menu-show"]);
-/** 获取鼠标位置和是否显示右键菜单 */
-const { x, y, showMenu } = useContextMenu(ContextMenuRef, isNull);
-
-// 监听showMenu状态变化并向父组件发送事件
-watch(
-  () => showMenu.value,
-  (newVal) => {
-    emit("menu-show", newVal);
-  },
-  { immediate: true }
-);
-
-/** 获取视口的宽高 */
-const { vw, vh } = useViewport();
-/** 定义右键菜单尺寸 */
-const w = ref(0);
-const h = ref(0);
-// 二级菜单状态
-const showSubmenu = ref(false);
-const activeSubmenu = ref<any[]>([]);
-const submenuPosition = ref({
-  left: "0px",
-  top: "0px"
-});
-
-/** 计算右键菜单的位置 */
+// 计算右键菜单的位置
 const pos = computed(() => {
   let posX = x.value;
   let posY = y.value;
@@ -166,23 +162,19 @@ const pos = computed(() => {
   };
 });
 
-// 添加 watch 监听主菜单显示状态
-watch(
-  () => showMenu.value,
-  (newVal) => {
-    if (!newVal) {
-      showSubmenu.value = false;
-      activeSubmenu.value = [];
-    }
-  }
-);
-
-const handleSize = ({ width, height }: any) => {
+/**
+ * 处理右键菜单尺寸变化
+ * @param param0 右键菜单尺寸
+ */
+const handleSize = ({ width, height }: { width: number; height: number }) => {
   w.value = width;
   h.value = height;
 };
 
-/** 处理右键主菜单点击事件 */
+/**
+ * 处理右键主菜单点击事件
+ * @param item 点击的菜单项
+ */
 const handleClick = (item: string) => {
   nextTick(() => {
     showMenu.value = false;
@@ -190,7 +182,10 @@ const handleClick = (item: string) => {
   });
 };
 
-// 处理子菜单项点击
+/**
+ * 处理子菜单项点击事件
+ * @param item 点击的子菜单项
+ */
 const handleSubItemClick = (item: any) => {
   if (typeof item.click === "function") {
     item.click(props.content);
@@ -198,10 +193,18 @@ const handleSubItemClick = (item: any) => {
   showSubmenu.value = false;
 };
 
+/**
+ * 处理右键子菜单进入动画
+ * @param el 子菜单元素
+ */
 const handleBeforeEnter = (el: any) => {
   el.style.height = 0;
 };
 
+/**
+ * 处理右键子菜单进入动画完成事件
+ * @param el 子菜单元素
+ */
 const handleEnter = (el: any) => {
   el.style.height = "auto";
   const h = el.clientHeight;
@@ -213,16 +216,29 @@ const handleEnter = (el: any) => {
 
 /**
  * 获取菜单项的属性值
+ * @param item 菜单项
+ * @param prop 属性名
+ * @returns 属性值
  */
 const getMenuItemProp = (item: any, prop: "icon" | "label") => {
   return typeof item[prop] === "function" ? item[prop](props.content) : item[prop];
 };
 
+/**
+ * 判断菜单项是否为危险项
+ * @param item 菜单项
+ * @returns 是否为危险项
+ */
 const isDangerousItem = (item: any) => {
   const icon = getMenuItemProp(item, "icon");
   return ["logout", "forbid"].includes(icon);
 };
 
+/**
+ * 处理右键主菜单鼠标进入事件
+ * @param item 进入的菜单项
+ * @param index 菜单项索引
+ */
 const handleMouseEnter = (item: any, index: number) => {
   const hasChildren = typeof item.children === "function" ? true : Array.isArray(item.children);
   if (!hasChildren) {
@@ -266,6 +282,10 @@ const handleMouseEnter = (item: any, index: number) => {
   showSubmenu.value = true;
 };
 
+/**
+ * 处理右键主菜单鼠标离开事件
+ * @param e 鼠标事件对象
+ */
 const handleMouseLeave = (e: MouseEvent) => {
   const relatedTarget = e.relatedTarget as HTMLElement;
   if (relatedTarget?.closest(".context-submenu")) {
@@ -278,6 +298,11 @@ const handleMouseLeave = (e: MouseEvent) => {
   }, 100);
 };
 
+/**
+ * 判断鼠标是否在子菜单区域
+ * @param e 鼠标事件对象
+ * @returns 是否在子菜单区域
+ */
 const isMouseInSubmenu = (e: MouseEvent) => {
   const submenu = document.querySelector(".context-submenu");
   if (!submenu) return false;
@@ -285,6 +310,11 @@ const isMouseInSubmenu = (e: MouseEvent) => {
   return elementsUnderMouse.some((el) => el.closest(".context-submenu"));
 };
 
+/**
+ * 判断鼠标是否在主菜单区域
+ * @param e 鼠标事件对象
+ * @returns 是否在主菜单区域
+ */
 const isMouseInMainMenu = (e: MouseEvent) => {
   const mainMenu = document.querySelector(".context-menu");
   if (!mainMenu) return false;
@@ -292,10 +322,35 @@ const isMouseInMainMenu = (e: MouseEvent) => {
   return elementsUnderMouse.some((el) => el.closest(".context-menu"));
 };
 
+/**
+ * 判断菜单项是否有子菜单
+ * @param item 菜单项
+ * @returns 是否有子菜单
+ */
 const shouldShowArrow = (item: any) => {
   const children = typeof item.children === "function" ? item.children(props.content) : item.children;
   return Array.isArray(children) && children.length > 0;
 };
+
+// 监听showMenu状态变化并向父组件发送事件
+watch(
+  () => showMenu.value,
+  (newVal) => {
+    emit("menu-show", newVal);
+  },
+  { immediate: true }
+);
+
+// 添加 watch 监听主菜单显示状态
+watch(
+  () => showMenu.value,
+  (newVal) => {
+    if (!newVal) {
+      showSubmenu.value = false;
+      activeSubmenu.value = [];
+    }
+  }
+);
 </script>
 
 <style scoped lang="scss">

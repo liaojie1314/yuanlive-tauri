@@ -44,22 +44,21 @@ import { useWindow } from "@/hooks/useWindow.ts";
 import { useSettingStore } from "@/stores/setting";
 import { isMac } from "@/utils/PlatformUtils";
 
+const { t } = useI18n();
 const { getWindowPayload } = useWindow();
 const settingStore = useSettingStore();
 const { themes } = storeToRefs(settingStore);
-const { t } = useI18n();
 
-const naiveTheme = computed(() => (themes.value.content === "dark" ? darkTheme : lightTheme));
-
-const ip = ref(t("auth.remoteLogin.unknownIp"));
-const showModal = ref(true);
 let currentWindow: WebviewWindow | null = null;
 let parentWindow: WebviewWindow | null = null;
 let unlistenClose: (() => void) | undefined;
 
-/**
- * 从窗口负载中获取异地登录IP
- */
+const ip = ref(t("auth.remoteLogin.unknownIp"));
+const showModal = ref(true);
+
+const naiveTheme = computed(() => (themes.value.content === "dark" ? darkTheme : lightTheme));
+
+/** 从窗口负载中获取异地登录IP */
 const assignIpFromPayload = async () => {
   try {
     const payload = await getWindowPayload<{ ip?: string }>("modal-remoteLogin");
@@ -71,6 +70,7 @@ const assignIpFromPayload = async () => {
   }
 };
 
+/** 处理确认按钮点击事件 */
 const handleConfirm = async () => {
   showModal.value = false;
   await parentWindow?.setEnabled(true);

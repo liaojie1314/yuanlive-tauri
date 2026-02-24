@@ -122,24 +122,16 @@ const appWindow = WebviewWindow.getCurrent();
 // 初始化数据
 const imageList = ref<string[]>([]);
 const currentIndex = ref(0);
-
 // 状态变量
 const scale = ref(1);
 const rotation = ref(0);
 const translateX = ref(0);
 const translateY = ref(0);
 const isDragging = ref(false);
-
-const dragStart = reactive({ x: 0, y: 0, initialTX: 0, initialTY: 0 });
-
-// Refs
-const imageRef = ref<HTMLImageElement>();
-const viewportRef = useTemplateRef<HTMLElement>("viewportRef");
-
 // 提示相关
 const showTip = ref(false);
 const tipText = ref("");
-
+const dragStart = reactive({ x: 0, y: 0, initialTX: 0, initialTY: 0 });
 // 左右箭头显示
 const showArrows = reactive({
   left: false,
@@ -147,6 +139,8 @@ const showArrows = reactive({
   leftHover: false,
   rightHover: false
 });
+const imageRef = ref<HTMLImageElement>();
+const viewportRef = useTemplateRef<HTMLElement>("viewportRef");
 
 const scaleText = computed(() => `${Math.round(scale.value * 100)}%`);
 
@@ -167,10 +161,12 @@ const transformStyle = computed(() => {
   return style;
 });
 
+/** 图片加载完成后：调整到窗口中心 */
 const onImageLoad = () => {
   fitImageToWindow();
 };
 
+/** 图片适应窗口：居中显示，保持比例 */
 const fitImageToWindow = () => {
   if (!viewportRef.value || !imageRef.value) return;
 
@@ -205,6 +201,10 @@ const fitImageToWindow = () => {
   scale.value = Math.min(widthRatio, heightRatio, 1);
 };
 
+/**
+ * 鼠标移动：根据位置显示/隐藏左右箭头
+ * @param e 鼠标事件对象
+ */
 const handleMouseMove = (e: MouseEvent) => {
   const { clientX } = e;
   const { innerWidth } = window;
@@ -212,21 +212,34 @@ const handleMouseMove = (e: MouseEvent) => {
   if (!showArrows.rightHover) showArrows.right = innerWidth - clientX <= 78;
 };
 
+/** 鼠标离开：隐藏左右箭头 */
 const handleMouseLeave = () => {
   if (!showArrows.leftHover) showArrows.left = false;
   if (!showArrows.rightHover) showArrows.right = false;
 };
 
+/**
+ * 鼠标进入：显示箭头
+ * @param direction 箭头方向
+ */
 const handleArrowEnter = (direction: "left" | "right") => {
   showArrows[`${direction}Hover`] = true;
   showArrows[direction] = true;
 };
 
+/**
+ * 鼠标离开：隐藏箭头
+ * @param direction 箭头方向
+ */
 const handleArrowLeave = (direction: "left" | "right") => {
   showArrows[`${direction}Hover`] = false;
   showArrows[direction] = false;
 };
 
+/**
+ * 鼠标按下：开始拖拽
+ * @param e 鼠标事件对象
+ */
 const startDrag = (e: MouseEvent) => {
   if (e.button !== 0) return;
   e.preventDefault();
@@ -242,6 +255,10 @@ const startDrag = (e: MouseEvent) => {
   document.addEventListener("mouseup", stopDrag);
 };
 
+/**
+ * 鼠标移动：拖拽图片
+ * @param e 鼠标事件对象
+ */
 const handleDrag = (e: MouseEvent) => {
   if (!isDragging.value) return;
   e.preventDefault();
@@ -253,32 +270,39 @@ const handleDrag = (e: MouseEvent) => {
   translateY.value = dragStart.initialTY + deltaY;
 };
 
+/** 鼠标松开：结束拖拽 */
 const stopDrag = () => {
   isDragging.value = false;
   document.removeEventListener("mousemove", handleDrag);
   document.removeEventListener("mouseup", stopDrag);
 };
 
+/** 放大图片 */
 const zoomIn = () => {
   scale.value = Math.min(5, scale.value + 0.1);
 };
 
+/** 缩小图片 */
 const zoomOut = () => {
   scale.value = Math.max(0.1, scale.value - 0.1);
 };
 
+/** 左转图片 */
 const rotateLeft = () => {
   rotation.value -= 90;
 };
 
+/** 右转图片 */
 const rotateRight = () => {
   rotation.value += 90;
 };
 
+/** 重置图片：居中显示，保持比例 */
 const resetImage = () => {
   fitImageToWindow();
 };
 
+/** 保存图片 */
 const saveImage = async () => {
   const imageUrl = currentImage.value;
   const suggestedName = imageUrl.split("/").pop() || "image.png";
@@ -298,6 +322,10 @@ const saveImage = async () => {
   }
 };
 
+/**
+ * 显示提示消息
+ * @param message 提示消息内容
+ */
 const showTipMessage = (message: string) => {
   tipText.value = message;
   showTip.value = true;
@@ -306,12 +334,17 @@ const showTipMessage = (message: string) => {
   }, 1500);
 };
 
+/**
+ * 同步当前显示索引
+ * @param index 新的索引值
+ */
 const syncCurrentIndex = (index: number) => {
   currentIndex.value = index;
   imageViewerStore.currentIndex = index;
   downloadOriginalByIndex(index);
 };
 
+/** 显示上一张图片 */
 const prevImage = () => {
   if (currentIndex.value > 0) {
     syncCurrentIndex(currentIndex.value - 1);
@@ -320,6 +353,7 @@ const prevImage = () => {
   }
 };
 
+/** 显示下一张图片 */
 const nextImage = () => {
   if (currentIndex.value < imageList.value.length - 1) {
     syncCurrentIndex(currentIndex.value + 1);
@@ -328,6 +362,10 @@ const nextImage = () => {
   }
 };
 
+/**
+ * 键盘事件处理
+ * @param e 键盘事件对象
+ */
 const handleKeydown = (e: KeyboardEvent) => {
   switch (e.key) {
     case "ArrowLeft":

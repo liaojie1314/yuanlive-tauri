@@ -1,5 +1,4 @@
 <template>
-  <!-- 单独使用n-config-provider来包裹不需要主题切换的界面 -->
   <n-config-provider :theme="naiveTheme" data-tauri-drag-region class="login-box size-full rounded-8px select-none">
     <!--顶部操作栏-->
     <action-bar :max-w="false" proxy />
@@ -184,7 +183,6 @@ const settingStore = useSettingStore();
 const { isGuideCompleted } = storeToRefs(guideStore);
 const { themes, login } = storeToRefs(settingStore);
 const { showTray, firstEnter } = storeToRefs(globalStore);
-const naiveTheme = computed(() => (themes.value.content === ThemeEnum.DARK ? darkTheme : lightTheme));
 
 const driverSteps = computed<DriverStepConfig[]>(() => [
   {
@@ -238,14 +236,19 @@ const driverConfig = computed(() => ({
 }));
 const { startTour, reinitialize } = useDriver(driverSteps.value, driverConfig.value);
 
+// 底部操作栏多语言超过6个字符时显示省略号
+const MAX_BOTTOM_TEXT_LEN = 6;
+// 导入Web Worker
+const timerWorker = new Worker(new URL("@/workers/timer.worker.ts", import.meta.url));
+
 // 输入框占位符
 const accountPH = ref(t("auth.input.account.placeholder"));
 const passwordPH = ref(t("auth.input.pass.placeholder"));
 // 协议
 const protocol = ref(true);
 const moreShow = ref(false);
-// 底部操作栏多语言超过6个字符时显示省略号
-const MAX_BOTTOM_TEXT_LEN = 6;
+
+const naiveTheme = computed(() => (themes.value.content === ThemeEnum.DARK ? darkTheme : lightTheme));
 const qrCodeText = computed(() => t("auth.button.qrCode"));
 const moreText = computed(() => t("auth.option.more"));
 const removeAccountText = computed(() => t("auth.button.removeAccount"));
@@ -257,26 +260,6 @@ const moreTitle = computed(() => (moreLabel.value !== moreText.value ? moreText.
 const removeAccountTitle = computed(() =>
   removeAccountLabel.value !== removeAccountText.value ? removeAccountText.value : undefined
 );
-
-watchEffect(
-  () => (loginDisabled.value = !(userInfo.value.account && userInfo.value.password && protocol.value && isOnline.value))
-);
-
-watch([driverSteps, driverConfig], ([steps, config]) => {
-  reinitialize(steps, config);
-});
-
-// 网络连接状态变化时，更新登录按钮状态
-watch(
-  () => isOnline,
-  (newVal) => {
-    loginDisabled.value = !newVal;
-    loginText.value = newVal ? t("auth.button.login.default") : t("auth.button.login.networkError");
-  }
-);
-
-// 导入Web Worker
-const timerWorker = new Worker(new URL("@/workers/timer.worker.ts", import.meta.url));
 
 /**
  * 点击非更多按钮时关闭更多菜单
@@ -299,9 +282,7 @@ const enterKey = (event: KeyboardEvent) => {
   }
 };
 
-/**
- * 处理登录窗口加载时的异地登录载荷
- */
+/** 处理登录窗口加载时的异地登录载荷 */
 const handlePendingRemoteLoginPayload = async () => {
   if (!isDesktop()) {
     return;
@@ -342,10 +323,22 @@ const openRemoteLoginModal = async (ip?: string) => {
   );
 };
 
-// 添加错误处理
-timerWorker.onerror = (error) => {
-  console.error("[Worker Error]", error);
-};
+watchEffect(
+  () => (loginDisabled.value = !(userInfo.value.account && userInfo.value.password && protocol.value && isOnline.value))
+);
+
+watch([driverSteps, driverConfig], ([steps, config]) => {
+  reinitialize(steps, config);
+});
+
+// 网络连接状态变化时，更新登录按钮状态
+watch(
+  () => isOnline,
+  (newVal) => {
+    loginDisabled.value = !newVal;
+    loginText.value = newVal ? t("auth.button.login.default") : t("auth.button.login.networkError");
+  }
+);
 
 // 监听 Worker 消息
 timerWorker.onmessage = (e) => {
@@ -353,6 +346,11 @@ timerWorker.onmessage = (e) => {
   if (type === "timeout") {
     checkUpdate("login");
   }
+};
+
+// 添加错误处理
+timerWorker.onerror = (error) => {
+  console.error("[Worker Error]", error);
 };
 
 onMounted(async () => {

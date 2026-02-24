@@ -1,5 +1,4 @@
 <template>
-  <!-- 单独使用n-config-provider来包裹不需要主题切换的界面 -->
   <n-config-provider
     :theme="naiveTheme"
     data-tauri-drag-region
@@ -194,78 +193,22 @@ import { getCurrentWebviewWindow, WebviewWindow } from "@tauri-apps/api/webviewW
 
 import { ThemeEnum } from "@/enums";
 import type { RegisterUserReq } from "@/api/types";
-
 import { registerApi, getCodeApi } from "@/api/auth";
-import { noSideSpace, validateAlphaNumeric, validateMinLength, validateSpecialChar } from "@/utils/ValidateUtils";
 import { useSettingStore } from "@/stores/setting";
+import { noSideSpace, validateAlphaNumeric, validateMinLength, validateSpecialChar } from "@/utils/ValidateUtils";
 
 const { t } = useI18n();
 const settingStore = useSettingStore();
 const { themes } = storeToRefs(settingStore);
-const naiveTheme = computed(() => (themes.value.content === ThemeEnum.DARK ? darkTheme : lightTheme));
-// 验证码倒计时消息ID
-const EMAIL_TIMER_ID = "register_window_email_timer";
-// 倒计时定时器 Worker
-const timerWorker = new Worker(new URL("@/workers/timer.worker.ts", import.meta.url));
 
 // 输入框类型定义
 type InputType = "nickName" | "email" | "password" | "confirmPassword";
-// 注册信息
-const info = unref(
-  ref<RegisterUserReq>({
-    email: "",
-    password: "",
-    username: "",
-    code: "",
-    confirmPassword: ""
-  })
-);
 
-// 确认密码
-const confirmPassword = ref("");
-// 协议
-const protocol = ref(true);
-const btnDisabled = ref(false);
-const loading = ref(false);
-const registerLoading = ref(false);
-// 前缀显示状态
-const showNamePrefix = ref(false);
-const showEmailPrefix = ref(false);
-const showPasswordPrefix = ref(false);
-const showConfirmPasswordPrefix = ref(false);
-// 常用邮箱后缀
-const commonEmailDomains = computed(() => {
-  return ["gmail.com", "163.com", "qq.com"].map((suffix) => {
-    return {
-      label: suffix,
-      value: suffix
-    };
-  });
-});
-
-// 发送验证码冷却时间(秒)
-const sendCodeCountDown = ref(0);
-// 发送验证码按钮文本
-const btnText = computed(() => {
-  if (loading.value) {
-    return t("auth.register.actions.sending");
-  }
-  if (sendCodeCountDown.value > 0) {
-    return t("auth.register.actions.retryIn", { seconds: sendCodeCountDown.value });
-  }
-  return t("auth.register.actions.sendCode");
-});
+// 验证码倒计时消息ID
+const EMAIL_TIMER_ID = "register_window_email_timer";
 // 使用day.js获取当前年份
 const currentYear = dayjs().year();
-const registerForm = ref<FormInst | null>(null);
-const emailCodeModal = ref(false);
-// 邮箱验证码PIN输入
-const emailCode = ref("");
-const pinInputRef = ref();
-const isEmailCodeComplete = computed(() => emailCode.value.length === 6);
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const isEmailValid = computed(() => emailPattern.test(info.email.trim()));
-
 // 校验规则
 const rules = {
   nickName: {
@@ -304,6 +247,63 @@ const rules = {
     }
   }
 };
+// 倒计时定时器 Worker
+const timerWorker = new Worker(new URL("@/workers/timer.worker.ts", import.meta.url));
+
+// 注册信息
+const info = unref(
+  ref<RegisterUserReq>({
+    email: "",
+    password: "",
+    username: "",
+    code: "",
+    confirmPassword: ""
+  })
+);
+
+// 确认密码
+const confirmPassword = ref("");
+// 协议
+const protocol = ref(true);
+const btnDisabled = ref(false);
+const loading = ref(false);
+const registerLoading = ref(false);
+// 前缀显示状态
+const showNamePrefix = ref(false);
+const showEmailPrefix = ref(false);
+const showPasswordPrefix = ref(false);
+const showConfirmPasswordPrefix = ref(false);
+// 发送验证码冷却时间(秒)
+const sendCodeCountDown = ref(0);
+const registerForm = ref<FormInst | null>(null);
+const emailCodeModal = ref(false);
+// 邮箱验证码PIN输入
+const emailCode = ref("");
+const pinInputRef = ref();
+
+const naiveTheme = computed(() => (themes.value.content === ThemeEnum.DARK ? darkTheme : lightTheme));
+// 常用邮箱后缀
+const commonEmailDomains = computed(() => {
+  return ["gmail.com", "163.com", "qq.com"].map((suffix) => {
+    return {
+      label: suffix,
+      value: suffix
+    };
+  });
+});
+
+// 发送验证码按钮文本
+const btnText = computed(() => {
+  if (loading.value) {
+    return t("auth.register.actions.sending");
+  }
+  if (sendCodeCountDown.value > 0) {
+    return t("auth.register.actions.retryIn", { seconds: sendCodeCountDown.value });
+  }
+  return t("auth.register.actions.sendCode");
+});
+const isEmailCodeComplete = computed(() => emailCode.value.length === 6);
+const isEmailValid = computed(() => emailPattern.test(info.email.trim()));
 
 // 检查密码是否满足所有条件
 const isPasswordValid = computed(() => {
@@ -320,10 +320,6 @@ const canSendCode = computed(() => {
     protocol.value &&
     isEmailValid.value
   );
-});
-
-watchEffect(() => {
-  btnDisabled.value = loading.value || !canSendCode.value;
 });
 
 /**
@@ -348,9 +344,7 @@ const handleInputState = (event: FocusEvent, type: InputType): void => {
   prefixMap[type].value = event.type === "focus";
 };
 
-/**
- * 处理注册步骤操作
- */
+/** 处理注册步骤操作 */
 const handleStepAction = async () => {
   if (btnDisabled.value || loading.value) return;
 
@@ -389,9 +383,7 @@ const handleStepAction = async () => {
   }
 };
 
-/**
- * 启动发送邮箱验证码倒计时
- */
+/** 启动发送邮箱验证码倒计时 */
 const startSendCodeCountdown = () => {
   sendCodeCountDown.value = 60;
   timerWorker.postMessage({
@@ -401,9 +393,7 @@ const startSendCodeCountdown = () => {
   });
 };
 
-/**
- * 处理注册操作
- */
+/** 处理注册操作 */
 const register = async () => {
   registerLoading.value = true;
   info.code = emailCode.value;
@@ -426,6 +416,10 @@ const register = async () => {
     registerLoading.value = false;
   }
 };
+
+watchEffect(() => {
+  btnDisabled.value = loading.value || !canSendCode.value;
+});
 
 timerWorker.onmessage = (e) => {
   const { type, msgId, remainingTime } = e.data;

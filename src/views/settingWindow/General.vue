@@ -94,21 +94,25 @@
 <script setup lang="tsx">
 import { useI18n } from "vue-i18n";
 
-import { useTopicsList } from "./model.tsx";
-import { useFontOptions, langOptions } from "./config.ts";
 import { CloseBxEnum } from "@/enums";
+import { useTopicsList } from "./model.tsx";
 import { isWindows } from "@/utils/PlatformUtils";
 import { useSettingStore } from "@/stores/setting.ts";
+import { useFontOptions, langOptions } from "./config.ts";
 
 const { t } = useI18n();
 const settingStore = useSettingStore();
 const { themes, tips, page } = settingStore;
 const { escClose } = storeToRefs(settingStore);
-const activeItem = ref<string>(themes.pattern);
 const topicsList = useTopicsList();
 const fontOptions = useFontOptions();
 
-/** 切换主题 */
+const activeItem = ref<string>(themes.pattern);
+
+/**
+ * 切换主题
+ * @param code 主题代码
+ */
 const handleTheme = (code: string) => {
   settingStore.toggleTheme(code);
 };

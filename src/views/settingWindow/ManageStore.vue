@@ -170,7 +170,11 @@ const {
   scanningProgress
 } = storeToRefs(scannerStore);
 
-// 获取占比严重程度颜色
+/**
+ * 获取磁盘占用严重程度颜色
+ * @param usage 磁盘占用百分比
+ * @returns 颜色值
+ */
 const getUsageColor = (usage: number) => {
   if (!diskInfo.value) return "#13987f";
   if (usage < 50) {
@@ -182,7 +186,7 @@ const getUsageColor = (usage: number) => {
   }
 };
 
-// 选择自定义目录
+/** 选择自定义目录 */
 const selectCustomDirectory = async () => {
   try {
     const result = await open({
@@ -199,19 +203,19 @@ const selectCustomDirectory = async () => {
   }
 };
 
-// 开始扫描
+/** 开始扫描 */
 const startScan = async () => {
   await scannerStore.startScan();
 };
 
-// 组件挂载时初始化扫描器
-onMounted(async () => {
-  await scannerStore.initializeScanner();
-});
-
 // 路径类型改变处理
 watch(pathType, (newType) => {
   scannerStore.setPathType(newType);
+});
+
+// 组件挂载时初始化扫描器
+onMounted(async () => {
+  await scannerStore.initializeScanner();
 });
 </script>
 

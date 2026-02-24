@@ -110,20 +110,22 @@ import { useI18n } from "vue-i18n";
 import "vue-cropper/dist/index.css";
 import { VueCropper } from "vue-cropper";
 
+defineOptions({
+  name: "AvatarCropper"
+});
+
 import { isMac, isWindows } from "@/utils/PlatformUtils";
 
 const { t } = useI18n();
-const localImageUrl = ref("");
-const cropperRef = ref();
-const loading = ref(false);
-const loadingText = computed(() =>
-  loading.value ? t("components.avatarCropper.uploading") : t("components.common.confirm")
-);
-const previewUrl = ref<{
-  url: string;
-  img: any;
-  w: number;
-  h: number;
+
+// 定义组件实例类型
+export interface AvatarCropperInstance {
+  finishLoading: () => void;
+}
+
+const props = defineProps<{
+  show: boolean;
+  imageUrl: string;
 }>();
 
 const emit = defineEmits<{
@@ -131,23 +133,25 @@ const emit = defineEmits<{
   crop: [data: Blob];
 }>();
 
-const props = defineProps<{
-  show: boolean;
-  imageUrl: string;
+const localImageUrl = ref("");
+const cropperRef = ref();
+const loading = ref(false);
+const previewUrl = ref<{
+  url: string;
+  img: any;
+  w: number;
+  h: number;
 }>();
-
-watch(
-  () => props.imageUrl,
-  (newVal) => {
-    localImageUrl.value = newVal;
-  },
-  { immediate: true }
+const loadingText = computed(() =>
+  loading.value ? t("components.avatarCropper.uploading") : t("components.common.confirm")
 );
 
+/** 实时预览 */
 const handleRealTime = (data: { url: string; img: any; w: number; h: number }) => {
   previewUrl.value = data;
 };
 
+/** 裁剪图片 */
 const handleCrop = () => {
   loading.value = true;
 
@@ -168,13 +172,13 @@ const finishLoading = () => {
   loading.value = false;
 };
 
-// 定义组件实例类型
-export interface AvatarCropperInstance {
-  finishLoading: () => void;
-}
-defineExpose<AvatarCropperInstance>({
-  finishLoading
-});
+watch(
+  () => props.imageUrl,
+  (newVal) => {
+    localImageUrl.value = newVal;
+  },
+  { immediate: true }
+);
 
 // 确保在组件卸载时清理预览
 onUnmounted(() => {
@@ -184,6 +188,10 @@ onUnmounted(() => {
     w: 0,
     h: 0
   };
+});
+
+defineExpose<AvatarCropperInstance>({
+  finishLoading
 });
 </script>
 

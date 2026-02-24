@@ -22,7 +22,7 @@
           <n-scrollbar class="h-full" @scroll="handleDetailScroll">
             <div class="p-4 text-[--text-color]">
               <div class="flex items-center justify-between mb-4">
-                <div class="font-medium text-[15px]">视频作者名称</div>
+                <div class="font-medium text-[15px]">{{ userName }}</div>
 
                 <button class="follow-btn" :class="{ 'is-followed': isFollowed }" @click="toggleFollow">
                   {{ isFollowed ? "已关注" : "关注" }}
@@ -196,6 +196,7 @@ import { getVideoListByUidApi, type VideoItem } from "@/api/follow";
 const props = defineProps<{
   show: boolean;
   userId: number | null;
+  userName: string;
   tab: "detail" | "comment";
 }>();
 

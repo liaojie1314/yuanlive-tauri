@@ -27,6 +27,7 @@ const { t } = useI18n();
 
 const settingStore = useSettingStore();
 const { login } = storeToRefs(settingStore);
+
 const autoLogin = ref(login.value.autoLogin);
 const autoStartup = ref(login.value.autoStartup);
 

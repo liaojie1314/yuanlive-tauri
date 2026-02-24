@@ -14,65 +14,29 @@
             @mouseenter="handleSettingsPanelEnter"
             @mouseleave="handleSettingsPanelLeave">
             <div class="settings-header">
-              <span class="settings-title">弹幕设置</span>
+              <span class="settings-title">{{ t("components.danmakuInput.settings") }}</span>
               <div class="reset-btn" @click="resetSettings">
                 <i-ph-arrow-counter-clockwise class="reset-icon" />
-                <span>恢复默认</span>
+                <span>{{ t("components.danmakuInput.reset") }}</span>
               </div>
             </div>
             <div class="settings-content">
-              <div class="settings-item">
-                <span class="settings-label">不透明度</span>
+              <div class="settings-item" v-for="item in sliderConfigs" :key="item.key">
+                <span class="settings-label">{{ item.label }}</span>
                 <n-slider
-                  v-model:value="localSettings.opacity"
-                  :min="0"
-                  :max="100"
+                  v-model:value="localSettings[item.key]"
+                  :min="item.min"
+                  :max="item.max"
                   :step="1"
                   :tooltip="false"
                   @update:value="handleSettingsChange" />
-                <span class="settings-value-right">{{ localSettings.opacity }}%</span>
-              </div>
-
-              <div class="settings-item">
-                <span class="settings-label">显示区域</span>
-                <n-slider
-                  v-model:value="localSettings.displayArea"
-                  :min="1"
-                  :max="5"
-                  :step="1"
-                  :tooltip="false"
-                  @update:value="handleSettingsChange" />
-                <span class="settings-value-right">{{ displayAreaLabel }}</span>
-              </div>
-
-              <div class="settings-item">
-                <span class="settings-label">字体大小</span>
-                <n-slider
-                  v-model:value="localSettings.fontSize"
-                  :min="1"
-                  :max="5"
-                  :step="1"
-                  :tooltip="false"
-                  @update:value="handleSettingsChange" />
-                <span class="settings-value-right">{{ fontSizeLabel }}</span>
-              </div>
-
-              <div class="settings-item">
-                <span class="settings-label">弹幕速度</span>
-                <n-slider
-                  v-model:value="localSettings.speed"
-                  :min="1"
-                  :max="3"
-                  :step="1"
-                  :tooltip="false"
-                  @update:value="handleSettingsChange" />
-                <span class="settings-value-right">{{ speedLabel }}</span>
+                <span class="settings-value-right">{{ item.text }}</span>
               </div>
 
               <div class="settings-divider"></div>
 
               <div class="settings-item settings-item-clickable" @click="toggleDanmakuList">
-                <span class="settings-label">弹幕列表</span>
+                <span class="settings-label">{{ t("components.danmakuInput.danmakuList") }}</span>
                 <div class="settings-arrow">
                   <i-ph-caret-right class="arrow-icon" />
                 </div>
@@ -92,7 +56,7 @@
         v-if="!isCompactMode"
         v-model="danmakuText"
         type="text"
-        placeholder="发一条友好的弹幕吧"
+        :placeholder="t('components.danmakuInput.placeholder')"
         class="danmaku-input"
         @keyup.enter="handleSend" />
 
@@ -123,16 +87,14 @@
       class="compact-settings-panel"
       @mouseenter="handleSettingsPanelEnter"
       @mouseleave="handleSettingsPanelLeave">
-      <!-- 当hover emoji图标时，隐藏settings-header -->
       <div class="settings-header" v-if="!showEmojiSelector">
-        <span class="settings-title">弹幕设置</span>
+        <span class="settings-title">{{ t("components.danmakuInput.settings") }}</span>
         <div class="reset-btn" @click="resetSettings">
           <i-ph-arrow-counter-clockwise class="reset-icon" />
-          <span>恢复默认</span>
+          <span>{{ t("components.danmakuInput.reset") }}</span>
         </div>
       </div>
       <div class="settings-content">
-        <!-- 当hover emoji图标时，显示emoji选择器，隐藏其他设置项 -->
         <n-scrollbar
           v-if="showEmojiSelector"
           class="emoji-selector-scroll"
@@ -144,79 +106,35 @@
             </div>
           </div>
         </n-scrollbar>
-
-        <!-- 当未hover emoji图标时，显示正常的设置项 -->
         <template v-else>
-          <div class="settings-item">
-            <span class="settings-label">不透明度</span>
+          <div class="settings-item" v-for="item in sliderConfigs" :key="item.key">
+            <span class="settings-label">{{ item.label }}</span>
             <n-slider
-              v-model:value="localSettings.opacity"
-              :min="0"
-              :max="100"
+              v-model:value="localSettings[item.key]"
+              :min="item.min"
+              :max="item.max"
               :step="1"
               :tooltip="false"
               @update:value="handleSettingsChange" />
-            <span class="settings-value-right">{{ localSettings.opacity }}%</span>
-          </div>
-
-          <div class="settings-item">
-            <span class="settings-label">显示区域</span>
-            <n-slider
-              v-model:value="localSettings.displayArea"
-              :min="1"
-              :max="5"
-              :step="1"
-              :tooltip="false"
-              @update:value="handleSettingsChange" />
-            <span class="settings-value-right">{{ displayAreaLabel }}</span>
-          </div>
-
-          <div class="settings-item">
-            <span class="settings-label">字体大小</span>
-            <n-slider
-              v-model:value="localSettings.fontSize"
-              :min="1"
-              :max="5"
-              :step="1"
-              :tooltip="false"
-              @update:value="handleSettingsChange" />
-            <span class="settings-value-right">{{ fontSizeLabel }}</span>
-          </div>
-
-          <div class="settings-item">
-            <span class="settings-label">弹幕速度</span>
-            <n-slider
-              v-model:value="localSettings.speed"
-              :min="1"
-              :max="3"
-              :step="1"
-              :tooltip="false"
-              @update:value="handleSettingsChange" />
-            <span class="settings-value-right">{{ speedLabel }}</span>
+            <span class="settings-value-right">{{ item.text }}</span>
           </div>
 
           <div class="settings-divider"></div>
-
           <div class="settings-item settings-item-clickable" @click="toggleDanmakuList">
-            <span class="settings-label">弹幕列表</span>
+            <span class="settings-label">{{ t("components.danmakuInput.danmakuList") }}</span>
             <div class="settings-arrow">
               <i-ph-caret-right class="arrow-icon" />
             </div>
           </div>
-
           <div class="settings-divider"></div>
-
           <div class="settings-item">
-            <span class="settings-label">弹幕开关</span>
+            <span class="settings-label">{{ t("components.danmakuInput.danmakuSwitch") }}</span>
             <div class="settings-arrow">
               <n-switch class="control-switch" :value="isDanmakuEnabled" @update:value="toggleDanmaku" />
             </div>
           </div>
-
           <div class="settings-divider"></div>
         </template>
-
-        <!-- danmaku-input-section始终显示 -->
         <div class="danmaku-input-section">
           <div class="danmaku-input-wrapper">
             <div class="emoji-btn" @mouseenter="handleEmojiBtnEnter" @mouseleave="handleEmojiBtnLeave">
@@ -225,10 +143,10 @@
             <input
               v-model="danmakuText"
               type="text"
-              placeholder="发一条弹幕吧"
+              :placeholder="t('components.danmakuInput.placeholder')"
               class="danmaku-input-field"
               @keyup.enter="handleSend" />
-            <button class="send-btn" @click="handleSend">发送</button>
+            <button class="send-btn" @click="handleSend">{{ t("components.danmakuInput.send") }}</button>
           </div>
         </div>
       </div>
@@ -237,8 +155,14 @@
 </template>
 
 <script setup lang="ts">
+import { useI18n } from "vue-i18n";
+import { useDebounceFn } from "@vueuse/core";
+
 import { emojis } from "@/utils/EmojiUtils";
 import { useDanmakuStore } from "@/stores/danmaku";
+
+const { t } = useI18n();
+const danmakuStore = useDanmakuStore();
 
 defineProps<{
   isEnabled: boolean;
@@ -251,63 +175,30 @@ const emit = defineEmits<{
   (e: "toggle-danmaku-list"): void;
 }>();
 
-const danmakuStore = useDanmakuStore();
-
-const danmakuText = ref("");
-const showEmojiPicker = ref(false);
-const showDanmakuSettingsPanel = ref(false);
-const showEmojiSelector = ref(false);
-const isCompactMode = ref(false);
-
 let danmakuSettingsHideTimer: number | null = null;
 let emojiPickerHideTimer: number | null = null;
 let emojiSelectorHideTimer: number | null = null;
-let settingsChangeDebounceTimer: number | null = null;
+const settingsChangeDebounceTimer: number | null = null;
 
-const handleEmojiClick = (emoji: string) => {
-  danmakuText.value += emoji;
-  showEmojiSelector.value = false;
-};
-
-// 修复hover抽搐问题
-const handleEmojiBtnEnter = () => {
-  if (emojiSelectorHideTimer) {
-    clearTimeout(emojiSelectorHideTimer);
-    emojiSelectorHideTimer = null;
-  }
-  showEmojiSelector.value = true;
-};
-
-const handleEmojiBtnLeave = () => {
-  if (emojiSelectorHideTimer) {
-    clearTimeout(emojiSelectorHideTimer);
-  }
-  // 添加延迟，避免鼠标移动到emoji选择器时闪烁
-  emojiSelectorHideTimer = window.setTimeout(() => {
-    showEmojiSelector.value = false;
-    emojiSelectorHideTimer = null;
-  }, 100);
-};
-
-// 当鼠标进入emoji选择器时，保持显示
-const handleEmojiSelectorEnter = () => {
-  if (emojiSelectorHideTimer) {
-    clearTimeout(emojiSelectorHideTimer);
-    emojiSelectorHideTimer = null;
-  }
-};
-
-// 当鼠标离开emoji选择器时，添加延迟隐藏
-const handleEmojiSelectorLeave = () => {
-  if (emojiSelectorHideTimer) {
-    clearTimeout(emojiSelectorHideTimer);
-  }
-  // 添加延迟，避免鼠标移动到emoji选择器时闪烁
-  emojiSelectorHideTimer = window.setTimeout(() => {
-    showEmojiSelector.value = false;
-    emojiSelectorHideTimer = null;
-  }, 100);
-};
+const fontSizeOptions = [
+  t("components.danmakuInput.fontSizeOptions.extraSmall"),
+  t("components.danmakuInput.fontSizeOptions.small"),
+  t("components.danmakuInput.fontSizeOptions.medium"),
+  t("components.danmakuInput.fontSizeOptions.large"),
+  t("components.danmakuInput.fontSizeOptions.extraLarge")
+];
+const speedOptions = [
+  t("components.danmakuInput.speedOptions.slower"),
+  t("components.danmakuInput.speedOptions.medium"),
+  t("components.danmakuInput.speedOptions.faster")
+];
+const displayAreaOptions = [
+  t("components.danmakuInput.displayAreaOptions.oneLine"),
+  t("components.danmakuInput.displayAreaOptions.twoLines"),
+  "25%",
+  "50%",
+  "80%"
+];
 
 // 字体大小映射：从实际像素值到滑块值（1-5）
 const fontSizeToSliderMap: Record<number, number> = {
@@ -318,7 +209,17 @@ const fontSizeToSliderMap: Record<number, number> = {
   20: 5
 };
 
-// 从实际像素值获取对应的滑块值
+const danmakuText = ref("");
+const showEmojiPicker = ref(false);
+const showDanmakuSettingsPanel = ref(false);
+const showEmojiSelector = ref(false);
+const isCompactMode = ref(false);
+
+/**
+ * 从实际像素值获取对应的滑块值
+ * @param pixelSize 实际字体像素大小
+ * @returns 对应的滑块值（1-5）
+ */
 const getSliderFontSize = (pixelSize: number): number => {
   return fontSizeToSliderMap[pixelSize] || 3; // 默认返回适中大小
 };
@@ -326,12 +227,55 @@ const getSliderFontSize = (pixelSize: number): number => {
 // 本地设置状态，用于滑块交互
 const localSettings = ref({
   opacity: danmakuStore.opacity,
-  fontSize: getSliderFontSize(danmakuStore.fontSize), // 从store实际像素值映射到滑块值
+  fontSize: getSliderFontSize(danmakuStore.fontSize),
   speed: danmakuStore.speed,
   displayArea: danmakuStore.displayArea
 });
 
-// 监听store变化，更新本地设置
+const fontSizeLabel = computed(() => fontSizeOptions[localSettings.value.fontSize - 1]);
+const speedLabel = computed(() => speedOptions[localSettings.value.speed - 1]);
+const displayAreaLabel = computed(() => displayAreaOptions[localSettings.value.displayArea - 1]);
+const sliderConfigs = computed(() => [
+  {
+    key: "opacity" as const,
+    label: t("components.danmakuInput.opacity"),
+    min: 0,
+    max: 100,
+    text: `${localSettings.value.opacity}%`
+  },
+  {
+    key: "displayArea" as const,
+    label: t("components.danmakuInput.displayArea"),
+    min: 1,
+    max: 5,
+    text: displayAreaLabel.value
+  },
+  {
+    key: "fontSize" as const,
+    label: t("components.danmakuInput.fontSize"),
+    min: 1,
+    max: 5,
+    text: fontSizeLabel.value
+  },
+  {
+    key: "speed" as const,
+    label: t("components.danmakuInput.speed"),
+    min: 1,
+    max: 3,
+    text: speedLabel.value
+  }
+]);
+
+/**
+ * 处理emoji点击事件
+ * @param emoji 点击的emoji字符
+ */
+const handleEmojiClick = (emoji: string) => {
+  danmakuText.value += emoji;
+  showEmojiSelector.value = false;
+};
+
+/** 从store同步最新设置到本地状态 */
 const updateLocalSettingsFromStore = () => {
   localSettings.value.opacity = danmakuStore.opacity;
   localSettings.value.fontSize = getSliderFontSize(danmakuStore.fontSize);
@@ -339,18 +283,15 @@ const updateLocalSettingsFromStore = () => {
   localSettings.value.displayArea = danmakuStore.displayArea;
 };
 
-const fontSizeOptions = ["超小", "小号", "适中", "大号", "超大"];
-const speedOptions = ["较慢", "适中", "较快"];
-const displayAreaOptions = ["一行", "两行", "25%", "50%", "80%"];
-
-const fontSizeLabel = computed(() => fontSizeOptions[localSettings.value.fontSize - 1]);
-const speedLabel = computed(() => speedOptions[localSettings.value.speed - 1]);
-const displayAreaLabel = computed(() => displayAreaOptions[localSettings.value.displayArea - 1]);
-
+/**
+ * 检查是否为紧凑模式
+ * @param width 输入框宽度
+ */
 const checkCompactMode = ({ width }: any) => {
   isCompactMode.value = width < 210;
 };
 
+/** 处理发送弹幕事件 */
 const handleSend = () => {
   if (danmakuText.value.trim()) {
     emit("send-danmaku", danmakuText.value.trim());
@@ -358,63 +299,8 @@ const handleSend = () => {
   }
 };
 
-const toggleDanmaku = () => {
-  emit("toggle-danmaku");
-};
-
-const showDanmakuSettings = () => {
-  // 打开设置面板时，从store同步最新设置
-  updateLocalSettingsFromStore();
-  showDanmakuSettingsPanel.value = true;
-  if (danmakuSettingsHideTimer) {
-    clearTimeout(danmakuSettingsHideTimer);
-    danmakuSettingsHideTimer = null;
-  }
-};
-
-const hideDanmakuSettings = () => {
-  if (danmakuSettingsHideTimer) {
-    clearTimeout(danmakuSettingsHideTimer);
-  }
-  danmakuSettingsHideTimer = window.setTimeout(() => {
-    showDanmakuSettingsPanel.value = false;
-    danmakuSettingsHideTimer = null;
-  }, 100);
-};
-
-const showEmojiPickerHover = () => {
-  showEmojiPicker.value = true;
-  if (emojiPickerHideTimer) {
-    clearTimeout(emojiPickerHideTimer);
-    emojiPickerHideTimer = null;
-  }
-};
-
-const hideEmojiPickerHover = () => {
-  if (emojiPickerHideTimer) {
-    clearTimeout(emojiPickerHideTimer);
-  }
-  emojiPickerHideTimer = window.setTimeout(() => {
-    showEmojiPicker.value = false;
-    emojiPickerHideTimer = null;
-  }, 100);
-};
-
-// 防抖函数，优化设置更新
-const debounce = (func: (...args: any[]) => void, delay: number) => {
-  return (...args: any[]) => {
-    if (settingsChangeDebounceTimer) {
-      clearTimeout(settingsChangeDebounceTimer);
-    }
-    settingsChangeDebounceTimer = window.setTimeout(() => {
-      func(...args);
-      settingsChangeDebounceTimer = null;
-    }, delay);
-  };
-};
-
-// 防抖处理设置变更
-const debouncedSettingsChange = debounce(() => {
+/** 处理弹幕设置变化事件（防抖） */
+const handleSettingsChange = useDebounceFn(() => {
   // 根据滑块值映射到实际像素值
   const fontSizeMap: Record<number, number> = {
     1: 12,
@@ -430,8 +316,107 @@ const debouncedSettingsChange = debounce(() => {
   danmakuStore.setDisplayArea(localSettings.value.displayArea);
 }, 300);
 
-const handleSettingsChange = () => {
-  debouncedSettingsChange();
+/** 切换弹幕开关 */
+const toggleDanmaku = () => {
+  emit("toggle-danmaku");
+};
+
+/** 切换弹幕列表显示 */
+const toggleDanmakuList = () => {
+  emit("toggle-danmaku-list");
+};
+
+/** 重置弹幕设置 */
+const resetSettings = () => {
+  danmakuStore.resetSettings();
+  updateLocalSettingsFromStore();
+  localSettings.value.fontSize = 3;
+};
+
+/**
+ * 处理选择表情符
+ * @param emoji 选中的表情符
+ */
+const handleSelectEmoji = (emoji: string) => {
+  danmakuText.value += emoji;
+  showEmojiPicker.value = false;
+};
+
+/** 显示弹幕设置面板 */
+const showDanmakuSettings = () => {
+  // 打开设置面板时，从store同步最新设置
+  updateLocalSettingsFromStore();
+  showDanmakuSettingsPanel.value = true;
+  if (danmakuSettingsHideTimer) {
+    clearTimeout(danmakuSettingsHideTimer);
+    danmakuSettingsHideTimer = null;
+  }
+};
+
+/** 隐藏弹幕设置面板 */
+const hideDanmakuSettings = () => {
+  if (danmakuSettingsHideTimer) {
+    clearTimeout(danmakuSettingsHideTimer);
+  }
+  danmakuSettingsHideTimer = window.setTimeout(() => {
+    showDanmakuSettingsPanel.value = false;
+    danmakuSettingsHideTimer = null;
+  }, 100);
+};
+
+/** 显示emoji选择器（悬停） */
+const showEmojiPickerHover = () => {
+  showEmojiPicker.value = true;
+  if (emojiPickerHideTimer) {
+    clearTimeout(emojiPickerHideTimer);
+    emojiPickerHideTimer = null;
+  }
+};
+
+/** 隐藏emoji选择器（悬停） */
+const hideEmojiPickerHover = () => {
+  if (emojiPickerHideTimer) {
+    clearTimeout(emojiPickerHideTimer);
+  }
+  emojiPickerHideTimer = window.setTimeout(() => {
+    showEmojiPicker.value = false;
+    emojiPickerHideTimer = null;
+  }, 100);
+};
+
+const handleEmojiBtnEnter = () => {
+  if (emojiSelectorHideTimer) {
+    clearTimeout(emojiSelectorHideTimer);
+    emojiSelectorHideTimer = null;
+  }
+  showEmojiSelector.value = true;
+};
+
+const handleEmojiBtnLeave = () => {
+  if (emojiSelectorHideTimer) {
+    clearTimeout(emojiSelectorHideTimer);
+  }
+  emojiSelectorHideTimer = window.setTimeout(() => {
+    showEmojiSelector.value = false;
+    emojiSelectorHideTimer = null;
+  }, 100);
+};
+
+const handleEmojiSelectorEnter = () => {
+  if (emojiSelectorHideTimer) {
+    clearTimeout(emojiSelectorHideTimer);
+    emojiSelectorHideTimer = null;
+  }
+};
+
+const handleEmojiSelectorLeave = () => {
+  if (emojiSelectorHideTimer) {
+    clearTimeout(emojiSelectorHideTimer);
+  }
+  emojiSelectorHideTimer = window.setTimeout(() => {
+    showEmojiSelector.value = false;
+    emojiSelectorHideTimer = null;
+  }, 100);
 };
 
 const handleSettingsPanelEnter = () => {
@@ -468,25 +453,6 @@ const handleEmojiPickerLeave = () => {
   }, 100);
 };
 
-const toggleDanmakuList = () => {
-  emit("toggle-danmaku-list");
-};
-
-const resetSettings = () => {
-  // 调用store的重置方法
-  danmakuStore.resetSettings();
-  // 更新本地设置
-  updateLocalSettingsFromStore();
-  // 重置滑块值
-  localSettings.value.fontSize = 3;
-};
-
-const handleSelectEmoji = (emoji: string) => {
-  danmakuText.value += emoji;
-  showEmojiPicker.value = false;
-};
-
-// 监听store中字体大小的变化，实时更新滑块值
 watch(
   () => danmakuStore.fontSize,
   (newSize) => {
@@ -801,9 +767,16 @@ onBeforeUnmount(() => {
   outline: none;
   padding: 4px 2px;
   max-width: 110px;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 
   &::placeholder {
     color: rgba(255, 255, 255, 0.5);
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
   }
 }
 
@@ -935,8 +908,14 @@ onBeforeUnmount(() => {
   outline: none;
   transition: all 0.3s ease;
   min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 
   &::placeholder {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
     color: rgba(255, 255, 255, 0.5);
   }
 
