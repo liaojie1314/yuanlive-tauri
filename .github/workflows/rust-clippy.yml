@@ -10,7 +10,7 @@
 name: rust-clippy analyze
 
 on:
-
+  workflow_dispatch:
   # push:
   #   # The branches below must be a subset of the branches above
   #   branches: [ "master" ]
@@ -52,7 +52,8 @@ jobs:
         continue-on-error: true
 
       - name: Upload analysis results to GitHub
-        uses: github/codeql-action/upload-sarif@v3
+        if: github.event.repository.visibility == 'public'
+        uses: github/codeql-action/upload-sarif@v4
         with:
           sarif_file: rust-clippy-results.sarif
           wait-for-processing: true
