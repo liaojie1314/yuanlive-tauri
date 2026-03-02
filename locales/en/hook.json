@@ -23,5 +23,28 @@
     "permissionDenied": "Location permission denied",
     "positionUnavailable": "Location unavailable",
     "timeout": "Location request timed out"
+  },
+  "avatarUpload": {
+    "uploadSuccess": "Avatar upload successful",
+    "uploadFailed": "Avatar upload failed",
+    "loadingFailed": "Image loading failed",
+    "sizeLimit": "Image size must be less than {sizeLimit}KB"
+  },
+  "download": {
+    "downloadFailed": "Download failed",
+    "downloadFailedInfo": "File download failed: {error}",
+    "unknownError": "Unknown error"
+  },
+  "globalShortcut": {
+    "copyColorSuccess": "Color copied successfully"
+  },
+  "voiceRecord": {
+    "recordFailed": "Voice recording failed",
+    "saveFailed": "Failed to save voice recording"
+  },
+  "scanner": {
+    "initFailed": "Failed to initialize scanner",
+    "selectDirectory": "Please select a directory first",
+    "selectDirectoryFailed": "Failed to select directory"
   }
 }

@@ -32,6 +32,10 @@
 <script setup lang="ts">
 import { getFileSuffix } from "@/utils/FormattingUtils";
 
+defineOptions({
+  name: "FileBlock"
+});
+
 const props = defineProps<{
   url: string;
   name: string;
@@ -52,8 +56,9 @@ const fileName = computed(() => {
   }
 });
 
+/** 点击文件块处理 */
 const handleFileClick = () => {
-  // 这里可以对接你的 Tauri API 打开文件目录、预览或下载
+  // TODO: 预览文件
   console.log("点击了消息中的文件:", props.name, props.url);
 };
 </script>

@@ -324,6 +324,7 @@
 </template>
 
 <script setup lang="ts">
+import { useI18n } from "vue-i18n";
 import * as fx from "glfx";
 import { fetch } from "@tauri-apps/plugin-http";
 import { error } from "@tauri-apps/plugin-log";
@@ -334,6 +335,8 @@ import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 
 import { TauriCommandEnum } from "@/enums";
 import { useWindow } from "@/hooks/useWindow";
+
+const { t } = useI18n();
 
 type SignalingProtocol = "srs-json" | "whip";
 const CANVAS_W = 1920;
@@ -494,7 +497,7 @@ const handleStreamToggle = async () => {
 };
 
 const startEverything = async () => {
-  if (!roomId.value) return window.$message.warning("请输入房间号");
+  if (!roomId.value) return window.$message.warning(t("record.roomIdRequired"));
   loading.value = true;
 
   try {
@@ -554,14 +557,14 @@ const startEverything = async () => {
 
     // 8. 监听屏幕分享的原生停止按钮
     screenStream.getVideoTracks()[0].onended = () => {
-      window.$message.info("屏幕分享已结束");
+      window.$message.info(t("record.screenShareEnded"));
       stopEverything();
     };
 
     isStreaming.value = true;
   } catch (err: any) {
     console.error(err);
-    window.$message.error(`启动失败: ${err.message || "未知错误"}`);
+    window.$message.error(t("record.startFailed", { error: err.message || t("record.unknownError") }));
     await stopEverything();
   } finally {
     loading.value = false;
@@ -1031,11 +1034,11 @@ const handleBgUpload = async () => {
     // 图片加载成功后，自动切换到"自定义图"模式
     bgImage.onload = () => {
       beautyConfig.bgType = "image";
-      window.$message.success("背景替换成功");
+      window.$message.success(t("record.bgReplaceSuccess"));
     };
   } catch (err) {
     console.error("背景选择失败:", err);
-    window.$message.error("无法加载图片");
+    window.$message.error(t("record.imageLoadFailed"));
   }
 };
 
@@ -1062,11 +1065,11 @@ const handleLogoUpload = async () => {
     logoImg.src = assetUrl;
     logoImg.onload = () => {
       watermarkConfig.enable = true;
-      window.$message.success("水印加载成功");
+      window.$message.success(t("record.watermarkLoadSuccess"));
     };
   } catch (err) {
     console.error("文件选择失败:", err);
-    window.$message.error("无法加载图片");
+    window.$message.error(t("record.imageLoadFailed"));
   }
 };
 

@@ -8,20 +8,25 @@
 </template>
 
 <script setup lang="ts">
-import { marked } from "marked";
 import hljs from "highlight.js";
+import { marked } from "marked";
 import "highlight.js/styles/github.css";
-import { writeText } from "@tauri-apps/plugin-clipboard-manager";
 import { save } from "@tauri-apps/plugin-dialog";
 import { writeTextFile } from "@tauri-apps/plugin-fs";
+import { writeText } from "@tauri-apps/plugin-clipboard-manager";
+
 import { useWindow } from "@/hooks/useWindow";
+
+defineOptions({
+  name: "MarkdownBlock"
+});
+
+const { createWebviewWindow, sendWindowPayload } = useWindow();
 
 const props = defineProps<{
   content: string;
   isSelf: boolean;
 }>();
-
-const { createWebviewWindow, sendWindowPayload } = useWindow();
 
 const languageMap: Record<string, string> = {
   js: "javascript",
@@ -71,7 +76,17 @@ const languageMap: Record<string, string> = {
   markdown: "markdown"
 };
 
-// 获取有效的 Highlight.js 语言标识符
+// Markdown 解析逻辑
+const renderedHtml = computed(() => {
+  if (!props.content) return "";
+  return marked.parse(props.content, { breaks: true, gfm: true }) as string;
+});
+
+/**
+ * 获取有效的 Highlight.js 语言标识符
+ * @param lang 原始语言标识符
+ * @returns 有效的 Highlight.js 语言标识符
+ */
 const getValidLanguage = (lang: string): string => {
   const lowerLang = lang.toLowerCase();
   if (hljs.getLanguage(lowerLang)) return lowerLang;
@@ -82,13 +97,7 @@ const getValidLanguage = (lang: string): string => {
   return "plaintext";
 };
 
-// Markdown 解析逻辑
-const renderedHtml = computed(() => {
-  if (!props.content) return "";
-  return marked.parse(props.content, { breaks: true, gfm: true }) as string;
-});
-
-// 代码块增强逻辑 (DOM 操作)
+/** 代码块增强逻辑 (DOM 操作) */
 const enhanceCodeBlocks = () => {
   document.querySelectorAll(".markdown-block pre code:not(.processed)").forEach((el) => {
     const codeEl = el as HTMLElement;
@@ -154,14 +163,10 @@ const enhanceCodeBlocks = () => {
   });
 };
 
-// 监听 content 变化重新增强 DOM
-watchEffect(() => {
-  if (props.content) {
-    nextTick(() => enhanceCodeBlocks());
-  }
-});
-
-// 全局点击事件 (事件委托)
+/**
+ * 全局点击事件 (事件委托)
+ * @param e 点击事件对象
+ */
 const handleClick = async (e: MouseEvent) => {
   const target = e.target as HTMLElement;
   const btn = target.closest(".code-btn") as HTMLElement;
@@ -252,6 +257,13 @@ const handleClick = async (e: MouseEvent) => {
     await sendWindowPayload(label, { content, lang });
   }
 };
+
+// 监听 content 变化重新增强 DOM
+watchEffect(() => {
+  if (props.content) {
+    nextTick(() => enhanceCodeBlocks());
+  }
+});
 
 onMounted(() => document.addEventListener("click", handleClick));
 onUnmounted(() => document.removeEventListener("click", handleClick));

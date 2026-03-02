@@ -29,7 +29,8 @@
   "camera": {
     "title": "Take Photo",
     "retake": "Retake",
-    "usePhoto": "Use Photo"
+    "usePhoto": "Use Photo",
+    "startCameraFailed": "Failed to start camera."
   },
   "voiceRecorder": {
     "tapPrefix": "Tap",
@@ -99,6 +100,39 @@
     "displayAreaOptions": {
       "oneLine": "one line",
       "twoLines": "two lines"
+    }
+  },
+  "audioBlock": {
+    "back": "Back 5 seconds",
+    "forward": "Forward 5 seconds"
+  },
+  "thinkingBlock": {
+    "think": "Thinking process",
+    "thinkDuration": "Deep-thought duration (${duration}s)"
+  },
+  "videoBlock": {
+    "video": "Video"
+  },
+  "messageItem": {
+    "ai": "AI助手",
+    "placeholder": "Ask YuanLive AI",
+    "resend": "Resend",
+    "editAndResend": "Edit and resend",
+    "label": {
+      "edit": "Edit",
+      "copy": "Copy text",
+      "read": "Read",
+      "favorite": "Favorite",
+      "copyMedia": "Copy media",
+      "saveMedia": "Save media",
+      "copyAllText": "Copy all text",
+      "delete": "Delete"
+    },
+    "msg": {
+      "saveSuccess": "File saved to: {path}",
+      "saveFailed": "File save failed",
+      "copySuccess": "Media copied to clipboard",
+      "copyFailed": "Media copy failed"
     }
   }
 }

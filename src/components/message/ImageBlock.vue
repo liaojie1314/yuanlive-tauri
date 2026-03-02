@@ -15,11 +15,17 @@
 </template>
 
 <script setup lang="ts">
+defineOptions({
+  name: "ImageBlock"
+});
+
 const props = defineProps<{
   url: string;
 }>();
 
+/** 点击图片块处理 */
 const previewImage = () => {
+  // TODO: 预览图片
   console.log("预览图片:", props.url);
 };
 </script>

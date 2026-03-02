@@ -11,6 +11,7 @@
 </template>
 
 <script setup lang="ts">
+import { useI18n } from "vue-i18n";
 import { type UnlistenFn, listen } from "@tauri-apps/api/event";
 import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
 
@@ -24,6 +25,7 @@ import FileUtil from "@/utils/FileUtil";
 import { getFilesMeta } from "@/utils/PathUtils";
 import rustWebSocketClient from "@/services/webSocketRust";
 
+const { t } = useI18n();
 const { logout } = useLogin();
 const { checkUpdate, CHECK_UPDATE_TIME } = useCheckUpdate();
 const globalStore = useGlobalStore();
@@ -86,7 +88,7 @@ const buildPathUploadFiles = async (paths: string[]) => {
     return await FileUtil.map2PathUploadFile(paths, filesMeta);
   } catch (error) {
     console.error("[layout] 解析拖拽文件元数据失败:", error);
-    window.$message?.error?.("解析拖拽文件失败");
+    window.$message?.error?.(t("home.index.parseDragFileFailed"));
     return [];
   }
 };
@@ -102,7 +104,7 @@ const handleNativeFileDrop = async (paths: string[]) => {
     if (pathFiles.length > 0) {
       useMitt.emit(MittEnum.GLOBAL_FILES_DROP, pathFiles);
     } else {
-      window.$message?.error?.("无法识别拖拽的文件");
+      window.$message?.error?.(t("home.index.unableParseDragFile"));
     }
   } catch (error) {
     console.error("[layout] 处理原生拖拽文件失败:", error);

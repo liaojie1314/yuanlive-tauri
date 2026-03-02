@@ -116,9 +116,11 @@
 </template>
 
 <script setup lang="ts">
+import { useI18n } from "vue-i18n";
 import { useWindow } from "@/hooks/useWindow";
 import { isWindows } from "@/utils/PlatformUtils";
 
+const { t } = useI18n();
 const { createWebviewWindow } = useWindow();
 
 defineOptions({
@@ -249,7 +251,7 @@ const openRecordWindow = () => {
     createWebviewWindow("直播", "record", 1200, 720, "", true, 800, 500);
     return;
   }
-  window.$message.warning("直播功能仅在Windows平台支持");
+  window.$message.warning(t("home.user.notSupport"));
 };
 
 // 监听标签页切换，初始化数据

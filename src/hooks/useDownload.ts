@@ -1,3 +1,4 @@
+import { useI18n } from "vue-i18n";
 import { createEventHook } from "@vueuse/core";
 import { BaseDirectory, exists, mkdir, writeFile } from "@tauri-apps/plugin-fs";
 
@@ -5,6 +6,7 @@ import { isMobile } from "@/utils/PlatformUtils";
 import { DownloadRequest, ProgressMessage, ResultMessage } from "@/types/download";
 
 export const useDownload = () => {
+  const { t } = useI18n();
   const process = ref(0);
   const isDownloading = ref(false);
   const { on: onLoaded, trigger } = createEventHook();
@@ -66,9 +68,9 @@ export const useDownload = () => {
         trigger("success");
       } else {
         // 下载失败
-        window.$message.error(result.error || "下载失败");
+        window.$message.error(result.error || t("hook.download.downloadFailed"));
         trigger("fail");
-        throw new Error(result.error || "下载失败");
+        throw new Error(result.error || t("hook.download.downloadFailed"));
       }
     } catch (error) {
       console.error("处理下载结果失败:", error);

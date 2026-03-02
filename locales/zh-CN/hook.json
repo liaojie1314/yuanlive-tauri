@@ -23,5 +23,28 @@
     "permissionDenied": "位置权限被拒绝",
     "positionUnavailable": "位置信息不可用",
     "timeout": "获取位置超时"
+  },
+  "avatarUpload": {
+    "uploadSuccess": "头像上传成功",
+    "uploadFailed": "头像上传失败",
+    "loadingFailed": "图片加载失败",
+    "sizeLimit": "图片大小不能超过 {sizeLimit}KB"
+  },
+  "download": {
+    "downloadFailed": "下载失败",
+    "downloadFailedInfo": "文件下载失败: {error}",
+    "unknownError": "未知错误"
+  },
+  "globalShortcut": {
+    "copyColorSuccess": "取色成功"
+  },
+  "voiceRecord": {
+    "recordFailed": "录音失败",
+    "saveFailed": "保存录音失败"
+  },
+  "scanner": {
+    "initFailed": "初始化扫描器失败",
+    "selectDirectory": "请先选择目录",
+    "selectDirectoryFailed": "选择目录失败"
   }
 }

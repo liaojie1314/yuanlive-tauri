@@ -1,0 +1,9 @@
+{
+  "roomIdRequired": "请输入房间号",
+  "screenShareEnded": "屏幕分享已结束",
+  "startFailed": "启动失败: {error}",
+  "unknownError": "未知错误",
+  "bgReplaceSuccess": "背景替换成功",
+  "watermarkLoadSuccess": "水印加载成功",
+  "imageLoadFailed": "无法加载图片"
+}

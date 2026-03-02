@@ -1,3 +1,4 @@
+import { useI18n } from "vue-i18n";
 import { sumBy } from "es-toolkit";
 import { appDataDir, join, resourceDir } from "@tauri-apps/api/path";
 import { BaseDirectory, exists, writeFile } from "@tauri-apps/plugin-fs";
@@ -29,6 +30,7 @@ export interface FileDownloadStatus {
 export const useFileDownloadStore = defineStore(
   StoresEnum.FILE_DOWNLOAD,
   () => {
+    const { t } = useI18n();
     const userStore = useUserStore();
     // 存储文件下载状态的Map，key为文件URL，value为下载状态
     const downloadStatusMap = ref<Record<string, FileDownloadStatus>>({});
@@ -269,7 +271,11 @@ export const useFileDownloadStore = defineStore(
           error: error instanceof Error ? error.message : "下载失败"
         });
 
-        window.$message?.error(`文件下载失败: ${error instanceof Error ? error.message : "未知错误"}`);
+        window.$message?.error(
+          t("hook.download.downloadFailedInfo", {
+            error: error instanceof Error ? error.message : t("hook.download.unknownError")
+          })
+        );
         return null;
       }
     };

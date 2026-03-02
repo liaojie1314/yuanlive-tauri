@@ -2,7 +2,7 @@
   <n-modal
     v-model:show="showModal"
     preset="card"
-    :title="$t('components.camera.title')"
+    :title="t('components.camera.title')"
     class="max-w-[800px] w-full bg-[--bg-modal]!"
     :on-after-leave="handleAfterLeave"
     :mask-closable="false">
@@ -27,11 +27,11 @@
         <template v-else>
           <n-button round secondary type="error" @click="handleRetake">
             <template #icon><i-mdi-refresh /></template>
-            {{ $t("components.camera.retake") }}
+            {{ t("components.camera.retake") }}
           </n-button>
           <n-button round type="success" @click="handleConfirm">
             <template #icon><i-mdi-check /></template>
-            {{ $t("components.camera.usePhoto") }}
+            {{ t("components.camera.usePhoto") }}
           </n-button>
         </template>
       </div>
@@ -40,7 +40,10 @@
 </template>
 
 <script setup lang="ts">
+import { useI18n } from "vue-i18n";
 import { useCamera } from "@/hooks/useCamera";
+
+const { t } = useI18n();
 
 const props = defineProps<{
   show: boolean;
@@ -77,7 +80,7 @@ watch(
           await startCamera(videoRef.value);
         } catch (e) {
           console.error("Failed to start camera:", e);
-          window.$message.error("Failed to start camera.");
+          window.$message.error(t("components.camera.startCameraFailed"));
         }
       }
     } else {

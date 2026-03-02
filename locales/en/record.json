@@ -1,0 +1,9 @@
+{
+  "roomIdRequired": "Please enter the room number",
+  "screenShareEnded": "Screen sharing has ended",
+  "startFailed": "Start failed: {error}",
+  "unknownError": "Unknown error",
+  "bgReplaceSuccess": "Background replacement successful",
+  "watermarkLoadSuccess": "Watermark loaded successfully",
+  "imageLoadFailed": "Failed to load image"
+}

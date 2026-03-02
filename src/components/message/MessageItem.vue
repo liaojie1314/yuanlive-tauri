@@ -16,7 +16,7 @@
 
       <div class="content-col flex flex-col max-w-[85%] min-w-0" :class="isSelf ? 'items-end' : 'items-start'">
         <div v-if="!isSelf" class="text-xs text-[--user-text-color] mb-1 ml-1">
-          {{ message.sender || "AI助手" }}
+          {{ message.sender || t("components.messageItem.ai") }}
         </div>
 
         <context-menu :menu="selectionMode ? [] : contextMenuOptions" @select="handleContextMenuSelect">
@@ -39,19 +39,19 @@
                   autosize
                   :bordered="false"
                   class="edit-textarea w-full !bg-transparent"
-                  placeholder="编辑你的消息..."
+                  :placeholder="t('components.messageItem.placeholder')"
                   autofocus />
               </div>
               <div class="flex justify-end gap-2 mt-2 pt-2 border-t border-[--line-color] px-1">
                 <div
                   class="px-3 py-1 text-xs rounded-md text-[--user-text-color] bg-[--input-area-bg] hover:bg-[--line-color] transition-colors border border-[--line-color] cursor-pointer"
                   @click="cancelEdit">
-                  取消
+                  {{ t("components.common.cancel") }}
                 </div>
                 <div
                   class="px-3 py-1 text-xs rounded-md bg-blue-600 text-white hover:bg-blue-700 shadow-sm transition-all active:scale-95 whitespace-nowrap cursor-pointer"
                   @click="submitEdit">
-                  重发
+                  {{ t("components.messageItem.resend") }}
                 </div>
               </div>
             </div>
@@ -96,7 +96,7 @@
               <i-material-symbols-edit-outline
                 v-if="isSelf && !isEditing"
                 class="action-icon text-sm"
-                title="编辑并重发"
+                :title="t('components.messageItem.editAndResend')"
                 @click="startEdit" />
               <template v-if="!isSelf">
                 <i-material-symbols-refresh class="action-icon text-sm" @click="$emit('refresh-message', message.id)" />
@@ -124,6 +124,7 @@
 </template>
 
 <script setup lang="ts">
+import { useI18n } from "vue-i18n";
 import { Image } from "@tauri-apps/api/image";
 import { save } from "@tauri-apps/plugin-dialog";
 import { writeFile } from "@tauri-apps/plugin-fs";
@@ -131,6 +132,12 @@ import { writeText, writeImage } from "@tauri-apps/plugin-clipboard-manager";
 
 import type { MessageData } from "@/types/chat";
 import { normalizeMessage } from "@/utils/MessageAdapter";
+
+defineOptions({
+  name: "MessageItem"
+});
+
+const { t } = useI18n();
 
 const props = defineProps<{
   message: MessageData;
@@ -151,6 +158,10 @@ const emit = defineEmits([
   "toggle-select"
 ]);
 
+const activeBlock = ref<any>(null);
+const isEditing = ref(false);
+const editText = ref("");
+
 const isSelf = computed(() => props.message.role === "user");
 const blocks = computed(() => normalizeMessage(props.message));
 const bubbleClasses = computed(() => {
@@ -158,27 +169,12 @@ const bubbleClasses = computed(() => {
     ? "bg-[--message-render-color] text-white border-transparent self-message-bubble"
     : "bg-[--input-area-bg] text-[--text-color] border-[--line-color]";
 });
-
-const activeBlock = ref<any>(null);
-
-// 鼠标悬浮并右键点击到具体的积木时，记录该积木
-const handleBlockContext = (block: any) => {
-  activeBlock.value = block;
-};
-
-// 如果右键点在了气泡的空隙(padding)处，清空当前积木，使用全局默认菜单
-const handleBubbleContext = (e: MouseEvent) => {
-  if (e.target === e.currentTarget) {
-    activeBlock.value = null;
-  }
-};
-
 // 基于上下文动态生成右键菜单
 const contextMenuOptions = computed(() => {
   const options = [];
 
   if (isSelf.value) {
-    options.push({ label: "修改", key: "edit" });
+    options.push({ label: t("components.messageItem.label.edit"), key: "edit" });
   }
 
   const target = activeBlock.value;
@@ -186,27 +182,49 @@ const contextMenuOptions = computed(() => {
   if (target) {
     // 鼠标明确点在了某个组件上
     if (["text", "thinking"].includes(target.type)) {
-      options.push({ label: "复制文本", key: "copy" });
-      options.push({ label: "朗读", key: "read" });
-      options.push({ label: "收藏", key: "favorite" });
+      options.push({ label: t("components.messageItem.label.copy"), key: "copy" });
+      options.push({ label: t("components.messageItem.label.read"), key: "read" });
+      options.push({ label: t("components.messageItem.label.favorite"), key: "favorite" });
     } else if (target.type === "image") {
-      options.push({ label: "复制图片", key: "copy_media" });
-      options.push({ label: "保存图片", key: "save_media" });
+      options.push({ label: t("components.messageItem.label.copyMedia"), key: "copy_media" });
+      options.push({ label: t("components.messageItem.label.saveMedia"), key: "save_media" });
     } else if (["video", "audio", "file"].includes(target.type)) {
-      options.push({ label: "保存", key: "save_media" });
+      options.push({ label: t("components.messageItem.label.saveMedia"), key: "save_media" });
     }
   } else {
     // 鼠标点在了气泡空白处：提供一个保底的全局复制功能
     const hasText = blocks.value.some((b: any) => ["text", "thinking"].includes(b.type));
     if (hasText) {
-      options.push({ label: "复制全部文本", key: "copy" });
+      options.push({ label: t("components.messageItem.label.copyAllText"), key: "copy" });
     }
   }
   // 删除功能永远可用，因为它是针对整条消息的
-  options.push({ label: "删除", key: "delete" });
+  options.push({ label: t("components.messageItem.label.delete"), key: "delete" });
   return options;
 });
 
+/**
+ * 鼠标悬浮并右键点击到具体的积木时，记录该块
+ * @param block 具体的积木块
+ */
+const handleBlockContext = (block: any) => {
+  activeBlock.value = block;
+};
+
+/**
+ * 如果右键点在了气泡的空隙(padding)处，清空当前积木，使用全局默认菜单
+ * @param e 鼠标事件
+ */
+const handleBubbleContext = (e: MouseEvent) => {
+  if (e.target === e.currentTarget) {
+    activeBlock.value = null;
+  }
+};
+
+/**
+ * 处理右键菜单点击事件
+ * @param item 点击的菜单项
+ */
 const handleContextMenuSelect = (item: any) => {
   const key = item.key || item;
   switch (key) {
@@ -234,7 +252,7 @@ const handleContextMenuSelect = (item: any) => {
   }
 };
 
-// 精准保存逻辑
+/** 保存逻辑 */
 const handleSaveMedia = async () => {
   // 只保存当前用户右键的那一个具体文件
   const block = activeBlock.value;
@@ -266,14 +284,14 @@ const handleSaveMedia = async () => {
     const response = await fetch(url);
     const arrayBuffer = await response.arrayBuffer();
     await writeFile(savePath, new Uint8Array(arrayBuffer));
-    window.$message?.success(`已保存至: ${savePath}`);
+    window.$message?.success(t("components.messageItem.msg.saveSuccess", { path: savePath }));
   } catch (error) {
     console.error("Tauri 保存失败:", error);
-    window.$message?.error(`文件保存失败`);
+    window.$message?.error(t("components.messageItem.msg.saveFailed"));
   }
 };
 
-// 精准复制图片逻辑
+/** 复制图片逻辑 */
 const handleCopyMedia = async () => {
   const block = activeBlock.value;
   if (!block || block.type !== "image") return;
@@ -310,14 +328,14 @@ const handleCopyMedia = async () => {
     // 5. 写入系统原生剪贴板
     await writeImage(tauriImage);
 
-    window.$message?.success("图片已复制到系统剪贴板");
+    window.$message?.success(t("components.messageItem.msg.copySuccess"));
   } catch (error) {
     console.error("图片复制失败:", error);
-    window.$message?.error("图片复制失败，请检查文件权限或格式");
+    window.$message?.error(t("components.messageItem.msg.copyFailed"));
   }
 };
 
-// 智能文本复制逻辑
+/** 文本复制逻辑 */
 const isCopied = ref(false);
 const handleCopyMessage = async () => {
   if (isCopied.value) return;
@@ -350,9 +368,7 @@ const handleCopyMessage = async () => {
   }
 };
 
-// 修改模式相关逻辑
-const isEditing = ref(false);
-const editText = ref("");
+/** 编辑文本 */
 const startEdit = () => {
   let currentText = "";
   for (const block of blocks.value) {
@@ -361,6 +377,8 @@ const startEdit = () => {
   editText.value = currentText || (typeof props.message.content === "string" ? props.message.content : "");
   isEditing.value = true;
 };
+
+/** 取消编辑 */
 const cancelEdit = () => {
   isEditing.value = false;
   editText.value = "";
@@ -371,9 +389,11 @@ const submitEdit = () => {
   isEditing.value = false;
 };
 
-// 版本控制逻辑
+/** 版本控制逻辑 */
 const handlePrevVersion = () =>
   props.message.currentVersion && props.message.currentVersion > 1 && emit("prev-message", props.message.id);
+
+/** 下一个版本 */
 const handleNextVersion = () =>
   props.message.currentVersion &&
   props.message.versionCount &&

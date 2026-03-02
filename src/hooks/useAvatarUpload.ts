@@ -1,3 +1,4 @@
+import { useI18n } from "vue-i18n";
 import { useUpload } from "./useUpload";
 import { UploadSceneEnum } from "@/enums";
 import type { AvatarCropperInstance } from "@/components/common/AvatarCropper.vue";
@@ -11,6 +12,8 @@ export interface AvatarUploadOptions {
 }
 
 export const useAvatarUpload = (options: AvatarUploadOptions = {}) => {
+  const { t } = useI18n();
+
   const {
     onSuccess,
     scene = UploadSceneEnum.AVATAR,
@@ -27,7 +30,7 @@ export const useAvatarUpload = (options: AvatarUploadOptions = {}) => {
   // 监听上传完成
   onComplete((result) => {
     if (result.success && result.url) {
-      window.$message.success("头像上传成功");
+      window.$message.success(t("hook.avatarUpload.uploadSuccess"));
       onSuccess?.(result.url);
 
       // 关闭窗口和清理
@@ -40,7 +43,7 @@ export const useAvatarUpload = (options: AvatarUploadOptions = {}) => {
   // 监听错误
   onError((error) => {
     console.error("上传头像失败:", error);
-    window.$message.error("上传头像失败");
+    window.$message.error(t("hook.avatarUpload.uploadFailed"));
     cropperRef.value?.finishLoading();
   });
 
@@ -71,7 +74,7 @@ export const useAvatarUpload = (options: AvatarUploadOptions = {}) => {
         });
       };
       img.onerror = () => {
-        window.$message.error("图片加载失败");
+        window.$message.error(t("hook.avatarUpload.loadingFailed"));
         URL.revokeObjectURL(url);
       };
       img.src = url;
@@ -90,7 +93,7 @@ export const useAvatarUpload = (options: AvatarUploadOptions = {}) => {
       const file = new File([cropBlob], fileName, { type: "image/webp" });
 
       if (file.size > sizeLimit * 1024) {
-        window.$message.error(`图片大小不能超过${sizeLimit}KB`);
+        window.$message.error(t("hook.avatarUpload.sizeLimit", { sizeLimit }));
         cropperRef.value?.finishLoading();
         return;
       }

@@ -1,3 +1,4 @@
+import { useI18n } from "vue-i18n";
 import { useThrottleFn } from "@vueuse/core";
 import { emitTo, listen } from "@tauri-apps/api/event";
 import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
@@ -39,6 +40,7 @@ const isMacPlatform = isMac();
  * 使用配置驱动的方式，方便扩展新快捷键
  */
 export const useGlobalShortcut = () => {
+  const { t } = useI18n();
   const settingStore = useSettingStore();
   // 获取平台对应的默认快捷键
   const getDefaultShortcuts = () => {
@@ -170,7 +172,7 @@ export const useGlobalShortcut = () => {
         await writeText(hexColor);
         console.log(`颜色已复制: ${hexColor}`);
         // 可选：在这里发送一个通知告诉用户复制成功
-        window.$message.success("取色成功");
+        window.$message.success(t("hook.globalShortcut.copyColorSuccess"));
       } catch (error) {
         console.log("用户取消取色", error);
       }

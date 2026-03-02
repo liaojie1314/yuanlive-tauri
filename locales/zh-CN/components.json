@@ -29,7 +29,8 @@
   "camera": {
     "title": "拍照",
     "retake": "重拍",
-    "usePhoto": "使用照片"
+    "usePhoto": "使用照片",
+    "startCameraFailed": "打开摄像头失败"
   },
   "voiceRecorder": {
     "tapPrefix": "点击",
@@ -99,6 +100,39 @@
     "displayAreaOptions": {
       "oneLine": "一行",
       "twoLines": "两行"
+    }
+  },
+  "audioBlock": {
+    "back": "后退5秒",
+    "forward": "快进5秒"
+  },
+  "thinkingBlock": {
+    "think": "思考过程",
+    "thinkDuration": "已深度思考 ({duration}s)"
+  },
+  "videoBlock": {
+    "video": "视频"
+  },
+  "messageItem": {
+    "ai": "AI助手",
+    "placeholder": "问问 YuanLive AI",
+    "resend": "重发",
+    "editAndResend": "编辑并重发",
+    "label": {
+      "edit": "修改",
+      "copy": "复制文本",
+      "read": "朗读",
+      "favorite": "收藏",
+      "copyMedia": "复制图片",
+      "saveMedia": "保存图片",
+      "copyAllText": "复制全部文本",
+      "delete": "删除"
+    },
+    "msg": {
+      "saveSuccess": "文件已保存至: {path}",
+      "saveFailed": "文件保存失败",
+      "copySuccess": "图片已复制到系统剪贴板",
+      "copyFailed": "图片复制失败"
     }
   }
 }

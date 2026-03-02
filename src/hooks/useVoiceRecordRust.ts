@@ -1,3 +1,4 @@
+import { useI18n } from "vue-i18n";
 import { startRecording, stopRecording } from "tauri-plugin-mic-recorder-api";
 import { BaseDirectory, create, exists, mkdir, readFile } from "@tauri-apps/plugin-fs";
 
@@ -82,6 +83,7 @@ const calculateFileHash = async (file: File): Promise<string> => {
 };
 
 export const useVoiceRecordRust = (options: VoiceRecordRustOptions = {}) => {
+  const { t } = useI18n();
   // 用户store
   const userStore = useUserStore();
   const isRecording = ref(false);
@@ -142,8 +144,8 @@ export const useVoiceRecordRust = (options: VoiceRecordRustOptions = {}) => {
       options.onStart?.();
     } catch (error) {
       console.error("开始录音失败:", error);
-      window.$message?.error("录音失败");
-      options.onError?.("录音失败");
+      window.$message?.error(t("hook.voiceRecord.recordFailed"));
+      options.onError?.(t("hook.voiceRecord.recordFailed"));
     }
   };
 
@@ -287,8 +289,8 @@ export const useVoiceRecordRust = (options: VoiceRecordRustOptions = {}) => {
       options.onStop?.(audioBlob, duration, fullPath);
     } catch (error) {
       console.error("保存音频文件失败:", error);
-      window.$message?.error("音频保存失败");
-      options.onError?.("音频保存失败");
+      window.$message?.error(t("hook.voiceRecord.saveFailed"));
+      options.onError?.(t("hook.voiceRecord.saveFailed"));
     }
   };
 

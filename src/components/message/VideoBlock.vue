@@ -22,13 +22,17 @@
     <div
       class="absolute bottom-2 left-2 px-1.5 py-0.5 rounded bg-black/50 backdrop-blur-sm border border-white/10 flex items-center gap-1 text-[10px] text-white">
       <i-material-symbols-videocam-outline class="text-xs" />
-      <span>视频</span>
+      <span>{{ $t("components.videoBlock.video") }}</span>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { generateVideoCover } from "@/utils/MessageAdapter";
+
+defineOptions({
+  name: "VideoBlock"
+});
 
 const props = defineProps<{
   url: string;
@@ -41,7 +45,9 @@ const localCover = ref("");
 // 计算最终展示的封面
 const displayCover = computed(() => props.coverImg || localCover.value);
 
+/** 点击播放视频 */
 const handlePlayClick = () => {
+  // TODO: 预览视频
   console.log("准备播放视频, URL:", props.url);
 };
 

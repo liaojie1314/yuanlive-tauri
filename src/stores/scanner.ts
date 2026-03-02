@@ -1,3 +1,4 @@
+import { useI18n } from "vue-i18n";
 import { listen } from "@tauri-apps/api/event";
 import { appCacheDir } from "@tauri-apps/api/path";
 import type { UnlistenFn } from "@tauri-apps/api/event";
@@ -31,6 +32,7 @@ type DirectoryInfo = {
  * 提供扫描、取消扫描、清理资源等功能
  */
 export const useScannerStore = defineStore(StoresEnum.SCANNER, () => {
+  const { t } = useI18n();
   const pathType = ref<"default" | "custom">("default");
   const defaultDirectory = ref<string>("");
   const customDirectory = ref<string>("");
@@ -108,7 +110,7 @@ export const useScannerStore = defineStore(StoresEnum.SCANNER, () => {
       }
     } catch (error) {
       console.error("初始化扫描器失败:", error);
-      window.$message?.error("初始化扫描器失败");
+      window.$message?.error(t("hook.scanner.initFailed"));
     }
   };
 
@@ -131,7 +133,7 @@ export const useScannerStore = defineStore(StoresEnum.SCANNER, () => {
 
   const startScan = async () => {
     if (!currentDirectory.value) {
-      window.$message?.warning("请先选择目录");
+      window.$message?.warning(t("hook.scanner.selectDirectory"));
       return;
     }
 

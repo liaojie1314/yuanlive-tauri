@@ -13,7 +13,11 @@
         <i-mdi-thought-bubble-outline v-else class="w-4 h-4" :class="isExpanded ? 'text-blue-500' : ''" />
 
         <span class="font-medium">
-          {{ isExpanded ? "思考过程" : `已深度思考 (${duration}s)` }}
+          {{
+            isExpanded
+              ? $t("components.thinkingBlock.think")
+              : $t("components.thinkingBlock.thinkDuration", { duration })
+          }}
         </span>
       </div>
 
@@ -39,6 +43,10 @@
 </template>
 
 <script setup lang="ts">
+defineOptions({
+  name: "ThinkingBlock"
+});
+
 defineProps<{
   content: string;
   duration: number;

@@ -4,7 +4,7 @@
     <div class="flex items-center gap-1.5 flex-shrink-0 ml-1">
       <div
         class="cursor-pointer text-[--user-text-color] hover:text-[--message-render-color] opacity-60 hover:opacity-100 transition-colors flex items-center justify-center w-6 h-6"
-        title="后退5秒"
+        :title="$t('components.audioBlock.back')"
         @click="skip(-5)">
         <i-material-symbols-fast-rewind-rounded class="text-[18px]" />
       </div>
@@ -18,7 +18,7 @@
 
       <div
         class="cursor-pointer text-[--user-text-color] hover:text-[--message-render-color] opacity-60 hover:opacity-100 transition-colors flex items-center justify-center w-6 h-6"
-        title="快进5秒"
+        :title="$t('components.audioBlock.forward')"
         @click="skip(5)">
         <i-material-symbols-fast-forward-rounded class="text-[18px]" />
       </div>
@@ -53,7 +53,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
+import { formatTime } from "@/utils/FormattingUtils";
+
+defineOptions({
+  name: "AudioBlock"
+});
 
 defineProps<{
   url: string;
@@ -67,19 +71,7 @@ const currentTime = ref(0);
 const duration = ref(0);
 const progress = ref(0);
 
-// 格式化时间 (秒 -> mm:ss)
-const formatTime = (time: number) => {
-  if (Number.isNaN(time) || !Number.isFinite(time)) return "00:00";
-  const m = Math.floor(time / 60)
-    .toString()
-    .padStart(2, "0");
-  const s = Math.floor(time % 60)
-    .toString()
-    .padStart(2, "0");
-  return `${m}:${s}`;
-};
-
-// 播放/暂停控制
+/** 播放/暂停控制 */
 const togglePlay = () => {
   if (!audioRef.value) return;
   if (isPlaying.value) {
@@ -90,7 +82,10 @@ const togglePlay = () => {
   isPlaying.value = !isPlaying.value;
 };
 
-// 快进/快退逻辑 (单位：秒)
+/**
+ * 快进/快退逻辑 (单位：秒)
+ * @param seconds 快进/快退的秒数
+ */
 const skip = (seconds: number) => {
   if (!audioRef.value || duration.value === 0) return;
 
@@ -111,14 +106,14 @@ const skip = (seconds: number) => {
   }
 };
 
-// 元数据加载完毕（获取总时长）
+/** 元数据加载完毕（获取总时长） */
 const onLoadedMetadata = () => {
   if (audioRef.value) {
     duration.value = audioRef.value.duration;
   }
 };
 
-// 进度更新
+/** 进度更新 */
 const onTimeUpdate = () => {
   if (!audioRef.value) return;
   currentTime.value = audioRef.value.currentTime;
@@ -127,7 +122,7 @@ const onTimeUpdate = () => {
   }
 };
 
-// 播放结束
+/** 播放结束 */
 const onEnded = () => {
   isPlaying.value = false;
   progress.value = 100; // 确保进度条走到底
@@ -141,7 +136,7 @@ const onEnded = () => {
   }, 500);
 };
 
-// 点击进度条跳转
+/** 点击进度条跳转 */
 const seekAudio = (e: MouseEvent) => {
   if (!progressBarRef.value || !audioRef.value || duration.value === 0) return;
   const rect = progressBarRef.value.getBoundingClientRect();

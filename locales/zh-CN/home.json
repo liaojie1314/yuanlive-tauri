@@ -2,7 +2,12 @@
   "index": {
     "myFollow": "我的关注",
     "hotTags": "热门标签",
-    "moreLive": "更多直播"
+    "moreLive": "更多直播",
+    "parseDragFileFailed": "解析拖拽文件失败",
+    "unableParseDragFile": "无法识别拖拽的文件"
+  },
+  "user": {
+    "notSupport": "直播功能仅在Windows平台支持"
   },
   "profileEdit": {
     "toast": {

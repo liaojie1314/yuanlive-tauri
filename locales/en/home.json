@@ -2,7 +2,12 @@
   "index": {
     "myFollow": "My Follow",
     "hotTags": "Hot Tags",
-    "moreLive": "More Live"
+    "moreLive": "More Live",
+    "parseDragFileFailed": "Failed to parse dragged files",
+    "unableParseDragFile": "Unable to parse dragged files"
+  },
+  "user": {
+    "notSupport": "Live streaming feature is only supported on Windows platform"
   },
   "profileEdit": {
     "toast": {

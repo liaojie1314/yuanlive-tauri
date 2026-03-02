@@ -199,7 +199,7 @@ const selectCustomDirectory = async () => {
     }
   } catch (error) {
     console.error("选择目录失败:", error);
-    window.$message?.error("选择目录失败");
+    window.$message?.error(t("setting.storage.selectDirectoryFailed"));
   }
 };
 
