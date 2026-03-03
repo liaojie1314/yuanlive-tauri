@@ -112,9 +112,8 @@ pub async fn ai_message_send_stream(
                                     if let Err(e) = on_event.send(chunk_event) {
                                         error!("发送 chunk 事件失败: {}", e);
                                     }
-                                } else if line.starts_with("data:") {
+                                } else if let Some(data) = line.strip_prefix("data:") {
                                     // 处理没有空格的情况: data:<content>
-                                    let data = &line[5..];
                                     info!("收到 SSE 数据 (无空格): {}", data);
 
                                     // 累积内容

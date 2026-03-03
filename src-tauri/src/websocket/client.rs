@@ -100,7 +100,7 @@ impl WebSocketClient {
         info!("Cancelled {} async tasks", task_count);
         // 发送关闭信号以主动关闭 WebSocket 连接
         if let Some(close_sender) = self.close_sender.write().await.take() {
-            if let Err(_) = close_sender.send(()) {
+            if close_sender.send(()).is_err() {
                 warn!("Failed to send close signal, connection may already be closed");
             } else {
                 info!("WebSocket close signal sent");
@@ -486,28 +486,23 @@ impl WebSocketClient {
     ) {
         info!("Received message: {}", text);
         // 尝试解析心跳响应
-        if let Ok(ws_msg) = serde_json::from_str::<WsMessage>(&text) {
-            match ws_msg {
-                WsMessage::HeartbeatResponse => {
-                    let now = Utc::now().timestamp_millis() as u64;
-                    last_pong_time.store(now, Ordering::SeqCst);
-                    consecutive_failures.store(0, Ordering::SeqCst);
-                    info!("Received heartbeat response");
-                    let health = ConnectionHealth {
-                        is_healthy: true,
-                        last_pong_time: Some(now),
-                        consecutive_failures: 0,
-                        round_trip_time: None,
-                    };
+        if let Ok(WsMessage::HeartbeatResponse) = serde_json::from_str::<WsMessage>(&text) {
+            let now = Utc::now().timestamp_millis() as u64;
+            last_pong_time.store(now, Ordering::SeqCst);
+            consecutive_failures.store(0, Ordering::SeqCst);
+            info!("Received heartbeat response");
+            let health = ConnectionHealth {
+                is_healthy: true,
+                last_pong_time: Some(now),
+                consecutive_failures: 0,
+                round_trip_time: None,
+            };
 
-                    let _ = app_handle.emit(
-                        "websocket-event",
-                        &WebSocketEvent::HeartbeatStatusChanged { health },
-                    );
-                    return;
-                }
-                _ => {}
-            }
+            let _ = app_handle.emit(
+                "websocket-event",
+                &WebSocketEvent::HeartbeatStatusChanged { health },
+            );
+            return;
         }
 
         // 处理业务消息

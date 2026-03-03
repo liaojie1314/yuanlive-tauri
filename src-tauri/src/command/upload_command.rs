@@ -30,6 +30,7 @@ pub async fn upload_chunk_bytes_command(
 
 // 大文件路径直接上传
 #[tauri::command]
+#[allow(clippy::too_many_arguments)]
 pub async fn upload_chunk_by_path_command(
     file_hash: String,
     file_name: String,

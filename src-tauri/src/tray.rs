@@ -61,7 +61,7 @@ pub fn create_tray<R: Runtime>(app: &tauri::AppHandle<R>) -> tauri::Result<()> {
                     }
                 } else if id == &exit_id {
                     // 退出应用
-                    let _ = tray_handler.exit(0);
+                    tray_handler.exit(0);
                 }
             })
             .build(app)?;

@@ -73,7 +73,7 @@ async fn handle_login_success(
     let mut rc = state.rc.lock().await;
     rc.token = Some(login_resp.access_token.clone());
     rc.refresh_token = Some(login_resp.refresh_token.clone());
-    rc.expire = Some(login_resp.expire.clone());
+    rc.expire = Some(login_resp.expire);
 
     info!("handle_login_success, user_info: {:?}", user_info);
     Ok(())

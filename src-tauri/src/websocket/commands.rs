@@ -34,7 +34,7 @@ pub struct UpdateConfigParams {
 }
 
 /// 成功响应结构
-#[derive(Debug, Serialize)]
+#[derive(Default, Debug, Serialize)]
 pub struct SuccessResponse {
     pub success: bool,
     pub message: Option<String>,

@@ -161,6 +161,7 @@ impl RequestClient {
 
     /// 直接从本地文件读取并上传，避免从 JS 传二进制数据
     /// 适用于大文件/视频上传场景
+    #[allow(clippy::too_many_arguments)]
     pub async fn upload_chunk_from_path(
         &mut self,
         file_hash: &str,
