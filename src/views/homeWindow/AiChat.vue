@@ -45,15 +45,15 @@
           v-else
           class="w-full max-w-[800px] flex items-center justify-between bg-[--input-area-bg] rounded-lg p-4 m-1 border border-[--line-color] shadow-sm transition-all">
           <div class="text-sm font-medium text-[--user-text-color]">
-            已选择
+            {{ t("home.aiChat.selected") }}
             <span class="text-blue-500 mx-1">{{ selectedMessageIds.size }}</span>
-            条消息
+            {{ t("home.aiChat.message") }}
           </div>
 
           <div class="flex items-center gap-4">
-            <n-button quaternary @click="cancelMessageSelection">取消</n-button>
+            <n-button quaternary @click="cancelMessageSelection">{{ t("components.common.cancel") }}</n-button>
             <n-button type="error" :disabled="selectedMessageIds.size === 0" @click="handleBatchDeleteMessages">
-              删除选中
+              {{ t("home.aiChat.deleteSelected") }}
             </n-button>
           </div>
         </div>
@@ -68,11 +68,15 @@
 </template>
 
 <script setup lang="ts">
+import { useI18n } from "vue-i18n";
 import type { ScrollbarInst } from "naive-ui";
+
 import type { MessageData } from "@/types/chat";
 import { messageCancelStream } from "@/utils/RequestUtils";
 
 defineOptions({ name: "AiChat" });
+
+const { t } = useI18n();
 
 const chatStatus = ref<"loading" | "streaming" | "normal">("normal");
 const activeChatId = ref<string>("1");
@@ -82,14 +86,21 @@ const scrollContentRef = ref<HTMLElement | null>(null);
 const isMessageSelectionMode = ref(false);
 const selectedMessageIds = ref<Set<string | number>>(new Set());
 const messages = ref<MessageData[]>([]);
+const currentRequestId = ref<string | null>(null); // 记录当前请求 ID 用于取消
 
-// 触发多选模式，并默认选中当前右键的消息
+/**
+ * 触发多选模式，并默认选中当前右键的消息
+ * @param id 消息 ID
+ */
 const handleEnterMessageMultiSelect = (id: string | number) => {
   isMessageSelectionMode.value = true;
   selectedMessageIds.value.add(id);
 };
 
-// 切换单条消息的选中状态
+/**
+ * 切换单条消息的选中状态
+ * @param id 消息 ID
+ */
 const handleToggleMessageSelect = (id: string | number) => {
   if (selectedMessageIds.value.has(id)) {
     selectedMessageIds.value.delete(id);
@@ -98,20 +109,20 @@ const handleToggleMessageSelect = (id: string | number) => {
   }
 };
 
-// 取消多选模式
+/** 取消多选模式 */
 const cancelMessageSelection = () => {
   isMessageSelectionMode.value = false;
   selectedMessageIds.value.clear();
 };
 
-// 批量删除选中的消息
+/** 批量删除选中的消息 */
 const handleBatchDeleteMessages = () => {
   if (selectedMessageIds.value.size === 0) return;
 
   window.$dialog.warning({
-    content: `确定要删除选中的 ${selectedMessageIds.value.size} 条消息吗？`,
-    positiveText: "删除",
-    negativeText: "取消",
+    content: t("home.aiChat.confirmDeleteSelected", { count: selectedMessageIds.value.size }),
+    positiveText: t("components.common.confirm"),
+    negativeText: t("components.common.cancel"),
     onPositiveClick: () => {
       // 从本地列表中移除选中的消息
       messages.value = messages.value.filter((msg) => !selectedMessageIds.value.has(msg.id));
@@ -123,10 +134,12 @@ const handleBatchDeleteMessages = () => {
   });
 };
 
+/** 切换消息列表折叠状态 */
 const handleToggleCollapse = () => {
   isHistoryCollapsed.value = !isHistoryCollapsed.value;
 };
 
+/** 滚动到消息列表底部 */
 const scrollToBottom = () => {
   nextTick(() => {
     if (scrollbarRef.value && scrollContentRef.value) {
@@ -220,8 +233,6 @@ const scrollToBottom = () => {
 //   ];
 // };
 
-const currentRequestId = ref<string | null>(null); // 记录当前请求 ID 用于取消
-
 // const handleSendMessage = async (payload: {
 //   type: string;
 //   content: string | any;
@@ -299,9 +310,7 @@ const currentRequestId = ref<string | null>(null); // 记录当前请求 ID 用�
 //   }
 // };
 
-/**
- * 取消当前 AI 消息生成
- */
+/** 取消当前 AI 消息生成 */
 const handleCancelAiResponse = async () => {
   if (currentRequestId.value) {
     if (currentRequestId.value) {
@@ -315,7 +324,7 @@ const handleCancelAiResponse = async () => {
         currentRequestId.value = null;
         const lastMsg = messages.value[messages.value.length - 1];
         if (lastMsg && lastMsg.role === "assistant") {
-          lastMsg.content += "\n\n*[已停止生成]*";
+          lastMsg.content += `\n\n*[${t("home.aiChat.stopGenerate")}]*`;
         }
       }
     } else {
@@ -325,6 +334,10 @@ const handleCancelAiResponse = async () => {
   }
 };
 
+/**
+ * 重发消息
+ * @param data 消息数据
+ */
 const handleResend = (data: { id: string | number; content: string }) => {
   // 1. 找到这条消息在列表中的索引
   const index = messages.value.findIndex((m) => m.id === data.id);
@@ -344,6 +357,10 @@ const handleResend = (data: { id: string | number; content: string }) => {
   });
 };
 
+/**
+ * 发送消息
+ * @param payload 消息内容
+ */
 const handleSendMessage = (payload: {
   type: string;
   content: string;
@@ -366,8 +383,10 @@ const handleSendMessage = (payload: {
   simulateAiStreamResponse();
 };
 
-// 模拟流式输出 (不再需要复杂的 typingEffect，只需更新数据)
-// 找到 simulateAiStreamResponse 或你实际对接后端的流式接收函数
+/**
+ * 模拟流式输出 (不再需要复杂的 typingEffect，只需更新数据)
+ * 找到 simulateAiStreamResponse 或你实际对接后端的流式接收函数
+ */
 const simulateAiStreamResponse = () => {
   const aiMsgId = Date.now() + 1;
   const aiMsg = ref<MessageData>({
@@ -418,7 +437,16 @@ const simulateAiStreamResponse = () => {
   };
 };
 
+/**
+ * 复制消息内容
+ * @param id 消息ID
+ */
 const handleCopy = (id: string) => console.log("Copy", id);
+
+/**
+ * 刷新消息内容
+ * @param id 消息ID
+ */
 const handleRefresh = (id: string) => console.log("Refresh", id);
 
 onMounted(() => {

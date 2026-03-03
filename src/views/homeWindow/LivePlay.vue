@@ -471,8 +471,8 @@
 </template>
 
 <script setup lang="ts">
-import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
 import mpegts from "mpegts.js";
+import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
 
 const router = useRouter();
 let unlistenResize: (() => void) | null = null;

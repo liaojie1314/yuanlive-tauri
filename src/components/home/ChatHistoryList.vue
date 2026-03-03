@@ -9,7 +9,7 @@
         <template #icon>
           <i-mdi-plus class="w-4 h-4" />
         </template>
-        新建对话
+        {{ t("components.chatHistoryList.newChat") }}
       </n-button>
 
       <n-button
@@ -30,7 +30,7 @@
       <template v-if="!isSelectionMode">
         <div class="flex items-center gap-2 text-sm font-medium text-[--user-text-color]">
           <i-mdi-history class="w-4 h-4" />
-          <span>历史对话</span>
+          <span>{{ t("components.chatHistoryList.history") }}</span>
         </div>
         <div class="flex items-center gap-1">
           <n-button
@@ -38,7 +38,7 @@
             circle
             size="small"
             class="text-[--action-bar-icon-color] hover:text-[--text-color]"
-            title="多选"
+            :title="t('components.chatHistoryList.multiSelect')"
             @click="isSelectionMode = true">
             <i-mdi-playlist-check class="w-4 h-4" />
           </n-button>
@@ -58,13 +58,15 @@
       <template v-else>
         <div class="flex items-center gap-2 text-sm font-medium text-[--user-text-color]">
           <n-checkbox :checked="isAllSelected" @update:checked="handleSelectAll" size="small" />
-          <span class="text-xs">已选 {{ selectedIds.size }} 项</span>
+          <span class="text-xs">{{ t("components.chatHistoryList.selectedCount", { count: selectedIds.size }) }}</span>
         </div>
         <div class="flex items-center gap-2">
           <n-button size="tiny" type="error" ghost :disabled="selectedIds.size === 0" @click="handleBatchDelete">
-            删除
+            {{ t("components.chatHistoryList.delete") }}
           </n-button>
-          <n-button size="tiny" quaternary @click="cancelSelection">取消</n-button>
+          <n-button size="tiny" quaternary @click="cancelSelection">
+            {{ t("components.common.cancel") }}
+          </n-button>
         </div>
       </template>
     </div>
@@ -93,18 +95,13 @@
 </template>
 
 <script setup lang="ts">
-interface ChatItem {
-  id: string;
-  title: string;
-  date: string;
-  isPinned?: boolean;
-}
+import { useI18n } from "vue-i18n";
 
-// 定义日期分组类型
-interface HistoryGroup {
-  date: string;
-  items: ChatItem[];
-}
+defineOptions({
+  name: "ChatHistoryList"
+});
+
+const { t } = useI18n();
 
 defineProps<{
   activeChatId?: string;
@@ -120,6 +117,27 @@ const emit = defineEmits<{
   "clear-all": [];
   "toggle-collapse": [];
 }>();
+
+interface ChatItem {
+  id: string;
+  title: string;
+  date: string;
+  isPinned?: boolean;
+}
+
+// 定义日期分组类型
+interface HistoryGroup {
+  date: string;
+  items: ChatItem[];
+}
+
+// 清空历史下拉菜单选项
+const clearMenuOptions = [
+  {
+    label: t("components.chatHistoryList.clearAll"),
+    key: "clear"
+  }
+];
 
 // 模拟历史对话数据
 const historyGroups = ref<HistoryGroup[]>([
@@ -183,7 +201,7 @@ const displayGroups = computed(() => {
   const result: HistoryGroup[] = [];
   // 如果存在置顶项目，将其作为第一个分组压入
   if (pinnedItems.length > 0) {
-    result.push({ date: "置顶", items: pinnedItems });
+    result.push({ date: t("components.chatHistoryList.pinned"), items: pinnedItems });
   }
   // 追加其他普通日期分组
   result.push(...regularGroups);
@@ -191,7 +209,10 @@ const displayGroups = computed(() => {
   return result;
 });
 
-// 4. 新增置顶/取消置顶的处理逻辑
+/**
+ * 处理置顶/取消置顶
+ * @param id 对话ID
+ */
 const handleTogglePin = (id: string) => {
   historyGroups.value.forEach((group) => {
     const item = group.items.find((i) => i.id === id);
@@ -203,13 +224,16 @@ const handleTogglePin = (id: string) => {
   });
 };
 
-// 退出多选
+/** 处理退出多选模式 */
 const cancelSelection = () => {
   isSelectionMode.value = false;
   selectedIds.value.clear();
 };
 
-// 切换单个选中状态
+/**
+ * 切换单个选中状态
+ * @param id 对话ID
+ */
 const handleToggleSelect = (id: string) => {
   if (selectedIds.value.has(id)) {
     selectedIds.value.delete(id);
@@ -218,7 +242,10 @@ const handleToggleSelect = (id: string) => {
   }
 };
 
-// 触发全选/取消全选
+/**
+ * 处理全选/取消全选
+ * @param checked 是否选中
+ */
 const handleSelectAll = (checked: boolean) => {
   if (checked) {
     selectedIds.value = new Set(allChatIds.value);
@@ -227,12 +254,12 @@ const handleSelectAll = (checked: boolean) => {
   }
 };
 
-// 批量删除
+/** 处理批量删除选中对话 */
 const handleBatchDelete = () => {
   window.$dialog.warning({
-    content: `确认删除选中的 ${selectedIds.value.size} 个对话吗？`,
-    positiveText: "确认",
-    negativeText: "取消",
+    content: t("components.chatHistoryList.deleteSelected", { count: selectedIds.value.size }),
+    positiveText: t("components.common.confirm"),
+    negativeText: t("components.common.cancel"),
     onPositiveClick: () => {
       // 1. 本地更新视图
       historyGroups.value = historyGroups.value
@@ -243,34 +270,42 @@ const handleBatchDelete = () => {
           };
         })
         .filter((group) => group.items.length > 0);
-
       // 2. 派发事件通知外层或接口
       emit("batch-delete-chat", Array.from(selectedIds.value));
-
       // 3. 退出多选模式
       cancelSelection();
     }
   });
 };
 
-// 处理从右键菜单进入多选模式
+/**
+ * 处理从右键菜单进入多选模式
+ * @param id 对话ID
+ */
 const handleEnterMultiSelect = (id: string) => {
   isSelectionMode.value = true;
   // 自动勾选当前触发右键菜单的那一项，体验更好
   selectedIds.value.add(id);
 };
 
-// 处理新建对话
+/** 处理新建对话 */
 const handleNewChat = () => {
   emit("new-chat");
 };
 
-// 处理选择对话
+/**
+ * 处理选择对话
+ * @param id 对话ID
+ */
 const handleChatClick = (id: string) => {
   emit("select-chat", id);
 };
 
-// 处理重命名对话
+/**
+ * 处理重命名对话
+ * @param id 对话ID
+ * @param newTitle 新标题
+ */
 const handleRename = (id: string, newTitle: string) => {
   // 本地更新对话标题
   historyGroups.value.forEach((group) => {
@@ -282,19 +317,25 @@ const handleRename = (id: string, newTitle: string) => {
   emit("rename-chat", id, newTitle);
 };
 
-// 处理菜单选择（用于清空历史）
+/**
+ * 处理菜单选择（用于清空历史）
+ * @param key 菜单键值
+ */
 const handleMenuSelect = (key: string) => {
   if (key === "clear") {
     handleClearAll();
   }
 };
 
-// 处理删除对话
+/**
+ * 处理删除对话
+ * @param id 对话ID
+ */
 const handleDelete = (id: string) => {
   window.$dialog.warning({
-    content: "确认删除该对话吗？",
-    positiveText: "确认",
-    negativeText: "取消",
+    content: t("components.chatHistoryList.deleteConfirm"),
+    positiveText: t("components.common.confirm"),
+    negativeText: t("components.common.cancel"),
     onPositiveClick: () => {
       // 本地删除对话
       historyGroups.value = historyGroups.value
@@ -312,12 +353,12 @@ const handleDelete = (id: string) => {
   });
 };
 
-// 处理清空所有历史
+/** 处理清空所有历史 */
 const handleClearAll = () => {
   window.$dialog.warning({
-    content: "确认清空所有历史对话吗？",
-    positiveText: "确认",
-    negativeText: "取消",
+    content: t("components.chatHistoryList.clearAllConfirm"),
+    positiveText: t("components.common.confirm"),
+    negativeText: t("components.common.cancel"),
     onPositiveClick: () => {
       // 本地清空所有历史
       historyGroups.value = [];
@@ -326,14 +367,6 @@ const handleClearAll = () => {
     }
   });
 };
-
-// 清空历史下拉菜单选项
-const clearMenuOptions = [
-  {
-    label: "清空所有历史",
-    key: "clear"
-  }
-];
 </script>
 
 <style scoped lang="scss">

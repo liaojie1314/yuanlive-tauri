@@ -75,8 +75,6 @@ const { logout } = useLogin();
 const { createWebviewWindow } = useWindow();
 const { checkUpdate } = useCheckUpdate();
 
-const activeUrl = ref<string>("index");
-
 type BaseMenuItem = {
   label: string;
   icon: string;
@@ -88,6 +86,8 @@ type MenuAction = {
   icon: string;
   title: string;
 };
+
+const activeUrl = ref<string>("index");
 
 const baseMenu: Array<Omit<MenuAction, "title">> = [
   {
@@ -173,6 +173,7 @@ const helpMenu = computed<BaseMenuItem[]>(() => [
   }
 ]);
 
+/** 点击侧边栏 */
 const handleClick = (url: string) => {
   activeUrl.value = url;
   router.push({ name: url });

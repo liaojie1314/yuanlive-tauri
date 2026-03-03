@@ -30,10 +30,16 @@ const { logout } = useLogin();
 const { checkUpdate, CHECK_UPDATE_TIME } = useCheckUpdate();
 const globalStore = useGlobalStore();
 const { firstEnter } = storeToRefs(globalStore);
+const appWindow = WebviewWindow.getCurrent();
+
+const tauriFileDropUnlisteners: UnlistenFn[] = [];
+// 导入Web Worker
+const timerWorker = new Worker(new URL("@/workers/timer.worker.ts", import.meta.url));
 
 // 是否需要阻塞首屏
 const requiresInitialSync = ref(true);
 const loadingPercentage = ref(10);
+const isDraggingFiles = ref(false);
 const loadingText = ref("正在加载应用...");
 // 记录首次登录状态，避免重复阻塞首屏
 const shouldBlockInitialRender = computed(() => requiresInitialSync.value && firstEnter.value);
@@ -43,13 +49,6 @@ const { overlayVisible, markAsyncLoaded } = useOverlayController({
   asyncTotal: 2,
   minDisplayMs: 600
 });
-
-const isDraggingFiles = ref(false);
-const appWindow = WebviewWindow.getCurrent();
-const tauriFileDropUnlisteners: UnlistenFn[] = [];
-
-// 导入Web Worker
-const timerWorker = new Worker(new URL("@/workers/timer.worker.ts", import.meta.url));
 
 // 修改异步组件的加载配置 - 优化加载性能
 const AsyncLeft = defineAsyncComponent({
@@ -113,9 +112,7 @@ const handleNativeFileDrop = async (paths: string[]) => {
   }
 };
 
-/**
- * 设置原生文件拖拽监听
- */
+/** 设置原生文件拖拽监听 */
 const setupNativeFileDropListeners = async () => {
   try {
     const unlisten = await appWindow.onDragDropEvent((event) => {
@@ -139,9 +136,7 @@ const setupNativeFileDropListeners = async () => {
   }
 };
 
-/**
- * 清理原生文件拖拽监听
- */
+/** 清理原生文件拖拽监听 */
 const cleanupNativeFileDropListeners = () => {
   while (tauriFileDropUnlisteners.length > 0) {
     const unlisten = tauriFileDropUnlisteners.pop();

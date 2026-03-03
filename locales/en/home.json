@@ -6,6 +6,18 @@
     "parseDragFileFailed": "Failed to parse dragged files",
     "unableParseDragFile": "Unable to parse dragged files"
   },
+  "aiChat": {
+    "selected": "Selected",
+    "message": "message",
+    "deleteSelected": "Delete selected",
+    "confirmDeleteSelected": "Are you sure you want to delete the selected {count} messages?",
+    "stopGenerate": "Stop generating"
+  },
+  "follow": {
+    "followers": "Followers ({count})",
+    "unseenCount": "{count} unseen works",
+    "noVideo": "No video available"
+  },
   "user": {
     "notSupport": "Live streaming feature is only supported on Windows platform"
   },

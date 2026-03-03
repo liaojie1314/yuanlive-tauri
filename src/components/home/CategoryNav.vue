@@ -35,12 +35,6 @@ import { getLiveCategoryApi } from "@/api/live";
 
 defineOptions({ name: "CategoryNav" });
 
-interface CategoryInfo {
-  name: string;
-  value: string;
-  children?: CategoryInfo[];
-}
-
 interface Props {
   activeCategory: string;
   activeChildCategory: string;
@@ -52,6 +46,13 @@ const emit = defineEmits<{
   "category-change": [parentValue: string, childValue?: string];
 }>();
 
+interface CategoryInfo {
+  name: string;
+  value: string;
+  children?: CategoryInfo[];
+}
+
+// TODO: 是否进行i18n，需要后端对其他进行支持
 const categories = ref<CategoryInfo[]>([{ name: "全部", value: "all", children: [] }]);
 
 const localActiveCategory = ref(props.activeCategory);
@@ -62,14 +63,10 @@ const currentChildren = computed(() => {
   return current?.children || [];
 });
 
-watch(
-  () => [props.activeCategory, props.activeChildCategory],
-  ([newParent, newChild]) => {
-    localActiveCategory.value = newParent;
-    localActiveChildCategory.value = newChild;
-  }
-);
-
+/**
+ * 处理一级分类切换
+ * @param val 一级分类值
+ */
 const handleParentChange = (val: string) => {
   localActiveCategory.value = val;
   const selectedCategory = categories.value.find((c) => c.value === val);
@@ -81,10 +78,22 @@ const handleParentChange = (val: string) => {
   emit("category-change", val, childValue);
 };
 
+/**
+ * 处理二级分类切换
+ * @param val 二级分类值
+ */
 const handleChildChange = (val: string) => {
   localActiveChildCategory.value = val;
   emit("category-change", localActiveCategory.value, val);
 };
+
+watch(
+  () => [props.activeCategory, props.activeChildCategory],
+  ([newParent, newChild]) => {
+    localActiveCategory.value = newParent;
+    localActiveChildCategory.value = newChild;
+  }
+);
 
 onMounted(async () => {
   const res = (await getLiveCategoryApi()) as CategoryInfo[];

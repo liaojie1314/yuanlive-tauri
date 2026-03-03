@@ -109,12 +109,11 @@
 import { useI18n } from "vue-i18n";
 import "vue-cropper/dist/index.css";
 import { VueCropper } from "vue-cropper";
+import { isMac, isWindows } from "@/utils/PlatformUtils";
 
 defineOptions({
   name: "AvatarCropper"
 });
-
-import { isMac, isWindows } from "@/utils/PlatformUtils";
 
 const { t } = useI18n();
 

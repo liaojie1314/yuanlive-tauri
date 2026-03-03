@@ -6,6 +6,18 @@
     "parseDragFileFailed": "解析拖拽文件失败",
     "unableParseDragFile": "无法识别拖拽的文件"
   },
+  "aiChat": {
+    "selected": "已选择",
+    "message": "条消息",
+    "deleteSelected": "删除选中",
+    "confirmDeleteSelected": "确定要删除选中的 {count} 条消息吗？",
+    "stopGenerate": "已停止生成"
+  },
+  "follow": {
+    "followers": "关注人({count})",
+    "unseenCount": "{count}个作品未看",
+    "noVideo": "暂无视频"
+  },
   "user": {
     "notSupport": "直播功能仅在Windows平台支持"
   },

@@ -173,7 +173,6 @@ const handleBackToHome = () => {
 };
 
 useMitt.on(MittEnum.SEARCH, (keyword: string) => {
-  console.log("Index received search:", keyword);
   currentSearchQuery.value = keyword;
   isSearching.value = true;
 });

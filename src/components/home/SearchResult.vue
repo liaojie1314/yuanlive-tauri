@@ -2,26 +2,28 @@
   <div class="search-result-container h-full flex flex-col">
     <div class="mb-4 flex items-center justify-between">
       <div class="text-lg">
-        搜索结果：
+        <span>{{ $t("components.searchResult.title") }}</span>
         <span class="font-bold text-red-500">"{{ query }}"</span>
-        <span class="text-sm text-gray-400 ml-2">共找到 {{ total }} 个相关直播</span>
+        <span class="text-sm text-gray-400 ml-2">{{ $t("components.searchResult.total", { total }) }}</span>
       </div>
       <n-button size="small" secondary @click="handleBack">
         <template #icon>
           <i-mdi-arrow-left />
         </template>
-        返回首页
+        {{ $t("components.searchResult.back") }}
       </n-button>
     </div>
 
     <div v-if="loading" class="flex-1 flex justify-center items-center min-h-[300px]">
-      <n-spin size="large" description="正如闪电般搜索中..." />
+      <n-spin size="large" :description="$t('components.searchResult.loading')" />
     </div>
 
     <div v-else-if="list.length === 0" class="flex-1 flex justify-center items-center min-h-[300px]">
-      <n-empty description="什么都没找到，换个关键词试试？">
+      <n-empty :description="$t('components.searchResult.empty')">
         <template #extra>
-          <n-button size="small" @click="handleBack">看看推荐</n-button>
+          <n-button size="small" @click="handleBack">
+            {{ $t("components.searchResult.back") }}
+          </n-button>
         </template>
       </n-empty>
     </div>
@@ -59,7 +61,6 @@ const props = defineProps<Props>();
 const emit = defineEmits(["back"]);
 const router = useRouter();
 
-// 数据定义
 interface LiveInfo {
   id: number;
   title: string;
@@ -76,7 +77,7 @@ const total = ref(0);
 
 const pageCount = computed(() => Math.ceil(total.value / pageSize.value));
 
-// 模拟API调用
+/** 获取搜索结果 */
 const fetchSearchResults = async () => {
   loading.value = true;
   list.value = []; // 清空当前列表
@@ -99,6 +100,25 @@ const fetchSearchResults = async () => {
   loading.value = false;
 };
 
+/** 翻页处理 */
+const handlePageChange = (newPage: number) => {
+  page.value = newPage;
+  fetchSearchResults();
+};
+
+/** 返回首页 */
+const handleBack = () => {
+  emit("back");
+};
+
+/**
+ * 导航到直播详情页
+ * @param id 房间id
+ */
+const navigateToLive = (id: number) => {
+  router.push(`/live/${id}`);
+};
+
 // 监听关键词变化，重置分页并搜索
 watch(
   () => props.query,
@@ -107,20 +127,6 @@ watch(
     fetchSearchResults();
   }
 );
-
-// 翻页处理
-const handlePageChange = (newPage: number) => {
-  page.value = newPage;
-  fetchSearchResults();
-};
-
-const handleBack = () => {
-  emit("back");
-};
-
-const navigateToLive = (id: number) => {
-  router.push(`/live/${id}`);
-};
 
 onMounted(() => {
   fetchSearchResults();

@@ -3,6 +3,13 @@
     "confirm": "Confirm",
     "cancel": "Cancel"
   },
+  "contextMenu": {
+    "multi-select": "Multi-select",
+    "rename": "Rename",
+    "pin": "Pin",
+    "unpin": "Unpin",
+    "delete": "Delete"
+  },
   "screenshot": {
     "borderRadius": "Radius",
     "redo": "Redo",
@@ -134,5 +141,49 @@
       "copySuccess": "Media copied to clipboard",
       "copyFailed": "Media copy failed"
     }
+  },
+  "messageInput": {
+    "placeholder": "Send a message to YuanLive AI",
+    "attach": "Attach file",
+    "uploadFile": "Upload file",
+    "uploadPhoto": "Upload photo",
+    "takeScreenshot": "Take screenshot",
+    "takePhoto": "Take photo",
+    "think": "Think",
+    "search": "Search",
+    "voiceMessage": "Voice message",
+    "goSetting": "Go to setting to add model",
+    "modelType": {
+      "auto": "Auto",
+      "text": "Text",
+      "image": "Image",
+      "video": "Video",
+      "audio": "Audio"
+    },
+    "msg": {
+      "previewFailed": "Failed to preview file",
+      "maxAttachments": "Max {count} attachments",
+      "remainingAttachments": "Max {count} remaining attachments",
+      "fileCountExceeded": "File count exceeded max limit"
+    }
+  },
+  "searchResult": {
+    "title": "Search results for: ",
+    "total": "Total: {total}",
+    "back": "Back to home",
+    "loading": "Searching...",
+    "empty": "No results found, try a different keyword?"
+  },
+  "chatHistoryList": {
+    "newChat": "New chat",
+    "history": "Chat history",
+    "clearAll": "Clear all history",
+    "multiSelect": "Multi-select",
+    "selectedCount": "{count} items",
+    "delete": "Delete",
+    "pinned": "Pinned",
+    "deleteSelected": "Confirm delete selected {count} items?",
+    "deleteConfirm": "Confirm delete this item?",
+    "clearAllConfirm": "Confirm clear all history?"
   }
 }

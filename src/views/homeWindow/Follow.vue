@@ -8,7 +8,9 @@
         'bg-[--right-bg-color] border-r border-[--line-color]'
       ]">
       <div :class="['flex items-center mb-3', isCollapsed ? 'justify-center' : 'justify-between']">
-        <div v-show="!isCollapsed" class="font-medium text-[--text-color]">关注人({{ followList.length }})</div>
+        <div v-show="!isCollapsed" class="font-medium text-[--text-color]">
+          {{ $t("home.follow.followers", { count: followList.length }) }}
+        </div>
         <n-button text type="primary" @click="toggleCollapse">
           <i-mdi-chevron-left
             v-if="!isCollapsed"
@@ -59,7 +61,7 @@
                   <div
                     v-show="follow.unseenCount > 0"
                     class="w-fit text-[12px] px-1 py-[2px] rounded-sm truncate bg-[--left-item-bg-color] text-[--user-text-color]">
-                    {{ follow.unseenCount }}个作品未看
+                    {{ $t("home.follow.unseenCount", { count: follow.unseenCount }) }}
                   </div>
                 </div>
               </div>
@@ -83,7 +85,9 @@
             :is-panel-open="showSidePanel"
             @open-panel="handleOpenPanel"
             @toggle-fullscreen="handleToggleFullscreen" />
-          <div v-else class="w-full h-full flex items-center justify-center text-gray-500">暂无视频</div>
+          <div v-else class="w-full h-full flex items-center justify-center text-gray-500">
+            {{ $t("home.follow.noVideo") }}
+          </div>
         </div>
 
         <video-side-panel
@@ -113,21 +117,24 @@ const isCollapsed = ref(false);
 // 关注列表数据
 const followList = ref<FollowItem[]>([]);
 const activeUserId = ref<number | null>(null); // 当前选中的关注用户ID
-const activeUserName = computed(() => {
-  return activeUserId.value ? followList.value.find((f) => f.followUserId === activeUserId.value)?.username || "" : "";
-});
 const currentVideo = ref<VideoItem | null>(null); // 当前正在播放的视频数据
 const showSidePanel = ref(false);
 const activePanelTab = ref<"detail" | "comment">("comment");
 const fullscreenWrapperRef = ref<HTMLElement | null>(null);
 const { isFullscreen, toggleFullscreen } = useFullscreen(fullscreenWrapperRef);
+const activeUserName = computed(() => {
+  return activeUserId.value ? followList.value.find((f) => f.followUserId === activeUserId.value)?.username || "" : "";
+});
 
-// 处理全屏切换逻辑
+/** 处理全屏切换逻辑 */
 const handleToggleFullscreen = () => {
   toggleFullscreen();
 };
 
-// 接收播放器抛出的事件来打开侧边栏，并切换到对应的 Tab
+/**
+ * 处理打开侧边栏并切换 Tab 的逻辑
+ * @param args 包含 Tab 名称的参数数组，默认值为 "comment"
+ */
 const handleOpenPanel = (...args: any[]) => {
   isCollapsed.value = true;
   const tabName = (args[0] || "comment") as "detail" | "comment";
@@ -141,16 +148,23 @@ const handleOpenPanel = (...args: any[]) => {
   }
 };
 
-// 切换展开/缩放状态
+/** 切换展开/缩放状态 */
 const toggleCollapse = () => {
   if (!showSidePanel.value) isCollapsed.value = !isCollapsed.value;
 };
 
-// 接收侧边栏传来的视频选择事件
+/**
+ * 处理接收侧边栏传来的视频选择事件
+ * @param video 选中的视频项
+ */
 const handlePlayVideo = (video: VideoItem) => {
   currentVideo.value = video;
 };
 
+/**
+ * 处理用户选择事件
+ * @param user 选中的用户项
+ */
 const handleSelectUser = (user: any) => {
   if (activeUserId.value === user.followUserId) {
     if (!showSidePanel.value) {

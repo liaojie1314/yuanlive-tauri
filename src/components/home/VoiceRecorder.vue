@@ -141,12 +141,12 @@ const {
   }
 });
 
-// 开始录音
+/** 开始录音 */
 const startRecording = async () => {
   await startRecord();
 };
 
-// 停止录音
+/** 停止录音 */
 const stopRecording = async () => {
   if (isRecording.value) {
     isProcessing.value = true;
@@ -154,7 +154,7 @@ const stopRecording = async () => {
   await stopRecord();
 };
 
-// 重置录音状态
+/** 重置录音状态 */
 const resetRecordingState = () => {
   // 清理音频播放器
   if (audioElement.value) {
@@ -173,7 +173,7 @@ const resetRecordingState = () => {
   isProcessing.value = false;
 };
 
-// 取消录音
+/** 取消录音 */
 const cancelRecording = () => {
   cancelRecord();
   audioBlob.value = null;
@@ -181,12 +181,12 @@ const cancelRecording = () => {
   isProcessing.value = false;
 };
 
-// 重新录制
+/** 重新录制 */
 const reRecord = () => {
   resetRecordingState();
 };
 
-// 创建音频元素用于播放
+/** 创建音频元素用于播放 */
 const createAudioElement = () => {
   if (audioBlob.value) {
     const url = URL.createObjectURL(audioBlob.value);
@@ -198,7 +198,7 @@ const createAudioElement = () => {
   }
 };
 
-// 切换播放状态
+/** 切换播放状态 */
 const togglePlayback = () => {
   if (audioElement.value) {
     if (isPlaying.value) {
@@ -210,7 +210,7 @@ const togglePlayback = () => {
   }
 };
 
-// 发送语音
+/** 发送语音 */
 const handleSend = async () => {
   if (!audioBlob.value || !localAudioPath.value) {
     console.log("🎤 缺少音频数据，退出发送");
@@ -242,7 +242,7 @@ const handleSend = async () => {
   }
 };
 
-// 取消/关闭
+/** 取消/关闭 */
 const handleCancel = () => {
   // 清理资源
   if (audioElement.value) {
@@ -253,7 +253,6 @@ const handleCancel = () => {
   emit("cancel");
 };
 
-// 生命周期
 onUnmounted(() => {
   if (audioElement.value) {
     audioElement.value.pause();

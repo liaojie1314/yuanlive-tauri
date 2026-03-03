@@ -43,7 +43,7 @@
         v-if="!isVoiceMode"
         v-model:value="messageText"
         type="textarea"
-        placeholder="Ask anything"
+        :placeholder="t('components.messageInput.placeholder')"
         :min-height="40"
         :max-height="120"
         :autosize="{ minRows: 1, maxRows: 5 }"
@@ -68,9 +68,9 @@
                     : 'bg-[--btn-secondary-bg] hover:bg-[--btn-secondary-hover]'
                 "
                 style="border-color: var(--btn-secondary-border)"
-                title="Attach file">
+                :title="t('components.messageInput.attach')">
                 <i-mdi-paperclip class="w-4 h-4" />
-                <span v-if="showButtonText">Attach</span>
+                <span v-if="showButtonText">{{ t("components.messageInput.attach") }}</span>
               </div>
             </template>
             <div class="menu-list space-y-1 p-1 rounded-md">
@@ -78,25 +78,25 @@
                 class="menu-item flex items-center gap-2 px-3 py-2 text-sm text-[--text-color] hover:bg-[--tray-hover] rounded-md cursor-pointer transition-colors"
                 @click="handleMenuClick('file')">
                 <i-mdi-file-upload-outline class="w-4 h-4" />
-                <span>Upload file</span>
+                <span>{{ t("components.messageInput.uploadFile") }}</span>
               </div>
               <div
                 class="menu-item flex items-center gap-2 px-3 py-2 text-sm text-[--text-color] hover:bg-[--tray-hover] rounded-md cursor-pointer transition-colors"
                 @click="handleMenuClick('photo')">
                 <i-mdi-image-outline class="w-4 h-4" />
-                <span>Upload photo</span>
+                <span>{{ t("components.messageInput.uploadPhoto") }}</span>
               </div>
               <div
                 class="menu-item flex items-center gap-2 px-3 py-2 text-sm text-[--text-color] hover:bg-[--tray-hover] rounded-md cursor-pointer transition-colors"
                 @click="handleMenuClick('screenshot')">
                 <i-mdi-camera class="w-4 h-4" />
-                <span>Take screenshot</span>
+                <span>{{ t("components.messageInput.takeScreenshot") }}</span>
               </div>
               <div
                 class="menu-item flex items-center gap-2 px-3 py-2 text-sm text-[--text-color] hover:bg-[--tray-hover] rounded-md cursor-pointer transition-colors"
                 @click="handleMenuClick('camera')">
                 <i-mdi-camera-plus class="w-4 h-4" />
-                <span>Take photo</span>
+                <span>{{ t("components.messageInput.takePhoto") }}</span>
               </div>
             </div>
           </n-popover>
@@ -118,10 +118,10 @@
               'text-[--text-color] bg-[--btn-secondary-bg] border-[--btn-secondary-border] hover:bg-[--btn-secondary-hover]':
                 !isThinkActive
             }"
-            title="Think"
+            :title="t('components.messageInput.think')"
             @click="isThinkActive = !isThinkActive">
             <i-mdi-lightbulb-outline class="w-4 h-4" />
-            <span v-if="showButtonText">Think</span>
+            <span v-if="showButtonText">{{ t("components.messageInput.think") }}</span>
           </div>
 
           <div
@@ -131,17 +131,17 @@
               'text-[--text-color] bg-[--btn-secondary-bg] border-[--btn-secondary-border] hover:bg-[--btn-secondary-hover]':
                 !isSearchActive
             }"
-            title="Search"
+            :title="t('components.messageInput.search')"
             @click="isSearchActive = !isSearchActive">
             <i-mdi-magnify class="w-4 h-4" />
-            <span v-if="showButtonText">Search</span>
+            <span v-if="showButtonText">{{ t("components.messageInput.search") }}</span>
           </div>
         </div>
 
         <div class="flex items-center gap-3">
           <div
             class="flex items-center justify-center w-8 h-8 text-[--text-color] rounded-full cursor-pointer transition-colors border bg-[--btn-secondary-bg] border-[--btn-secondary-border] hover:bg-[--btn-secondary-hover]"
-            title="Voice message"
+            :title="t('components.messageInput.voiceMessage')"
             @click="handleVoiceClick">
             <i-mdi-microphone-outline class="w-4 h-4" />
           </div>
@@ -165,12 +165,13 @@
 </template>
 
 <script setup lang="ts">
+import { useI18n } from "vue-i18n";
 import { type SelectOption, NEllipsis } from "naive-ui";
 import { open } from "@tauri-apps/plugin-dialog";
 import { convertFileSrc, invoke } from "@tauri-apps/api/core";
 import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
 
-import { MittEnum } from "@/enums";
+import { MittEnum, TauriCommandEnum } from "@/enums";
 import { useSettingStore } from "@/stores/setting";
 import { useMitt } from "@/hooks/useMitt";
 import { useWindow } from "@/hooks/useWindow";
@@ -183,12 +184,26 @@ import { getFileSuffix } from "@/utils/FormattingUtils";
 
 defineOptions({ name: "MessageInput" });
 
+const { t } = useI18n();
 const settingStore = useSettingStore();
 const { openImageViewer } = useImageViewer();
 const { openVideoViewer } = useVideoViewer();
 const { handleScreenshot } = useGlobalShortcut();
 const { createWebviewWindow } = useWindow();
 const appWindow = WebviewWindow.getCurrent();
+
+interface Props {
+  status?: "loading" | "streaming" | "normal";
+}
+
+const props = withDefaults(defineProps<Props>(), {
+  status: "normal"
+});
+
+const emit = defineEmits<{
+  (e: "send-message", payload: any): void;
+  (e: "cancel-stream"): void;
+}>();
 
 interface Attachment {
   type: "image" | "file";
@@ -197,9 +212,33 @@ interface Attachment {
   name: string; // 文件名
 }
 
-interface Props {
-  status?: "loading" | "streaming" | "normal";
-}
+const maxAttachments = 6;
+const modelOptions = [
+  { label: t("components.messageInput.modelType.auto"), value: "auto" },
+  {
+    type: "group",
+    label: t("components.messageInput.modelType.text"),
+    key: "text-models",
+    children: [
+      { label: "gpt-4", value: "gpt-4" },
+      { label: "gpt-3.5-turbo", value: "gpt-3.5-turbo" },
+      { label: "claude-3-opus", value: "claude-3-opus" },
+      { label: "claude-3-sonnet", value: "claude-3-sonnet" }
+    ]
+  },
+  {
+    type: "group",
+    label: t("components.messageInput.modelType.image"),
+    key: "image-models",
+    children: [
+      { label: "dall-e-3", value: "dall-e-3" },
+      { label: "midjourney", value: "midjourney" },
+      { label: "stable-diffusion", value: "stable-diffusion" }
+    ]
+  },
+  { label: t("components.messageInput.goSetting"), value: "settings" }
+];
+const VIDEO_EXTS = ["mp4", "avi", "mov", "mkv", "wmv", "flv", "webm", "m4v"];
 
 const messageText = ref("");
 const attachments = ref<Attachment[]>([]);
@@ -211,51 +250,15 @@ const selectedModel = ref("auto");
 const showCameraModal = ref(false);
 const isVoiceMode = ref(false);
 
-const props = withDefaults(defineProps<Props>(), {
-  status: "normal"
-});
-
-const emit = defineEmits<{
-  (e: "send-message", payload: any): void;
-  (e: "cancel-stream"): void;
-}>();
-
-const modelOptions = [
-  { label: "auto", value: "auto" },
-  {
-    type: "group",
-    label: "文字",
-    key: "text-models",
-    children: [
-      { label: "gpt-4", value: "gpt-4" },
-      { label: "gpt-3.5-turbo", value: "gpt-3.5-turbo" },
-      { label: "claude-3-opus", value: "claude-3-opus" },
-      { label: "claude-3-sonnet", value: "claude-3-sonnet" }
-    ]
-  },
-  {
-    type: "group",
-    label: "图片",
-    key: "image-models",
-    children: [
-      { label: "dall-e-3", value: "dall-e-3" },
-      { label: "midjourney", value: "midjourney" },
-      { label: "stable-diffusion", value: "stable-diffusion" }
-    ]
-  },
-  { label: "前往设置添加模型", value: "settings" }
-];
-
 const isBtnDisabled = computed(() => {
   if (props.status === "loading") return true;
   if (props.status === "streaming") return false;
   return !messageText.value.trim() && attachments.value.length === 0;
 });
 
-const VIDEO_EXTS = ["mp4", "avi", "mov", "mkv", "wmv", "flv", "webm", "m4v"];
-
 /**
  * 统一处理附件点击 (预览)
+ * @param item 点击的附件项
  */
 const handleAttachmentClick = async (item: Attachment) => {
   // 1. 图片预览
@@ -291,13 +294,15 @@ const handleAttachmentClick = async (item: Attachment) => {
 
 /**
  * 发送窗口 Payload 辅助函数
+ * @param windowLabel 窗口标签
+ * @param payload 要发送的 Payload 数据
  */
 const sendWindowPayload = async (windowLabel: string, payload: any) => {
   if (isMobile()) {
     return Promise.resolve();
   }
   // 调用后端 Rust 命令暂存 Payload
-  return invoke<void>("push_window_payload", {
+  return invoke<void>(TauriCommandEnum.PUSH_WINDOW_PAYLOAD, {
     label: windowLabel,
     payload
   });
@@ -305,6 +310,7 @@ const sendWindowPayload = async (windowLabel: string, payload: any) => {
 
 /**
  * 打开文档预览窗口
+ * @param item 要预览的文件附件项
  */
 const openDocumentPreview = async (item: Attachment) => {
   const windowLabel = "previewFile";
@@ -344,13 +350,17 @@ const openDocumentPreview = async (item: Attachment) => {
     }
   } catch (error) {
     console.error("打开文档预览失败:", error);
-    window.$message.error("无法预览该文件");
+    window.$message.error(t("components.messageInput.msg.previewFailed"));
   }
 };
 
+/**
+ * 选择文件 (图片/文件)
+ * @param isImage 是否选择图片文件
+ */
 const selectFiles = async (isImage: boolean) => {
-  if (attachments.value.length >= 6) {
-    window.$message.warning("最多只能上传6个文件");
+  if (attachments.value.length >= maxAttachments) {
+    window.$message.warning(t("components.messageInput.msg.maxAttachments", { count: maxAttachments }));
     return;
   }
   try {
@@ -364,9 +374,9 @@ const selectFiles = async (isImage: boolean) => {
 
     if (selected) {
       const paths = Array.isArray(selected) ? selected : [selected];
-      const remainingSlots = 6 - attachments.value.length;
+      const remainingSlots = maxAttachments - attachments.value.length;
       if (paths.length > remainingSlots) {
-        window.$message.warning(`最多只能再上传${remainingSlots}个文件`);
+        window.$message.warning(t("components.messageInput.msg.remainingAttachments", { count: remainingSlots }));
         paths.length = remainingSlots;
       }
       paths.forEach((path) => {
@@ -385,16 +395,20 @@ const selectFiles = async (isImage: boolean) => {
   }
 };
 
+/**
+ * 全局文件拖放处理
+ * @param files 拖放的文件数组
+ */
 const handleGlobalFilesDrop = async (files: UploadFile[]) => {
   if (!files || files.length === 0) return;
-  const remainingSlots = 6 - attachments.value.length;
+  const remainingSlots = maxAttachments - attachments.value.length;
   if (remainingSlots <= 0) {
-    window.$message.warning("文件数量已达上限");
+    window.$message.warning(t("components.messageInput.msg.fileCountExceeded"));
     return;
   }
   const filesToProcess = files.length > remainingSlots ? files.slice(0, remainingSlots) : files;
   if (files.length > remainingSlots) {
-    window.$message.warning(`最多只能再上传${remainingSlots}个文件`);
+    window.$message.warning(t("components.messageInput.msg.remainingAttachments", { count: remainingSlots }));
   }
   filesToProcess.forEach((file) => {
     let name = "";
@@ -423,9 +437,13 @@ const handleGlobalFilesDrop = async (files: UploadFile[]) => {
   });
 };
 
+/**
+ * 处理相机确认，添加图片附件
+ * @param base64Photo 相机捕获的 base64 图片
+ */
 const handleCameraConfirm = (base64Photo: string) => {
-  if (attachments.value.length >= 6) {
-    window.$message.warning("最多只能上传6个文件");
+  if (attachments.value.length >= maxAttachments) {
+    window.$message.warning(t("components.messageInput.msg.maxAttachments", { count: maxAttachments }));
     return;
   }
   attachments.value.push({
@@ -436,6 +454,7 @@ const handleCameraConfirm = (base64Photo: string) => {
   });
 };
 
+/** 发送消息 */
 const sendMessage = () => {
   // 1. 处理取消生成逻辑
   if (props.status === "streaming" || props.status === "loading") {
@@ -508,10 +527,18 @@ const sendMessage = () => {
   attachments.value = [];
 };
 
+/**
+ * 处理窗口大小变化，动态显示按钮文本
+ * @param width 窗口宽度
+ */
 const handleResize = ({ width }: { width: number }) => {
   showButtonText.value = width >= 588;
 };
 
+/**
+ * 处理菜单点击事件
+ * @param menuItem 点击的菜单项
+ */
 const handleMenuClick = async (menuItem: string) => {
   showAttachPopover.value = false;
   switch (menuItem) {
@@ -530,6 +557,11 @@ const handleMenuClick = async (menuItem: string) => {
   }
 };
 
+/**
+ * 渲染选择选项的标签
+ * @param option 选择选项
+ * @returns 渲染后的标签元素
+ */
 const renderLabel = (option: SelectOption) => {
   return h(
     NEllipsis,
@@ -538,6 +570,10 @@ const renderLabel = (option: SelectOption) => {
   );
 };
 
+/**
+ * 处理键盘事件，触发发送消息
+ * @param e 键盘事件对象
+ */
 const handleEnterKey = (e: KeyboardEvent) => {
   const sendKey = settingStore.chat.sendKey;
   if ((sendKey === "Enter" && !e.shiftKey) || (sendKey === "Shift+Enter" && e.shiftKey)) {
@@ -546,19 +582,40 @@ const handleEnterKey = (e: KeyboardEvent) => {
   }
 };
 
+/**
+ * 删除附件
+ * @param index 要删除的附件索引
+ */
 const removeAttachment = (index: number) => {
   attachments.value.splice(index, 1);
 };
 
+/**
+ * 处理语音点击事件，切换到语音输入模式
+ */
 const handleVoiceClick = () => {
   isVoiceMode.value = true;
 };
+
+/**
+ * 处理语音取消事件，切换到文本输入模式
+ */
 const handleVoiceCancel = () => {
   isVoiceMode.value = false;
 };
+
+/**
+ * 直接发送语音数据
+ * @param voiceData 语音数据
+ */
 const sendVoiceDirect = (voiceData: any) => {
   console.log(voiceData);
 };
+
+/**
+ * 处理模型选择变化事件
+ * @param value 选择的模型值
+ */
 const handleModelChange = (value: string) => {
   selectedModel.value = value;
 };
@@ -567,8 +624,8 @@ onMounted(() => {
   useMitt.on(MittEnum.GLOBAL_FILES_DROP, handleGlobalFilesDrop);
 
   appWindow.listen("screenshot", async (e: any) => {
-    if (attachments.value.length >= 6) {
-      window.$message.warning("最多只能上传6个文件");
+    if (attachments.value.length >= maxAttachments) {
+      window.$message.warning(t("components.messageInput.msg.maxAttachments", { count: maxAttachments }));
       return;
     }
     try {

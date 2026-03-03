@@ -54,7 +54,10 @@
 </template>
 
 <script setup lang="ts">
+import { useI18n } from "vue-i18n";
 import type { NInput } from "naive-ui";
+
+const { t } = useI18n();
 
 const props = defineProps<{
   title: string;
@@ -79,24 +82,37 @@ const editTitle = ref(props.title);
 const renameInputRef = ref<InstanceType<typeof NInput> | null>(null);
 
 const menuOptions = computed(() => [
-  { label: "多选", key: "multi-select" },
-  { label: "重命名", key: "rename" },
-  { label: props.isPinned ? "取消置顶" : "置顶", key: "toggle-pin" },
-  { label: "删除", key: "delete" }
+  { label: t("components.contextMenu.multi-select"), key: "multi-select" },
+  { label: t("components.contextMenu.rename"), key: "rename" },
+  { label: props.isPinned ? t("components.contextMenu.unpin") : t("components.contextMenu.pin"), key: "toggle-pin" },
+  { label: t("components.contextMenu.delete"), key: "delete" }
 ]);
 
 const contextMenuOptions = computed(() => [
-  { label: "多选", key: "multi-select" },
-  { label: "重命名", key: "rename" },
-  { label: props.isPinned ? "取消置顶" : "置顶", key: "toggle-pin" },
-  { label: "删除", key: "delete", disabled: false }
+  { label: t("components.contextMenu.multi-select"), key: "multi-select" },
+  { label: t("components.contextMenu.rename"), key: "rename" },
+  { label: props.isPinned ? t("components.contextMenu.unpin") : t("components.contextMenu.pin"), key: "toggle-pin" },
+  { label: t("components.contextMenu.delete"), key: "delete", disabled: false }
 ]);
 
+/**
+ * 处理菜单选择
+ * @param key 菜单选项的key
+ */
 const handleMenuSelect = (key: string) => executeAction(key);
+
+/**
+ * 处理上下文菜单选择
+ * @param item 上下文菜单选项
+ */
 const handleContextMenuSelect = (item: any) => {
   if (item && item.key) executeAction(item.key);
 };
 
+/**
+ * 执行菜单操作
+ * @param key 菜单选项的key
+ */
 const executeAction = (key: string) => {
   switch (key) {
     case "multi-select":
@@ -114,18 +130,21 @@ const executeAction = (key: string) => {
   }
 };
 
+/** 处理重命名点击 */
 const handleRenameClick = () => {
   isRenaming.value = true;
   editTitle.value = props.title;
   nextTick(() => renameInputRef.value?.focus());
 };
 
+/** 处理重命名确认 */
 const handleRenameConfirm = () => {
   const newTitle = editTitle.value.trim();
   if (newTitle && newTitle !== props.title) emit("rename", newTitle);
   isRenaming.value = false;
 };
 
+/** 处理重命名取消 */
 const handleRenameCancel = () => {
   isRenaming.value = false;
   editTitle.value = props.title;
