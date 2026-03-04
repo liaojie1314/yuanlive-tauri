@@ -4,11 +4,11 @@
       <div class="panel-header">
         <div class="tabs">
           <div class="tab-item" :class="{ active: activeTab === 'detail' }" @click="activeTab = 'detail'">
-            详情
+            {{ $t("components.videoSidePanel.detail") }}
             <div v-if="activeTab === 'detail'" class="active-line"></div>
           </div>
           <div class="tab-item" :class="{ active: activeTab === 'comment' }" @click="activeTab = 'comment'">
-            评论
+            {{ $t("components.videoSidePanel.comment") }}
             <div v-if="activeTab === 'comment'" class="active-line"></div>
           </div>
         </div>
@@ -25,7 +25,7 @@
                 <div class="font-medium text-[15px]">{{ userName }}</div>
 
                 <button class="follow-btn" :class="{ 'is-followed': isFollowed }" @click="toggleFollow">
-                  {{ isFollowed ? "已关注" : "关注" }}
+                  {{ isFollowed ? $t("components.videoSidePanel.followed") : $t("components.videoSidePanel.follow") }}
                 </button>
               </div>
 
@@ -50,14 +50,14 @@
                       <span></span>
                       <span></span>
                     </div>
-                    <span class="playing-text">播放中</span>
+                    <span class="playing-text">{{ $t("components.videoSidePanel.playing") }}</span>
                   </div>
                 </div>
               </div>
 
               <div v-if="isLoadingMore" class="loading-more">
                 <i-mdi-loading class="animate-spin" />
-                加载中...
+                {{ $t("components.videoSidePanel.loading") }}
               </div>
             </div>
           </n-scrollbar>
@@ -66,14 +66,18 @@
         <div v-show="activeTab === 'comment'" class="h-full w-full relative overflow-hidden">
           <n-scrollbar class="h-full">
             <div class="px-4 py-3 box-border">
-              <div class="text-xs text-[--user-text-color] mb-4">全部评论({{ totalComments }})</div>
+              <div class="text-xs text-[--user-text-color] mb-4">
+                {{ $t("components.videoSidePanel.totalComments", { total: totalComments }) }}
+              </div>
 
               <div v-for="comment in commentList" :key="comment.id" class="comment-item">
                 <img :src="comment.user.avatar" class="avatar" />
                 <div class="comment-main border-b border-[--line-color] pb-4">
                   <div class="user-info">
                     <span class="username">{{ comment.user.username }}</span>
-                    <span v-if="comment.user.isAuthor" class="author-badge">作者</span>
+                    <span v-if="comment.user.isAuthor" class="author-badge">
+                      {{ $t("components.videoSidePanel.author") }}
+                    </span>
                   </div>
 
                   <template v-if="!comment.isDisliked">
@@ -82,11 +86,11 @@
                   </template>
                   <div v-else class="collapsed-message">
                     <i-mdi-information-outline class="collapse-icon" />
-                    该评论被折叠
+                    {{ $t("components.videoSidePanel.collapsedComment") }}
                   </div>
                   <div class="comment-actions">
                     <span class="time-loc">{{ comment.time }} · {{ comment.location }}</span>
-                    <span class="action-btn">回复</span>
+                    <span class="action-btn">{{ $t("components.videoSidePanel.reply") }}</span>
 
                     <div class="action-right">
                       <div class="action-icon" :class="{ 'is-active': comment.isLiked }" @click="toggleLike(comment)">
@@ -109,7 +113,13 @@
                     class="expand-replies"
                     @click="comment.showReplies = !comment.showReplies">
                     <div class="dash-line"></div>
-                    <span>{{ comment.showReplies ? "收起回复" : `展开${comment.replies.length}条回复` }}</span>
+                    <span>
+                      {{
+                        comment.showReplies
+                          ? $t("components.videoSidePanel.collapseReplies")
+                          : $t("components.videoSidePanel.expandReplies", { count: comment.replies.length })
+                      }}
+                    </span>
                     <i-mdi-chevron-down :class="{ 'rotate-180': comment.showReplies }" class="transition-transform" />
                   </div>
 
@@ -119,7 +129,9 @@
                       <div class="comment-main">
                         <div class="user-info">
                           <span class="username">{{ reply.user.username }}</span>
-                          <span v-if="reply.user.isAuthor" class="author-badge">作者</span>
+                          <span v-if="reply.user.isAuthor" class="author-badge">
+                            {{ $t("components.videoSidePanel.author") }}
+                          </span>
                         </div>
 
                         <template v-if="!reply.isDisliked">
@@ -128,11 +140,11 @@
                         </template>
                         <div v-else class="collapsed-message">
                           <i-mdi-information-outline class="collapse-icon" />
-                          该评论被折叠
+                          {{ $t("components.videoSidePanel.collapsedComment") }}
                         </div>
                         <div class="comment-actions">
                           <span class="time-loc">{{ reply.time }} · {{ reply.location }}</span>
-                          <span class="action-btn">回复</span>
+                          <span class="action-btn">{{ $t("components.videoSidePanel.reply") }}</span>
                           <div class="action-right">
                             <div class="action-icon" :class="{ 'is-active': reply.isLiked }" @click="toggleLike(reply)">
                               <i-ph-heart-fill v-if="reply.isLiked" />
@@ -170,12 +182,15 @@
           <input
             v-model="commentText"
             type="text"
-            placeholder="留下你的精彩评论吧"
+            :placeholder="$t('components.videoSidePanel.placeholder')"
             class="comment-input"
             @keyup.enter="submitComment" />
           <div class="action-icons">
-            <i-ph-image class="icon" @click="handleImageUpload" title="上传图片" />
-            <i-ph-smiley class="icon" @click.stop="showEmojiPicker = !showEmojiPicker" title="表情" />
+            <i-ph-image class="icon" @click="handleImageUpload" :title="$t('components.videoSidePanel.uploadImage')" />
+            <i-ph-smiley
+              class="icon"
+              @click.stop="showEmojiPicker = !showEmojiPicker"
+              :title="$t('components.videoSidePanel.emoji')" />
           </div>
         </div>
 
@@ -205,43 +220,6 @@ const emit = defineEmits<{
   "update:tab": [value: "detail" | "comment"];
 }>();
 
-const videoList = ref<VideoItem[]>([]);
-
-const activeTab = computed({
-  get: () => props.tab,
-  set: (val) => emit("update:tab", val)
-});
-
-const handleClose = () => {
-  emit("update:show", false);
-};
-
-const isFollowed = ref(true);
-const toggleFollow = () => {
-  if (isFollowed.value) {
-    // TODO: 取消关注并通知重新获取关注列表
-  }
-  isFollowed.value = !isFollowed.value;
-};
-
-const isLoadingMore = ref(false);
-
-// 监听滚动到底部加载更多
-const handleDetailScroll = (e: Event) => {
-  const target = e.target as HTMLElement;
-  // 触底判定：滚动距离 + 视口高度 >= 滚动条总高度 - 阈值
-  if (target.scrollTop + target.clientHeight >= target.scrollHeight - 50) {
-    loadMoreVideos();
-  }
-};
-
-const loadMoreVideos = () => {
-  if (isLoadingMore.value) return;
-  isLoadingMore.value = true;
-
-  // TODO: 加载更多视频
-};
-
 interface CommentUser {
   username: string;
   avatar: string;
@@ -262,6 +240,14 @@ interface CommentData {
   replies?: CommentData[];
 }
 
+let uploadImagePath = ""; // Tauri本地路径
+
+const videoList = ref<VideoItem[]>([]);
+const isFollowed = ref(true);
+const isLoadingMore = ref(false);
+const commentText = ref("");
+const showEmojiPicker = ref(false);
+const uploadImagePreview = ref(""); // 预览图片URL
 // 模拟图中数据
 const commentList = ref<CommentData[]>([
   {
@@ -312,10 +298,51 @@ const commentList = ref<CommentData[]>([
   }
 ]);
 
+const activeTab = computed({
+  get: () => props.tab,
+  set: (val) => emit("update:tab", val)
+});
 const totalComments = computed(() => {
   return commentList.value.reduce((acc, curr) => acc + 1 + (curr.replies?.length || 0), 0);
 });
 
+/** 关闭侧边栏 */
+const handleClose = () => {
+  emit("update:show", false);
+};
+
+/** 切换关注状态 */
+const toggleFollow = () => {
+  if (isFollowed.value) {
+    // TODO: 取消关注并通知重新获取关注列表
+  }
+  isFollowed.value = !isFollowed.value;
+};
+
+/**
+ * 监听详情页滚动到底部加载更多视频
+ * @param e 滚动事件
+ */
+const handleDetailScroll = (e: Event) => {
+  const target = e.target as HTMLElement;
+  // 触底判定：滚动距离 + 视口高度 >= 滚动条总高度 - 阈值
+  if (target.scrollTop + target.clientHeight >= target.scrollHeight - 50) {
+    loadMoreVideos();
+  }
+};
+
+/** 加载更多视频 */
+const loadMoreVideos = () => {
+  if (isLoadingMore.value) return;
+  isLoadingMore.value = true;
+
+  // TODO: 加载更多视频
+};
+
+/**
+ * 切换评论点赞状态
+ * @param item 评论项
+ */
 const toggleLike = (item: CommentData) => {
   if (item.isLiked) {
     item.isLiked = false;
@@ -327,6 +354,10 @@ const toggleLike = (item: CommentData) => {
   }
 };
 
+/**
+ * 切换评论点踩状态
+ * @param item 评论项
+ */
 const toggleDislike = (item: CommentData) => {
   item.isDisliked = !item.isDisliked;
   if (item.isDisliked && item.isLiked) {
@@ -335,21 +366,20 @@ const toggleDislike = (item: CommentData) => {
   }
 };
 
-const commentText = ref("");
-const showEmojiPicker = ref(false);
-const uploadImagePreview = ref(""); // 预览图片URL
-let uploadImagePath = ""; // Tauri本地路径
-
-// 点击页面其他区域关闭表情包
+/** 点击页面其他区域关闭表情包 */
 const closeEmojiPicker = () => {
   showEmojiPicker.value = false;
 };
 
+/**
+ * 处理选择表情包事件
+ * @param emoji 选中的表情包
+ */
 const onSelectEmoji = (emoji: string) => {
   commentText.value += emoji;
 };
 
-// 使用 Tauri API 选择图片
+/** 点击图片上传按钮触发图片选择 */
 const handleImageUpload = async () => {
   try {
     const selected = await open({
@@ -367,12 +397,13 @@ const handleImageUpload = async () => {
   }
 };
 
+/** 点击删除图片按钮移除图片 */
 const removeImage = () => {
   uploadImagePreview.value = "";
   uploadImagePath = "";
 };
 
-// 提交评论
+/** 提交评论 */
 const submitComment = () => {
   if (!commentText.value.trim() && !uploadImagePreview.value) return;
 
@@ -394,6 +425,10 @@ const submitComment = () => {
   showEmojiPicker.value = false;
 };
 
+/**
+ * 根据用户ID获取视频列表
+ * @param userId 用户ID
+ */
 const fetchVideos = async (userId: number) => {
   try {
     videoList.value = await getVideoListByUidApi(userId);
@@ -430,7 +465,10 @@ const fetchVideos = async (userId: number) => {
   }
 };
 
-// 点击视频网格项
+/**
+ * 点击视频网格项
+ * @param clickedVideo 点击的视频项
+ */
 const onVideoClick = (clickedVideo: VideoItem) => {
   // 将所有视频设为非播放状态，当前点击的设为播放状态
   videoList.value.forEach((v) => (v.isPlaying = false));

@@ -213,31 +213,6 @@ interface Attachment {
 }
 
 const maxAttachments = 6;
-const modelOptions = [
-  { label: t("components.messageInput.modelType.auto"), value: "auto" },
-  {
-    type: "group",
-    label: t("components.messageInput.modelType.text"),
-    key: "text-models",
-    children: [
-      { label: "gpt-4", value: "gpt-4" },
-      { label: "gpt-3.5-turbo", value: "gpt-3.5-turbo" },
-      { label: "claude-3-opus", value: "claude-3-opus" },
-      { label: "claude-3-sonnet", value: "claude-3-sonnet" }
-    ]
-  },
-  {
-    type: "group",
-    label: t("components.messageInput.modelType.image"),
-    key: "image-models",
-    children: [
-      { label: "dall-e-3", value: "dall-e-3" },
-      { label: "midjourney", value: "midjourney" },
-      { label: "stable-diffusion", value: "stable-diffusion" }
-    ]
-  },
-  { label: t("components.messageInput.goSetting"), value: "settings" }
-];
 const VIDEO_EXTS = ["mp4", "avi", "mov", "mkv", "wmv", "flv", "webm", "m4v"];
 
 const messageText = ref("");
@@ -255,6 +230,34 @@ const isBtnDisabled = computed(() => {
   if (props.status === "streaming") return false;
   return !messageText.value.trim() && attachments.value.length === 0;
 });
+const modelOptions = computed(() => [
+  { label: t("components.messageInput.modelType.auto"), value: "auto" },
+  {
+    type: "group",
+    label: t("components.messageInput.modelType.text"),
+    key: "text-models",
+    children: []
+  },
+  {
+    type: "group",
+    label: t("components.messageInput.modelType.image"),
+    key: "image-models",
+    children: []
+  },
+  {
+    type: "group",
+    label: t("components.messageInput.modelType.audio"),
+    key: "audio-models",
+    children: []
+  },
+  {
+    type: "group",
+    label: t("components.messageInput.modelType.video"),
+    key: "video-models",
+    children: []
+  },
+  { label: t("components.messageInput.goSetting"), value: "settings" }
+]);
 
 /**
  * 统一处理附件点击 (预览)
@@ -617,6 +620,11 @@ const sendVoiceDirect = (voiceData: any) => {
  * @param value 选择的模型值
  */
 const handleModelChange = (value: string) => {
+  if (value === "settings") {
+    // TODO: 跳转到模型设置页面
+    console.log("跳转到模型设置页面");
+    return;
+  }
   selectedModel.value = value;
 };
 

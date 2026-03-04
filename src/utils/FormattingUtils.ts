@@ -111,3 +111,15 @@ export const formatTime = (time: number) => {
     .padStart(2, "0");
   return `${m}:${s}`;
 };
+
+/**
+ * 格式化数字
+ * @param num 要格式化的数字
+ * @returns 格式化后的字符串 TODO: 优化格式化逻辑
+ */
+export const formatNumber = (num: number): string => {
+  if (num >= 10000) {
+    return (num / 10000).toFixed(1) + "万";
+  }
+  return num.toString();
+};

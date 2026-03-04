@@ -1,0 +1,93 @@
+{
+  "danmakuList": {
+    "title": "弹幕列表",
+    "time": "时间",
+    "content": "弹幕内容"
+  },
+  "danmakuReport": {
+    "title": "弹幕举报",
+    "placeholder": "请详细描述举报原因，便于平台判断违规情况",
+    "submit": "提交"
+  },
+  "collectionFolder": {
+    "title": "新建收藏夹",
+    "placeholder": "请输入收藏夹的名称（{count}个字以内）",
+    "inputMessage": "请输入收藏夹名称",
+    "publicLabel": "设置为公开",
+    "publicInfo": "公开后有机会被推荐，帮助到更多人"
+  },
+  "uploadVideo": {
+    "title": "发布视频",
+    "uploadMessage": "点击或拖拽视频到此处上传",
+    "videoInfo": "支持 MP4, MOV, MKV 格式，大小不超过 {count}GB",
+    "reupload": "更换视频",
+    "videoTitle": "视频标题",
+    "videoTitlePlaceholder": "给视频起个响亮的标题吧 (必填)",
+    "videoDesc": "视频简介",
+    "videoDescPlaceholder": "介绍一下视频内容...",
+    "cover": "设置封面",
+    "uploadCover": "上传封面",
+    "extractFrame": "正在提取视频帧...",
+    "currentCover": "当前封面",
+    "publishVideo": "发布视频",
+    "msg": {
+      "videoSizeLimit": "视频大小不能超过 {count}GB",
+      "inputVideoTitle": "请输入视频标题",
+      "publishSuccess": "发布成功！",
+      "publishFailed": "发布失败，请重试"
+    }
+  },
+  "followList": {
+    "title": "关注列表",
+    "following": "关注 ({count})",
+    "followers": "粉丝 ({count})",
+    "placeholder": "搜索用户名",
+    "sortOption": {
+      "sort": "综合排序",
+      "followTime": "关注时间",
+      "followerCount": "粉丝数量"
+    },
+    "follow": "关注",
+    "followed": "已关注",
+    "noContent": "暂无内容"
+  },
+  "editProfile": {
+    "title": "编辑资料",
+    "replaceAvatar": "点击更换头像",
+    "username": "用户名",
+    "usernamePlaceholder": "设置你的用户名",
+    "desc": "个人简介",
+    "descPlaceholder": "介绍一下自己吧",
+    "save": "保存修改"
+  },
+  "applyStreamer": {
+    "title": "申请成为主播",
+    "applyDesc": "申请说明",
+    "applyDescInfo": "请如实填写身份信息，审核通过后即可开启直播功能。我们承诺严格保障您的信息安全。",
+    "realName": "真实姓名",
+    "realNamePlaceholder": "请填写身份证上的姓名",
+    "idCard": "身份证号",
+    "idCardPlaceholder": "请填写18位身份证号",
+    "phone": "手机号",
+    "phonePlaceholder": "用于接收审核通知",
+    "liveCategory": "直播分区",
+    "liveCategoryPlaceholder": "请选择您擅长的直播领域",
+    "reason": "申请理由",
+    "reasonPlaceholder": "简单介绍一下您的直播计划...",
+    "agree": "我已阅读并同意",
+    "agreeLink": "《YuanLive主播注册协议》",
+    "submit": "提交申请",
+    "msg": {
+      "completeInfo": "请完善申请信息",
+      "applySuccess": "申请已提交，请耐心等待审核"
+    },
+    "rule": {
+      "realName": "请输入真实姓名",
+      "idCard": "请输入身份证号",
+      "idCardLengthError": "身份证号长度不正确",
+      "phone": "请输入手机号",
+      "phoneLengthError": "手机号长度不正确",
+      "liveCategory": "请选择直播分区"
+    }
+  }
+}

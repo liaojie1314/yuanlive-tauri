@@ -1,10 +1,5 @@
 <template>
-  <base-dialog
-    v-model:show="dialogVisible"
-    title="举报弹幕"
-    :close-on-overlay-click="true"
-    height="400px"
-    width="420px">
+  <base-dialog v-model:show="dialogVisible" :title="$t('dialog.danmakuReport.title')" height="400px" width="420px">
     <template #default>
       <div class="danmaku-report-container max-w-[400px] mx-auto">
         <!-- 举报类型选择 -->
@@ -25,7 +20,7 @@
         <div class="report-description">
           <textarea
             v-model="reportDescription"
-            placeholder="请详细描述举报原因，便于平台判断违规情况"
+            :placeholder="$t('dialog.danmakuReport.placeholder')"
             maxlength="120"
             class="description-input"
             rows="4"></textarea>
@@ -34,7 +29,9 @@
 
         <!-- 提交按钮 -->
         <div class="submit-container">
-          <button class="submit-btn" :disabled="!selectedReportType" @click="handleSubmit">提交</button>
+          <button class="submit-btn" :disabled="!selectedReportType" @click="handleSubmit">
+            {{ $t("dialog.danmakuReport.submit") }}
+          </button>
         </div>
       </div>
     </template>
@@ -56,13 +53,7 @@ const emit = defineEmits<{
   "submit-report": [index: number, type: string, description: string];
 }>();
 
-// 双向绑定
-const dialogVisible = computed({
-  get: () => props.show,
-  set: (value) => emit("update:show", value)
-});
-
-// 举报类型选项
+// 举报类型选项 TODO: 是否从后端获取
 const reportTypes = [
   { label: "色情低俗", value: "pornographic" },
   { label: "违法犯罪", value: "illegal" },
@@ -77,8 +68,13 @@ const reportTypes = [
 const selectedReportType = ref("");
 // 举报描述
 const reportDescription = ref("");
+// 双向绑定
+const dialogVisible = computed({
+  get: () => props.show,
+  set: (value) => emit("update:show", value)
+});
 
-// 提交举报
+/** 提交举报 */
 const handleSubmit = () => {
   if (selectedReportType.value) {
     emit("submit-report", props.danmakuIndex, selectedReportType.value, reportDescription.value);

@@ -6,7 +6,7 @@
         <div class="avatar-border-animation"></div>
         <img
           :src="userInfo?.avatar"
-          :alt="`${userInfo?.username}的头像`"
+          :alt="$t('components.userInfo.imgAlt', { username: userInfo?.username })"
           class="relative w-24 h-24 rounded-full border-4 border-transparent object-cover cursor-pointer transition-transform z-10 group-hover:scale-105"
           loading="lazy"
           @click="openEditDialog" />
@@ -26,23 +26,23 @@
           <span
             class="special-style cursor-pointer transition-colors duration-200 hover:text-blue-500"
             @click="openFollowDialog('following')">
-            关注
+            {{ $t("components.userInfo.following") }}
             <span class="text-[--text-color] font-medium">{{ animatedFollowingCount }}</span>
           </span>
           <span
             class="special-style cursor-pointer transition-colors duration-200 hover:text-blue-500"
             @click="openFollowDialog('followers')">
-            粉丝
+            {{ $t("components.userInfo.followers") }}
             <span class="text-[--text-color] font-medium">{{ animatedFollowerCount }}</span>
           </span>
           <span class="special-style cursor-pointer transition-colors duration-200 hover:text-blue-500">
-            获赞
+            {{ $t("components.userInfo.likes") }}
             <span class="text-[--text-color] font-medium">{{ animatedLikesCount }}</span>
           </span>
         </div>
 
         <div class="text-sm text-[--user-text-color]">
-          <span class="mr-2">YuanLive号:</span>
+          <span class="mr-2">{{ $t("components.userInfo.uid") }}</span>
           <span class="font-medium text-[--text-color]">{{ userInfo?.uid }}</span>
         </div>
       </div>
@@ -59,11 +59,11 @@
           <template #icon>
             <i-mdi-microphone-variant />
           </template>
-          申请成为主播
+          {{ $t("components.userInfo.applyAnchor") }}
         </n-button>
 
         <div class="flex-center w-full gap-2.5 text-xs text-[--user-text-color]">
-          <span class="whitespace-nowrap">保存登录</span>
+          <span class="whitespace-nowrap">{{ $t("components.userInfo.saveLoginInfo") }}</span>
           <n-switch size="small" v-model:value="saveLoginInfoLocal" />
         </div>
       </div>
@@ -71,7 +71,6 @@
 
     <follow-list-dialog v-model:show="dialogVisible" v-model:active-tab="activeTab" />
     <edit-profile-dialog v-model:show="editDialogVisible" />
-
     <apply-streamer-dialog v-model:show="applyDialogVisible" @submit="handleApplySubmit" />
   </div>
 </template>
@@ -81,6 +80,9 @@ import { useUserStore } from "@/stores/user";
 import { useNumberAnimation } from "@/hooks/useNumberAnimation";
 
 const { userInfo } = useUserStore();
+const animatedFollowingCount = useNumberAnimation(() => userInfo?.userStats.followingCount || 0);
+const animatedFollowerCount = useNumberAnimation(() => userInfo?.userStats.followerCount || 0);
+const animatedLikesCount = useNumberAnimation(() => userInfo?.userStats.totalLikesReceived || 0);
 
 const props = defineProps(["saveLoginInfo"]);
 const emit = defineEmits(["update:saveLoginInfo"]);
@@ -90,33 +92,38 @@ const activeTab = ref<"following" | "followers">("following");
 const editDialogVisible = ref(false);
 // 申请主播弹窗状态
 const applyDialogVisible = ref(false);
-const animatedFollowingCount = useNumberAnimation(() => userInfo?.userStats.followingCount || 0);
-const animatedFollowerCount = useNumberAnimation(() => userInfo?.userStats.followerCount || 0);
-const animatedLikesCount = useNumberAnimation(() => userInfo?.userStats.totalLikesReceived || 0);
 
 const saveLoginInfoLocal = computed({
   get: () => props.saveLoginInfo,
   set: (val) => emit("update:saveLoginInfo", val)
 });
 
+/**
+ * 打开关注列表弹窗
+ * @param tab 关注类型，following 或 followers
+ */
 const openFollowDialog = (tab: "following" | "followers") => {
   activeTab.value = tab;
   dialogVisible.value = true;
 };
 
+/** 打开编辑个人信息弹窗 */
 const openEditDialog = () => {
   editDialogVisible.value = true;
 };
 
-// 打开申请弹窗
+/** 打开主播申请弹窗 */
 const openApplyDialog = () => {
   applyDialogVisible.value = true;
 };
 
-// 处理申请提交
+/**
+ * 处理主播申请提交
+ * @param data 主播申请数据
+ */
 const handleApplySubmit = (data: any) => {
   console.log("主播申请提交数据:", data);
-  // 这里可以做后续逻辑，比如刷新用户信息等
+  // TODO: 发送申请主播请求
 };
 </script>
 

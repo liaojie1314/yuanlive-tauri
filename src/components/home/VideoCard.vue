@@ -27,7 +27,7 @@
       <div
         v-if="video.duration"
         class="absolute bottom-2 right-2 bg-black/70 backdrop-blur-[2px] text-white text-[10px] px-1.5 py-0.5 rounded">
-        {{ formatDuration(video.duration) }}
+        {{ formatTime(video.duration) }}
       </div>
     </div>
 
@@ -41,6 +41,8 @@
 </template>
 
 <script setup lang="ts">
+import { formatNumber, formatTime } from "@/utils/FormattingUtils";
+
 defineOptions({
   name: "VideoCard"
 });
@@ -62,7 +64,7 @@ const { video } = defineProps<{
 const videoRef = ref<HTMLVideoElement | null>(null);
 const isPlaying = ref(false);
 
-// 播放视频
+/** 播放视频 */
 const playVideo = () => {
   if (videoRef.value) {
     videoRef.value.play().catch((error) => {
@@ -72,7 +74,7 @@ const playVideo = () => {
   }
 };
 
-// 暂停视频
+/** 暂停视频 */
 const pauseVideo = () => {
   if (videoRef.value) {
     videoRef.value.pause();
@@ -80,20 +82,5 @@ const pauseVideo = () => {
     videoRef.value.currentTime = 0;
     isPlaying.value = false;
   }
-};
-
-// 格式化时长
-const formatDuration = (seconds: number): string => {
-  const mins = Math.floor(seconds / 60);
-  const secs = Math.floor(seconds % 60);
-  return `${mins}:${secs.toString().padStart(2, "0")}`;
-};
-
-// 格式化数字
-const formatNumber = (num: number): string => {
-  if (num >= 10000) {
-    return (num / 10000).toFixed(1) + "万";
-  }
-  return num.toString();
 };
 </script>

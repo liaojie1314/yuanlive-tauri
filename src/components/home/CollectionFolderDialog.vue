@@ -1,24 +1,26 @@
 <template>
-  <base-dialog v-model:show="dialogVisible" title="新建收藏夹" width="400px">
+  <base-dialog v-model:show="dialogVisible" :title="$t('dialog.collectionFolder.title')" width="400px">
     <div class="new-folder-dialog">
       <div class="dialog-content">
         <div class="input-group">
           <n-input
             v-model:value="folderName"
             type="text"
-            placeholder="请输入收藏夹的名称（15个字以内）"
-            maxlength="15"
+            :placeholder="$t('dialog.collectionFolder.placeholder', { count: maxNameLength })"
+            :maxlength="maxNameLength"
             show-count
             clearable
             class="border-(1px solid #90909080)"
             @input="handleInput" />
-          <div v-if="folderName.length === 0" class="error-message">请输入收藏夹名称</div>
+          <div v-if="folderName.length === 0" class="error-message">
+            {{ $t("dialog.collectionFolder.inputMessage") }}
+          </div>
         </div>
 
         <div class="switch-group">
           <div class="switch-label">
-            <span class="main-label">设置为公开</span>
-            <span class="sub-label">公开后有机会被推荐，帮助到更多人</span>
+            <span class="main-label">{{ $t("dialog.collectionFolder.publicLabel") }}</span>
+            <span class="sub-label">{{ $t("dialog.collectionFolder.publicInfo") }}</span>
           </div>
           <div class="switch-btn">
             <n-switch v-model:value="isPublicFolder" />
@@ -27,9 +29,11 @@
       </div>
 
       <div class="dialog-footer">
-        <n-button strong secondary @click="handleCancel">取消</n-button>
+        <n-button strong secondary @click="handleCancel">
+          {{ $t("components.common.cancel") }}
+        </n-button>
         <n-button type="primary" @click="handleConfirm" :disabled="!isFormValid" class="confirm-btn-style">
-          确认
+          {{ $t("components.common.confirm") }}
         </n-button>
       </div>
     </div>
@@ -48,25 +52,26 @@ const emit = defineEmits<{
   "create-folder": [name: string, isPublic: boolean];
 }>();
 
+const maxNameLength = 15;
+// 输入防抖定时器
+let inputTimer: number | null = null;
+
+// 收藏夹名称
+const folderName = ref("");
+// 是否公开
+const isPublicFolder = ref(false);
 // 双向绑定
 const dialogVisible = computed({
   get: () => props.show,
   set: (value) => emit("update:show", value)
 });
 
-// 收藏夹名称
-const folderName = ref("");
-// 是否公开
-const isPublicFolder = ref(false);
-// 输入防抖定时器
-let inputTimer: number | null = null;
-
-// 计算属性：表单是否有效
+// 表单是否有效
 const isFormValid = computed(() => {
   return folderName.value.trim().length > 0 && folderName.value.trim().length <= 15;
 });
 
-// 输入处理（带防抖）
+/** 输入处理（带防抖） */
 const handleInput = () => {
   if (inputTimer) {
     clearTimeout(inputTimer);
@@ -76,13 +81,13 @@ const handleInput = () => {
   }, 300);
 };
 
-// 取消按钮处理
+/** 取消按钮处理 */
 const handleCancel = () => {
   dialogVisible.value = false;
   resetForm();
 };
 
-// 确认按钮处理
+/** 确认按钮处理 */
 const handleConfirm = () => {
   if (isFormValid.value) {
     emit("create-folder", folderName.value.trim(), isPublicFolder.value);
@@ -91,7 +96,7 @@ const handleConfirm = () => {
   }
 };
 
-// 重置表单
+/** 重置表单 */
 const resetForm = () => {
   folderName.value = "";
   isPublicFolder.value = false;

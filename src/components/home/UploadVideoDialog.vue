@@ -1,5 +1,5 @@
 <template>
-  <base-dialog v-model:show="dialogVisible" title="发布视频" width="700px">
+  <base-dialog v-model:show="dialogVisible" :title="$t('dialog.uploadVideo.title')" width="700px">
     <div class="upload-video-content space-y-6">
       <div v-if="!videoFile" class="flex justify-center py-8">
         <n-upload
@@ -11,8 +11,10 @@
           <n-upload-dragger class="!bg-[--home-bg-color] !border-[--line-color] hover:!border-blue-500">
             <div class="flex flex-col items-center gap-3 py-6 px-12">
               <i-mdi-cloud-upload class="text-6xl text-blue-500/50" />
-              <div class="text-base font-medium text-[--text-color]">点击或拖拽视频到此处上传</div>
-              <p class="text-xs text-[--user-text-color]">支持 MP4, MOV, MKV 格式，大小不超过 2GB</p>
+              <div class="text-base font-medium text-[--text-color]">{{ $t("dialog.uploadVideo.uploadMessage") }}</div>
+              <p class="text-xs text-[--user-text-color]">
+                {{ $t("dialog.uploadVideo.videoInfo", { count: maxVideoSize }) }}
+              </p>
             </div>
           </n-upload-dragger>
         </n-upload>
@@ -27,27 +29,33 @@
               @click="handleReupload">
               <span class="text-white text-sm flex items-center gap-1">
                 <i-mdi-refresh />
-                更换视频
+                {{ $t("dialog.uploadVideo.reupload") }}
               </span>
             </div>
           </div>
 
           <div class="flex-1 space-y-4">
-            <n-form-item label="视频标题" :show-label="true" label-style="color: var(--text-color);">
+            <n-form-item
+              label="{{ $t('dialog.uploadVideo.videoTitle') }}"
+              :show-label="true"
+              label-style="color: var(--text-color);">
               <n-input
                 v-model:value="form.title"
-                placeholder="给视频起个响亮的标题吧 (必填)"
+                :placeholder="$t('dialog.uploadVideo.videoTitlePlaceholder')"
                 maxlength="50"
                 show-count
                 class="border-(1px solid #90909080)"
                 clearable />
             </n-form-item>
 
-            <n-form-item label="视频简介" :show-label="true" label-style="color: var(--text-color);">
+            <n-form-item
+              :label="$t('dialog.uploadVideo.videoDesc')"
+              :show-label="true"
+              label-style="color: var(--text-color);">
               <n-input
                 v-model:value="form.description"
                 type="textarea"
-                placeholder="介绍一下视频内容..."
+                :placeholder="$t('dialog.uploadVideo.videoDescPlaceholder')"
                 :autosize="{ minRows: 2, maxRows: 4 }"
                 class="border-(1px solid #90909080)" />
             </n-form-item>
@@ -56,11 +64,13 @@
 
         <div class="border-t border-[--line-color] pt-4">
           <div class="flex justify-between items-center mb-3">
-            <span class="text-sm font-medium text-[--text-color] whitespace-nowrap shrink-0 mr-2">设置封面</span>
+            <span class="text-sm font-medium text-[--text-color] whitespace-nowrap shrink-0 mr-2">
+              {{ $t("dialog.uploadVideo.cover") }}
+            </span>
             <n-upload accept="image/*" :show-file-list="false" @change="handleCoverUpload">
               <n-button size="small" secondary>
                 <template #icon><i-mdi-image-plus /></template>
-                上传封面
+                {{ $t("dialog.uploadVideo.uploadCover") }}
               </n-button>
             </n-upload>
           </div>
@@ -68,7 +78,7 @@
           <div class="bg-[--tray-bg-color] p-3 rounded-lg border border-[--line-color]">
             <div v-if="isGenerating" class="flex justify-center py-4">
               <n-spin size="small">
-                <template #description>正在提取视频帧...</template>
+                <template #description>{{ $t("dialog.uploadVideo.extractFrame") }}</template>
               </n-spin>
             </div>
 
@@ -76,7 +86,9 @@
               <div class="flex gap-3 pb-2 min-w-max">
                 <div class="relative w-32 aspect-video rounded overflow-hidden border-2 border-blue-500 shrink-0">
                   <img :src="form.coverUrl || frames[0]" class="w-full h-full object-cover" />
-                  <div class="absolute bottom-0 right-0 bg-blue-500 text-white text-[10px] px-1">当前封面</div>
+                  <div class="absolute bottom-0 right-0 bg-blue-500 text-white text-[10px] px-1">
+                    {{ $t("dialog.uploadVideo.currentCover") }}
+                  </div>
                 </div>
 
                 <div
@@ -94,9 +106,9 @@
       </div>
 
       <div class="flex justify-end gap-3 pt-2">
-        <n-button @click="closeDialog">取消</n-button>
+        <n-button @click="closeDialog">{{ $t("components.common.cancel") }}</n-button>
         <n-button type="primary" :loading="isSubmitting" :disabled="!videoFile || !form.title" @click="handleSubmit">
-          发布视频
+          {{ $t("dialog.uploadVideo.publishVideo") }}
         </n-button>
       </div>
     </div>
@@ -104,17 +116,21 @@
 </template>
 
 <script setup lang="ts">
+import { useI18n } from "vue-i18n";
 import type { UploadFileInfo } from "naive-ui";
+
 import { useVideoFrame } from "@/hooks/useVideoFrame";
+
+const { t } = useI18n();
+const { videoUrl, frames, isGenerating, generateFrames, clearFrames } = useVideoFrame();
 
 interface Props {
   show: boolean;
 }
-
 const props = defineProps<Props>();
 const emit = defineEmits(["update:show", "success"]);
 
-const { videoUrl, frames, isGenerating, generateFrames, clearFrames } = useVideoFrame();
+const maxVideoSize = 2;
 
 const videoFile = ref<File | null>(null);
 const isSubmitting = ref(false);
@@ -133,14 +149,17 @@ const dialogVisible = computed({
   }
 });
 
-// 处理视频选择
+/**
+ * 处理视频选择
+ * @param data 视频文件信息
+ */
 const handleVideoChange = async (data: { file: UploadFileInfo }) => {
   const file = data.file.file;
   if (!file) return;
 
   // 简单的格式校验
-  if (file.size > 2 * 1024 * 1024 * 1024) {
-    window.$message.error("视频大小不能超过 2GB");
+  if (file.size > maxVideoSize * 1024 * 1024 * 1024) {
+    window.$message.error(t("dialog.uploadVideo.msg.videoSizeLimit", { count: maxVideoSize }));
     return;
   }
 
@@ -155,7 +174,10 @@ const handleVideoChange = async (data: { file: UploadFileInfo }) => {
   }
 };
 
-// 处理手动上传封面
+/**
+ * 处理封面上传
+ * @param data 封面文件信息
+ */
 const handleCoverUpload = (data: { file: UploadFileInfo }) => {
   const file = data.file.file;
   if (file) {
@@ -164,7 +186,7 @@ const handleCoverUpload = (data: { file: UploadFileInfo }) => {
   }
 };
 
-// 重新上传
+/** 重新上传视频 */
 const handleReupload = () => {
   videoFile.value = null;
   clearFrames();
@@ -173,10 +195,10 @@ const handleReupload = () => {
   form.coverUrl = "";
 };
 
-// 提交表单
+/** 提交表单 */
 const handleSubmit = async () => {
   if (!form.title.trim()) {
-    window.$message.warning("请输入视频标题");
+    window.$message.warning(t("dialog.uploadVideo.msg.inputVideoTitle"));
     return;
   }
 
@@ -188,20 +210,22 @@ const handleSubmit = async () => {
     // 模拟上传延迟
     await new Promise((resolve) => setTimeout(resolve, 2000));
 
-    window.$message.success("发布成功！");
+    window.$message.success(t("dialog.uploadVideo.msg.publishSuccess"));
     emit("success");
     dialogVisible.value = false;
   } catch (error) {
-    window.$message.error("发布失败，请重试");
+    window.$message.error(t("dialog.uploadVideo.msg.publishFailed"));
   } finally {
     isSubmitting.value = false;
   }
 };
 
+/** 关闭弹窗 */
 const closeDialog = () => {
   dialogVisible.value = false;
 };
 
+/** 重置表单 */
 const resetForm = () => {
   handleReupload();
 };

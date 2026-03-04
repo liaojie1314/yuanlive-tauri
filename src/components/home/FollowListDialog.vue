@@ -1,9 +1,13 @@
 <template>
-  <base-dialog v-model:show="dialogVisible">
+  <base-dialog v-model:show="dialogVisible" :title="t('dialog.followList.title')">
     <template #header>
       <n-tabs v-model:value="activeTab" type="line" class="h-12 leading-12 mb-[-1px] w-full">
-        <n-tab-pane name="following" :tab="`关注 (${userInfo?.userStats.followingCount || 0})`" />
-        <n-tab-pane name="followers" :tab="`粉丝 (${userInfo?.userStats.followerCount || 0})`" />
+        <n-tab-pane
+          name="following"
+          :tab="t('dialog.followList.following', { count: userInfo?.userStats.followingCount || 0 })" />
+        <n-tab-pane
+          name="followers"
+          :tab="t('dialog.followList.followers', { count: userInfo?.userStats.followerCount || 0 })" />
       </n-tabs>
     </template>
 
@@ -11,7 +15,7 @@
       <div class="flex items-center justify-between">
         <n-input
           v-model:value="searchQuery"
-          placeholder="搜索用户名"
+          :placeholder="t('dialog.followList.placeholder')"
           clearable
           class="w-[360px] border-(1px solid #90909080)">
           <template #prefix>
@@ -19,7 +23,9 @@
           </template>
         </n-input>
         <n-dropdown v-if="activeTab === 'following'" trigger="click" :options="sortOptions">
-          <n-button quaternary class="text-[--user-text-color]">综合排序</n-button>
+          <n-button quaternary class="text-[--user-text-color]">
+            {{ t("dialog.followList.sortOption.sort") }}
+          </n-button>
         </n-dropdown>
       </div>
 
@@ -45,14 +51,14 @@
                 round
                 size="small"
                 class="bg-[--left-item-bg-color] text-[--user-text-color] border-none">
-                已关注
+                {{ t("dialog.followList.followed") }}
               </n-button>
-              <n-button v-else round size="small" type="primary">关注</n-button>
+              <n-button v-else round size="small" type="primary">{{ t("dialog.followList.follow") }}</n-button>
             </div>
           </div>
         </div>
         <div v-if="displayUsers.length === 0" class="py-10">
-          <n-empty description="暂无内容" />
+          <n-empty :description="t('dialog.followList.noContent')" />
         </div>
       </n-scrollbar>
     </div>
@@ -60,23 +66,16 @@
 </template>
 
 <script setup lang="ts">
+import { useI18n } from "vue-i18n";
 import { useUserStore } from "@/stores/user";
 
-interface User {
-  id: string;
-  name: string;
-  avatar: string;
-  description: string;
-  verified: boolean;
-  isFollowing: boolean;
-}
+const { t } = useI18n();
+const { userInfo } = useUserStore();
 
 interface Props {
   show: boolean;
   activeTab?: "following" | "followers";
 }
-
-const { userInfo } = useUserStore();
 
 const props = withDefaults(defineProps<Props>(), {
   activeTab: "following"
@@ -87,10 +86,26 @@ const emit = defineEmits<{
   "update:activeTab": [value: "following" | "followers"];
 }>();
 
-// 模拟关注列表数据
+interface User {
+  id: string;
+  name: string;
+  avatar: string;
+  description: string;
+  verified: boolean;
+  isFollowing: boolean;
+}
+
+// 关注列表
 const followingList = ref<User[]>([]);
-// 模拟粉丝列表数据
+// 粉丝列表
 const followersList = ref<User[]>([]);
+// 排序选项
+const sortOptions = ref([
+  { label: t("dialog.followList.sortOption.sort"), key: "comprehensive" },
+  { label: t("dialog.followList.sortOption.followTime"), key: "followTime" },
+  { label: t("dialog.followList.sortOption.followerCount"), key: "followerCount" }
+]);
+const searchQuery = ref("");
 
 // 双向绑定
 const dialogVisible = computed({
@@ -102,15 +117,6 @@ const activeTab = computed({
   get: () => props.activeTab,
   set: (value) => emit("update:activeTab", value)
 });
-
-const searchQuery = ref("");
-
-// 排序选项
-const sortOptions = ref([
-  { label: "综合排序", key: "comprehensive" },
-  { label: "关注时间", key: "followTime" },
-  { label: "粉丝数量", key: "followerCount" }
-]);
 
 // 根据当前Tab和搜索条件过滤用户列表
 const displayUsers = computed(() => {

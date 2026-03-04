@@ -1,0 +1,93 @@
+{
+  "danmakuList": {
+    "title": "Danmaku List",
+    "time": "Time",
+    "content": "Danmaku Content"
+  },
+  "danmakuReport": {
+    "title": "Danmaku Report",
+    "placeholder": "Please describe the reason for the report in detail, so that the platform can judge the violation situation",
+    "submit": "Submit"
+  },
+  "collectionFolder": {
+    "title": "New Collection Folder",
+    "placeholder": "Please enter the name of the collection folder (up to {count} characters)",
+    "inputMessage": "Please enter the name of the collection folder",
+    "publicLabel": "Set as Public",
+    "publicInfo": "Public folders will be recommended to more people"
+  },
+  "uploadVideo": {
+    "title": "Upload Video",
+    "uploadMessage": "Click or drag the video file to upload",
+    "videoInfo": "Supports MP4, MOV, MKV formats, size up to {count}GB",
+    "reupload": "Replace Video",
+    "videoTitle": "Video Title",
+    "videoTitlePlaceholder": "Please enter a title for the video (required)",
+    "videoDesc": "Video Description",
+    "videoDescPlaceholder": "Describe the video content...",
+    "cover": "Set Cover",
+    "uploadCover": "Upload Cover",
+    "extractFrame": "Extracting video frame...",
+    "currentCover": "Current Cover",
+    "publishVideo": "Publish Video",
+    "msg": {
+      "videoSizeLimit": "Video size cannot exceed {count}GB",
+      "inputVideoTitle": "Please enter the video title",
+      "publishSuccess": "Publish success!",
+      "publishFailed": "Publish failed, please try again"
+    }
+  },
+  "followList": {
+    "title": "Follow List",
+    "following": "Following ({count})",
+    "followers": "Followers ({count})",
+    "placeholder": "Search for usernames",
+    "sortOption": {
+      "sort": "Sort by",
+      "followTime": "Follow time",
+      "followerCount": "Follower count"
+    },
+    "follow": "Follow",
+    "followed": "Followed",
+    "noContent": "No content"
+  },
+  "editProfile": {
+    "title": "Edit Profile",
+    "replaceAvatar": "Replace avatar",
+    "username": "Username",
+    "usernamePlaceholder": "Set your username",
+    "desc": "Description",
+    "descPlaceholder": "Introduce yourself",
+    "save": "Save changes"
+  },
+  "applyStreamer": {
+    "title": "Apply to be a Streamer",
+    "applyDesc": "Application Description",
+    "applyDescInfo": "Please provide your real name, ID card number, and phone number to apply to be a streamer. We will review your application and get back to you as soon as possible.",
+    "realName": "Real Name",
+    "realNamePlaceholder": "Please enter your real name",
+    "idCard": "ID Card Num",
+    "idCardPlaceholder": "Please enter your ID card number (18 digits)",
+    "phone": "Phone Num",
+    "phonePlaceholder": "Used for receiving review notifications",
+    "liveCategory": "Live Category",
+    "liveCategoryPlaceholder": "Please choose your live category",
+    "reason": "Apply Reason",
+    "reasonPlaceholder": "Simple introduction of your live plan...",
+    "agree": "I have read and agree to the",
+    "agreeLink": "YuanLive Streamer Registration Agreement",
+    "submit": "Submit Application",
+    "msg": {
+      "completeInfo": "Please complete the application information",
+      "applySuccess": "Application submitted, please wait for review"
+    },
+    "rule": {
+      "realName": "Please enter your real name",
+      "idCard": "Please enter your ID card number",
+      "idCardLengthError": "ID card number length is incorrect",
+      "phone": "Please enter your phone number",
+      "phoneLengthError": "Phone number length is incorrect",
+      "liveCategory": "Please select a live category"
+    }
+  }
+}

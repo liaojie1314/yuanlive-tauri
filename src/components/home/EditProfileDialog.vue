@@ -1,5 +1,5 @@
 <template>
-  <base-dialog v-model:show="dialogVisible" title="编辑资料">
+  <base-dialog v-model:show="dialogVisible" :title="$t('dialog.editProfile.title')">
     <div class="space-y-6">
       <div class="flex flex-col items-center gap-3">
         <div class="relative cursor-pointer group size-24">
@@ -10,20 +10,25 @@
             <i-mdi-camera class="size-7 text-white" />
           </div>
         </div>
-        <span class="text-xs text-[--user-text-color] hover:text-blue-500 transition-colors">点击更换头像</span>
+        <span class="text-xs text-[--user-text-color] hover:text-blue-500 transition-colors">
+          {{ $t("dialog.editProfile.replaceAvatar") }}
+        </span>
       </div>
 
       <div class="grid gap-5">
         <div class="flex flex-col gap-2">
-          <label class="text-sm font-medium text-[--text-color] ml-1">名字</label>
-          <n-input v-model:value="form.username" placeholder="设置你的昵称" class="border-(1px solid #90909080)" />
+          <label class="text-sm font-medium text-[--text-color] ml-1">{{ $t("dialog.editProfile.username") }}</label>
+          <n-input
+            v-model:value="form.username"
+            :placeholder="$t('dialog.editProfile.usernamePlaceholder')"
+            class="border-(1px solid #90909080)" />
         </div>
 
         <div class="flex flex-col gap-2">
-          <label class="text-sm font-medium text-[--text-color] ml-1">个人简介</label>
+          <label class="text-sm font-medium text-[--text-color] ml-1">{{ $t("dialog.editProfile.desc") }}</label>
           <n-input
             v-model:value="form.description"
-            placeholder="介绍一下自己吧"
+            :placeholder="$t('dialog.editProfile.descPlaceholder')"
             type="textarea"
             :autosize="{ minRows: 3, maxRows: 5 }"
             maxlength="100"
@@ -33,8 +38,10 @@
       </div>
 
       <div class="flex justify-end gap-3 pt-4 border-t border-[--line-color]">
-        <n-button ghost @click="closeDialog">取消</n-button>
-        <n-button type="primary" class="px-8" @click="saveProfile" :disabled="!form.username">保存修改</n-button>
+        <n-button ghost @click="closeDialog">{{ $t("components.common.cancel") }}</n-button>
+        <n-button type="primary" class="px-8" @click="saveProfile" :disabled="!form.username">
+          {{ $t("dialog.editProfile.save") }}
+        </n-button>
       </div>
     </div>
   </base-dialog>
@@ -66,14 +73,14 @@ const emit = defineEmits<{
   save: [data: { name: string; description: string; avatar?: string }];
 }>();
 
+const fileInputRef = ref<HTMLInputElement>();
+const cropperRef = ref<AvatarCropperInstance>();
 // 本地表单数据
 const form = reactive({
   username: userInfo?.username,
   description: "",
   avatar: userInfo?.avatar
 });
-const fileInputRef = ref<HTMLInputElement>();
-const cropperRef = ref<AvatarCropperInstance>();
 
 const {
   localImageUrl,
@@ -98,16 +105,20 @@ const dialogVisible = computed({
   set: (value) => emit("update:show", value)
 });
 
+/** 关闭弹窗 */
 const closeDialog = () => {
   dialogVisible.value = false;
 };
 
-// 代理 Hook 的裁剪事件
+/**
+ * 处理裁剪事件
+ * @param cropBlob 裁剪后的图片 Blob 对象
+ */
 const handleCrop = async (cropBlob: Blob) => {
   await onHookCrop(cropBlob);
 };
 
-// 保存资料
+/** 保存资料 */
 const saveProfile = () => {
   if (!form.username?.trim()) return;
 

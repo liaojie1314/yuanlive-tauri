@@ -338,13 +338,16 @@ import videojs from "video.js";
 import "video.js/dist/video-js.css";
 
 import { MittEnum } from "@/enums";
-import { useMitt } from "@/hooks/useMitt";
 import { type VideoItem } from "@/api/follow";
 import { useVideoStore } from "@/stores/video";
 import { useDanmakuStore } from "@/stores/danmaku";
+import { useMitt } from "@/hooks/useMitt";
 import { useFullscreen } from "@/hooks/useFullscreen";
+import { formatTime } from "@/utils/FormattingUtils";
 
 const { isFullscreen } = useFullscreen();
+const danmakuStore = useDanmakuStore();
+const videoStore = useVideoStore();
 
 const props = defineProps<{
   poster?: string;
@@ -375,51 +378,59 @@ const emit = defineEmits<{
   (e: "toggle-fullscreen"): void;
 }>();
 
-// Danmaku Types
 interface Danmaku {
   id: string;
   time: string;
   content: string;
   isLiked: boolean;
   createdAt: number;
-  startTime?: number; // Track when the danmaku animation started
-  remainingDuration?: number; // Track remaining animation duration when hovered
+  startTime?: number;
+  remainingDuration?: number;
   top?: string; // 固定的垂直位置
   horizontalOffset?: number; // 水平偏移量，用于避免同时出现的弹幕重叠
 }
+
+// TODO: i18n
+const resolutionOptions = [
+  { label: "超清2K", key: "2k" },
+  { label: "高清1080P", key: "1080p" },
+  { label: "高清720P", key: "720p" },
+  { label: "标清540P", key: "540p" },
+  { label: "智能", key: "auto" }
+];
+let animationFrameIds: number[] = [];
+const playbackRates = [0.5, 0.75, 1.0, 1.25, 1.5, 2.0];
+const playbackRateOptions = playbackRates.map((rate) => ({ label: `${rate}x`, key: rate }));
+// 记录每行的活跃弹幕，用于计算水平偏移
+const lineDanmakus = new Map<number, Danmaku[]>();
+const danmakuTimers = new Map<string, NodeJS.Timeout>();
+const displayedDanmakuIds = new Set<string>();
+const eventListeners = new Map<string, (event: Event) => void>();
 
 const currentVideo = ref<VideoItem | null>(null);
 const videoContainerRef = ref<HTMLDivElement | null>(null);
 const playerRef = ref<any>(null);
 const danmakuContainerRef = ref<HTMLDivElement | null>(null);
 const hoveredDanmakuId = ref<string | null>(null);
-
-// States for custom controls
 const isMiniWindow = ref(false);
 const isPlaying = ref(false);
-const playbackRates = [0.5, 0.75, 1.0, 1.25, 1.5, 2.0];
-
-// Interaction Panel States
+// 交互状态
 const isLiked = ref(false);
 const likeCount = ref(0);
 const commentCount = ref(0);
 const isFavorited = ref(false);
 const favoriteCount = ref(0);
 const shareCount = ref(0);
-
-// Collection Folder States
+// 收藏夹状态
 const showCollectionTooltip = ref(false);
 const collectionFolders = ref([{ id: 1, name: "12", count: 0, isSelected: true }]);
 const showNewFolderDialog = ref(false);
 const selectedFolderId = ref<number | null>(1);
-
-// Share Tooltip States
+// 分享状态
 const showShareTooltip = ref(false);
-
-// More Tooltip States
+// 更多操作状态
 const showMoreTooltip = ref(false);
-
-// Danmaku List Dialog
+// 弹幕列表状态
 const showDanmakuListDialog = ref(false);
 const showDanmakuReportDialog = ref(false);
 const selectedDanmakuIndex = ref(-1);
@@ -565,48 +576,56 @@ const danmakuList = ref<Danmaku[]>([
     createdAt: Date.now()
   }
 ]);
-
-// Active Danmakus that are currently displayed
+// 当前正在显示的弹幕列表
 const activeDanmakus = ref<Danmaku[]>([]);
-
-// Get danmaku settings from store
-const danmakuStore = useDanmakuStore();
-const videoStore = useVideoStore();
-
+// TODO: i18n
 const videoMenuOptions = ref([
   { label: "播放 / 暂停", action: "play-pause" },
   { label: "静音 / 取消静音", action: "mute" },
   { label: "画中画模式", action: "pip" },
   { label: "全屏 / 退出全屏", action: "fullscreen" }
 ]);
+// 弹幕行管理，使用轮询方式分配行
+const lineHeight = ref<number>(40); // 固定行高，确保足够的垂直间距
+// 当前行索引，用于轮询分配行
+const currentLineIndex = ref<number>(0);
+const showVolumeSlider = ref(false);
+const currentTime = ref(0);
+const duration = ref(0);
+const isLeftControlsCompact = ref(false);
+const showPauseOverlay = ref(false);
 
-// 处理右键菜单项的点击事件
+/**
+ * 处理右键菜单项的点击事件
+ * @param item 右键菜单项对象，包含 label 和 action 属性
+ */
 const handleMenuSelect = (item: any) => {
   // item 就是我们在 videoMenuOptions 中定义的对象
   switch (item.action) {
     case "play-pause":
-      togglePlay(); // 调用你写好的播放暂停方法
+      togglePlay();
       break;
     case "mute":
-      toggleMute(); // 调用你写好的静音方法
+      toggleMute();
       break;
     case "pip":
-      toggleMiniWindow(); // 调用画中画/小窗方法
+      toggleMiniWindow();
       break;
     case "fullscreen":
-      toggleFullscreen(); // 调用全屏方法
+      toggleFullscreen();
       break;
   }
 };
 
-// Open report dialog
+/**
+ * 打开弹幕举报对话框
+ * @param arg 弹幕索引或弹幕ID
+ */
 const openDanmakuReportDialog = (arg: number | string) => {
   if (typeof arg === "number") {
-    // Called with index (from DanmakuListDialog)
     selectedDanmakuIndex.value = arg;
     showDanmakuReportDialog.value = true;
   } else {
-    // Called with danmakuId (string) from video player
     const index = danmakuList.value.findIndex((d) => d.id === arg);
     if (index !== -1) {
       selectedDanmakuIndex.value = index;
@@ -615,7 +634,12 @@ const openDanmakuReportDialog = (arg: number | string) => {
   }
 };
 
-// Handle report submission
+/**
+ * 处理弹幕举报
+ * @param index 弹幕索引
+ * @param type 报告类型
+ * @param description 报告描述
+ */
 const handleDanmakuReport = (index: number, type: string, description: string) => {
   console.log("Report submitted:", {
     danmakuIndex: index,
@@ -625,12 +649,11 @@ const handleDanmakuReport = (index: number, type: string, description: string) =
   showDanmakuReportDialog.value = false;
 };
 
-// Refs to track danmaku timers and display status
-const danmakuTimers = new Map<string, NodeJS.Timeout>();
-const displayedDanmakuIds = new Set<string>(); // Track which danmakus have been displayed
-const eventListeners = new Map<string, (event: Event) => void>(); // Track all event listeners for cleanup
-
-// Shared function to set danmaku timer
+/**
+ * 设置弹幕定时器
+ * @param danmakuId 弹幕ID
+ * @param duration 显示持续时间（毫秒）
+ */
 const setDanmakuTimer = (danmakuId: string, duration: number) => {
   const danmaku = activeDanmakus.value.find((d) => d.id === danmakuId);
   if (danmaku) {
@@ -650,21 +673,18 @@ const setDanmakuTimer = (danmakuId: string, duration: number) => {
   danmakuTimers.set(danmakuId, timer);
 };
 
-// Show danmaku actions on hover
+/**
+ * 显示弹幕操作
+ * @param danmakuId 弹幕ID
+ */
 const showDanmakuActions = (danmakuId: string) => {
   hoveredDanmakuId.value = danmakuId;
-
-  // Find the danmaku and calculate remaining duration
   const danmaku = activeDanmakus.value.find((d) => d.id === danmakuId);
   if (danmaku && danmaku.startTime) {
-    // Get current timer if exists
     const timer = danmakuTimers.get(danmakuId);
     if (timer) {
-      // Clear existing timer
       clearTimeout(timer);
       danmakuTimers.delete(danmakuId);
-
-      // Calculate elapsed time and remaining duration
       const elapsed = Date.now() - danmaku.startTime;
       const totalDuration = 12000 / danmakuStore.speed;
       danmaku.remainingDuration = Math.max(0, totalDuration - elapsed);
@@ -672,16 +692,13 @@ const showDanmakuActions = (danmakuId: string) => {
   }
 };
 
-// Hide danmaku actions when not hovering
+/** 隐藏弹幕操作 */
 const hideDanmakuActions = () => {
   const prevHoveredId = hoveredDanmakuId.value;
   hoveredDanmakuId.value = null;
-
-  // If we were hovering over a danmaku, restart its animation timer
   if (prevHoveredId) {
     const danmaku = activeDanmakus.value.find((d) => d.id === prevHoveredId);
     if (danmaku && danmaku.remainingDuration !== undefined && danmaku.remainingDuration > 0) {
-      // Set a new timer with remaining duration
       const timer = setTimeout(() => {
         const index = activeDanmakus.value.findIndex((d) => d.id === prevHoveredId);
         if (index !== -1) {
@@ -689,36 +706,28 @@ const hideDanmakuActions = () => {
         }
         danmakuTimers.delete(prevHoveredId);
       }, danmaku.remainingDuration);
-
-      // Store the timer
       danmakuTimers.set(prevHoveredId, timer);
-
-      // Reset remaining duration as it's now being used
       danmaku.remainingDuration = undefined;
     }
   }
 };
 
-// Toggle danmaku like status
+/**
+ * 切换弹幕点赞状态
+ * @param danmakuId 弹幕ID
+ */
 const toggleDanmakuLike = (danmakuId: string) => {
   const danmaku = danmakuList.value.find((d) => d.id === danmakuId);
   if (danmaku) {
     danmaku.isLiked = !danmaku.isLiked;
   }
-
-  // Update active danmakus as well
   const activeDanmaku = activeDanmakus.value.find((d) => d.id === danmakuId);
   if (activeDanmaku) {
     activeDanmaku.isLiked = !activeDanmaku.isLiked;
   }
 };
-const playbackRateOptions = playbackRates.map((rate) => ({ label: `${rate}x`, key: rate }));
-const showVolumeSlider = ref(false);
-const currentTime = ref(0);
-const duration = ref(0);
-const isLeftControlsCompact = ref(false);
-const showPauseOverlay = ref(false);
 
+/** 处理容器点击事件，切换播放状态 */
 const handleContainerClick = () => {
   if (playerRef.value) {
     if (isPlaying.value) {
@@ -729,33 +738,23 @@ const handleContainerClick = () => {
   }
 };
 
-// Format time from seconds to mm:ss format
-const formatTime = (seconds: number): string => {
-  if (isNaN(seconds) || seconds < 0) return "00:00";
-  const mins = Math.floor(seconds / 60);
-  const secs = Math.floor(seconds % 60);
-  return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
-};
-
+/**
+ * 检查左侧控制条宽度是否紧凑
+ * @param width 左侧控制条宽度
+ */
 const checkLeftControlsWidth = ({ width }: any) => {
   isLeftControlsCompact.value = width < 190;
 };
 
-// Resolution options
-const resolutionOptions = [
-  { label: "超清2K", key: "2k" },
-  { label: "高清1080P", key: "1080p" },
-  { label: "高清720P", key: "720p" },
-  { label: "标清540P", key: "540p" },
-  { label: "智能", key: "auto" }
-];
-
-// 全屏切换
+/** 切换全屏状态 */
 const toggleFullscreen = () => {
   emit("toggle-fullscreen");
 };
 
-// 音量控制
+/**
+ * 设置音量
+ * @param newVolume 新音量值（0-100）
+ */
 const setVolume = (newVolume: number) => {
   videoStore.setVolume(newVolume);
   if (playerRef.value) {
@@ -763,6 +762,7 @@ const setVolume = (newVolume: number) => {
   }
 };
 
+/** 切换静音状态 */
 const toggleMute = () => {
   videoStore.toggleMute();
   if (playerRef.value) {
@@ -771,7 +771,10 @@ const toggleMute = () => {
   }
 };
 
-// 切换播放速度
+/**
+ * 设置播放速度
+ * @param key 播放速度键值
+ */
 const setPlaybackRate = (key: number) => {
   videoStore.setPlaybackRate(key);
   if (playerRef.value) {
@@ -779,84 +782,86 @@ const setPlaybackRate = (key: number) => {
   }
 };
 
-// Interaction Panel Methods
+/** 切换点赞状态 */
 const toggleLike = () => {
   isLiked.value = !isLiked.value;
   likeCount.value += isLiked.value ? 1 : -1;
 };
 
+/** 切换收藏状态 */
 const toggleFavorite = () => {
   isFavorited.value = !isFavorited.value;
   favoriteCount.value += isFavorited.value ? 1 : -1;
 };
 
+/** 打开分享面板逻辑 */
 const toggleShare = () => {
-  // 打开分享面板逻辑
   console.log("Toggle share panel");
 };
 
-// Share Action Methods
+/** 复制链接 */
 const copyLink = () => {
-  // 复制链接
   showShareTooltip.value = false;
   console.log("Copy video link");
-  // 实际应用中这里会实现复制链接到剪贴板的功能
+  // TODO: 实现复制链接到剪贴板的功能
 };
 
+/** 下载视频 */
 const downloadVideo = () => {
-  // 下载视频
   showShareTooltip.value = false;
   console.log("Download video");
-  // 实际应用中这里会实现下载视频的功能
+  // TODO: 实现下载视频逻辑
 };
 
+/** 显示二维码 */
 const showQRCode = () => {
-  // 显示二维码
   showShareTooltip.value = false;
   console.log("Show QR code for sharing");
-  // 实际应用中这里会实现显示二维码的功能
+  // TODO: 获取二维码并显示
 };
 
-// More Action Methods
+/** 显示更多操作 */
 const toggleMoreOptions = () => {
-  // Toggle more options
   showMoreTooltip.value = false;
   console.log("Toggle more options");
 };
 
+/** 推荐视频 */
 const recommendVideo = () => {
-  // 推荐视频
   showMoreTooltip.value = false;
   console.log("Recommend video");
 };
 
+/** 不感兴趣 */
 const dislikeVideo = () => {
-  // 不感兴趣
   showMoreTooltip.value = false;
   console.log("Dislike video");
 };
 
+/** 取消关注 */
 const unfollowCreator = () => {
-  // 取消关注
   showMoreTooltip.value = false;
   console.log("Unfollow creator");
 };
 
+/** 举报视频 */
 const reportVideo = () => {
-  // 举报
   showMoreTooltip.value = false;
   console.log("Report video");
 };
 
+/** 显示快捷键列表 */
 const showShortcuts = () => {
-  // 显示快捷键列表
   showMoreTooltip.value = false;
   console.log("Show shortcuts list");
 };
 
-// Collection Folder Methods
+/**
+ * 更新选中的收藏夹（单选逻辑：只能选中一个文件夹）
+ * @param folderId 收藏夹ID
+ * @param isChecked 是否选中
+ */
 const updateSelectedFolder = (folderId: number, isChecked: boolean) => {
-  // 更新选中的收藏夹（单选逻辑：只能选中一个文件夹）
   collectionFolders.value.forEach((f) => {
     if (f.id === folderId) {
       f.isSelected = isChecked;
@@ -869,16 +874,16 @@ const updateSelectedFolder = (folderId: number, isChecked: boolean) => {
   selectedFolderId.value = isChecked ? folderId : null;
 };
 
+/** 仅收藏视频 */
 const onlyCollectVideo = () => {
-  // 仅收藏视频
   isFavorited.value = !isFavorited.value;
   favoriteCount.value += isFavorited.value ? 1 : -1;
   showCollectionTooltip.value = false;
   console.log("Only collect video");
 };
 
+/** 收藏至收藏夹 */
 const collectToFolder = () => {
-  // 收藏至收藏夹
   if (selectedFolderId.value) {
     const folder = collectionFolders.value.find((f) => f.id === selectedFolderId.value);
     if (folder) {
@@ -891,14 +896,18 @@ const collectToFolder = () => {
   }
 };
 
+/** 点击新建收藏夹按钮 */
 const onNewFolderClick = () => {
-  // 新建收藏夹，隐藏tooltip
   showCollectionTooltip.value = false;
   showNewFolderDialog.value = true;
 };
 
+/**
+ * 创建新收藏夹
+ * @param name 收藏夹名称
+ * @param isPublic 是否为公开收藏夹
+ */
 const handleCreateFolder = (name: string, isPublic: boolean) => {
-  // 创建新收藏夹
   // 生成新的收藏夹ID
   const newId = Math.max(...collectionFolders.value.map((f) => f.id), 0) + 1;
   // 添加新收藏夹
@@ -916,7 +925,7 @@ const handleCreateFolder = (name: string, isPublic: boolean) => {
   console.log("Create new folder", name, isPublic);
 };
 
-// Custom control methods
+/** 切换播放暂停状态 */
 const togglePlay = () => {
   if (playerRef.value) {
     if (playerRef.value.paused()) {
@@ -927,73 +936,79 @@ const togglePlay = () => {
   }
 };
 
+/**
+ * 跳转视频时间
+ * @param time 跳转时间（秒）
+ */
 const seek = (time: number) => {
   if (playerRef.value) {
     playerRef.value.currentTime(time);
-
-    // Reset danmaku state when seeking
-    // Clear displayed danmaku IDs to allow them to be shown again
     displayedDanmakuIds.clear();
-    // Clear active danmakus
     activeDanmakus.value = [];
-    // Clear danmaku timers
     danmakuTimers.forEach((timer) => {
       clearTimeout(timer);
     });
     danmakuTimers.clear();
-    // Reset line management state
     lineDanmakus.clear();
     currentLineIndex.value = 0;
   }
 };
 
+/**
+ * 发送弹幕
+ * @param content 弹幕内容
+ * @param isImage 是否为图片弹幕
+ */
 const sendDanmaku = (content: string, isImage?: boolean) => {
   if (content) {
     emit("danmaku-send", content, isImage);
   }
 };
 
+/**
+ * 切换自动播放状态
+ * @param val 新的自动播放状态
+ */
 const toggleAutoplay = (val: boolean) => {
   videoStore.setAutoplay(val);
   emit("autoplay-change", val);
 };
 
+/**
+ * 切换清除屏幕状态
+ * @param val 新的清除屏幕状态
+ */
 const toggleClearScreen = (val: boolean) => {
   videoStore.setClearScreen(val);
   emit("clear-screen-change", val);
 };
 
+/** 切换弹幕显示状态 */
 const toggleDanmaku = () => {
   const newState = !danmakuStore.enabled;
   danmakuStore.setEnabled(newState);
   emit("danmaku-toggle", newState);
 };
 
-// Danmaku settings are now managed by the danmakuStore
-
-// Convert time string (mm:ss) to seconds
+/** 转换时间字符串（mm:ss）为秒数
+ * @param timeStr 时间字符串，格式为 mm:ss
+ * @returns 转换后的秒数
+ */
 const timeStringToSeconds = (timeStr: string): number => {
   const [minutes, seconds] = timeStr.split(":").map(Number);
   return minutes * 60 + seconds;
 };
 
-// 弹幕行管理，使用轮询方式分配行
-const lineHeight = ref<number>(40); // 固定行高，确保足够的垂直间距
-
-// 当前行索引，用于轮询分配行
-const currentLineIndex = ref<number>(0);
-
-// 记录每行的活跃弹幕，用于计算水平偏移
-const lineDanmakus = new Map<number, Danmaku[]>();
-
-// 更新行高，根据当前字体大小
+/** 更新行高，根据当前字体大小 */
 const updateLineHeight = () => {
   // 固定行高，确保足够的垂直间距，考虑字体大小和行间距
   // 增加行高系数，确保垂直方向有足够的间距，避免重叠
   lineHeight.value = Math.max(45, danmakuStore.fontSize * 3.5);
 };
 
-// 获取当前容器的最大行数
+/** 获取当前容器的最大行数
+ * @returns 最大行数
+ */
 const getMaxLines = (): number => {
   const containerHeight = danmakuContainerRef.value?.offsetHeight || 0;
 
@@ -1023,7 +1038,9 @@ const getMaxLines = (): number => {
   return Math.max(1, maxLines);
 };
 
-// 使用轮询方式分配行，确保弹幕均匀分布
+/** 使用轮询方式分配行，确保弹幕均匀分布
+ * @returns 分配的行索引
+ */
 const assignLine = (): number => {
   const maxLines = getMaxLines();
   const lineIndex = currentLineIndex.value;
@@ -1034,7 +1051,10 @@ const assignLine = (): number => {
   return lineIndex;
 };
 
-// 测量弹幕内容的宽度
+/** 测量弹幕内容的宽度
+ * @param content 弹幕内容
+ * @returns 弹幕内容的宽度
+ */
 const measureDanmakuWidth = (content: string): number => {
   // 创建一个临时元素来测量文本宽度
   const tempElement = document.createElement("div");
@@ -1052,17 +1072,18 @@ const measureDanmakuWidth = (content: string): number => {
   return width;
 };
 
-// 生成新的弹幕对象，包含固定的垂直位置和水平偏移
+/**
+ * 生成新的弹幕对象，包含固定的垂直位置和水平偏移
+ * @param danmaku 原始弹幕对象
+ * @returns 包含垂直位置和水平偏移的弹幕对象
+ */
 const generateDanmaku = (danmaku: Danmaku): Danmaku => {
   // 更新行高
   updateLineHeight();
-
   // 使用轮询方式分配行
   const targetLineIndex = assignLine();
-
   // 计算垂直位置，确保足够的垂直间距
   const top = `${targetLineIndex * lineHeight.value}px`;
-
   // 不再使用累积的偏移量，为每个弹幕生成独立的偏移量
   // 只考虑当前活跃的同一行弹幕，计算水平偏移量
   const currentLineActiveDanmakus = activeDanmakus.value.filter((d) => {
@@ -1071,18 +1092,14 @@ const generateDanmaku = (danmaku: Danmaku): Danmaku => {
     const targetTop = targetLineIndex * lineHeight.value;
     return danmakuTop === targetTop;
   });
-
   // 计算当前行已占用的总宽度，只考虑当前活跃的弹幕
   const totalWidth = currentLineActiveDanmakus.reduce((sum, d) => {
     return sum + (measureDanmakuWidth(d.content) + 20); // 20px作为弹幕之间的间距
   }, 0);
-
   // 计算水平偏移量，确保与前一个弹幕有20px的间距
   const horizontalOffset = totalWidth;
-
   // 不再使用lineDanmakus存储，避免累积偏移量
   // 直接使用activeDanmakus来管理当前活跃的弹幕
-
   return {
     ...danmaku,
     top, // 存储固定的垂直位置
@@ -1090,27 +1107,16 @@ const generateDanmaku = (danmaku: Danmaku): Danmaku => {
   };
 };
 
-// Update active danmakus based on current video time
+/** 更新当前活跃的弹幕列表，根据当前视频时间 */
 const updateActiveDanmakus = () => {
   if (!playerRef.value || !danmakuStore.enabled) {
     return;
   }
-
   const currentTime = playerRef.value.currentTime();
-
-  // Process all danmakus to check if they should be displayed now
   danmakuList.value.forEach((danmaku) => {
     const danmakuTime = timeStringToSeconds(danmaku.time);
-
-    // Check if this danmaku should be displayed now
-    // The danmaku should be added when current time reaches its time
-    // and it hasn't been added yet and hasn't been displayed before
     const isAlreadyActive = activeDanmakus.value.some((d) => d.id === danmaku.id);
     const hasBeenDisplayed = displayedDanmakuIds.has(danmaku.id);
-
-    // Only add if not already active, hasn't been displayed, and current time is within a window of danmaku time
-    // Use a 1s window to ensure danmakus appear at the correct time point, increasing tolerance for video playback variations
-    // Special handling for 00:00 danmakus to ensure they are displayed
     const timeWindow = 1;
     const isZeroTimeDanmaku = danmakuTime === 0;
     const isWithinTimeWindow = currentTime >= danmakuTime && currentTime - danmakuTime < timeWindow;
@@ -1118,35 +1124,27 @@ const updateActiveDanmakus = () => {
       !isAlreadyActive && !hasBeenDisplayed && (isWithinTimeWindow || (isZeroTimeDanmaku && currentTime < timeWindow));
     if (shouldAdd) {
       const newDanmaku = generateDanmaku(danmaku);
-      // Calculate animation duration based on speed from store
       const animationDuration = 12000 / danmakuStore.speed;
-
-      // Add to active danmakus list
       activeDanmakus.value.push(newDanmaku);
-      // Mark as displayed to prevent repeat display
       displayedDanmakuIds.add(danmaku.id);
-
       setDanmakuTimer(newDanmaku.id, animationDuration);
     }
   });
-
-  // No need for cleanup based on time difference anymore
-  // We're only adding danmakus at their correct time points and they'll be removed by their own timers
-  // Only remove hovered danmakus when they're no longer hovered
   activeDanmakus.value = activeDanmakus.value.filter((danmaku) => {
-    // Keep danmaku if:
-    // 1. It has a timer (still active), OR
-    // 2. It's currently being hovered
     return danmakuTimers.has(danmaku.id) || hoveredDanmakuId.value === danmaku.id;
   });
 };
 
+/** 切换弹幕列表显示 */
 const toggleDanmakuList = () => {
   console.log("Toggle danmaku list");
   showDanmakuListDialog.value = true;
 };
 
-// 切换清晰度
+/**
+ * 切换清晰度
+ * @param key 清晰度键值
+ */
 const switchResolution = (key: string) => {
   videoStore.setResolution(key);
   if (playerRef.value && currentVideo.value?.videoUrl) {
@@ -1159,6 +1157,7 @@ const switchResolution = (key: string) => {
   }
 };
 
+/** 切换系统画中画 */
 const toggleMiniWindow = async () => {
   if (!playerRef.value) return;
 
@@ -1193,6 +1192,15 @@ useMitt.on(MittEnum.PLAY_VIDEO, (video: VideoItem) => {
     playerRef.value.play();
   }
 });
+
+watch(
+  () => props.poster,
+  (newPoster) => {
+    if (playerRef.value && newPoster) {
+      playerRef.value.poster(newPoster);
+    }
+  }
+);
 
 onMounted(() => {
   if (!videoContainerRef.value) return;
@@ -1322,7 +1330,6 @@ onMounted(() => {
     };
     player.on("volumechange", volumechangeHandler);
     eventListeners.set("volumechange", volumechangeHandler);
-
     // 监听视频加载事件
     const loadedmetadataHandler = () => {
       console.log("Video metadata loaded successfully");
@@ -1335,7 +1342,6 @@ onMounted(() => {
 
     player.on("enterpictureinpicture", enterPipHandler);
     eventListeners.set("enterpictureinpicture", enterPipHandler);
-    // 监听退出系统画中画
     const leavePipHandler = () => {
       isMiniWindow.value = false;
     };
@@ -1343,25 +1349,15 @@ onMounted(() => {
     eventListeners.set("leavepictureinpicture", leavePipHandler);
     const loadeddataHandler = () => {
       console.log("Video data loaded successfully");
-
-      // Show 00:00 danmakus immediately when video data is loaded
-      // This ensures danmakus appear right when the video starts
       if (playerRef.value) {
-        // Reset danmaku state first
         displayedDanmakuIds.clear();
         activeDanmakus.value = [];
-
-        // Clear danmaku timers
         danmakuTimers.forEach((timer) => {
           clearTimeout(timer);
         });
         danmakuTimers.clear();
-
-        // Reset line management state
         lineDanmakus.clear();
         currentLineIndex.value = 0;
-
-        // Process 00:00 danmakus immediately
         danmakuList.value.forEach((danmaku) => {
           const danmakuTime = timeStringToSeconds(danmaku.time);
           if (danmakuTime === 0) {
@@ -1397,9 +1393,6 @@ onMounted(() => {
 
     const seekedHandler = () => {
       console.log("Video seeked to new position");
-
-      // Update active danmakus after seeking completes
-      // This ensures danmakus at the new time position are displayed
       updateActiveDanmakus();
     };
     player.on("seeked", seekedHandler);
@@ -1410,45 +1403,22 @@ onMounted(() => {
   }
 });
 
-// Animation frame IDs for cleanup
-let animationFrameIds: number[] = [];
-
-// Cleanup
 onBeforeUnmount(() => {
   if (playerRef.value) {
     playerRef.value.dispose();
     playerRef.value = null;
   }
   danmakuTimers.clear();
-
-  // Clear animation frames
   animationFrameIds.forEach((id) => {
     cancelAnimationFrame(id);
   });
   animationFrameIds = [];
-
-  // Clear displayed danmaku IDs to reset for next playback
   displayedDanmakuIds.clear();
-
-  // Clear active danmakus array to release memory
   activeDanmakus.value = [];
-
-  // Reset line management state
   lineDanmakus.clear();
   currentLineIndex.value = 0;
 });
 
-// Update poster when props changes
-watch(
-  () => props.poster,
-  (newPoster) => {
-    if (playerRef.value && newPoster) {
-      playerRef.value.poster(newPoster);
-    }
-  }
-);
-
-// Expose player methods
 defineExpose({
   play: () => playerRef.value?.play(),
   pause: () => playerRef.value?.pause(),

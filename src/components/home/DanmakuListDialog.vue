@@ -1,9 +1,9 @@
 <template>
-  <base-dialog v-model:show="dialogVisible" title="弹幕列表">
+  <base-dialog v-model:show="dialogVisible" :title="$t('dialog.danmakuList.title')">
     <div class="danmaku-list-container">
       <div class="danmaku-header">
-        <div class="header-item">时间</div>
-        <div class="header-item content-item">弹幕内容</div>
+        <div class="header-item">{{ $t("dialog.danmakuList.time") }}</div>
+        <div class="header-item content-item">{{ $t("dialog.danmakuList.content") }}</div>
       </div>
       <n-scrollbar class="danmaku-scroll-container">
         <div class="danmaku-list">
@@ -53,11 +53,19 @@ const dialogVisible = computed({
   set: (value) => emit("update:show", value)
 });
 
+/**
+ * 处理点赞操作
+ * @param index 弹幕索引
+ */
 const handleLike = (index: number) => {
   // 这里可以添加点赞逻辑
   console.log("Like danmaku at index:", index);
 };
 
+/**
+ * 处理举报操作
+ * @param index 弹幕索引
+ */
 const handleReport = (index: number) => {
   emit("open-report", index);
 };

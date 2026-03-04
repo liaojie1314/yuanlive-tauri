@@ -185,5 +185,31 @@
     "deleteSelected": "Confirm delete selected {count} items?",
     "deleteConfirm": "Confirm delete this item?",
     "clearAllConfirm": "Confirm clear all history?"
+  },
+  "videoSidePanel": {
+    "comment": "Comment",
+    "detail": "Detail",
+    "follow": "Follow",
+    "followed": "Followed",
+    "playing": "Playing",
+    "loading": "Loading...",
+    "totalComments": "Total comments: {total}",
+    "author": "Author",
+    "collapsedComment": "This comment is collapsed",
+    "reply": "Reply",
+    "collapseReplies": "Collapse replies",
+    "expandReplies": "Expand {count} replies",
+    "placeholder": "Leave a comment",
+    "uploadImage": "Upload image",
+    "emoji": "Emoji"
+  },
+  "userInfo": {
+    "imgAlt": "{username}'s avatar",
+    "following": "Following",
+    "followers": "Followers",
+    "likes": "Likes",
+    "uid": "YuanLive ID:",
+    "applyAnchor": "Apply to be an anchor",
+    "saveLoginInfo": "Save login info"
   }
 }

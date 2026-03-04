@@ -185,5 +185,31 @@
     "deleteSelected": "确认删除选中的 {count} 个对话吗？",
     "deleteConfirm": "确认删除该对话吗？",
     "clearAllConfirm": "确认清空所有历史对话吗？"
+  },
+  "videoSidePanel": {
+    "comment": "评论",
+    "detail": "详情",
+    "follow": "关注",
+    "followed": "已关注",
+    "playing": "播放中",
+    "loading": "加载中...",
+    "totalComments": "全部评论({total})",
+    "author": "作者",
+    "collapsedComment": "该评论被折叠",
+    "reply": "回复",
+    "collapseReplies": "收起回复",
+    "expandReplies": "展开{count}条回复",
+    "placeholder": "留下你的精彩评论吧",
+    "uploadImage": "上传图片",
+    "emoji": "表情"
+  },
+  "userInfo": {
+    "imgAlt": "{username}的头像",
+    "following": "关注",
+    "followers": "粉丝",
+    "likes": "获赞",
+    "uid": "YuanLive号:",
+    "applyAnchor": "申请成为主播",
+    "saveLoginInfo": "保存登录信息"
   }
 }
