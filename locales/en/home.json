@@ -19,7 +19,29 @@
     "noVideo": "No video available"
   },
   "user": {
-    "notSupport": "Live streaming feature is only supported on Windows platform"
+    "publishVideo": "Publish Video",
+    "manageVideo": "Video Management",
+    "openRecord": "Open Live Stream",
+    "liveData": "Live Data",
+    "notSupport": "Live streaming feature is only supported on Windows platform",
+    "noCollectionFolder": "No collection folder available",
+    "createCollectionFolder": "Create collection folder",
+    "createCollectionFolderTip": "Create a collection folder to organize your videos",
+    "noLikeVideo": "No liked videos available",
+    "noLikeVideoTip": "Browse videos and like your favorites",
+    "noMore": "No more content available",
+    "tab": {
+      "works": "works ({count})",
+      "recommend": "recommend",
+      "like": "like",
+      "collection": "collect",
+      "watchHistory": "history",
+      "watchLater": "later",
+      "myReservation": "reservation",
+      "aiNotes": "AINotes",
+      "collectionFolder": "collection folder",
+      "videos": "videos"
+    }
   },
   "profileEdit": {
     "toast": {

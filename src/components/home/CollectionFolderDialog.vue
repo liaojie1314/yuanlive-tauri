@@ -178,4 +178,13 @@ onUnmounted(() => {
     opacity: 0.6;
   }
 }
+
+:deep(.n-input__placeholder span) {
+  display: inline-block;
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: middle;
+}
 </style>

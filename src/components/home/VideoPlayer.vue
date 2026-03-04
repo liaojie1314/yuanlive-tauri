@@ -8,7 +8,7 @@
       <div ref="videoContainerRef" class="video-container"></div>
       <div v-if="isFullscreen" class="exit-fullscreen-btn" @click.stop="toggleFullscreen">
         <i-mdi-chevron-left class="iconify-icon" />
-        <span>退出全屏</span>
+        <span>{{ $t("components.videoPlayer.exitFullscreen") }}</span>
       </div>
 
       <!-- Danmaku Container -->
@@ -34,11 +34,14 @@
               class="danmaku-action-btn like-btn"
               :class="{ liked: danmaku.isLiked }"
               @click="toggleDanmakuLike(danmaku.id)"
-              title="点赞">
+              :title="$t('components.videoPlayer.like')">
               <i-material-symbols-favorite v-if="danmaku.isLiked" class="iconify-icon" />
               <i-material-symbols-favorite-outline v-else class="iconify-icon" />
             </span>
-            <span class="danmaku-action-btn report-btn" @click="openDanmakuReportDialog(danmaku.id)" title="举报">
+            <span
+              class="danmaku-action-btn report-btn"
+              @click="openDanmakuReportDialog(danmaku.id)"
+              :title="$t('components.videoPlayer.report')">
               <i-mdi-alert-outline class="iconify-icon" />
             </span>
           </div>
@@ -55,7 +58,7 @@
               </div>
             </div>
           </template>
-          <div class="tooltip-content">用户信息</div>
+          <div class="tooltip-content">{{ $t("components.videoPlayer.userInfo") }}</div>
         </n-tooltip>
 
         <n-tooltip placement="left" trigger="hover" :raw="true">
@@ -67,7 +70,7 @@
               <div class="interaction-count">{{ likeCount }}</div>
             </div>
           </template>
-          <div class="tooltip-content">点赞</div>
+          <div class="tooltip-content">{{ $t("components.videoPlayer.like") }}</div>
         </n-tooltip>
 
         <n-tooltip placement="left" trigger="hover" :raw="true">
@@ -79,7 +82,7 @@
               <div class="interaction-count">{{ commentCount }}</div>
             </div>
           </template>
-          <div class="tooltip-content">评论</div>
+          <div class="tooltip-content">{{ $t("components.videoPlayer.comment") }}</div>
         </n-tooltip>
 
         <n-tooltip
@@ -99,14 +102,14 @@
 
           <div class="collection-tooltip">
             <div class="collection-header">
-              <span>选择收藏夹</span>
-              <div class="new-folder-btn" @click="onNewFolderClick">+ 新建</div>
+              <span>{{ $t("components.videoPlayer.collectionFolder") }}</span>
+              <div class="new-folder-btn" @click="onNewFolderClick">+ {{ $t("components.videoPlayer.newFolder") }}</div>
             </div>
             <div v-if="collectionFolders.length === 0" class="no-collections">
               <div class="no-collections-icon">
                 <i-material-symbols-folder-outline class="iconify-icon" />
               </div>
-              <div class="no-collections-text">暂无收藏夹~</div>
+              <div class="no-collections-text">{{ $t("components.videoPlayer.noCollections") }}</div>
             </div>
             <div v-else class="collection-list">
               <div v-for="folder in collectionFolders" :key="folder.id" class="collection-item">
@@ -123,8 +126,12 @@
             </div>
 
             <div class="collection-footer">
-              <div class="footer-btn only-collect-btn" @click="onlyCollectVideo">仅收藏视频</div>
-              <div class="footer-btn collect-to-folder-btn" @click="collectToFolder">收藏至收藏夹</div>
+              <div class="footer-btn only-collect-btn" @click="onlyCollectVideo">
+                {{ $t("components.videoPlayer.onlyCollectVideo") }}
+              </div>
+              <div class="footer-btn collect-to-folder-btn" @click="collectToFolder">
+                {{ $t("components.videoPlayer.collectToFolder") }}
+              </div>
             </div>
           </div>
         </n-tooltip>
@@ -141,7 +148,7 @@
           <div class="share-tooltip">
             <div class="share-btn copy-link-btn" @click="copyLink">
               <i-material-symbols-link class="iconify-icon share-btn-icon" />
-              <span class="share-btn-text">复制链接</span>
+              <span class="share-btn-text">{{ $t("components.videoPlayer.copyLink") }}</span>
             </div>
             <div class="share-btn download-btn" @click="downloadVideo">
               <i-material-symbols-download class="iconify-icon share-btn-icon" />
@@ -158,10 +165,10 @@
               <div class="interaction-icon listen-icon">
                 <i-material-symbols-headphones class="iconify-icon" />
               </div>
-              <div class="interaction-count">听视频</div>
+              <div class="interaction-count">{{ $t("components.videoPlayer.listenVideo") }}</div>
             </div>
           </template>
-          <div class="tooltip-content">听视频</div>
+          <div class="tooltip-content">{{ $t("components.videoPlayer.listenVideo") }}</div>
         </n-tooltip>
 
         <n-tooltip placement="left-end" trigger="hover" :raw="true" :show-arrow="false" v-model:show="showMoreTooltip">
@@ -177,34 +184,34 @@
               <div class="more-btn-icon-container">
                 <i-material-symbols-thumb-up class="iconify-icon more-btn-icon" />
               </div>
-              <span class="more-btn-text">推荐</span>
+              <span class="more-btn-text">{{ $t("components.videoPlayer.recommend") }}</span>
             </button>
 
             <button class="more-btn dislike-btn" @click="dislikeVideo">
               <div class="more-btn-icon-container">
                 <i-material-symbols-thumb-down class="iconify-icon more-btn-icon" />
               </div>
-              <span class="more-btn-text">不感兴趣</span>
+              <span class="more-btn-text">{{ $t("components.videoPlayer.dislike") }}</span>
             </button>
             <button class="more-btn unfollow-btn" @click="unfollowCreator">
               <div class="more-btn-icon-container">
                 <i-material-symbols-person-remove class="iconify-icon more-btn-icon" />
               </div>
-              <span class="more-btn-text">取消关注</span>
+              <span class="more-btn-text">{{ $t("components.videoPlayer.unfollow") }}</span>
             </button>
 
             <button class="more-btn report-btn" @click="reportVideo">
               <div class="more-btn-icon-container">
                 <i-material-symbols-warning class="iconify-icon more-btn-icon" />
               </div>
-              <span class="more-btn-text">举报</span>
+              <span class="more-btn-text">{{ $t("components.videoPlayer.report") }}</span>
             </button>
 
             <button class="more-btn shortcuts-btn" @click="showShortcuts">
               <div class="more-btn-icon-container">
                 <i-material-symbols-keyboard class="iconify-icon more-btn-icon" />
               </div>
-              <span class="more-btn-text">快捷键列表</span>
+              <span class="more-btn-text">{{ $t("components.videoPlayer.shortcuts") }}</span>
             </button>
           </div>
         </n-tooltip>
@@ -262,11 +269,11 @@
 
         <div class="right-controls">
           <div class="control-item" v-show="!isPanelOpen || isFullscreen">
-            <span class="control-text">连播</span>
+            <span class="control-text">{{ $t("components.videoPlayer.autoplay") }}</span>
             <n-switch v-model:value="videoStore.autoplay" @update:value="toggleAutoplay" class="control-switch" />
           </div>
           <div class="control-item" v-show="!isPanelOpen || isFullscreen">
-            <span class="control-text">清屏</span>
+            <span class="control-text">{{ $t("components.videoPlayer.clearScreen") }}</span>
             <n-switch v-model:value="videoStore.clearScreen" @update:value="toggleClearScreen" class="control-switch" />
           </div>
           <div class="control-item">
@@ -2368,7 +2375,7 @@ defineExpose({
   width: 12px;
   height: 12px;
   margin-right: 6px;
-  color: var(--action-bar-icon-color);
+  color: var(--disabled-color) !important;
 }
 
 .folder-name {

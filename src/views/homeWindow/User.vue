@@ -11,25 +11,25 @@
           @click="showUploadDialog = true">
           <!-- @click="createWebviewWindow('live2d', 'live2d', 100, 400)"> -->
           <i-mdi-video-plus class="text-xl text-blue-500 mb-1"></i-mdi-video-plus>
-          <span class="text-sm text-[--user-text-color]">发布视频</span>
+          <span class="text-sm text-[--user-text-color]">{{ $t("home.user.publishVideo") }}</span>
         </div>
         <div
           class="flex flex-col items-center justify-center p-3 rounded-lg hover:bg-[--tray-hover] cursor-pointer transition-colors"
           @click="createWebviewWindow('视频管理', 'manageVideo', 1200, 720, '', true, 800, 500)">
           <i-mdi-video class="text-xl text-green-500 mb-1"></i-mdi-video>
-          <span class="text-sm text-[--user-text-color]">视频管理</span>
+          <span class="text-sm text-[--user-text-color]">{{ $t("home.user.manageVideo") }}</span>
         </div>
         <div
           class="flex flex-col items-center justify-center p-3 rounded-lg hover:bg-[--tray-hover] cursor-pointer transition-colors"
           @click="openRecordWindow">
           <i-mdi-camcorder class="text-xl text-red-500 mb-1"></i-mdi-camcorder>
-          <span class="text-sm text-[--user-text-color]">开直播</span>
+          <span class="text-sm text-[--user-text-color]">{{ $t("home.user.openRecord") }}</span>
         </div>
         <div
           class="flex flex-col items-center justify-center p-3 rounded-lg hover:bg-[--tray-hover] cursor-pointer transition-colors"
           @click="createWebviewWindow('直播数据', 'manageLive', 1200, 720, '', true, 800, 500)">
           <i-mdi-chart-line class="text-xl text-orange-500 mb-1"></i-mdi-chart-line>
-          <span class="text-sm text-[--user-text-color]">直播数据</span>
+          <span class="text-sm text-[--user-text-color]">{{ $t("home.user.liveData") }}</span>
         </div>
       </div>
     </div>
@@ -42,26 +42,22 @@
         :tab-active-color="'#ff0050'"
         :tab-font-size="14"
         :tab-font-weight="500">
-        <n-tab-pane name="works" tab="作品 0" />
-        <n-tab-pane name="recommend" tab="推荐" />
-        <n-tab-pane name="like" tab="喜欢" />
-        <n-tab-pane name="collection" tab="收藏" />
-        <n-tab-pane name="history" tab="观看历史" />
-        <n-tab-pane name="later" tab="稍后再看" />
-        <n-tab-pane name="reservation" tab="我的预约" />
-        <n-tab-pane name="ai-note" tab="AI笔记" />
+        <n-tab-pane name="works" :tab="$t('home.user.tab.works', { count: 0 })" />
+        <n-tab-pane name="recommend" :tab="$t('home.user.tab.recommend')" />
+        <n-tab-pane name="like" :tab="$t('home.user.tab.like')" />
+        <n-tab-pane name="collection" :tab="$t('home.user.tab.collection')" />
+        <n-tab-pane name="history" :tab="$t('home.user.tab.watchHistory')" />
+        <n-tab-pane name="later" :tab="$t('home.user.tab.watchLater')" />
+        <n-tab-pane name="reservation" :tab="$t('home.user.tab.myReservation')" />
+        <n-tab-pane name="ai-note" :tab="$t('home.user.tab.aiNotes')" />
       </n-tabs>
-
-      <div class="ml-4 pr-2">
-        <n-button text class="text-[--user-text-color] hover:text-[--text-color] text-sm">批量管理</n-button>
-      </div>
     </div>
 
     <div v-if="activeTopTab === 'collection'" class="mx-4 flex flex-col flex-1 min-h-0">
       <div class="mb-2 px-1">
         <n-tabs v-model:value="activeSubTab" :tab-active-color="'#ff0050'" :tab-font-size="14">
-          <n-tab-pane name="folders" tab="收藏夹" />
-          <n-tab-pane name="videos" tab="视频" />
+          <n-tab-pane name="folders" :tab="$t('home.user.tab.collectionFolder')" />
+          <n-tab-pane name="videos" :tab="$t('home.user.tab.videos')" />
         </n-tabs>
       </div>
 
@@ -70,13 +66,13 @@
           <div class="mb-4">
             <i-mdi-folder-outline class="text-[--disabled-color] text-[100px]" />
           </div>
-          <div class="text-lg font-semibold text-[--text-color] mb-2">暂无收藏夹</div>
-          <div class="text-sm text-[--user-text-color] mb-4">赶快去新建属于自己的收藏夹吧</div>
+          <div class="text-lg font-semibold text-[--text-color] mb-2">{{ $t("home.user.noCollectionFolder") }}</div>
+          <div class="text-sm text-[--user-text-color] mb-4">{{ $t("home.user.createCollectionFolderTip") }}</div>
           <n-button
             type="primary"
             @click="showCreateDialog = true"
             class="bg-[#ff0050] text-white border-none px-6 py-2.5 rounded-lg text-sm font-semibold hover:bg-[#ff3366] transition-colors">
-            + 新建收藏夹
+            + {{ $t("home.user.createCollectionFolder") }}
           </n-button>
         </div>
 
@@ -97,15 +93,15 @@
         <div
           v-if="!isLoading && !hasMore && likedVideos.length > 0"
           class="text-center text-[--user-text-color] py-4 text-sm">
-          没有更多内容了
+          {{ $t("home.user.noMore") }}
         </div>
 
         <div
           v-if="!isLoading && likedVideos.length === 0"
           class="h-full flex flex-col items-center justify-center text-center py-10">
           <i-mdi-heart-outline class="text-[--disabled-color] text-[80px] mb-4" />
-          <div class="text-lg font-semibold text-[--text-color] mb-2">暂无喜欢的视频</div>
-          <div class="text-sm text-[--user-text-color]">去浏览视频，喜欢的话就点个赞吧</div>
+          <div class="text-lg font-semibold text-[--text-color] mb-2">{{ $t("home.user.noLikeVideo") }}</div>
+          <div class="text-sm text-[--user-text-color]">{{ $t("home.user.noLikeVideoTip") }}</div>
         </div>
       </n-scrollbar>
     </div>
@@ -120,12 +116,12 @@ import { useI18n } from "vue-i18n";
 import { useWindow } from "@/hooks/useWindow";
 import { isWindows } from "@/utils/PlatformUtils";
 
-const { t } = useI18n();
-const { createWebviewWindow } = useWindow();
-
 defineOptions({
   name: "User"
 });
+
+const { t } = useI18n();
+const { createWebviewWindow } = useWindow();
 
 interface CollectionFolder {
   id: string;
@@ -143,8 +139,9 @@ interface Video {
   duration?: number;
 }
 
-const saveLoginInfo = ref(true);
+const pageSize = 12;
 
+const saveLoginInfo = ref(true);
 // 顶部标签栏状态
 const activeTopTab = ref("collection");
 // 收藏子标签栏状态
@@ -153,16 +150,18 @@ const activeSubTab = ref("folders");
 const folders = ref<CollectionFolder[]>([]);
 // 新建收藏夹对话框显示状态
 const showCreateDialog = ref(false);
-
 // 喜欢视频相关状态
 const likedVideos = ref<Video[]>([]);
 const currentPage = ref(1);
 const isLoading = ref(false);
 const hasMore = ref(true);
 const showUploadDialog = ref(false);
-const pageSize = 12;
 
-// 处理创建收藏夹
+/**
+ * 创建收藏夹
+ * @param name 收藏夹名称
+ * @param isPublic 是否公开收藏夹
+ */
 const handleCreateFolder = (name: string, isPublic: boolean) => {
   const newFolder: CollectionFolder = {
     id: Date.now().toString(),
@@ -174,7 +173,12 @@ const handleCreateFolder = (name: string, isPublic: boolean) => {
   console.log("创建收藏夹:", newFolder);
 };
 
-// 模拟生成视频数据
+/**
+ * 模拟生成视频数据
+ * @param page 当前页码
+ * @param size 每页视频数量
+ * @returns 模拟视频数组
+ */
 const generateMockVideos = (page: number, size: number): Video[] => {
   const videos: Video[] = [];
   const startIndex = (page - 1) * size;
@@ -201,7 +205,7 @@ const generateMockVideos = (page: number, size: number): Video[] => {
   return videos;
 };
 
-// 加载更多视频
+/** 加载更多视频 */
 const loadMoreVideos = async () => {
   if (isLoading.value || !hasMore.value) return;
 
@@ -227,12 +231,15 @@ const loadMoreVideos = async () => {
   }
 };
 
-// 初始化加载视频
+/** 初始化加载视频 */
 const initLikedVideos = () => {
   loadMoreVideos();
 };
 
-// 监听滚动事件，实现下滑加载
+/**
+ * 监听滚动事件，实现下滑加载
+ * @param event 滚动事件对象
+ */
 const handleScroll = (event: Event) => {
   const scrollElement = event.target as HTMLElement;
   const { scrollTop, scrollHeight, clientHeight } = scrollElement;
@@ -243,9 +250,7 @@ const handleScroll = (event: Event) => {
   }
 };
 
-/**
- * 打开直播窗口
- */
+/** 打开直播窗口 */
 const openRecordWindow = () => {
   if (isWindows()) {
     createWebviewWindow("直播", "record", 1200, 720, "", true, 800, 500);

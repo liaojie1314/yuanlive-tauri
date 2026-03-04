@@ -19,7 +19,29 @@
     "noVideo": "暂无视频"
   },
   "user": {
-    "notSupport": "直播功能仅在Windows平台支持"
+    "publishVideo": "发布视频",
+    "manageVideo": "视频管理",
+    "openRecord": "开直播",
+    "liveData": "直播数据",
+    "notSupport": "直播功能仅在Windows平台支持",
+    "noCollectionFolder": "暂无收藏夹",
+    "createCollectionFolder": "新建收藏夹",
+    "createCollectionFolderTip": "赶快去新建属于自己的收藏夹吧",
+    "noLikeVideo": "暂无喜欢的视频",
+    "noLikeVideoTip": "去浏览视频，喜欢的话就点个赞吧",
+    "noMore": "没有更多内容了",
+    "tab": {
+      "works": "作品 {count}",
+      "recommend": "推荐",
+      "like": "喜欢",
+      "collection": "收藏",
+      "watchHistory": "观看历史",
+      "watchLater": "稍后再看",
+      "myReservation": "我的预约",
+      "aiNotes": "AI笔记",
+      "collectionFolder": "收藏夹",
+      "videos": "视频"
+    }
   },
   "profileEdit": {
     "toast": {

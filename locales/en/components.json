@@ -211,5 +211,25 @@
     "uid": "YuanLive ID:",
     "applyAnchor": "Apply to be an anchor",
     "saveLoginInfo": "Save login info"
+  },
+  "videoPlayer": {
+    "exitFullscreen": "Exit fullscreen",
+    "like": "like",
+    "comment": "comment",
+    "report": "report",
+    "userInfo": "User info",
+    "collectionFolder": "Select collection",
+    "newFolder": "new",
+    "noCollections": "No collections",
+    "onlyCollectVideo": "collect video",
+    "collectToFolder": "to folder",
+    "copyLink": "link",
+    "listenVideo": "listen video",
+    "recommend": "recommend",
+    "dislike": "dislike",
+    "unfollow": "unfollow",
+    "shortcuts": "shortcuts",
+    "autoplay": "autoplay",
+    "clearScreen": "clear screen"
   }
 }

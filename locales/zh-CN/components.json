@@ -211,5 +211,25 @@
     "uid": "YuanLive号:",
     "applyAnchor": "申请成为主播",
     "saveLoginInfo": "保存登录信息"
+  },
+  "videoPlayer": {
+    "exitFullscreen": "退出全屏",
+    "like": "点赞",
+    "comment": "评论",
+    "report": "举报",
+    "userInfo": "用户信息",
+    "collectionFolder": "选择收藏夹",
+    "newFolder": "新建",
+    "noCollections": "暂无收藏夹~",
+    "onlyCollectVideo": "仅收藏视频",
+    "collectToFolder": "收藏至收藏夹",
+    "copyLink": "复制链接",
+    "listenVideo": "听视频",
+    "recommend": "推荐",
+    "dislike": "不感兴趣",
+    "unfollow": "取消关注",
+    "shortcuts": "快捷键列表",
+    "autoplay": "连播",
+    "clearScreen": "清屏"
   }
 }
