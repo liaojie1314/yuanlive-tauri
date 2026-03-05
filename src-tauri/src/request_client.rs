@@ -562,6 +562,7 @@ pub enum Url {
     GetLiveListByCategory,
     GetFollowing,
     GetFollowingLive,
+    GetHotCategory,
     GetVideoListByUid,
     MessageSendStream,
     MapCoordTranslate,
@@ -591,9 +592,10 @@ impl Url {
             Url::GetLiveCategory => (http::Method::GET, "live/category/tree"),
             Url::GetLiveListByCategory => (http::Method::GET, "live/category/listByCategory"),
             Url::GetFollowingLive => (http::Method::GET, "user/follow/following/live"),
+            Url::GetHotCategory => (http::Method::GET, "/live/category/getHotCategory"),
             // 关注相关
             Url::GetFollowing => (http::Method::GET, "user/follow/following"),
-            Url::GetVideoListByUid => (http::Method::GET, "live/record/getRecordByUid/{uid}"),
+            Url::GetVideoListByUid => (http::Method::POST, "live/record/pageQueryRecordByUid"),
             // AI 相关
             Url::MessageSendStream => (http::Method::POST, "ai/chat/stream"),
             // 地图相关
@@ -625,6 +627,7 @@ impl Url {
             "getLiveCategory" => Ok(Url::GetLiveCategory),
             "getLiveListByCategory" => Ok(Url::GetLiveListByCategory),
             "getFollowingLive" => Ok(Url::GetFollowingLive),
+            "getHotCategory" => Ok(Url::GetHotCategory),
             // 关注相关
             "getFollowing" => Ok(Url::GetFollowing),
             "getVideoListByUid" => Ok(Url::GetVideoListByUid),

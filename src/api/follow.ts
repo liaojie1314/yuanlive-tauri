@@ -26,6 +26,7 @@ export interface VideoItem {
   commentCount: number;
   shareCount: number;
   collectCount: number;
+  description: string;
   isPlaying?: boolean;
 }
 
@@ -33,11 +34,13 @@ export interface VideoItem {
  * 获取关注的人的视频列表
  * @returns 关注的人的视频列表
  */
-export async function getVideoListByUidApi(uid: number) {
+export async function getVideoListByUidApi(uid: number, pageNum?: number, pageSize?: number) {
   return await request<VideoItem[]>({
     url: UrlEnum.GET_VIDEO_LIST_BY_UID,
-    pathParams: {
-      uid
+    body: {
+      uid,
+      pageNum,
+      pageSize
     }
   });
 }

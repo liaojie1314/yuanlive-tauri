@@ -11,6 +11,23 @@ export async function getLiveCategoryApi() {
   });
 }
 
+export interface HotCategoryItem {
+  id: number;
+  label: string;
+  value: string;
+  parentValue: string;
+}
+
+/**
+ * 获取热门类别
+ * @returns 6个热门类别
+ */
+export async function getHotCategoryApi() {
+  return await request<HotCategoryItem[]>({
+    url: UrlEnum.GET_HOT_CATEGORY
+  });
+}
+
 export interface FollowLiveItem {
   username: string;
   avatar: string;

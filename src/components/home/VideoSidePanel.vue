@@ -30,7 +30,7 @@
               </div>
 
               <p class="text-sm mb-6 leading-relaxed">
-                这里是视频的详情描述内容，可能包含一些标签或者说明文字，描述视频的精彩之处...
+                {{ videoDesc }}
               </p>
 
               <div class="video-grid">
@@ -248,6 +248,7 @@ const isLoadingMore = ref(false);
 const commentText = ref("");
 const showEmojiPicker = ref(false);
 const uploadImagePreview = ref(""); // 预览图片URL
+const videoDesc = ref("");
 // 模拟图中数据
 const commentList = ref<CommentData[]>([
   {
@@ -445,6 +446,7 @@ const fetchVideos = async (userId: number) => {
           commentCount: 120,
           shareCount: 50,
           collectCount: 300,
+          description: "1111111111111",
           isPlaying: true // 默认第一个是播放状态
         },
         {
@@ -455,11 +457,13 @@ const fetchVideos = async (userId: number) => {
           commentCount: 10,
           shareCount: 2,
           collectCount: 15,
+          description: "2131231234",
           isPlaying: false
         }
       ];
     }
     if (videoList.value.length > 0) {
+      videoDesc.value = videoList.value[0].description;
       useMitt.emit(MittEnum.PLAY_VIDEO, videoList.value[0]);
     }
   }
@@ -473,7 +477,7 @@ const onVideoClick = (clickedVideo: VideoItem) => {
   // 将所有视频设为非播放状态，当前点击的设为播放状态
   videoList.value.forEach((v) => (v.isPlaying = false));
   clickedVideo.isPlaying = true;
-
+  videoDesc.value = clickedVideo.description;
   useMitt.emit(MittEnum.PLAY_VIDEO, clickedVideo);
 };
 

@@ -46,6 +46,8 @@ export enum UrlEnum {
   GET_USER_INFO = "getUserInfo",
   // 获取直播类别
   GET_LIVE_CATEGORY = "getLiveCategory",
+  // 获取热门类别
+  GET_HOT_CATEGORY = "getHotCategory",
   // 获取人气前5的直播列表
   GET_TOP_FIVE_LIVE = "getTopFiveLive",
   // 获取当前直播类别的所有直播列表

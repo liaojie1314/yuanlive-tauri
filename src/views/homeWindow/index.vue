@@ -84,7 +84,7 @@
                 :key="tag.id"
                 class="bg-[--tray-bg-color] rounded-lg p-[14px] text-center text-sm font-medium cursor-pointer hover:bg-[--tray-hover] transition-colors duration-300"
                 @click="handleCategoryChange(tag.parentValue, tag.value)">
-                {{ tag.name }}
+                {{ tag.label }}
               </div>
             </div>
           </div>
@@ -112,21 +112,16 @@ import { useMitt } from "@/hooks/useMitt";
 import {
   getTopFiveLiveApi,
   getFollowingLiveApi,
+  getHotCategoryApi,
   getLiveListByCategoryApi,
   type LiveItem,
-  type FollowLiveItem
+  type FollowLiveItem,
+  type HotCategoryItem
 } from "@/api/live";
 
 defineOptions({
   name: "Index"
 });
-
-interface HotCategoryInfo {
-  id: number;
-  name: string;
-  value: string;
-  parentValue: string;
-}
 
 const router = useRouter();
 
@@ -137,7 +132,7 @@ const activeChildCategory = ref("all");
 const liveList = ref<LiveItem[]>([]);
 const topLiveList = ref<LiveItem[]>([]);
 const followLiveList = ref<FollowLiveItem[]>([]);
-const hotTags = ref<HotCategoryInfo[]>([]);
+const hotTags = ref<HotCategoryItem[]>([]);
 // 搜索状态控制
 const isSearching = ref(false);
 const currentSearchQuery = ref("");
@@ -179,8 +174,9 @@ useMitt.on(MittEnum.SEARCH, (keyword: string) => {
 
 onMounted(async () => {
   topLiveList.value = await getTopFiveLiveApi();
-  liveList.value = await getLiveListByCategoryApi("all");
+  hotTags.value = await getHotCategoryApi();
   followLiveList.value = await getFollowingLiveApi();
+  liveList.value = await getLiveListByCategoryApi("all");
 });
 </script>
 
