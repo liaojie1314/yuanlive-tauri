@@ -53,7 +53,7 @@ const emit = defineEmits<{
   "submit-report": [index: number, type: string, description: string];
 }>();
 
-// 举报类型选项 TODO: 是否从后端获取
+// 举报类型选项
 const reportTypes = [
   { label: "色情低俗", value: "pornographic" },
   { label: "违法犯罪", value: "illegal" },
@@ -160,7 +160,7 @@ const handleSubmit = () => {
   transition: border-color 0.2s ease;
   box-sizing: border-box;
 
-  &:placeholder {
+  &::placeholder {
     color: var(--user-text-color);
   }
 

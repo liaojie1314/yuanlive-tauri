@@ -265,9 +265,7 @@ impl RequestClient {
         scene: &str,
     ) -> Result<ApiResult<serde_json::Value>, anyhow::Error> {
         let (method, path) = Url::CheckUploadedChunks.get_url();
-        let params = Some(
-            serde_json::json!({ "fileHash": file_hash, "fileName": file_name, "scene": scene }),
-        );
+        let params = Some(json!({ "fileHash": file_hash, "fileName": file_name, "scene": scene }));
         self.base_request(
             method,
             path,
@@ -287,7 +285,7 @@ impl RequestClient {
         scene: &str,
     ) -> Result<ApiResult<serde_json::Value>, anyhow::Error> {
         let (method, path) = Url::MergeChunks.get_url();
-        let body = Some(serde_json::json!({
+        let body = Some(json!({
             "fileHash": file_hash,
             "fileName": file_name,
             "totalChunks": total_chunks,
