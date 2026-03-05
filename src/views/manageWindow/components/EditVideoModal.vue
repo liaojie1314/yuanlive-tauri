@@ -168,6 +168,19 @@ import { UploadFileInfo, type TagProps } from "naive-ui";
 import { useDownload } from "@/hooks/useDownload";
 import { useVideoFrame } from "@/hooks/useVideoFrame";
 
+const { frames, isGenerating, generateFrames, clearFrames } = useVideoFrame();
+const { downloadFile, isDownloading, process: downloadProgress, onLoaded } = useDownload();
+
+const props = defineProps<{
+  show: boolean;
+  videoData: VideoItem | null;
+}>();
+
+const emit = defineEmits<{
+  "update:show": [value: boolean];
+  save: [data: VideoItem];
+}>();
+
 interface VideoItem {
   key: string;
   title: string;
@@ -184,17 +197,11 @@ interface VideoItem {
   videoUrl?: string;
 }
 
-const props = defineProps<{
-  show: boolean;
-  videoData: VideoItem | null;
-}>();
-
-const emit = defineEmits<{
-  "update:show": [value: boolean];
-  save: [data: VideoItem];
-}>();
-
-const { frames, isGenerating, generateFrames, clearFrames } = useVideoFrame();
+const statusMap: Record<string, { type: TagProps["type"]; text: string }> = {
+  published: { type: "success", text: "已发布" },
+  auditing: { type: "warning", text: "审核中" },
+  offline: { type: "error", text: "已下架" }
+};
 
 // 表单数据
 const form = ref<VideoItem>({} as VideoItem);
@@ -202,18 +209,33 @@ const newVideoFile = ref<File | null>(null);
 const showFrameSelector = ref(false);
 const saving = ref(false);
 
-const { downloadFile, isDownloading, process: downloadProgress, onLoaded } = useDownload();
+// 视频源文件名展示
+const videoFileName = computed(() => {
+  if (newVideoFile.value) return newVideoFile.value.name;
+  return form.value.fileName || "原视频文件.mp4";
+});
 
-// 监听下载状态
-onLoaded((status) => {
-  if (status === "success") {
-    window.$message.success("文件下载完成");
-  } else {
-    window.$message.error("下载失败或已取消");
+// 是否有可用的视频源来提取帧
+const hasVideoSource = computed(() => {
+  return !!newVideoFile.value || !!form.value.videoUrl;
+});
+
+const statusTagType = computed((): TagProps["type"] => {
+  return statusMap[form.value.status]?.type || "default";
+});
+
+const statusText = computed(() => statusMap[form.value.status]?.text || "未知");
+
+// 弹窗显示控制
+const dialogVisible = computed({
+  get: () => props.show,
+  set: (val) => {
+    if (!val) reset();
+    emit("update:show", val);
   }
 });
 
-// 3. 实现下载处理函数
+/** 处理视频下载 */
 const handleDownload = async () => {
   if (!form.value.videoUrl) {
     window.$message.warning("当前视频无下载地址");
@@ -236,51 +258,7 @@ const handleDownload = async () => {
   }
 };
 
-// 视频源文件名展示
-const videoFileName = computed(() => {
-  if (newVideoFile.value) return newVideoFile.value.name;
-  return form.value.fileName || "原视频文件.mp4";
-});
-
-// 是否有可用的视频源来提取帧
-const hasVideoSource = computed(() => {
-  return !!newVideoFile.value || !!form.value.videoUrl;
-});
-
-const statusMap: Record<string, { type: TagProps["type"]; text: string }> = {
-  published: { type: "success", text: "已发布" },
-  auditing: { type: "warning", text: "审核中" },
-  offline: { type: "error", text: "已下架" }
-};
-
-const statusTagType = computed((): TagProps["type"] => {
-  return statusMap[form.value.status]?.type || "default";
-});
-
-const statusText = computed(() => statusMap[form.value.status]?.text || "未知");
-
-// 弹窗显示控制
-const dialogVisible = computed({
-  get: () => props.show,
-  set: (val) => {
-    if (!val) reset();
-    emit("update:show", val);
-  }
-});
-
-// 监听 props 数据变化初始化表单
-watch(
-  () => props.videoData,
-  (newVal) => {
-    if (newVal) {
-      // 深拷贝避免影响父组件列表显示
-      form.value = JSON.parse(JSON.stringify(newVal));
-    }
-  },
-  { immediate: true }
-);
-
-// 上传图片封面
+/** 上传图片封面 */
 const handleUploadCover = (data: { file: UploadFileInfo }) => {
   const file = data.file.file;
   if (file) {
@@ -289,7 +267,10 @@ const handleUploadCover = (data: { file: UploadFileInfo }) => {
   }
 };
 
-// 替换源文件
+/**
+ * 替换视频源文件
+ * @param data 上传的视频文件
+ */
 const handleReplaceVideo = (data: { file: UploadFileInfo }) => {
   const file = data.file.file;
   if (file) {
@@ -300,7 +281,7 @@ const handleReplaceVideo = (data: { file: UploadFileInfo }) => {
   }
 };
 
-// 触发提取帧
+/** 触发提取帧 */
 const triggerFrameExtract = async () => {
   showFrameSelector.value = true;
 
@@ -314,7 +295,7 @@ const triggerFrameExtract = async () => {
   }
 };
 
-// 切换上下架状态
+/** 切换上下架状态 */
 const toggleStatus = () => {
   if (form.value.status === "published") {
     form.value.status = "offline";
@@ -325,7 +306,7 @@ const toggleStatus = () => {
   }
 };
 
-// 保存
+/** 保存视频信息 */
 const handleSave = async () => {
   saving.value = true;
 
@@ -342,13 +323,36 @@ const handleSave = async () => {
   close();
 };
 
+/** 关闭弹窗 */
 const close = () => {
   dialogVisible.value = false;
 };
 
+/** 重置表单数据 */
 const reset = () => {
   newVideoFile.value = null;
   showFrameSelector.value = false;
   clearFrames();
 };
+
+// 监听下载状态
+onLoaded((status) => {
+  if (status === "success") {
+    window.$message.success("文件下载完成");
+  } else {
+    window.$message.error("下载失败或已取消");
+  }
+});
+
+// 监听 props 数据变化初始化表单
+watch(
+  () => props.videoData,
+  (newVal) => {
+    if (newVal) {
+      // 深拷贝避免影响父组件列表显示
+      form.value = JSON.parse(JSON.stringify(newVal));
+    }
+  },
+  { immediate: true }
+);
 </script>

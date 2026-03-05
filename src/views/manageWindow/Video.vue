@@ -127,6 +127,10 @@ import { useEcharts } from "@/hooks/useEcharts";
 import { useSettingStore } from "@/stores/setting";
 import EditVideoModal from "./components/EditVideoModal.vue";
 
+const settingStore = useSettingStore();
+const { themes } = storeToRefs(settingStore);
+const naiveTheme = computed(() => (themes.value.content === ThemeEnum.DARK ? darkTheme : lightTheme));
+
 interface VideoItem {
   key: string;
   title: string;
@@ -141,186 +145,6 @@ interface VideoItem {
   fileName?: string;
   description?: string;
 }
-
-const settingStore = useSettingStore();
-const { themes } = storeToRefs(settingStore);
-const naiveTheme = computed(() => (themes.value.content === ThemeEnum.DARK ? darkTheme : lightTheme));
-
-// 1. 饼图 (互动数据)
-const pieChartRef = ref<HTMLElement | null>(null);
-const { setOption: setPieOption, resize: resizePie } = useEcharts(pieChartRef);
-
-// 2. 折线图 (收益趋势)
-const lineChartRef = ref<HTMLElement | null>(null);
-const { setOption: setLineOption, resize: resizeLine } = useEcharts(lineChartRef);
-const currentVideo = ref<VideoItem | null>(null);
-
-const handleResize = () => {
-  resizePie();
-  resizeLine();
-};
-
-const initCharts = () => {
-  // 饼图配置
-  setPieOption({
-    tooltip: { trigger: "item" },
-    legend: { bottom: "5%", left: "center", itemWidth: 10, itemHeight: 10 },
-    series: [
-      {
-        name: "互动分布",
-        type: "pie",
-        radius: ["40%", "65%"],
-        center: ["50%", "45%"],
-        avoidLabelOverlap: false,
-        itemStyle: {
-          borderRadius: 8,
-          borderColor: "var(--tray-bg-color)",
-          borderWidth: 2
-        },
-        label: { show: false, position: "center" },
-        emphasis: {
-          label: { show: true, fontSize: 18, fontWeight: "bold", color: "var(--text-color)" }
-        },
-        labelLine: { show: false },
-        data: [
-          { value: 1048, name: "点赞" },
-          { value: 735, name: "评论" },
-          { value: 580, name: "转发" },
-          { value: 484, name: "收藏" },
-          { value: 300, name: "弹幕" }
-        ]
-      }
-    ]
-  });
-
-  // 折线图配置
-  setLineOption({
-    tooltip: {
-      trigger: "axis",
-      backgroundColor: "rgba(50, 50, 50, 0.7)",
-      borderColor: "#333",
-      textStyle: { color: "#fff" }
-    },
-    grid: { left: "20", right: "20", bottom: "20", top: "40", containLabel: true },
-    xAxis: {
-      type: "category",
-      boundaryGap: false,
-      data: ["周一", "周二", "周三", "周四", "周五", "周六", "周日"],
-      axisLine: { lineStyle: { color: "#888" } },
-      axisLabel: { color: "#888" }
-    },
-    yAxis: {
-      type: "value",
-      splitLine: { lineStyle: { type: "dashed", color: "#eee" } }
-    },
-    series: [
-      {
-        name: "视频收益",
-        type: "line",
-        smooth: true,
-        showSymbol: false,
-        lineStyle: { width: 3, color: "#ff0050" },
-        areaStyle: {
-          opacity: 0.2,
-          color: {
-            type: "linear",
-            x: 0,
-            y: 0,
-            x2: 0,
-            y2: 1,
-            colorStops: [
-              { offset: 0, color: "rgb(255, 0, 80)" },
-              { offset: 1, color: "rgba(255, 255, 255, 0)" }
-            ]
-          }
-        },
-        data: [120, 132, 101, 134, 90, 230, 210]
-      },
-      {
-        name: "直播收益",
-        type: "line",
-        smooth: true,
-        showSymbol: false,
-        lineStyle: { width: 3, color: "#8884d8" },
-        areaStyle: {
-          opacity: 0.2,
-          color: {
-            type: "linear",
-            x: 0,
-            y: 0,
-            x2: 0,
-            y2: 1,
-            colorStops: [
-              { offset: 0, color: "#8884d8" },
-              { offset: 1, color: "rgba(255, 255, 255, 0)" }
-            ]
-          }
-        },
-        data: [220, 182, 191, 234, 290, 330, 310]
-      }
-    ]
-  });
-};
-
-// 确保 DOM 挂载后初始化图表
-onMounted(() => {
-  setTimeout(() => {
-    initCharts();
-  }, 100);
-});
-
-const searchText = ref("");
-const showEditModal = ref(false);
-
-// 模拟数据
-const videoList = ref<VideoItem[]>([
-  {
-    key: "1",
-    title: "原神：纳塔最新探索攻略，宝箱全收集",
-    coverUrl: "https://picsum.photos/id/10/200/112",
-    createTime: "2024-05-20 12:00",
-    status: "published",
-    stats: { views: 12000, likes: 3400, comments: 120 }
-  },
-  {
-    key: "2",
-    title: "VUE3 + Tauri 开发实战教程 EP01",
-    coverUrl: "https://picsum.photos/id/20/200/112",
-    createTime: "2024-05-21 14:30",
-    status: "auditing",
-    stats: { views: 0, likes: 0, comments: 0 }
-  },
-  {
-    key: "3",
-    title: "记录我的猫咪日常",
-    coverUrl: "https://picsum.photos/id/30/200/112",
-    createTime: "2024-05-18 09:00",
-    status: "offline",
-    stats: { views: 500, likes: 20, comments: 5 }
-  },
-  {
-    key: "4",
-    title: "黑神话：悟空 实机演示解析",
-    coverUrl: "https://picsum.photos/id/40/200/112",
-    createTime: "2024-05-22 10:00",
-    status: "published",
-    stats: { views: 45000, likes: 8900, comments: 560 }
-  },
-  {
-    key: "5",
-    title: "前端性能优化指南 2024版",
-    coverUrl: "https://picsum.photos/id/50/200/112",
-    createTime: "2024-05-23 16:20",
-    status: "published",
-    stats: { views: 3200, likes: 450, comments: 32 }
-  }
-]);
-
-// 过滤列表
-const filteredVideos = computed(() => {
-  if (!searchText.value) return videoList.value;
-  return videoList.value.filter((v) => v.title.includes(searchText.value));
-});
 
 // 表格列定义
 const columns: DataTableColumns<VideoItem> = [
@@ -440,6 +264,177 @@ const columns: DataTableColumns<VideoItem> = [
   }
 ];
 
+// 1. 饼图 (互动数据)
+const pieChartRef = ref<HTMLElement | null>(null);
+const { setOption: setPieOption, resize: resizePie } = useEcharts(pieChartRef);
+// 2. 折线图 (收益趋势)
+const lineChartRef = ref<HTMLElement | null>(null);
+const { setOption: setLineOption, resize: resizeLine } = useEcharts(lineChartRef);
+const currentVideo = ref<VideoItem | null>(null);
+
+const searchText = ref("");
+const showEditModal = ref(false);
+
+// 模拟数据
+const videoList = ref<VideoItem[]>([
+  {
+    key: "1",
+    title: "原神：纳塔最新探索攻略，宝箱全收集",
+    coverUrl: "https://picsum.photos/id/10/200/112",
+    createTime: "2024-05-20 12:00",
+    status: "published",
+    stats: { views: 12000, likes: 3400, comments: 120 }
+  },
+  {
+    key: "2",
+    title: "VUE3 + Tauri 开发实战教程 EP01",
+    coverUrl: "https://picsum.photos/id/20/200/112",
+    createTime: "2024-05-21 14:30",
+    status: "auditing",
+    stats: { views: 0, likes: 0, comments: 0 }
+  },
+  {
+    key: "3",
+    title: "记录我的猫咪日常",
+    coverUrl: "https://picsum.photos/id/30/200/112",
+    createTime: "2024-05-18 09:00",
+    status: "offline",
+    stats: { views: 500, likes: 20, comments: 5 }
+  },
+  {
+    key: "4",
+    title: "黑神话：悟空 实机演示解析",
+    coverUrl: "https://picsum.photos/id/40/200/112",
+    createTime: "2024-05-22 10:00",
+    status: "published",
+    stats: { views: 45000, likes: 8900, comments: 560 }
+  },
+  {
+    key: "5",
+    title: "前端性能优化指南 2024版",
+    coverUrl: "https://picsum.photos/id/50/200/112",
+    createTime: "2024-05-23 16:20",
+    status: "published",
+    stats: { views: 3200, likes: 450, comments: 32 }
+  }
+]);
+
+// 过滤列表
+const filteredVideos = computed(() => {
+  if (!searchText.value) return videoList.value;
+  return videoList.value.filter((v) => v.title.includes(searchText.value));
+});
+
+/** 初始化echarts图表 */
+const initCharts = () => {
+  // 饼图配置
+  setPieOption({
+    tooltip: { trigger: "item" },
+    legend: { bottom: "5%", left: "center", itemWidth: 10, itemHeight: 10 },
+    series: [
+      {
+        name: "互动分布",
+        type: "pie",
+        radius: ["40%", "65%"],
+        center: ["50%", "45%"],
+        avoidLabelOverlap: false,
+        itemStyle: {
+          borderRadius: 8,
+          borderColor: "var(--tray-bg-color)",
+          borderWidth: 2
+        },
+        label: { show: false, position: "center" },
+        emphasis: {
+          label: { show: true, fontSize: 18, fontWeight: "bold", color: "var(--text-color)" }
+        },
+        labelLine: { show: false },
+        data: [
+          { value: 1048, name: "点赞" },
+          { value: 735, name: "评论" },
+          { value: 580, name: "转发" },
+          { value: 484, name: "收藏" },
+          { value: 300, name: "弹幕" }
+        ]
+      }
+    ]
+  });
+
+  // 折线图配置
+  setLineOption({
+    tooltip: {
+      trigger: "axis",
+      backgroundColor: "rgba(50, 50, 50, 0.7)",
+      borderColor: "#333",
+      textStyle: { color: "#fff" }
+    },
+    grid: { left: "20", right: "20", bottom: "20", top: "40", containLabel: true },
+    xAxis: {
+      type: "category",
+      boundaryGap: false,
+      data: ["周一", "周二", "周三", "周四", "周五", "周六", "周日"],
+      axisLine: { lineStyle: { color: "#888" } },
+      axisLabel: { color: "#888" }
+    },
+    yAxis: {
+      type: "value",
+      splitLine: { lineStyle: { type: "dashed", color: "#eee" } }
+    },
+    series: [
+      {
+        name: "视频收益",
+        type: "line",
+        smooth: true,
+        showSymbol: false,
+        lineStyle: { width: 3, color: "#ff0050" },
+        areaStyle: {
+          opacity: 0.2,
+          color: {
+            type: "linear",
+            x: 0,
+            y: 0,
+            x2: 0,
+            y2: 1,
+            colorStops: [
+              { offset: 0, color: "rgb(255, 0, 80)" },
+              { offset: 1, color: "rgba(255, 255, 255, 0)" }
+            ]
+          }
+        },
+        data: [120, 132, 101, 134, 90, 230, 210]
+      },
+      {
+        name: "直播收益",
+        type: "line",
+        smooth: true,
+        showSymbol: false,
+        lineStyle: { width: 3, color: "#8884d8" },
+        areaStyle: {
+          opacity: 0.2,
+          color: {
+            type: "linear",
+            x: 0,
+            y: 0,
+            x2: 0,
+            y2: 1,
+            colorStops: [
+              { offset: 0, color: "#8884d8" },
+              { offset: 1, color: "rgba(255, 255, 255, 0)" }
+            ]
+          }
+        },
+        data: [220, 182, 191, 234, 290, 330, 310]
+      }
+    ]
+  });
+};
+
+/** 处理图表.resize事件 */
+const handleResize = () => {
+  resizePie();
+  resizeLine();
+};
+
+/** 处理刷新按钮点击事件 */
 const handleRefresh = () => {
   window.$message.loading("正在刷新数据...");
   setTimeout(() => {
@@ -447,11 +442,19 @@ const handleRefresh = () => {
   }, 1000);
 };
 
+/**
+ * 处理编辑按钮点击事件
+ * @param row 要编辑的视频项
+ */
 const handleEdit = (row: VideoItem) => {
   currentVideo.value = row;
   showEditModal.value = true;
 };
 
+/**
+ * 处理保存编辑按钮点击事件
+ * @param updatedData 更新后的视频项数据
+ */
 const handleSaveEdit = (updatedData: VideoItem) => {
   const index = videoList.value.findIndex((v) => v.key === updatedData.key);
   if (index !== -1) {
@@ -460,6 +463,10 @@ const handleSaveEdit = (updatedData: VideoItem) => {
   }
 };
 
+/**
+ * 处理删除按钮点击事件
+ * @param row 要删除的视频项
+ */
 const handleDelete = (row: VideoItem) => {
   window.$dialog.warning({
     title: "确认删除",
@@ -475,6 +482,9 @@ const handleDelete = (row: VideoItem) => {
 
 onMounted(async () => {
   await getCurrentWebviewWindow().show();
+  setTimeout(() => {
+    initCharts();
+  }, 100);
   window.addEventListener("resize", handleResize);
 });
 

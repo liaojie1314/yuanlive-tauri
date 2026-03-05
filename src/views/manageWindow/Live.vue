@@ -240,6 +240,13 @@ import { ThemeEnum } from "@/enums";
 import { useEcharts } from "@/hooks/useEcharts";
 import { useSettingStore } from "@/stores/setting";
 
+const settingStore = useSettingStore();
+const { themes } = storeToRefs(settingStore);
+const naiveTheme = computed(() => (themes.value.content === ThemeEnum.DARK ? darkTheme : lightTheme));
+
+const trendChartRef = ref<HTMLElement | null>(null);
+const { setOption, resize } = useEcharts(trendChartRef);
+
 // 历史直播列表
 interface HistoryStream {
   key: string;
@@ -249,49 +256,6 @@ interface HistoryStream {
   stats: { uv: number; revenue: number; danmaku: number };
   cover: string;
 }
-
-const settingStore = useSettingStore();
-const { themes } = storeToRefs(settingStore);
-const naiveTheme = computed(() => (themes.value.content === ThemeEnum.DARK ? darkTheme : lightTheme));
-
-const trendChartRef = ref<HTMLElement | null>(null);
-const { setOption, resize } = useEcharts(trendChartRef);
-
-const initChart = () => {
-  // 模拟数据
-  const xData = Array.from({ length: 20 }, (_, i) => `20:${(i * 3).toString().padStart(2, "0")}`);
-  const popularity = xData.map(() => Math.floor(Math.random() * 20000 + 30000));
-
-  setOption({
-    tooltip: { trigger: "axis", backgroundColor: "rgba(0,0,0,0.7)", textStyle: { color: "#fff" }, borderWidth: 0 },
-    grid: { left: "10px", right: "20px", top: "20px", bottom: "20px", containLabel: true },
-    xAxis: { type: "category", boundaryGap: false, data: xData, axisLine: { lineStyle: { color: "#555" } } },
-    yAxis: { type: "value", splitLine: { lineStyle: { type: "dashed", color: "#333" } } },
-    series: [
-      {
-        name: "人气",
-        type: "line",
-        smooth: true,
-        showSymbol: false,
-        areaStyle: {
-          color: {
-            type: "linear",
-            x: 0,
-            y: 0,
-            x2: 0,
-            y2: 1,
-            colorStops: [
-              { offset: 0, color: "rgba(255, 69, 69, 0.3)" },
-              { offset: 1, color: "rgba(255, 69, 69, 0)" }
-            ]
-          }
-        },
-        lineStyle: { width: 3, color: "#ff4545" },
-        data: popularity
-      }
-    ]
-  });
-};
 
 const hotWords = [
   { word: "2333", count: 2103, percent: 100 },
@@ -303,16 +267,6 @@ const hotWords = [
   { word: "晚安", count: 480, percent: 20 },
   { word: "Vue", count: 320, percent: 15 }
 ];
-
-// SC 数据
-const scData = Array.from({ length: 15 }).map((_, i) => ({
-  key: i,
-  user: `老板_${i}`,
-  avatar: `https://picsum.photos/seed/${i + 100}/40`,
-  price: [30, 50, 100, 500][i % 4],
-  time: `20:4${i % 10}`,
-  content: i % 2 === 0 ? "主播讲得太好了，支持一下！" : "求问这个主题在哪里下载？"
-}));
 
 const scColumns = [
   {
@@ -378,49 +332,6 @@ const giftColumns: DataTableColumns<any> = [
   }
 ];
 
-const historyData = ref<HistoryStream[]>([
-  {
-    key: "1",
-    title: "聊聊Tauri开发与Vue3的最佳实践",
-    startTime: "2026-02-11 19:30",
-    duration: "04:15:20",
-    stats: { uv: 156032, revenue: 3240.5, danmaku: 28902 },
-    cover: "https://picsum.photos/id/48/200/112"
-  },
-  {
-    key: "2",
-    title: "周末加班：手写一个即时通讯系统",
-    startTime: "2026-02-09 14:00",
-    duration: "06:20:11",
-    stats: { uv: 98021, revenue: 1520.0, danmaku: 14500 },
-    cover: "https://picsum.photos/id/2/200/112"
-  },
-  {
-    key: "3",
-    title: "原神启动！探索新地图",
-    startTime: "2026-02-05 20:00",
-    duration: "02:45:30",
-    stats: { uv: 210450, revenue: 5680.0, danmaku: 45200 },
-    cover: "https://picsum.photos/id/3/200/112"
-  },
-  {
-    key: "4",
-    title: "前端面试题在线答疑",
-    startTime: "2026-02-01 19:00",
-    duration: "03:10:05",
-    stats: { uv: 45020, revenue: 320.5, danmaku: 8900 },
-    cover: "https://picsum.photos/id/4/200/112"
-  },
-  {
-    key: "5",
-    title: "深夜代码ASMR：写Bug",
-    startTime: "2026-01-28 23:00",
-    duration: "01:30:00",
-    stats: { uv: 12005, revenue: 50.0, danmaku: 1200 },
-    cover: "https://picsum.photos/id/5/200/112"
-  }
-]);
-
 const historyColumns: DataTableColumns<HistoryStream> = [
   {
     title: "直播主题",
@@ -476,6 +387,96 @@ const historyColumns: DataTableColumns<HistoryStream> = [
     }
   }
 ];
+
+// SC 数据
+const scData = Array.from({ length: 15 }).map((_, i) => ({
+  key: i,
+  user: `老板_${i}`,
+  avatar: `https://picsum.photos/seed/${i + 100}/40`,
+  price: [30, 50, 100, 500][i % 4],
+  time: `20:4${i % 10}`,
+  content: i % 2 === 0 ? "主播讲得太好了，支持一下！" : "求问这个主题在哪里下载？"
+}));
+
+const historyData = ref<HistoryStream[]>([
+  {
+    key: "1",
+    title: "聊聊Tauri开发与Vue3的最佳实践",
+    startTime: "2026-02-11 19:30",
+    duration: "04:15:20",
+    stats: { uv: 156032, revenue: 3240.5, danmaku: 28902 },
+    cover: "https://picsum.photos/id/48/200/112"
+  },
+  {
+    key: "2",
+    title: "周末加班：手写一个即时通讯系统",
+    startTime: "2026-02-09 14:00",
+    duration: "06:20:11",
+    stats: { uv: 98021, revenue: 1520.0, danmaku: 14500 },
+    cover: "https://picsum.photos/id/2/200/112"
+  },
+  {
+    key: "3",
+    title: "原神启动！探索新地图",
+    startTime: "2026-02-05 20:00",
+    duration: "02:45:30",
+    stats: { uv: 210450, revenue: 5680.0, danmaku: 45200 },
+    cover: "https://picsum.photos/id/3/200/112"
+  },
+  {
+    key: "4",
+    title: "前端面试题在线答疑",
+    startTime: "2026-02-01 19:00",
+    duration: "03:10:05",
+    stats: { uv: 45020, revenue: 320.5, danmaku: 8900 },
+    cover: "https://picsum.photos/id/4/200/112"
+  },
+  {
+    key: "5",
+    title: "深夜代码ASMR：写Bug",
+    startTime: "2026-01-28 23:00",
+    duration: "01:30:00",
+    stats: { uv: 12005, revenue: 50.0, danmaku: 1200 },
+    cover: "https://picsum.photos/id/5/200/112"
+  }
+]);
+
+/** 初始化图表 */
+const initChart = () => {
+  // 模拟数据
+  const xData = Array.from({ length: 20 }, (_, i) => `20:${(i * 3).toString().padStart(2, "0")}`);
+  const popularity = xData.map(() => Math.floor(Math.random() * 20000 + 30000));
+
+  setOption({
+    tooltip: { trigger: "axis", backgroundColor: "rgba(0,0,0,0.7)", textStyle: { color: "#fff" }, borderWidth: 0 },
+    grid: { left: "10px", right: "20px", top: "20px", bottom: "20px", containLabel: true },
+    xAxis: { type: "category", boundaryGap: false, data: xData, axisLine: { lineStyle: { color: "#555" } } },
+    yAxis: { type: "value", splitLine: { lineStyle: { type: "dashed", color: "#333" } } },
+    series: [
+      {
+        name: "人气",
+        type: "line",
+        smooth: true,
+        showSymbol: false,
+        areaStyle: {
+          color: {
+            type: "linear",
+            x: 0,
+            y: 0,
+            x2: 0,
+            y2: 1,
+            colorStops: [
+              { offset: 0, color: "rgba(255, 69, 69, 0.3)" },
+              { offset: 1, color: "rgba(255, 69, 69, 0)" }
+            ]
+          }
+        },
+        lineStyle: { width: 3, color: "#ff4545" },
+        data: popularity
+      }
+    ]
+  });
+};
 
 onMounted(async () => {
   await getCurrentWebviewWindow().show();
