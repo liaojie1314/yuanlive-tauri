@@ -1,4 +1,5 @@
 import { UrlEnum } from "@/enums";
+import { HotCategoryItem, FollowLiveItem, LiveItem } from "./types";
 import { request } from "@/utils/RequestUtils.ts";
 
 /**
@@ -11,13 +12,6 @@ export async function getLiveCategoryApi() {
   });
 }
 
-export interface HotCategoryItem {
-  id: number;
-  label: string;
-  value: string;
-  parentValue: string;
-}
-
 /**
  * 获取热门类别
  * @returns 6个热门类别
@@ -28,12 +22,6 @@ export async function getHotCategoryApi() {
   });
 }
 
-export interface FollowLiveItem {
-  username: string;
-  avatar: string;
-  roomId: number;
-}
-
 /**
  * 获取当前用户正在直播的关注列表
  * @returns 当前用户正在直播的关注列表
@@ -42,14 +30,6 @@ export async function getFollowingLiveApi() {
   return await request<FollowLiveItem[]>({
     url: UrlEnum.GET_FOLLOWING_LIVE
   });
-}
-
-export interface LiveItem {
-  id: number;
-  title: string;
-  anchorName: string;
-  coverImg: string;
-  hotScore: number;
 }
 
 /**

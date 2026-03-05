@@ -34,17 +34,21 @@
               </p>
 
               <div class="video-grid">
-                <div v-for="video in videoList" :key="video.id" class="video-card group" @click="onVideoClick(video)">
+                <div
+                  v-for="(video, index) in playlistStore.videoList"
+                  :key="video.id"
+                  class="video-card group"
+                  @click="playlistStore.playSpecificVideo(video)">
                   <img :src="video.coverUrl" class="video-cover" />
 
-                  <div v-if="!video.isPlaying" class="video-mask"></div>
+                  <div v-if="index !== playlistStore.currentVideoIndex" class="video-mask"></div>
 
-                  <div v-if="!video.isPlaying" class="like-info">
+                  <div v-if="index !== playlistStore.currentVideoIndex" class="like-info">
                     <i-ph-heart-fill class="text-white w-3 h-3" />
                     <span>{{ video.likeCount }}</span>
                   </div>
 
-                  <div v-if="video.isPlaying" class="playing-status">
+                  <div v-if="index === playlistStore.currentVideoIndex" class="playing-status">
                     <div class="playing-bars">
                       <span></span>
                       <span></span>
@@ -54,8 +58,7 @@
                   </div>
                 </div>
               </div>
-
-              <div v-if="isLoadingMore" class="loading-more">
+              <div v-if="playlistStore.isLoading" class="loading-more">
                 <i-mdi-loading class="animate-spin" />
                 {{ $t("components.videoSidePanel.loading") }}
               </div>
@@ -204,9 +207,9 @@
 import { open } from "@tauri-apps/plugin-dialog";
 import { convertFileSrc } from "@tauri-apps/api/core";
 
-import { MittEnum } from "@/enums";
-import { useMitt } from "@/hooks/useMitt";
-import { getVideoListByUidApi, type VideoItem } from "@/api/follow";
+import { usePlaylistStore } from "@/stores/playlist";
+
+const playlistStore = usePlaylistStore();
 
 const props = defineProps<{
   show: boolean;
@@ -242,9 +245,7 @@ interface CommentData {
 
 let uploadImagePath = ""; // Tauri本地路径
 
-const videoList = ref<VideoItem[]>([]);
 const isFollowed = ref(true);
-const isLoadingMore = ref(false);
 const commentText = ref("");
 const showEmojiPicker = ref(false);
 const uploadImagePreview = ref(""); // 预览图片URL
@@ -326,18 +327,10 @@ const toggleFollow = () => {
  */
 const handleDetailScroll = (e: Event) => {
   const target = e.target as HTMLElement;
-  // 触底判定：滚动距离 + 视口高度 >= 滚动条总高度 - 阈值
   if (target.scrollTop + target.clientHeight >= target.scrollHeight - 50) {
-    loadMoreVideos();
+    // 侧边栏触底，直接叫 Store 加载下一页
+    playlistStore.fetchVideos(props.userId as number, true);
   }
-};
-
-/** 加载更多视频 */
-const loadMoreVideos = () => {
-  if (isLoadingMore.value) return;
-  isLoadingMore.value = true;
-
-  // TODO: 加载更多视频
 };
 
 /**
@@ -425,71 +418,6 @@ const submitComment = () => {
   removeImage();
   showEmojiPicker.value = false;
 };
-
-/**
- * 根据用户ID获取视频列表
- * @param userId 用户ID
- */
-const fetchVideos = async (userId: number) => {
-  try {
-    videoList.value = await getVideoListByUidApi(userId);
-  } catch (_) {
-    videoList.value = [];
-  } finally {
-    if (!videoList.value || videoList.value.length === 0) {
-      videoList.value = [
-        {
-          id: Date.now(), // 保证ID唯一
-          videoUrl: "http://vjs.zencdn.net/v/oceans.mp4",
-          coverUrl: `https://picsum.photos/150/200?random=${userId}`, // 根据用户ID换封面
-          likeCount: 2070,
-          commentCount: 120,
-          shareCount: 50,
-          collectCount: 300,
-          description: "1111111111111",
-          isPlaying: true // 默认第一个是播放状态
-        },
-        {
-          id: Date.now() + 1,
-          videoUrl: "http://vjs.zencdn.net/v/oceans.mp4", // 模拟另一个视频
-          coverUrl: `https://picsum.photos/150/200?random=${userId + 1}`,
-          likeCount: 8033,
-          commentCount: 10,
-          shareCount: 2,
-          collectCount: 15,
-          description: "2131231234",
-          isPlaying: false
-        }
-      ];
-    }
-    if (videoList.value.length > 0) {
-      videoDesc.value = videoList.value[0].description;
-      useMitt.emit(MittEnum.PLAY_VIDEO, videoList.value[0]);
-    }
-  }
-};
-
-/**
- * 点击视频网格项
- * @param clickedVideo 点击的视频项
- */
-const onVideoClick = (clickedVideo: VideoItem) => {
-  // 将所有视频设为非播放状态，当前点击的设为播放状态
-  videoList.value.forEach((v) => (v.isPlaying = false));
-  clickedVideo.isPlaying = true;
-  videoDesc.value = clickedVideo.description;
-  useMitt.emit(MittEnum.PLAY_VIDEO, clickedVideo);
-};
-
-watch(
-  () => props.userId,
-  (newId) => {
-    if (newId) {
-      fetchVideos(newId);
-    }
-  },
-  { immediate: true }
-);
 
 onMounted(() => {
   document.addEventListener("click", closeEmojiPicker);

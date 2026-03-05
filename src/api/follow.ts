@@ -1,12 +1,6 @@
 import { UrlEnum } from "@/enums";
+import { FollowItem, type VideoPageResult } from "./types";
 import { request } from "@/utils/RequestUtils.ts";
-
-export interface FollowItem {
-  followUserId: number;
-  username: string;
-  avatar: string;
-  unseenCount: number;
-}
 
 /**
  * 获取用户关注列表
@@ -18,24 +12,12 @@ export async function getFollowingApi() {
   });
 }
 
-export interface VideoItem {
-  id: number;
-  videoUrl: string;
-  coverUrl: string;
-  likeCount: number;
-  commentCount: number;
-  shareCount: number;
-  collectCount: number;
-  description: string;
-  isPlaying?: boolean;
-}
-
 /**
  * 获取关注的人的视频列表
  * @returns 关注的人的视频列表
  */
 export async function getVideoListByUidApi(uid: number, pageNum?: number, pageSize?: number) {
-  return await request<VideoItem[]>({
+  return await request<VideoPageResult>({
     url: UrlEnum.GET_VIDEO_LIST_BY_UID,
     body: {
       uid,

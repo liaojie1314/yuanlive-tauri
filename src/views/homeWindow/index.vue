@@ -109,15 +109,8 @@
 <script setup lang="ts">
 import { MittEnum } from "@/enums";
 import { useMitt } from "@/hooks/useMitt";
-import {
-  getTopFiveLiveApi,
-  getFollowingLiveApi,
-  getHotCategoryApi,
-  getLiveListByCategoryApi,
-  type LiveItem,
-  type FollowLiveItem,
-  type HotCategoryItem
-} from "@/api/live";
+import { LiveItem, FollowLiveItem, HotCategoryItem } from "@/api/types";
+import { getTopFiveLiveApi, getFollowingLiveApi, getHotCategoryApi, getLiveListByCategoryApi } from "@/api/live";
 
 defineOptions({
   name: "Index"

@@ -14,8 +14,6 @@ export enum UploadSceneEnum {
 export enum MittEnum {
   /** 搜索 */
   SEARCH = "search",
-  /** 播放视频 */
-  PLAY_VIDEO = "PLAY_VIDEO",
   /** 全局文件拖拽 */
   GLOBAL_FILES_DROP = "globalFilesDrop",
   /** 更新提示 */
@@ -162,6 +160,8 @@ export enum StoresEnum {
   DANMAKU = "danmaku",
   // 视频
   VIDEO = "video",
+  // 播放列表
+  PLAYLIST = "playlist",
   // 文件下载
   FILE_DOWNLOAD = "fileDownload",
   // 图片查看器

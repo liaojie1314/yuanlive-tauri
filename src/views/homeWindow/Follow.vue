@@ -78,7 +78,7 @@
         :class="{ 'is-fullscreen': isFullscreen }">
         <div class="flex-1 relative h-full">
           <video-player
-            v-if="currentVideo"
+            v-if="playlistStore.currentVideo"
             :controls="true"
             :autoplay="true"
             :muted="false"
@@ -103,21 +103,22 @@
 </template>
 
 <script setup lang="ts">
-import { MittEnum } from "@/enums";
-import { useMitt } from "@/hooks/useMitt";
+import { FollowItem } from "@/api/types";
+import { getFollowingApi } from "@/api/follow";
+import { usePlaylistStore } from "@/stores/playlist";
 import { useFullscreen } from "@/hooks/useFullscreen";
-import { getFollowingApi, type VideoItem, type FollowItem } from "@/api/follow";
 
 defineOptions({
   name: "Follow"
 });
+
+const playlistStore = usePlaylistStore();
 
 // 展开/缩放状态管理
 const isCollapsed = ref(false);
 // 关注列表数据
 const followList = ref<FollowItem[]>([]);
 const activeUserId = ref<number | null>(null); // 当前选中的关注用户ID
-const currentVideo = ref<VideoItem | null>(null); // 当前正在播放的视频数据
 const showSidePanel = ref(false);
 const activePanelTab = ref<"detail" | "comment">("comment");
 const fullscreenWrapperRef = ref<HTMLElement | null>(null);
@@ -154,18 +155,10 @@ const toggleCollapse = () => {
 };
 
 /**
- * 处理接收侧边栏传来的视频选择事件
- * @param video 选中的视频项
- */
-const handlePlayVideo = (video: VideoItem) => {
-  currentVideo.value = video;
-};
-
-/**
  * 处理用户选择事件
  * @param user 选中的用户项
  */
-const handleSelectUser = (user: any) => {
+const handleSelectUser = async (user: any) => {
   if (activeUserId.value === user.followUserId) {
     if (!showSidePanel.value) {
       showSidePanel.value = true;
@@ -173,12 +166,14 @@ const handleSelectUser = (user: any) => {
     }
     return;
   }
+
   activeUserId.value = user.followUserId;
+
+  // 等待视频数据真正加载完成
+  await playlistStore.fetchVideos(user.followUserId);
 };
 
 onMounted(async () => {
-  useMitt.on(MittEnum.PLAY_VIDEO, handlePlayVideo);
-
   try {
     followList.value = await getFollowingApi();
   } catch (_) {
@@ -190,15 +185,13 @@ onMounted(async () => {
         { followUserId: 102, username: "模拟用户B", avatar: "https://picsum.photos/60/60?2", unseenCount: 0 }
       ];
     }
+
     // 初始化选中第一个用户
     if (followList.value.length > 0) {
-      handleSelectUser(followList.value[0]);
+      // 等待第一次选择和数据加载彻底完成
+      await handleSelectUser(followList.value[0]);
     }
   }
-});
-
-onUnmounted(() => {
-  useMitt.off(MittEnum.PLAY_VIDEO, handlePlayVideo);
 });
 </script>
 

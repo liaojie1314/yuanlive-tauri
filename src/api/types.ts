@@ -1,3 +1,14 @@
+export type PageResult<T> = {
+  // 总条数
+  total: number;
+  // 每页条数
+  pageSize: number;
+  // 当前页码
+  currentPage: number;
+  // 数据列表
+  list: T[];
+};
+
 type UserStats = {
   followerCount: number;
   followingCount: number;
@@ -46,3 +57,46 @@ export type ForgetPasswordReq = {
   // 确认密码
   confirmPassword: string;
 };
+
+//========follow========
+export interface FollowItem {
+  followUserId: number;
+  username: string;
+  avatar: string;
+  unseenCount: number;
+}
+
+export interface VideoItem {
+  id: number;
+  videoUrl: string;
+  coverUrl: string;
+  likeCount: number;
+  commentCount: number;
+  shareCount: number;
+  collectCount: number;
+  description: string;
+}
+
+export type VideoPageResult = PageResult<VideoItem>;
+
+//========live========
+export interface HotCategoryItem {
+  id: number;
+  label: string;
+  value: string;
+  parentValue: string;
+}
+
+export interface FollowLiveItem {
+  username: string;
+  avatar: string;
+  roomId: number;
+}
+
+export interface LiveItem {
+  id: number;
+  title: string;
+  anchorName: string;
+  coverImg: string;
+  hotScore: number;
+}

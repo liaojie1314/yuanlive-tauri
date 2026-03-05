@@ -344,15 +344,14 @@
 import videojs from "video.js";
 import "video.js/dist/video-js.css";
 
-import { MittEnum } from "@/enums";
-import { type VideoItem } from "@/api/follow";
 import { useVideoStore } from "@/stores/video";
 import { useDanmakuStore } from "@/stores/danmaku";
-import { useMitt } from "@/hooks/useMitt";
+import { usePlaylistStore } from "@/stores/playlist";
 import { useFullscreen } from "@/hooks/useFullscreen";
 import { formatTime } from "@/utils/FormattingUtils";
 
 const { isFullscreen } = useFullscreen();
+const playlistStore = usePlaylistStore();
 const danmakuStore = useDanmakuStore();
 const videoStore = useVideoStore();
 
@@ -414,7 +413,6 @@ const danmakuTimers = new Map<string, NodeJS.Timeout>();
 const displayedDanmakuIds = new Set<string>();
 const eventListeners = new Map<string, (event: Event) => void>();
 
-const currentVideo = ref<VideoItem | null>(null);
 const videoContainerRef = ref<HTMLDivElement | null>(null);
 const playerRef = ref<any>(null);
 const danmakuContainerRef = ref<HTMLDivElement | null>(null);
@@ -1154,8 +1152,8 @@ const toggleDanmakuList = () => {
  */
 const switchResolution = (key: string) => {
   videoStore.setResolution(key);
-  if (playerRef.value && currentVideo.value?.videoUrl) {
-    const newSrc = `${currentVideo.value.videoUrl}?resolution=${key}`;
+  if (playerRef.value && playlistStore.currentVideo?.videoUrl) {
+    const newSrc = `${playlistStore.currentVideo.videoUrl}?resolution=${key}`;
     playerRef.value.src({ src: newSrc, type: "video/mp4" });
     playerRef.value.load();
     if (isPlaying.value) {
@@ -1180,26 +1178,6 @@ const toggleMiniWindow = async () => {
   }
 };
 
-useMitt.on(MittEnum.PLAY_VIDEO, (video: VideoItem) => {
-  currentVideo.value = video;
-  // 更新右侧面板统计数据
-  likeCount.value = video.likeCount || 0;
-  commentCount.value = video.commentCount || 0;
-  favoriteCount.value = video.collectCount || 0;
-  shareCount.value = video.shareCount || 0;
-  // isLiked.value = video.watched || false;
-
-  // 通知 video.js 切换播放源并播放
-  if (playerRef.value && video.videoUrl) {
-    playerRef.value.src({
-      src: video.videoUrl,
-      type: "video/mp4" // 如果有不同格式可以动态判断
-    });
-    playerRef.value.load();
-    playerRef.value.play();
-  }
-});
-
 watch(
   () => props.poster,
   (newPoster) => {
@@ -1207,6 +1185,34 @@ watch(
       playerRef.value.poster(newPoster);
     }
   }
+);
+
+watch(
+  () => playlistStore.currentVideo,
+  (newVideo) => {
+    if (newVideo) {
+      // 更新右侧面板统计数据
+      likeCount.value = newVideo.likeCount || 0;
+      commentCount.value = newVideo.commentCount || 0;
+      favoriteCount.value = newVideo.collectCount || 0;
+      shareCount.value = newVideo.shareCount || 0;
+
+      // 通知 video.js 切换播放源并播放
+      if (playerRef.value && newVideo.videoUrl) {
+        playerRef.value.src({
+          src: newVideo.videoUrl,
+          type: "video/mp4"
+        });
+        playerRef.value.load();
+
+        // 加上 setTimeout 防止 videojs 还没 ready 就 play 报错
+        setTimeout(() => {
+          playerRef.value.play();
+        }, 100);
+      }
+    }
+  },
+  { deep: true }
 );
 
 onMounted(() => {
@@ -1218,10 +1224,10 @@ onMounted(() => {
 
   const options: any = {
     controls: false,
-    autoplay: props.autoplay || false,
+    autoplay: props.autoplay || true,
     muted: videoStore.muted,
     loop: props.loop || false,
-    preload: props.preload || "metadata",
+    preload: props.preload || "auto",
     poster: props.poster || "",
     sources: [],
     fluid: true,
