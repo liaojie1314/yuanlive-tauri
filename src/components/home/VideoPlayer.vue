@@ -8,7 +8,7 @@
       <div ref="videoContainerRef" class="video-container"></div>
       <div v-if="isFullscreen" class="exit-fullscreen-btn" @click.stop="toggleFullscreen">
         <i-mdi-chevron-left class="iconify-icon" />
-        <span>{{ $t("components.videoPlayer.exitFullscreen") }}</span>
+        <span>{{ t("components.videoPlayer.exitFullscreen") }}</span>
       </div>
 
       <!-- Danmaku Container -->
@@ -34,14 +34,14 @@
               class="danmaku-action-btn like-btn"
               :class="{ liked: danmaku.isLiked }"
               @click="toggleDanmakuLike(danmaku.id)"
-              :title="$t('components.videoPlayer.like')">
+              :title="t('components.videoPlayer.like')">
               <i-material-symbols-favorite v-if="danmaku.isLiked" class="iconify-icon" />
               <i-material-symbols-favorite-outline v-else class="iconify-icon" />
             </span>
             <span
               class="danmaku-action-btn report-btn"
               @click="openDanmakuReportDialog(danmaku.id)"
-              :title="$t('components.videoPlayer.report')">
+              :title="t('components.videoPlayer.report')">
               <i-mdi-alert-outline class="iconify-icon" />
             </span>
           </div>
@@ -58,7 +58,7 @@
               </div>
             </div>
           </template>
-          <div class="tooltip-content">{{ $t("components.videoPlayer.userInfo") }}</div>
+          <div class="tooltip-content">{{ t("components.videoPlayer.userInfo") }}</div>
         </n-tooltip>
 
         <n-tooltip placement="left" trigger="hover" :raw="true">
@@ -70,7 +70,7 @@
               <div class="interaction-count">{{ likeCount }}</div>
             </div>
           </template>
-          <div class="tooltip-content">{{ $t("components.videoPlayer.like") }}</div>
+          <div class="tooltip-content">{{ t("components.videoPlayer.like") }}</div>
         </n-tooltip>
 
         <n-tooltip placement="left" trigger="hover" :raw="true">
@@ -82,7 +82,7 @@
               <div class="interaction-count">{{ commentCount }}</div>
             </div>
           </template>
-          <div class="tooltip-content">{{ $t("components.videoPlayer.comment") }}</div>
+          <div class="tooltip-content">{{ t("components.videoPlayer.comment") }}</div>
         </n-tooltip>
 
         <n-tooltip
@@ -102,14 +102,14 @@
 
           <div class="collection-tooltip">
             <div class="collection-header">
-              <span>{{ $t("components.videoPlayer.collectionFolder") }}</span>
-              <div class="new-folder-btn" @click="onNewFolderClick">+ {{ $t("components.videoPlayer.newFolder") }}</div>
+              <span>{{ t("components.videoPlayer.collectionFolder") }}</span>
+              <div class="new-folder-btn" @click="onNewFolderClick">+ {{ t("components.videoPlayer.newFolder") }}</div>
             </div>
             <div v-if="collectionFolders.length === 0" class="no-collections">
               <div class="no-collections-icon">
                 <i-material-symbols-folder-outline class="iconify-icon" />
               </div>
-              <div class="no-collections-text">{{ $t("components.videoPlayer.noCollections") }}</div>
+              <div class="no-collections-text">{{ t("components.videoPlayer.noCollections") }}</div>
             </div>
             <div v-else class="collection-list">
               <div v-for="folder in collectionFolders" :key="folder.id" class="collection-item">
@@ -127,10 +127,10 @@
 
             <div class="collection-footer">
               <div class="footer-btn only-collect-btn" @click="onlyCollectVideo">
-                {{ $t("components.videoPlayer.onlyCollectVideo") }}
+                {{ t("components.videoPlayer.onlyCollectVideo") }}
               </div>
               <div class="footer-btn collect-to-folder-btn" @click="collectToFolder">
-                {{ $t("components.videoPlayer.collectToFolder") }}
+                {{ t("components.videoPlayer.collectToFolder") }}
               </div>
             </div>
           </div>
@@ -148,10 +148,16 @@
           <div class="share-tooltip">
             <div class="share-btn copy-link-btn" @click="copyLink">
               <i-material-symbols-link class="iconify-icon share-btn-icon" />
-              <span class="share-btn-text">{{ $t("components.videoPlayer.copyLink") }}</span>
+              <span class="share-btn-text">{{ t("components.videoPlayer.copyLink") }}</span>
             </div>
             <div class="share-btn download-btn" @click="downloadVideo">
-              <i-material-symbols-download class="iconify-icon share-btn-icon" />
+              <template v-if="isDownloading">
+                <i-mdi-loading class="iconify-icon share-btn-icon animate-spin" />
+                <span class="share-btn-text ml-2">{{ downloadProcess }}%</span>
+              </template>
+              <template v-else>
+                <i-material-symbols-download class="iconify-icon share-btn-icon" />
+              </template>
             </div>
             <div class="share-btn qr-code-btn" @click="showQRCode">
               <i-material-symbols-qr-code class="iconify-icon share-btn-icon" />
@@ -165,10 +171,10 @@
               <div class="interaction-icon listen-icon">
                 <i-material-symbols-headphones class="iconify-icon" />
               </div>
-              <div class="interaction-count">{{ $t("components.videoPlayer.listenVideo") }}</div>
+              <div class="interaction-count">{{ t("components.videoPlayer.listenVideo") }}</div>
             </div>
           </template>
-          <div class="tooltip-content">{{ $t("components.videoPlayer.listenVideo") }}</div>
+          <div class="tooltip-content">{{ t("components.videoPlayer.listenVideo") }}</div>
         </n-tooltip>
 
         <n-tooltip placement="left-end" trigger="hover" :raw="true" :show-arrow="false" v-model:show="showMoreTooltip">
@@ -184,34 +190,35 @@
               <div class="more-btn-icon-container">
                 <i-material-symbols-thumb-up class="iconify-icon more-btn-icon" />
               </div>
-              <span class="more-btn-text">{{ $t("components.videoPlayer.recommend") }}</span>
+              <span class="more-btn-text">{{ t("components.videoPlayer.recommend") }}</span>
             </button>
 
             <button class="more-btn dislike-btn" @click="dislikeVideo">
               <div class="more-btn-icon-container">
                 <i-material-symbols-thumb-down class="iconify-icon more-btn-icon" />
               </div>
-              <span class="more-btn-text">{{ $t("components.videoPlayer.dislike") }}</span>
+              <span class="more-btn-text">{{ t("components.videoPlayer.dislike") }}</span>
             </button>
-            <button class="more-btn unfollow-btn" @click="unfollowCreator">
+            <button class="more-btn unfollow-btn" @click="toggleFollow">
               <div class="more-btn-icon-container">
-                <i-material-symbols-person-remove class="iconify-icon more-btn-icon" />
+                <i-material-symbols-person-remove v-if="isFollowed" class="iconify-icon more-btn-icon" />
+                <i-material-symbols-person-add v-else class="iconify-icon more-btn-icon" />
               </div>
-              <span class="more-btn-text">{{ $t("components.videoPlayer.unfollow") }}</span>
+              <span class="more-btn-text">{{ t("components.videoPlayer.unfollow") }}</span>
             </button>
 
             <button class="more-btn report-btn" @click="reportVideo">
               <div class="more-btn-icon-container">
                 <i-material-symbols-warning class="iconify-icon more-btn-icon" />
               </div>
-              <span class="more-btn-text">{{ $t("components.videoPlayer.report") }}</span>
+              <span class="more-btn-text">{{ t("components.videoPlayer.report") }}</span>
             </button>
 
             <button class="more-btn shortcuts-btn" @click="showShortcuts">
               <div class="more-btn-icon-container">
                 <i-material-symbols-keyboard class="iconify-icon more-btn-icon" />
               </div>
-              <span class="more-btn-text">{{ $t("components.videoPlayer.shortcuts") }}</span>
+              <span class="more-btn-text">{{ t("components.videoPlayer.shortcuts") }}</span>
             </button>
           </div>
         </n-tooltip>
@@ -269,11 +276,11 @@
 
         <div class="right-controls">
           <div class="control-item" v-show="!isPanelOpen || isFullscreen">
-            <span class="control-text">{{ $t("components.videoPlayer.autoplay") }}</span>
+            <span class="control-text">{{ t("components.videoPlayer.autoplay") }}</span>
             <n-switch v-model:value="videoStore.autoplay" @update:value="toggleAutoplay" class="control-switch" />
           </div>
           <div class="control-item" v-show="!isPanelOpen || isFullscreen">
-            <span class="control-text">{{ $t("components.videoPlayer.clearScreen") }}</span>
+            <span class="control-text">{{ t("components.videoPlayer.clearScreen") }}</span>
             <n-switch v-model:value="videoStore.clearScreen" @update:value="toggleClearScreen" class="control-switch" />
           </div>
           <div class="control-item">
@@ -343,17 +350,24 @@
 <script setup lang="ts">
 import videojs from "video.js";
 import "video.js/dist/video-js.css";
+import { useI18n } from "vue-i18n";
+import { BaseDirectory } from "@tauri-apps/plugin-fs";
+import { writeText } from "@tauri-apps/plugin-clipboard-manager";
 
+import { unfollowApi } from "@/api/follow";
 import { useVideoStore } from "@/stores/video";
 import { useDanmakuStore } from "@/stores/danmaku";
 import { usePlaylistStore } from "@/stores/playlist";
+import { useDownload } from "@/hooks/useDownload";
 import { useFullscreen } from "@/hooks/useFullscreen";
 import { formatTime } from "@/utils/FormattingUtils";
 
+const { t } = useI18n();
 const { isFullscreen } = useFullscreen();
 const playlistStore = usePlaylistStore();
 const danmakuStore = useDanmakuStore();
 const videoStore = useVideoStore();
+const { downloadFile, cancelDownload, process: downloadProcess, isDownloading, onLoaded } = useDownload();
 
 const props = defineProps<{
   poster?: string;
@@ -413,6 +427,7 @@ const danmakuTimers = new Map<string, NodeJS.Timeout>();
 const displayedDanmakuIds = new Set<string>();
 const eventListeners = new Map<string, (event: Event) => void>();
 
+const isFollowed = ref(true);
 const videoContainerRef = ref<HTMLDivElement | null>(null);
 const playerRef = ref<any>(null);
 const danmakuContainerRef = ref<HTMLDivElement | null>(null);
@@ -805,17 +820,69 @@ const toggleShare = () => {
 };
 
 /** 复制链接 */
-const copyLink = () => {
-  showShareTooltip.value = false;
-  console.log("Copy video link");
-  // TODO: 实现复制链接到剪贴板的功能
+const copyLink = async () => {
+  showShareTooltip.value = false; // 隐藏分享面板
+
+  const video = playlistStore.currentVideo;
+  if (!video) {
+    window.$message?.warning(t("components.videoPlayer.msg.noVideoInfo"));
+    return;
+  }
+  // 【链接策略】
+  // 1. 分享原视频源地址：
+  const linkToCopy = video.videoUrl;
+  // 2. Web 网页端：
+  // const linkToCopy = `https://www.yuanlive.com/video/${video.id}`;
+  // 3. 桌面端唤醒协议：
+  // const linkToCopy = `yuanlive://video/${video.id}`;
+  try {
+    // 1. 优先使用 Tauri 原生剪贴板插件 (最稳妥、权限最高)
+    await writeText(linkToCopy);
+    window.$message?.success("视频链接已复制到剪贴板");
+  } catch (tauriError) {
+    console.warn("Tauri 原生剪贴板复制失败，尝试 Web API 降级:", tauriError);
+    // 2. 降级方案：使用现代浏览器的 API 兜底
+    try {
+      await navigator.clipboard.writeText(linkToCopy);
+      window.$message?.success(t("components.videoPlayer.msg.videoLinkCopied"));
+    } catch (webError) {
+      console.error("全部剪贴板方案均失败:", webError);
+      window.$message?.error(t("components.videoPlayer.msg.copyFailed"));
+    }
+  }
 };
 
 /** 下载视频 */
-const downloadVideo = () => {
+const downloadVideo = async () => {
+  // 防止重复点击下载
+  if (isDownloading.value) {
+    window.$dialog?.warning({
+      content: t("components.videoPlayer.dialog.cancelDownloadConfirm"),
+      positiveText: t("components.common.confirm"),
+      negativeText: t("components.common.cancel"),
+      onPositiveClick: () => {
+        cancelDownload();
+        window.$message?.success(t("components.videoPlayer.msg.cancelDownloadSuccess"));
+      }
+    });
+    return;
+  }
   showShareTooltip.value = false;
-  console.log("Download video");
-  // TODO: 实现下载视频逻辑
+  // 获取当前正在播放的视频
+  const video = playlistStore.currentVideo;
+  if (!video || !video.videoUrl) {
+    window.$message?.error(t("components.videoPlayer.msg.getVideoUrlFailed"));
+    return;
+  }
+  // 定义保存的文件名和路径 (保存到系统的 Downloads 文件夹下的 YuanLive 目录)
+  const fileName = `YuanLive_Video_${video.id || Date.now()}.mp4`;
+  const savePath = `YuanLive/${fileName}`;
+  try {
+    window.$message?.info(t("components.videoPlayer.msg.startDownloadVideo"));
+    await downloadFile(video.videoUrl, savePath, BaseDirectory.Download);
+  } catch (error) {
+    console.error("视频下载触发异常:", error);
+  }
 };
 
 /** 显示二维码 */
@@ -843,10 +910,20 @@ const dislikeVideo = () => {
   console.log("Dislike video");
 };
 
-/** 取消关注 */
-const unfollowCreator = () => {
+/** 切换关注状态 */
+const toggleFollow = async () => {
   showMoreTooltip.value = false;
-  console.log("Unfollow creator");
+  window.$dialog.warning({
+    content: t("components.videoPlayer.dialog.unfollowConfirm"),
+    positiveText: t("components.common.confirm"),
+    negativeText: t("components.common.cancel"),
+    onPositiveClick: async () => {
+      if (isFollowed.value) {
+        isFollowed.value = (await unfollowApi(playlistStore.currentUserId as number)) ?? false;
+        return;
+      }
+    }
+  });
 };
 
 /** 举报视频 */
@@ -1177,6 +1254,12 @@ const toggleMiniWindow = async () => {
     console.error("画中画功能调用失败，可能环境不支持:", error);
   }
 };
+
+onLoaded((result) => {
+  if (result === "success") {
+    window.$message?.success("视频下载完成");
+  }
+});
 
 watch(
   () => props.poster,

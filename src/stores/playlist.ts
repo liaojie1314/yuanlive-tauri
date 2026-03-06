@@ -101,6 +101,7 @@ export const usePlaylistStore = defineStore(StoresEnum.PLAYLIST, () => {
   return {
     videoList,
     currentVideo,
+    currentUserId,
     currentVideoIndex,
     hasMore,
     isLoading,

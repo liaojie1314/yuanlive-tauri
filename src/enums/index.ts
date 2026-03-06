@@ -52,6 +52,8 @@ export enum UrlEnum {
   GET_LIVE_LIST_BY_CATEGORY = "getLiveListByCategory",
   // 获取当前用户正在直播的关注列表
   GET_FOLLOWING_LIVE = "getFollowingLive",
+  // 取消关注
+  UNFOLLOW = "unfollow",
   // 获取用户关注列表
   GET_FOLLOWING = "getFollowing",
   // 获取关注的人的视频列表

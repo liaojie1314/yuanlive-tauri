@@ -560,6 +560,7 @@ pub enum Url {
     GetLiveCategory,
     GetTopFiveLive,
     GetLiveListByCategory,
+    Unfollow,
     GetFollowing,
     GetFollowingLive,
     GetHotCategory,
@@ -594,6 +595,7 @@ impl Url {
             Url::GetFollowingLive => (http::Method::GET, "user/follow/following/live"),
             Url::GetHotCategory => (http::Method::GET, "/live/category/getHotCategory"),
             // 关注相关
+            Url::Unfollow => (http::Method::DELETE, "user/follow/unfollow/{followUserId}"),
             Url::GetFollowing => (http::Method::GET, "user/follow/following"),
             Url::GetVideoListByUid => (http::Method::POST, "live/record/pageQueryRecordByUid"),
             // AI 相关
@@ -629,6 +631,7 @@ impl Url {
             "getFollowingLive" => Ok(Url::GetFollowingLive),
             "getHotCategory" => Ok(Url::GetHotCategory),
             // 关注相关
+            "unfollow" => Ok(Url::Unfollow),
             "getFollowing" => Ok(Url::GetFollowing),
             "getVideoListByUid" => Ok(Url::GetVideoListByUid),
             // AI 相关

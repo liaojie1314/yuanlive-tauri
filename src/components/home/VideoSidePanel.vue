@@ -208,6 +208,7 @@ import { open } from "@tauri-apps/plugin-dialog";
 import { convertFileSrc } from "@tauri-apps/api/core";
 
 import { usePlaylistStore } from "@/stores/playlist";
+import { unfollowApi } from "@/api/follow";
 
 const playlistStore = usePlaylistStore();
 
@@ -314,11 +315,11 @@ const handleClose = () => {
 };
 
 /** 切换关注状态 */
-const toggleFollow = () => {
+const toggleFollow = async () => {
   if (isFollowed.value) {
-    // TODO: 取消关注并通知重新获取关注列表
+    isFollowed.value = (await unfollowApi(playlistStore.currentUserId as number)) ?? false;
+    return;
   }
-  isFollowed.value = !isFollowed.value;
 };
 
 /**

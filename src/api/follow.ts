@@ -3,6 +3,20 @@ import { FollowItem, type VideoPageResult } from "./types";
 import { request } from "@/utils/RequestUtils.ts";
 
 /**
+ * 取消关注
+ * @param followUserId 被关注用户id
+ * @returns 是否关注
+ */
+export async function unfollowApi(followUserId: number) {
+  return await request<boolean>({
+    url: UrlEnum.UNFOLLOW,
+    pathParams: {
+      followUserId
+    }
+  });
+}
+
+/**
  * 获取用户关注列表
  * @returns 当前用户关注列表
  */

@@ -230,6 +230,18 @@
     "unfollow": "unfollow",
     "shortcuts": "shortcuts",
     "autoplay": "autoplay",
-    "clearScreen": "clear screen"
+    "clearScreen": "clear screen",
+    "dialog": {
+      "unfollowConfirm": "Are you sure you want to unfollow this user?",
+      "cancelDownloadConfirm": "Are you sure you want to cancel the download?"
+    },
+    "msg": {
+      "cancelDownloadSuccess": "Cancel download success",
+      "getVideoUrlFailed": "Failed to get video URL",
+      "startDownloadVideo": "Start downloading video...",
+      "noVideoInfo": "Failed to get current video info",
+      "videoLinkCopied": "Video link copied to clipboard",
+      "copyFailed": "Copy failed, please try again"
+    }
   }
 }
