@@ -593,7 +593,7 @@ impl Url {
             Url::GetLiveCategory => (http::Method::GET, "live/category/tree"),
             Url::GetLiveListByCategory => (http::Method::GET, "live/category/listByCategory"),
             Url::GetFollowingLive => (http::Method::GET, "user/follow/following/live"),
-            Url::GetHotCategory => (http::Method::GET, "/live/category/getHotCategory"),
+            Url::GetHotCategory => (http::Method::GET, "live/category/getHotCategory"),
             // 关注相关
             Url::Unfollow => (http::Method::DELETE, "user/follow/unfollow/{followUserId}"),
             Url::GetFollowing => (http::Method::GET, "user/follow/following"),
