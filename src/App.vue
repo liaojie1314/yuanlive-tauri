@@ -10,6 +10,7 @@
 import { useI18n } from "vue-i18n";
 import { listen } from "@tauri-apps/api/event";
 import { exit } from "@tauri-apps/plugin-process";
+import { onOpenUrl } from "@tauri-apps/plugin-deep-link";
 import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
 
 import { useUserStore } from "@/stores/user";
@@ -153,7 +154,18 @@ watch(
   }
 );
 
-onMounted(() => {
+onMounted(async () => {
+  // 全局监听深度链接唤醒
+  await onOpenUrl((urls) => {
+    console.log("被外部链接唤醒，URLs:", urls);
+    // urls 通常是一个数组，取第一个触发唤醒的 URL
+    const url = urls[0];
+    if (url && url.startsWith("yuanlive://")) {
+      // 假设你的分享链接是：yuanlive://video/10086
+      // const path = url.replace('yuanlive://', ''); // 变成 "video/10086"
+      // TODO: 业务逻辑
+    }
+  });
   if (isWindows10()) {
     appWindow.setShadow(false).catch((error) => {
       console.warn("禁用窗口阴影失败:", error);

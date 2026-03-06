@@ -111,6 +111,7 @@
     "dialog:default",
     "dialog:allow-save",
     "mic-recorder:default",
-    "updater:default"
+    "updater:default",
+    "deep-link:default"
   ]
 }
