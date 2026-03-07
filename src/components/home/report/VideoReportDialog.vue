@@ -1,7 +1,7 @@
 <template>
   <report-dialog
     v-model:show="dialogVisible"
-    :title="$t('dialog.report.danmaku.title')"
+    :title="$t('dialog.report.video.title')"
     :report-types="reportTypes"
     @submit="handleReportSubmit" />
 </template>
@@ -9,27 +9,26 @@
 <script setup lang="ts">
 interface Props {
   show: boolean;
-  danmakuIndex?: number;
+  videoId?: number | string;
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  danmakuIndex: -1
+  videoId: ""
 });
 
 const emit = defineEmits<{
   "update:show": [value: boolean];
-  "submit-report": [index: number, type: string, description: string];
+  "submit-report": [videoId: number | string, type: string, description: string];
 }>();
 
-// 弹幕专属举报类型
+// 视频的举报类型
 const reportTypes = [
   { label: "色情低俗", value: "pornographic" },
   { label: "违法犯罪", value: "illegal" },
   { label: "造谣传谣", value: "rumor" },
   { label: "垃圾广告", value: "spam" },
-  { label: "骚扰", value: "harassment" },
-  { label: "人身攻击", value: "personal_attack" },
-  { label: "时政不实信息", value: "political_misinformation" }
+  { label: "侵权盗版", value: "infringement" },
+  { label: "内容引人不适", value: "discomfort" }
 ];
 
 const dialogVisible = computed({
@@ -38,11 +37,11 @@ const dialogVisible = computed({
 });
 
 /**
- * 处理弹幕举报提交
+ * 处理视频举报提交
  * @param type 举报类型
  * @param description 举报描述
  */
 const handleReportSubmit = (type: string, description: string) => {
-  emit("submit-report", props.danmakuIndex, type, description);
+  emit("submit-report", props.videoId, type, description);
 };
 </script>

@@ -304,7 +304,7 @@
           </div>
 
           <!-- Volume Control -->
-          <div class="control-item volume-control">
+          <div class="control-item volume-control" @wheel.prevent="handleWheelVolume">
             <div @click="toggleMute" @mouseenter="showVolumeSlider = true" @mouseleave="showVolumeSlider = false">
               <span class="control-icon">
                 <i-ph-speaker-slash v-if="videoStore.muted || videoStore.volume === 0" class="iconify-icon" />
@@ -343,6 +343,11 @@
     v-model:show="showDanmakuReportDialog"
     :danmaku-index="selectedDanmakuIndex"
     @submit-report="handleDanmakuReport" />
+
+  <video-report-dialog
+    v-model:show="showVideoReportDialog"
+    :video-id="playlistStore.currentVideo?.id"
+    @submit-report="handleVideoReport" />
 
   <collection-folder-dialog v-model:show="showNewFolderDialog" @create-folder="handleCreateFolder" />
 </template>
@@ -453,6 +458,7 @@ const showMoreTooltip = ref(false);
 // 弹幕列表状态
 const showDanmakuListDialog = ref(false);
 const showDanmakuReportDialog = ref(false);
+const showVideoReportDialog = ref(false);
 const selectedDanmakuIndex = ref(-1);
 const danmakuList = ref<Danmaku[]>([
   {
@@ -670,6 +676,21 @@ const handleDanmakuReport = (index: number, type: string, description: string) =
 };
 
 /**
+ * 处理视频举报
+ * @param videoId 视频id
+ * @param type 报告类型
+ * @param description 报告描述
+ */
+const handleVideoReport = (videoId: string | number, type: string, description: string) => {
+  console.log("Report submitted:", {
+    videoIndex: videoId,
+    reportType: type,
+    description: description
+  });
+  showVideoReportDialog.value = false;
+};
+
+/**
  * 设置弹幕定时器
  * @param danmakuId 弹幕ID
  * @param duration 显示持续时间（毫秒）
@@ -789,6 +810,33 @@ const toggleMute = () => {
     playerRef.value.muted(videoStore.muted);
     playerRef.value.volume(videoStore.volume / 100);
   }
+};
+
+/** * 处理鼠标滚轮调整音量
+ * @param e 滚轮事件对象
+ */
+const handleWheelVolume = (e: WheelEvent) => {
+  // 定义每次滚动的音量步长（比如 5%）
+  const step = 5;
+  let newVolume = videoStore.volume;
+  // e.deltaY < 0 表示滚轮向上推（增大音量）
+  // e.deltaY > 0 表示滚轮向下拉（减小音量）
+  if (e.deltaY < 0) {
+    newVolume = Math.min(100, newVolume + step);
+  } else if (e.deltaY > 0) {
+    newVolume = Math.max(0, newVolume - step);
+  }
+  // 如果音量已经到顶或到底，没有发生变化，就不做处理
+  if (newVolume === videoStore.volume) return;
+  // 如果当前是静音状态，且用户向上滚动增大了音量，自动解除静音
+  if (videoStore.muted && newVolume > 0) {
+    videoStore.toggleMute();
+    if (playerRef.value) {
+      playerRef.value.muted(false);
+    }
+  }
+  // 调用已有的设置音量方法
+  setVolume(newVolume);
 };
 
 /**
@@ -929,7 +977,7 @@ const toggleFollow = async () => {
 /** 举报视频 */
 const reportVideo = () => {
   showMoreTooltip.value = false;
-  console.log("Report video");
+  showVideoReportDialog.value = true;
 };
 
 /** 显示快捷键列表 */

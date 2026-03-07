@@ -132,25 +132,25 @@
               <div
                 class="control-btn volume-control relative"
                 @mouseenter="showVolumeSlider = true"
-                @mouseleave="showVolumeSlider = false">
+                @mouseleave="showVolumeSlider = false"
+                @wheel.prevent="handleVolumeWheel"
+                @click="toggleMute">
                 <i-ph-speaker-high v-if="volume > 50" class="w-5 h-5 text-white" />
                 <i-ph-speaker-low v-else-if="volume > 0" class="w-5 h-5 text-white" />
                 <i-ph-speaker-slash v-else class="w-5 h-5 text-white" />
+
                 <div
                   class="volume-slider-container"
                   v-show="showVolumeSlider"
                   @mouseenter="showVolumeSlider = true"
-                  @mouseleave="showVolumeSlider = false">
+                  @mouseleave="showVolumeSlider = false"
+                  @click.stop>
                   <n-slider v-model:value="volume" :min="0" :max="100" @update:value="setVolume" vertical />
                 </div>
               </div>
 
               <div class="control-btn" @click="toggleMiniWindow">
                 <i-mdi-dock-window class="w-5 h-5 text-white" />
-              </div>
-
-              <div class="control-btn" @click="toggleWindowFullscreen">
-                <i-material-symbols-fullscreen class="w-5 h-5 text-white" />
               </div>
 
               <div class="control-btn" @click="toggleFullscreen">
@@ -482,22 +482,19 @@ let flvPlayer: mpegts.Player | null = null;
 
 // 跟踪每个popover的显示状态
 const popoverVisible = ref<Record<number, boolean>>({});
-
 // 控制更多礼物弹窗的显示状态
 const moreGiftsVisible = ref(false);
-
 // 控制充值弹窗的显示状态
 const rechargeVisible = ref(false);
-
 // 选中的充值金额
 const selectedAmount = ref(60);
-
 // 用户余额
 const balance = ref(0);
-
 // 视频控制相关状态
 const isPlaying = ref(true);
 const volume = ref(70);
+// 记录静音前的音量，初始值与当前默认音量保持一致
+const previousVolume = ref(70);
 const isScreenRotated = ref(false);
 const currentResolution = ref("自动");
 const isFullscreen = ref(false);
@@ -1026,12 +1023,26 @@ const toggleGiftSettings = () => {
   console.log("Toggle gift settings");
 };
 
-const toggleMiniWindow = () => {
-  console.log("Toggle mini window");
-};
+const toggleMiniWindow = async () => {
+  if (!videoRef.value) return;
 
-const toggleWindowFullscreen = () => {
-  console.log("Toggle window fullscreen");
+  try {
+    if (document.pictureInPictureElement) {
+      // 已经在小窗模式，则退出
+      await document.exitPictureInPicture();
+    } else if (document.pictureInPictureEnabled) {
+      // 检查视频是否已经加载了元数据 (readyState >= 1 代表 HAVE_METADATA)
+      if (videoRef.value.readyState >= 1) {
+        await videoRef.value.requestPictureInPicture();
+      } else {
+        window.$message?.warning("视频加载中，请稍后再试");
+      }
+    } else {
+      console.warn("当前环境不支持画中画(小窗)功能");
+    }
+  } catch (error) {
+    console.error("切换小窗模式失败:", error);
+  }
 };
 
 // 全屏逻辑
@@ -1053,6 +1064,31 @@ const setVolume = (newVolume: number) => {
   if (videoRef.value) {
     videoRef.value.volume = newVolume / 100;
   }
+};
+
+// 切换静音/取消静音逻辑
+const toggleMute = () => {
+  if (volume.value > 0) {
+    // 当前有声音，先保存当前音量，然后设置为 0 (静音)
+    previousVolume.value = volume.value;
+    setVolume(0);
+  } else {
+    // 当前为静音，恢复之前的音量（防范边界情况，如果之前也是 0，则默认恢复到 50）
+    const restoreVolume = previousVolume.value > 0 ? previousVolume.value : 50;
+    setVolume(restoreVolume);
+  }
+};
+
+// 滚轮控制音量逻辑
+const handleVolumeWheel = (event: WheelEvent) => {
+  // 定义每次滚动的音量变化步长
+  const step = 5;
+  // event.deltaY < 0 表示向上滚动(增大音量)，> 0 表示向下滚动(减小音量)
+  let newVolume = volume.value + (event.deltaY < 0 ? step : -step);
+  // 将音量限制在 0 - 100 的范围内
+  newVolume = Math.max(0, Math.min(100, newVolume));
+  // 调用现有的 setVolume 方法更新音量和播放器状态
+  setVolume(newVolume);
 };
 
 onMounted(() => {

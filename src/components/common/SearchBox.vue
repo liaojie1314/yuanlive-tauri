@@ -65,7 +65,7 @@
             <div
               class="text-xs text-[--user-text-color] hover:text-[--text-color] flex items-center gap-1 transition-colors cursor-pointer"
               @click="handleRefreshSuggestions">
-              <i-mdi-refresh class="w-3 h-3" />
+              <i-mdi-refresh class="w-3 h-3" :class="{ 'animate-spin': isRefreshing }" />
               {{ $t("components.searchBox.refresh") }}
             </div>
           </div>
@@ -118,6 +118,7 @@ const searchQuery = ref("");
 const showDropdown = ref(false);
 // 用于跟踪是否点击了下拉框内容
 const isDropdownClicked = ref(false);
+const isRefreshing = ref(false);
 
 /**
  * 获取搜索历史记录
@@ -212,7 +213,16 @@ const deleteSearchHistory = (index: number) => {
 
 /** 刷新搜索建议 */
 const handleRefreshSuggestions = () => {
-  console.log("Refreshing suggestions");
+  // 如果已经在刷新中，则不作处理（防止重复点击）
+  if (isRefreshing.value) return;
+
+  isRefreshing.value = true;
+  // 模拟请求后端的延迟，500毫秒后停止旋转
+  setTimeout(() => {
+    // TODO: 更新 searchSuggestions.value 的数据
+    // searchSuggestions.value = ["新推荐1", "新推荐2", ...];
+    isRefreshing.value = false;
+  }, 500);
 };
 
 /** 处理输入框失去焦点 */

@@ -4,10 +4,15 @@
     "time": "Time",
     "content": "Danmaku Content"
   },
-  "danmakuReport": {
-    "title": "Danmaku Report",
+  "report": {
+    "submit": "Submit",
     "placeholder": "Please describe the reason for the report in detail, so that the platform can judge the violation situation",
-    "submit": "Submit"
+    "danmaku": {
+      "title": "Danmaku Report"
+    },
+    "video": {
+      "title": "Video Report"
+    }
   },
   "collectionFolder": {
     "title": "New Collection Folder",

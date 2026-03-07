@@ -4,10 +4,15 @@
     "time": "时间",
     "content": "弹幕内容"
   },
-  "danmakuReport": {
-    "title": "弹幕举报",
+  "report": {
+    "submit": "提交",
     "placeholder": "请详细描述举报原因，便于平台判断违规情况",
-    "submit": "提交"
+    "danmaku": {
+      "title": "弹幕举报"
+    },
+    "video": {
+      "title": "视频举报"
+    }
   },
   "collectionFolder": {
     "title": "新建收藏夹",
