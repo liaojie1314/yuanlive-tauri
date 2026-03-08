@@ -93,8 +93,6 @@
         <video-side-panel
           v-model:show="showSidePanel"
           v-model:tab="activePanelTab"
-          :user-id="activeUserId"
-          :user-name="activeUserName"
           class="side-panel-transition"
           :class="{ 'fullscreen-overlay': isFullscreen }" />
       </div>
@@ -123,9 +121,6 @@ const showSidePanel = ref(false);
 const activePanelTab = ref<"detail" | "comment">("comment");
 const fullscreenWrapperRef = ref<HTMLElement | null>(null);
 const { isFullscreen, toggleFullscreen } = useFullscreen(fullscreenWrapperRef);
-const activeUserName = computed(() => {
-  return activeUserId.value ? followList.value.find((f) => f.followUserId === activeUserId.value)?.username || "" : "";
-});
 
 /** 处理全屏切换逻辑 */
 const handleToggleFullscreen = () => {
@@ -158,7 +153,7 @@ const toggleCollapse = () => {
  * 处理用户选择事件
  * @param user 选中的用户项
  */
-const handleSelectUser = async (user: any) => {
+const handleSelectUser = async (user: FollowItem) => {
   if (activeUserId.value === user.followUserId) {
     if (!showSidePanel.value) {
       showSidePanel.value = true;
@@ -170,7 +165,7 @@ const handleSelectUser = async (user: any) => {
   activeUserId.value = user.followUserId;
 
   // 等待视频数据真正加载完成
-  await playlistStore.fetchVideos(user.followUserId);
+  await playlistStore.fetchVideos(user.followUserId, user.username);
 };
 
 onMounted(async () => {

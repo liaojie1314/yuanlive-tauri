@@ -9,6 +9,7 @@ export const usePlaylistStore = defineStore(StoresEnum.PLAYLIST, () => {
   const hasMore = ref(true);
   const isLoading = ref(false);
   const currentUserId = ref<number | null>(null);
+  const currentUsername = ref<string>("");
 
   // 获取当前正在播放的视频对象
   const currentVideo = computed(() => videoList.value[currentVideoIndex.value] || null);
@@ -18,11 +19,12 @@ export const usePlaylistStore = defineStore(StoresEnum.PLAYLIST, () => {
    * @param userId 要获取视频数据的用户ID
    * @param isLoadMore 是否加载更多数据（默认值为 false）
    */
-  const fetchVideos = async (userId: number, isLoadMore = false) => {
+  const fetchVideos = async (userId: number, username: string, isLoadMore = false) => {
     if (isLoading.value || (!hasMore.value && isLoadMore)) return;
 
     isLoading.value = true;
     currentUserId.value = userId;
+    currentUsername.value = username;
 
     // 准备要请求的页码
     const targetPage = isLoadMore ? currentPage.value : 1;
@@ -78,6 +80,22 @@ export const usePlaylistStore = defineStore(StoresEnum.PLAYLIST, () => {
     }
   };
 
+  /**
+   * 独立播放指定的视频（例如从搜索结果跳转过来）
+   * @param video 要播放的完整视频对象
+   */
+  const playSingleVideo = (video: VideoItem) => {
+    // 清空当前列表，只放入这一个视频
+    videoList.value = [video];
+    currentVideoIndex.value = 0;
+
+    // 关闭分页加载逻辑
+    hasMore.value = false;
+    currentPage.value = 1;
+    currentUserId.value = video.userId || null;
+    currentUsername.value = video.username || "";
+  };
+
   /** 播放下一个视频 */
   const playNext = async () => {
     if (currentVideoIndex.value < videoList.value.length - 1) {
@@ -85,7 +103,7 @@ export const usePlaylistStore = defineStore(StoresEnum.PLAYLIST, () => {
     }
     // 如果快播到底部了（比如倒数第2个），提前去预加载下一页
     if (currentVideoIndex.value >= videoList.value.length - 3 && hasMore.value) {
-      await fetchVideos(currentUserId.value!, true);
+      await fetchVideos(currentUserId.value!, currentUsername.value!, true);
     }
   };
 
@@ -102,11 +120,13 @@ export const usePlaylistStore = defineStore(StoresEnum.PLAYLIST, () => {
     videoList,
     currentVideo,
     currentUserId,
+    currentUsername,
     currentVideoIndex,
     hasMore,
     isLoading,
     fetchVideos,
     playNext,
+    playSingleVideo,
     playSpecificVideo
   };
 });

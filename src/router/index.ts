@@ -33,6 +33,11 @@ const getCommonRoutes = (): Array<RouteRecordRaw> => [
     component: () => import("@/views/homeWindow/LivePlay.vue")
   },
   {
+    name: "video",
+    path: "/video",
+    component: () => import("@/views/homeWindow/VideoDetail.vue")
+  },
+  {
     name: "home",
     path: "/home",
     component: () => import("@/layout/index.vue"),

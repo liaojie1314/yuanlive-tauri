@@ -68,6 +68,8 @@ export interface FollowItem {
 
 export interface VideoItem {
   id: number;
+  userId?: number;
+  username?: string;
   videoUrl: string;
   coverUrl: string;
   likeCount: number;

@@ -22,7 +22,7 @@
           <n-scrollbar class="h-full" @scroll="handleDetailScroll">
             <div class="p-4 text-[--text-color]">
               <div class="flex items-center justify-between mb-4">
-                <div class="font-medium text-[15px]">{{ userName }}</div>
+                <div class="font-medium text-[15px]">{{ playlistStore.currentUsername }}</div>
 
                 <button class="follow-btn" :class="{ 'is-followed': isFollowed }" @click="toggleFollow">
                   {{ isFollowed ? $t("components.videoSidePanel.followed") : $t("components.videoSidePanel.follow") }}
@@ -214,8 +214,6 @@ const playlistStore = usePlaylistStore();
 
 const props = defineProps<{
   show: boolean;
-  userId: number | null;
-  userName: string;
   tab: "detail" | "comment";
 }>();
 
@@ -330,7 +328,7 @@ const handleDetailScroll = (e: Event) => {
   const target = e.target as HTMLElement;
   if (target.scrollTop + target.clientHeight >= target.scrollHeight - 50) {
     // 侧边栏触底，直接叫 Store 加载下一页
-    playlistStore.fetchVideos(props.userId as number, true);
+    playlistStore.fetchVideos(playlistStore.currentUserId as number, playlistStore.currentUsername, true);
   }
 };
 
