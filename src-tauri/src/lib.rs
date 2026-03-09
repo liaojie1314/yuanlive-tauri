@@ -33,6 +33,10 @@ pub struct FfmpegState {
     child: std::sync::Mutex<Option<CommandChild>>,
 }
 
+pub struct McpState {
+    child: std::sync::Mutex<Option<CommandChild>>,
+}
+
 pub(crate) static APP_STATE_READY: AtomicBool = AtomicBool::new(false);
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -190,6 +194,9 @@ fn common_setup(app_handle: AppHandle) -> Result<(), Box<dyn std::error::Error>>
             app_handle.manage(FfmpegState {
                 child: std::sync::Mutex::new(None),
             });
+            app_handle.manage(McpState {
+                child: std::sync::Mutex::new(None),
+            });
             APP_STATE_READY.store(true, Ordering::SeqCst);
             if let Err(e) = app_handle.emit("app-state-ready", ()) {
                 warn!("Failed to emit app-state-ready event: {}", e);
@@ -219,6 +226,8 @@ fn get_invoke_handlers() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Se
         check_uploaded_chunks_command, merge_chunks_command, upload_chunk_by_path_command,
         upload_chunk_bytes_command,
     };
+    #[cfg(windows)]
+    use crate::desktop::windows_mcp::{send_to_mcp, start_mcp};
     use crate::websocket::commands::{
         ws_disconnect, ws_force_reconnect, ws_get_state, ws_init_connection, ws_is_connected,
         ws_send_message,
@@ -229,7 +238,7 @@ fn get_invoke_handlers() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Se
     use desktop::directory_scanner::{
         cancel_directory_scan, get_directory_usage_info_with_progress,
     };
-    #[cfg(desktop)]
+    #[cfg(windows)]
     use desktop::live_stream::{
         check_ffmpeg_installed, push_stream_chunk, start_stream_pipe, stop_stream_pipe,
     };
@@ -262,19 +271,24 @@ fn get_invoke_handlers() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Se
         ws_send_message,
         ws_is_connected,
         ws_get_state,
+        // MCP 相关
+        #[cfg(windows)]
+        start_mcp,
+        #[cfg(windows)]
+        send_to_mcp,
         #[cfg(desktop)]
         push_window_payload,
         #[cfg(desktop)]
         get_window_payload,
         #[cfg(desktop)]
         screenshot,
-        #[cfg(desktop)]
+        #[cfg(windows)]
         check_ffmpeg_installed,
-        #[cfg(desktop)]
+        #[cfg(windows)]
         start_stream_pipe,
-        #[cfg(desktop)]
+        #[cfg(windows)]
         stop_stream_pipe,
-        #[cfg(desktop)]
+        #[cfg(windows)]
         push_stream_chunk,
         #[cfg(desktop)]
         get_directory_usage_info_with_progress,

@@ -126,6 +126,15 @@ export enum TauriCommandEnum {
   GET_WINDOW_PAYLOAD = "get_window_payload",
   // 截图
   SCREENSHOT = "screenshot",
+  // 获取目录占用信息
+  GET_DIRECTORY_USAGE_INFO_WITH_PROGRESS = "get_directory_usage_info_with_progress",
+  // 取消目录扫描
+  CANCEL_DIRECTORY_SCAN = "cancel_directory_scan",
+  // 系统tts发声
+  SPEAK_SYSTEM = "speak_system",
+  // 提取视频封面
+  EXTRACT_VIDEO_COVER = "extract_video_cover",
+  /** windows专属 */
   // 检查ffmpeg是否安装
   CHECK_FFMPEG_INSTALLED = "check_ffmpeg_installed",
   // 启动流管道
@@ -134,14 +143,10 @@ export enum TauriCommandEnum {
   PUSH_STREAM_CHUNK = "push_stream_chunk",
   // 停止流管道
   STOP_STREAM_PIPE = "stop_stream_pipe",
-  // 获取目录占用信息
-  GET_DIRECTORY_USAGE_INFO_WITH_PROGRESS = "get_directory_usage_info_with_progress",
-  // 取消目录扫描
-  CANCEL_DIRECTORY_SCAN = "cancel_directory_scan",
-  // 系统tts发声
-  SPEAK_SYSTEM = "speak_system",
-  // 提取视频封面
-  EXTRACT_VIDEO_COVER = "extract_video_cover"
+  // 启动 MCP
+  START_MCP = "start_mcp",
+  // 向 MCP 发送指令
+  SEND_TO_MCP = "send_to_mcp"
 }
 
 /** pinia存储的名称 */

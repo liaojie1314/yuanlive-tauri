@@ -11,7 +11,7 @@
   },
   "bundle": {
     "resources": ["configuration"],
-    "externalBin": ["binaries/ffmpeg"],
+    "externalBin": ["binaries/ffmpeg", "binaries/windows-mcp"],
     "active": true,
     "targets": ["msi", "nsis"],
     "icon": [

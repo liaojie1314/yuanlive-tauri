@@ -4,3 +4,4 @@ pub mod live_stream;
 pub mod tts;
 pub mod video_cover;
 pub mod window_payload;
+pub mod windows_mcp;

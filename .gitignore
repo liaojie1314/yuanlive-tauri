@@ -28,7 +28,7 @@ dist-ssr
 
 /public/selfie_segmentation
 
-src-tauri/binaries/
+src-tauri/binaries/ffmpeg-x86_64-pc-windows-msvc.exe
 
 # 秘钥
 yuanlive.key
