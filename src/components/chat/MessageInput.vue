@@ -172,15 +172,15 @@ import { convertFileSrc, invoke } from "@tauri-apps/api/core";
 import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
 
 import { MittEnum, TauriCommandEnum } from "@/enums";
-import { useSettingStore } from "@/stores/setting";
-import { useMitt } from "@/hooks/useMitt";
-import { useWindow } from "@/hooks/useWindow";
-import { useImageViewer } from "@/hooks/useImageViewer";
-import { useVideoViewer } from "@/hooks/useVideoViewer";
-import { useGlobalShortcut } from "@/hooks/useGlobalShortcut";
-import { UploadFile } from "@/utils/FileUtil";
-import { isMobile } from "@/utils/PlatformUtils";
-import { getFileSuffix } from "@/utils/FormattingUtils";
+import { useSettingStore } from "@/stores/setting.ts";
+import { useMitt } from "@/hooks/useMitt.ts";
+import { useWindow } from "@/hooks/useWindow.ts";
+import { useImageViewer } from "@/hooks/useImageViewer.ts";
+import { useVideoViewer } from "@/hooks/useVideoViewer.ts";
+import { useGlobalShortcut } from "@/hooks/useGlobalShortcut.ts";
+import { UploadFile } from "@/utils/FileUtil.ts";
+import { isMobile } from "@/utils/PlatformUtils.ts";
+import { getFileSuffix } from "@/utils/FormattingUtils.ts";
 
 defineOptions({ name: "MessageInput" });
 

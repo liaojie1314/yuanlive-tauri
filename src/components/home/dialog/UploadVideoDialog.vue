@@ -119,7 +119,7 @@
 import { useI18n } from "vue-i18n";
 import type { UploadFileInfo } from "naive-ui";
 
-import { useVideoFrame } from "@/hooks/useVideoFrame";
+import { useVideoFrame } from "@/hooks/useVideoFrame.ts";
 
 const { t } = useI18n();
 const { videoUrl, frames, isGenerating, generateFrames, clearFrames } = useVideoFrame();

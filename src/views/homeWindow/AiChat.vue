@@ -397,16 +397,40 @@ const simulateAiStreamResponse = () => {
     time: new Date().toLocaleTimeString(),
     thinking: "",
     content: "",
-    thinkingTime: 0
+    thinkingTime: 0,
+    // 模拟的 RAG 检索数据
+    citations: [
+      {
+        id: 1,
+        title: "Tauri2_架构设计文档.pdf",
+        type: "file",
+        snippet:
+          "Tauri 2.0 引入了全新的 IPC 架构，使得前端 Vue 进程能够以极低的延迟与 Rust 后端进行二进制数据通信，同时提供了更完善的插件系统 (Plugin System)...",
+        score: 0.92
+      },
+      {
+        id: 2,
+        title: "上周二历史对话",
+        type: "history",
+        snippet:
+          "用户询问了关于如何优化 Spring Cloud 高并发直播聊天室的架构。AI 建议使用 Redis 配合 WebSocket 集群进行消息分发...",
+        score: 0.85
+      },
+      {
+        id: 3,
+        title: "Vue 官方文档: 响应式原理",
+        type: "web",
+        snippet:
+          "Vue 3 使用了 Proxy 来代替 Vue 2 的 Object.defineProperty，这使得 Vue 能够完美拦截对象属性的添加、删除，以及数组索引的修改，极大地提升了性能。"
+      }
+    ]
   });
 
-  // 1. 消息对象刚插入时，调用一次滚动到底部 (保留这里)
+  // 消息对象刚插入时，调用一次滚动到底部
   messages.value.push(aiMsg.value);
-  scrollToBottom();
-
-  const fullThinking = "正在分析用户意图...\n用户似乎在测试流式输出功能。\n检查组件响应速度...";
+  const fullThinking = "正在检索相关文档...\n匹配到 3 个高度相关的信息源。\n开始整合并生成最终回答...";
   const fullContent =
-    "流式输出测试成功！\n\n```python\nprint('Hello World')\n```\n\n你可以看到思考过程先出现，然后是正文逐字显示。";
+    "根据检索到的资料，流式输出测试成功！\n\n这证明了我们的前端架构不仅能丝滑处理 RAG 引用，还能完美兼容 `Tauri 2` 的进程通信与 `Vue 3` 的 Proxy 响应式系统。\n\n你可以把鼠标悬浮在底部的引用标签上，看看弹出的浮窗效果。";
 
   let tIndex = 0;
   let cIndex = 0;
@@ -427,9 +451,9 @@ const simulateAiStreamResponse = () => {
   const startContentStream = () => {
     const contentInterval = setInterval(() => {
       if (cIndex < fullContent.length) {
-        scrollToBottom();
         aiMsg.value.content += fullContent[cIndex];
         cIndex++;
+        // scrollToBottom(); // 记得在外部处理滚动
       } else {
         clearInterval(contentInterval);
       }

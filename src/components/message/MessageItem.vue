@@ -66,6 +66,10 @@
                 <file-block v-else-if="block.type === 'file'" :url="block.url" :name="block.name" :is-self="isSelf" />
               </div>
             </template>
+
+            <citation-block
+              v-if="!isSelf && message.citations && message.citations.length > 0"
+              :citations="message.citations" />
           </div>
         </context-menu>
 

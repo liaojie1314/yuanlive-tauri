@@ -58,8 +58,8 @@
 
 <script setup lang="ts">
 import { UploadSceneEnum } from "@/enums";
-import { useUserStore } from "@/stores/user";
-import { useAvatarUpload } from "@/hooks/useAvatarUpload";
+import { useUserStore } from "@/stores/user.ts";
+import { useAvatarUpload } from "@/hooks/useAvatarUpload.ts";
 import type { AvatarCropperInstance } from "@/components/common/AvatarCropper.vue";
 
 const { userInfo } = useUserStore();
