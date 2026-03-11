@@ -65,7 +65,7 @@
             <div
               class="text-xs text-[--user-text-color] hover:text-[--text-color] flex items-center gap-1 transition-colors cursor-pointer"
               @click="handleRefreshSuggestions">
-              <i-mdi-refresh class="w-3 h-3" :class="{ 'animate-spin': isRefreshing }" />
+              <i-mdi-refresh class="w-3 h-3" />
               {{ $t("components.searchBox.refresh") }}
             </div>
           </div>
@@ -86,16 +86,16 @@
           <div class="text-[--text-color] font-medium mb-2 text-sm">{{ $t("components.searchBox.trending") }}</div>
           <div class="space-y-1">
             <div
-              v-for="(item, index) in trendingSearches"
+              v-for="(item, index) in hotSearches"
               :key="index"
               class="flex items-center gap-2 cursor-pointer hover:bg-[--tray-hover] px-2 py-1.5 rounded transition-colors"
-              @click="handleTrendingClick(item)">
+              @click="handleTrendingClick(item.content)">
               <span
                 class="w-4 h-4 rounded text-[10px] flex items-center justify-center font-medium flex-shrink-0"
                 :class="index < 3 ? 'bg-red-500 text-white' : 'bg-[--line-color] text-[--user-text-color]'">
                 {{ index + 1 }}
               </span>
-              <span class="text-[--text-color] text-sm truncate">{{ item }}</span>
+              <span class="text-[--text-color] text-sm truncate">{{ item.content }}</span>
             </div>
           </div>
         </div>
@@ -106,7 +106,9 @@
 
 <script setup lang="ts">
 import { useMitt } from "@/hooks/useMitt";
+import { getHotSearchApi } from "@/api/user";
 import { StorageKeyEnum, MittEnum } from "@/enums";
+import type { HotSearchItem } from "@/api/types.ts";
 
 defineOptions({
   name: "SearchBox"
@@ -144,13 +146,7 @@ const searchSuggestions = ref<string[]>([
 ]);
 
 // 最近热搜
-const trendingSearches = ref<string[]>([
-  "领悟总书记对海南自贸港的殷殷期待",
-  "海南自贸港正式封关",
-  "再坚持一下 2262年有两个春节",
-  "不断巩固拓展经济稳中有向好势头",
-  "剑来动画第二季定档"
-]);
+const hotSearches = ref<HotSearchItem[]>([]);
 
 /** 处理搜索 */
 const handleSearch = () => {
@@ -245,6 +241,14 @@ const clearInput = () => {
   searchQuery.value = "";
 };
 
+/** 获取热搜 */
+const fetchHotSearch = async () => {
+  const res = await getHotSearchApi();
+  if (res) {
+    hotSearches.value = res;
+  }
+};
+
 watch(
   searchHistory,
   (newHistory) => {
@@ -252,6 +256,10 @@ watch(
   },
   { deep: true }
 );
+
+onMounted(() => {
+  fetchHotSearch();
+});
 </script>
 
 <style scoped>

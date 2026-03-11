@@ -71,6 +71,11 @@ export type SearchResultItem = {
 
 export type SearchResultPageResult = PageResult<SearchResultItem>;
 
+export type HotSearchItem = {
+  id: number;
+  content: string;
+};
+
 //========follow========
 export type FollowItem = {
   followUserId: number;

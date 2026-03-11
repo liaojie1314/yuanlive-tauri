@@ -558,6 +558,7 @@ pub enum Url {
     CheckQRStatus,
     GetUserInfo,
     GetSearchResult,
+    GetHotSearch,
     GetLiveCategory,
     GetTopFiveLive,
     GetLiveListByCategory,
@@ -590,6 +591,7 @@ impl Url {
             // 用户信息相关
             Url::GetUserInfo => (http::Method::GET, "user/user/getUserInfo"),
             Url::GetSearchResult => (http::Method::GET, "user/user/search"),
+            Url::GetHotSearch => (http::Method::GET, "user/user/hotSearch"),
             // 直播相关
             Url::GetTopFiveLive => (http::Method::GET, "live/room/popularRooms"),
             Url::GetLiveCategory => (http::Method::GET, "live/category/tree"),
@@ -627,6 +629,7 @@ impl Url {
             // 用户信息相关
             "getUserInfo" => Ok(Url::GetUserInfo),
             "getSearchResult" => Ok(Url::GetSearchResult),
+            "getHotSearch" => Ok(Url::GetHotSearch),
             // 直播相关
             "getTopFiveLive" => Ok(Url::GetTopFiveLive),
             "getLiveCategory" => Ok(Url::GetLiveCategory),

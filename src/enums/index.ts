@@ -46,6 +46,8 @@ export enum UrlEnum {
   GET_USER_INFO = "getUserInfo",
   // 获取搜索结果
   GET_SEARCH_RESULT = "getSearchResult",
+  // 获取5条热门搜索
+  GET_HOT_SEARCH = "getHotSearch",
   // 获取直播类别
   GET_LIVE_CATEGORY = "getLiveCategory",
   // 获取热门类别

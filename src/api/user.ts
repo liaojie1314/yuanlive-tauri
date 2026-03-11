@@ -1,6 +1,6 @@
 import { UrlEnum } from "@/enums";
 import { request } from "@/utils/RequestUtils.ts";
-import type { SearchResultPageResult } from "@/api/types.ts";
+import type { SearchResultPageResult, HotSearchItem } from "@/api/types.ts";
 
 /**
  * 获取用户详情
@@ -27,5 +27,12 @@ export async function getSearchResultApi(query: string, pageNum?: number, pageSi
       pageNum,
       pageSize
     }
+  });
+}
+
+/** 获取5条热搜条目 */
+export async function getHotSearchApi() {
+  return await request<HotSearchItem[]>({
+    url: UrlEnum.GET_HOT_SEARCH
   });
 }
