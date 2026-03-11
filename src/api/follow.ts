@@ -1,5 +1,5 @@
 import { UrlEnum } from "@/enums";
-import { FollowItem, type VideoPageResult } from "./types";
+import type { FollowItem, VideoPageResult } from "./types";
 import { request } from "@/utils/RequestUtils.ts";
 
 /**

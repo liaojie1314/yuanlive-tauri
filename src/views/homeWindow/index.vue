@@ -109,7 +109,7 @@
 <script setup lang="ts">
 import { MittEnum } from "@/enums";
 import { useMitt } from "@/hooks/useMitt";
-import { LiveItem, FollowLiveItem, HotCategoryItem } from "@/api/types";
+import type { LiveItem, FollowLiveItem, HotCategoryItem } from "@/api/types";
 import { getTopFiveLiveApi, getFollowingLiveApi, getHotCategoryApi, getLiveListByCategoryApi } from "@/api/live";
 
 defineOptions({

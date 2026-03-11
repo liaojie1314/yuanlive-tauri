@@ -557,6 +557,7 @@ pub enum Url {
     GenerateQRCode,
     CheckQRStatus,
     GetUserInfo,
+    GetSearchResult,
     GetLiveCategory,
     GetTopFiveLive,
     GetLiveListByCategory,
@@ -588,6 +589,7 @@ impl Url {
             Url::CheckQRStatus => (http::Method::GET, "user/auth/qrcode/check"),
             // 用户信息相关
             Url::GetUserInfo => (http::Method::GET, "user/user/getUserInfo"),
+            Url::GetSearchResult => (http::Method::GET, "user/user/search"),
             // 直播相关
             Url::GetTopFiveLive => (http::Method::GET, "live/room/popularRooms"),
             Url::GetLiveCategory => (http::Method::GET, "live/category/tree"),
@@ -624,6 +626,7 @@ impl Url {
             "checkQRStatus" => Ok(Url::CheckQRStatus),
             // 用户信息相关
             "getUserInfo" => Ok(Url::GetUserInfo),
+            "getSearchResult" => Ok(Url::GetSearchResult),
             // 直播相关
             "getTopFiveLive" => Ok(Url::GetTopFiveLive),
             "getLiveCategory" => Ok(Url::GetLiveCategory),

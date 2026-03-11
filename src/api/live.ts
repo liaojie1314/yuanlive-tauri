@@ -1,5 +1,5 @@
 import { UrlEnum } from "@/enums";
-import { HotCategoryItem, FollowLiveItem, LiveItem } from "./types";
+import type { HotCategoryItem, FollowLiveItem, LiveItem } from "./types";
 import { request } from "@/utils/RequestUtils.ts";
 
 /**

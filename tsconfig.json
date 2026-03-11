@@ -23,7 +23,7 @@
       "~/*": ["./*"],
       "@/*": ["./src/*"]
     },
-    "types": ["node"],
+    "types": ["node", "unplugin-icons/types/vue"],
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true
   },

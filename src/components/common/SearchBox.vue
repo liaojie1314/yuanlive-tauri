@@ -105,8 +105,8 @@
 </template>
 
 <script setup lang="ts">
-import { StorageKeyEnum, MittEnum } from "@/enums";
 import { useMitt } from "@/hooks/useMitt";
+import { StorageKeyEnum, MittEnum } from "@/enums";
 
 defineOptions({
   name: "SearchBox"

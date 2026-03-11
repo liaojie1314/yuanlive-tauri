@@ -101,7 +101,7 @@
 </template>
 
 <script setup lang="ts">
-import { FollowItem } from "@/api/types";
+import type { FollowItem } from "@/api/types";
 import { getFollowingApi } from "@/api/follow";
 import { usePlaylistStore } from "@/stores/playlist";
 import { useFullscreen } from "@/hooks/useFullscreen";

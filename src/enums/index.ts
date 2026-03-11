@@ -14,6 +14,8 @@ export enum UploadSceneEnum {
 export enum MittEnum {
   /** 搜索 */
   SEARCH = "search",
+  /** 填充消息输入框 */
+  FILL_MESSAGE_INPUT = "fillMessageInput",
   /** 全局文件拖拽 */
   GLOBAL_FILES_DROP = "globalFilesDrop",
   /** 更新提示 */
@@ -42,6 +44,8 @@ export enum UrlEnum {
   FORGET_PASSWORD = "forgetPassword",
   // 获取用户信息详情
   GET_USER_INFO = "getUserInfo",
+  // 获取搜索结果
+  GET_SEARCH_RESULT = "getSearchResult",
   // 获取直播类别
   GET_LIVE_CATEGORY = "getLiveCategory",
   // 获取热门类别
@@ -169,6 +173,8 @@ export enum StoresEnum {
   VIDEO = "video",
   // 播放列表
   PLAYLIST = "playlist",
+  // AI
+  AI = "ai",
   // 文件下载
   FILE_DOWNLOAD = "fileDownload",
   // 图片查看器

@@ -30,7 +30,7 @@
 
     <div v-else class="flex-1">
       <div class="grid grid-cols-4 gap-4">
-        <div v-for="item in list" :key="item.id" @click="navigateToLive(item.id)">
+        <div v-for="item in list" :key="item.id" @click="navigateToLive(item)">
           <live-card
             :cover-url="item.coverImg"
             :title="item.title"
@@ -51,26 +51,33 @@
 </template>
 
 <script setup lang="ts">
+import type { VideoItem } from "@/api/types";
+import { getSearchResultApi } from "@/api/user";
+import { usePlaylistStore } from "@/stores/playlist";
+
 defineOptions({ name: "SearchResult" });
 
-interface Props {
-  query: string;
-}
-
-const props = defineProps<Props>();
-const emit = defineEmits(["back"]);
 const router = useRouter();
+const playlistStore = usePlaylistStore();
 
-interface LiveInfo {
+const props = defineProps<{
+  query: string;
+}>();
+const emit = defineEmits(["back"]);
+
+interface DisplayItem {
   id: number;
   title: string;
   anchorName: string;
   coverImg: string;
   hotScore: number;
+  isLive: boolean; // 增加标识，用于区分跳转路由
+  // video 数据
+  video?: VideoItem;
 }
 
 const loading = ref(false);
-const list = ref<LiveInfo[]>([]);
+const list = ref<DisplayItem[]>([]);
 const page = ref(1);
 const pageSize = ref(12);
 const total = ref(0);
@@ -82,22 +89,45 @@ const fetchSearchResults = async () => {
   loading.value = true;
   list.value = []; // 清空当前列表
 
-  // 模拟网络延迟
-  await new Promise((resolve) => setTimeout(resolve, 600));
+  try {
+    const res = await getSearchResultApi(props.query, page.value, pageSize.value);
 
-  // 模拟生成数据
-  const mockData: LiveInfo[] = Array.from({ length: pageSize.value }).map((_, i) => ({
-    id: Date.now() + i,
-    title: `${props.query} - 相关直播内容 ${page.value}-${i + 1}`,
-    anchorName: `主播_${Math.floor(Math.random() * 1000)}`,
-    coverImg: `https://picsum.photos/640/360?random=${page.value * 10 + i}`,
-    hotScore: Math.floor(Math.random() * 100000)
-  }));
-
-  // 模拟总数 (根据关键词长度变一下，让它看起来不一样)
-  total.value = props.query.length * 10 + 25;
-  list.value = mockData;
-  loading.value = false;
+    if (res) {
+      total.value = res.total || 0;
+      // 数据映射
+      list.value = res.list
+        ?.map((item) => {
+          if (item.checkRoom && item.liveRoom) {
+            // 直播间数据映射
+            return {
+              id: item.liveRoom.id,
+              title: item.liveRoom.title || "",
+              anchorName: item.liveRoom.anchorName || "",
+              coverImg: item.liveRoom.coverImg || "",
+              hotScore: item.liveRoom.hotScore || 0,
+              isLive: true
+            };
+          } else if (!item.checkRoom && item.video) {
+            // 视频数据映射
+            return {
+              id: item.video.id,
+              title: item.video.title || "",
+              anchorName: item.video.username || "",
+              coverImg: item.video.coverUrl || "",
+              hotScore: item.video.likeCount || 0,
+              isLive: false,
+              video: item.video
+            };
+          }
+          return null;
+        })
+        .filter(Boolean) as DisplayItem[];
+    }
+  } catch (error) {
+    console.error("获取搜索结果失败:", error);
+  } finally {
+    loading.value = false;
+  }
 };
 
 /** 翻页处理 */
@@ -113,10 +143,15 @@ const handleBack = () => {
 
 /**
  * 导航到直播详情页
- * @param id 房间id
+ * @param item 搜索结果项
  */
-const navigateToLive = (id: number) => {
-  router.push(`/live/${id}`);
+const navigateToLive = (item: DisplayItem) => {
+  if (item.isLive) {
+    router.push(`/live/${item.id}`);
+  } else {
+    playlistStore.playSingleVideo(item.video as VideoItem);
+    router.push("/video");
+  }
 };
 
 // 监听关键词变化，重置分页并搜索

@@ -9,6 +9,32 @@ export type PageResult<T> = {
   list: T[];
 };
 
+//========auth========
+export type RegisterUserReq = {
+  // 用户名
+  username: string;
+  // 邮箱
+  email: string;
+  // 密码
+  password: string;
+  // 验证码
+  code: string;
+  // 确认密码
+  confirmPassword: string;
+};
+
+export type ForgetPasswordReq = {
+  // 邮箱
+  email: string;
+  // 验证码
+  code: string;
+  // 密码
+  password: string;
+  // 确认密码
+  confirmPassword: string;
+};
+
+//========user========
 type UserStats = {
   followerCount: number;
   followingCount: number;
@@ -34,40 +60,28 @@ export type UserInfoType = {
   userStats: UserStats;
 };
 
-export type RegisterUserReq = {
-  // 用户名
-  username: string;
-  // 邮箱
-  email: string;
-  // 密码
-  password: string;
-  // 验证码
-  code: string;
-  // 确认密码
-  confirmPassword: string;
+export type SearchResultItem = {
+  // 视频
+  video?: VideoItem;
+  // 直播间
+  liveRoom?: LiveItem;
+  // 是否是直播间
+  checkRoom: boolean;
 };
 
-export type ForgetPasswordReq = {
-  // 邮箱
-  email: string;
-  // 验证码
-  code: string;
-  // 密码
-  password: string;
-  // 确认密码
-  confirmPassword: string;
-};
+export type SearchResultPageResult = PageResult<SearchResultItem>;
 
 //========follow========
-export interface FollowItem {
+export type FollowItem = {
   followUserId: number;
   username: string;
   avatar: string;
   unseenCount: number;
-}
+};
 
-export interface VideoItem {
+export type VideoItem = {
   id: number;
+  title?: string;
   userId?: number;
   username?: string;
   videoUrl: string;
@@ -77,28 +91,28 @@ export interface VideoItem {
   shareCount: number;
   collectCount: number;
   description: string;
-}
+};
 
 export type VideoPageResult = PageResult<VideoItem>;
 
 //========live========
-export interface HotCategoryItem {
+export type HotCategoryItem = {
   id: number;
   label: string;
   value: string;
   parentValue: string;
-}
+};
 
-export interface FollowLiveItem {
+export type FollowLiveItem = {
   username: string;
   avatar: string;
   roomId: number;
-}
+};
 
-export interface LiveItem {
+export type LiveItem = {
   id: number;
   title: string;
   anchorName: string;
   coverImg: string;
   hotScore: number;
-}
+};

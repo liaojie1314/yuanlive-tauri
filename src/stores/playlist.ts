@@ -1,5 +1,5 @@
 import { StoresEnum } from "@/enums";
-import { VideoItem } from "@/api/types";
+import type { VideoItem } from "@/api/types";
 import { getVideoListByUidApi } from "@/api/follow";
 
 export const usePlaylistStore = defineStore(StoresEnum.PLAYLIST, () => {
