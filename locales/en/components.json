@@ -132,6 +132,7 @@
     "emptyContext": "No context files",
     "emptyGenerated": "No generated files",
     "save": "Save",
+    "addToKB": "Add to Knowledge Base",
     "remove": "Remove"
   },
   "agentSettings": {
@@ -200,6 +201,18 @@
   },
   "trendingPrompts": {
     "title": "Trending Prompts"
+  },
+  "addToKnowledge": {
+    "title": "Add to Knowledge Base",
+    "addTo": "Add",
+    "addToKnowledgeDesc": "Add to knowledge base, AI will remember this document in future conversations.",
+    "chooseKnowledge": "Choose knowledge base",
+    "selectKnowledgePlaceholder": "Select knowledge base",
+    "confirm": "Confirm add",
+    "msg": {
+      "success": "Successfully added to knowledge base!",
+      "error": "Failed to add to knowledge base, please try again."
+    }
   },
   "searchResult": {
     "title": "Search results for: ",

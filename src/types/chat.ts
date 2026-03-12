@@ -41,6 +41,7 @@ export interface FileBlock extends BaseBlock {
 export interface Citation {
   id: number; // 引用序号，如 1, 2, 3
   title: string; // 来源名称，如 "adv.txt"
+  url?: string; // 来源资源url
   type: "file" | "web" | "history"; // 来源类型，用于展示不同的图标
   snippet: string; // 向量库中匹配到的具体文本片段 (Chunk)
   score?: number; // 相似度得分 (可选，用于展示相关性)

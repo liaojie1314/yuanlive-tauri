@@ -36,6 +36,11 @@
             <span class="text-xs text-[--text-color] truncate max-w-[120px]">
               {{ cite.title }}
             </span>
+
+            <i-mdi-open-in-new
+              v-if="cite.type === 'web'"
+              class="w-3.5 h-3.5 ml-0.5 text-blue-500 opacity-60 hover:opacity-100 transition-opacity"
+              @click="handleCitationClick(cite)" />
           </div>
         </template>
 
@@ -57,10 +62,30 @@
 
 <script setup lang="ts">
 import type { Citation } from "@/types/chat";
+import { useWindow } from "@/hooks/useWindow";
+
+const { createExternalWebviewWindow } = useWindow();
 
 defineProps<{
   citations?: Citation[];
 }>();
+
+/**
+ * 处理引用点击事件
+ * @param cite 点击的引用项
+ */
+const handleCitationClick = async (cite: Citation) => {
+  if (cite.type === "web") {
+    console.log(cite);
+    // 假设网页的真实 URL 存在 cite.url
+    const url = cite.url;
+    if (url) {
+      await createExternalWebviewWindow(cite.title, url);
+    }
+  } else if (cite.type === "file") {
+    console.log("预览本地文件:", cite.title);
+  }
+};
 </script>
 
 <style scoped>

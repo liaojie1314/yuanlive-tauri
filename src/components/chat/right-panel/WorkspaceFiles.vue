@@ -50,13 +50,25 @@
           </div>
 
           <div
-            class="absolute top-[-6px] right-[-6px] w-5 h-5 rounded-full bg-[--action-bar-icon-color] text-[--tray-bg-color] flex items-center justify-center cursor-pointer transition-colors shadow-sm z-10 opacity-0 group-hover:opacity-100"
-            :class="section.actionHoverClass"
-            :title="section.actionTooltip"
+            v-if="section.id === 'generated'"
+            class="absolute top-[-6px] right-[-6px] w-5 h-5 rounded-full bg-[--action-bar-icon-color] text-[--tray-bg-color] flex items-center justify-center cursor-pointer transition-colors shadow-sm z-10 opacity-0 group-hover:opacity-100 hover:bg-blue-500"
+            :title="t('components.workspaceFiles.save')"
             @click.stop="section.onAction(index, item)">
-            <i-mdi-close v-if="section.id === 'context'" class="w-3 h-3" />
-            <i-mdi-download v-else class="w-3 h-3" />
+            <i-mdi-download class="w-3 h-3" />
           </div>
+
+          <n-dropdown
+            v-if="section.id === 'context'"
+            trigger="click"
+            placement="bottom-end"
+            :options="contextMenuOptions"
+            @select="(key) => handleContextAction(key, index, item)">
+            <div
+              class="absolute top-[-6px] right-[-6px] w-5 h-5 rounded-full bg-[--action-bar-icon-color] text-[--tray-bg-color] flex items-center justify-center cursor-pointer transition-colors shadow-sm z-10 opacity-0 group-hover:opacity-100 hover:bg-gray-500"
+              @click.stop>
+              <i-mdi-dots-horizontal class="w-3 h-3" />
+            </div>
+          </n-dropdown>
         </div>
       </div>
 
@@ -66,15 +78,38 @@
         {{ section.emptyText }}
       </div>
     </div>
+    <add-to-knowledge-modal v-model:show="showKbModal" :file="currentOperateFile" @success="handleKbSuccess" />
   </div>
 </template>
 
 <script setup lang="ts">
+import { NIcon } from "naive-ui";
 import { useI18n } from "vue-i18n";
+import IconClose from "~icons/mdi/close";
+import IconDatabasePlus from "~icons/mdi/database-plus-outline";
+
 import { getFileSuffix } from "@/utils/FormattingUtils";
 
 const { t } = useI18n();
 
+// 上下文文件的下拉菜单选项
+const contextMenuOptions = [
+  {
+    label: t("components.workspaceFiles.addToKB"),
+    key: "add_to_kb",
+    icon: () => h(NIcon, null, { default: () => h(IconDatabasePlus) })
+  },
+  { type: "divider", key: "d1" },
+  {
+    label: t("components.workspaceFiles.remove"),
+    key: "remove",
+    // 可以直接给 NIcon 传类名来控制颜色
+    icon: () => h(NIcon, { class: "text-red-500" }, { default: () => h(IconClose) })
+  }
+];
+
+const showKbModal = ref(false);
+const currentOperateFile = ref<any>(null);
 // 上下文
 const contextFiles = ref([
   { type: "image", name: "图片.png", path: "/mock/path/img.png", previewUrl: "https://picsum.photos/id/180/200/200" }, //
@@ -125,6 +160,29 @@ const sections = computed(() => [
     onAction: (_index: number, item: any) => downloadGeneratedFile(item)
   }
 ]);
+
+/**
+ * 处理上下文文件的菜单操作
+ * @param key 菜单选项的键值
+ * @param index 要操作的文件索引
+ * @param item 要操作的文件项
+ */
+const handleContextAction = (key: string, index: number, item: any) => {
+  if (key === "remove") {
+    removeContextFile(index);
+  } else if (key === "add_to_kb") {
+    currentOperateFile.value = item;
+    showKbModal.value = true;
+  }
+};
+
+/**
+ * 添加到知识库成功后的回调
+ */
+const handleKbSuccess = () => {
+  console.log("已将文件加入全局记忆！");
+  // 可以在这里刷新一下侧边栏的知识库列表等状态
+};
 
 /**
  * 移除上下文文件

@@ -187,6 +187,7 @@
     "emptyContext": "当前对话暂无专属上下文",
     "emptyGenerated": "暂无生成的代码或媒体文件",
     "save": "保存",
+    "addToKB": "添加到知识库",
     "remove": "移除"
   },
   "agentSettings": {
@@ -199,6 +200,18 @@
       "windows": "允许 AI 读取本地系统级信息与状态",
       "fs": "允许 AI 读写授权的本地项目目录",
       "shell": "允许 AI 执行安全的终端构建命令"
+    }
+  },
+  "addToKnowledge": {
+    "title": "添加到知识库",
+    "addTo": "将",
+    "addToKnowledgeDesc": "添加至知识库，AI 将在未来的对话中长久记忆这份文档。",
+    "chooseKnowledge": "选择目标知识库",
+    "selectKnowledgePlaceholder": "请选择知识库",
+    "confirm": "确认添加",
+    "msg": {
+      "success": "已成功添加到知识库！",
+      "error": "添加失败，请重试。"
     }
   },
   "searchResult": {
