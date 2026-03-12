@@ -17,6 +17,8 @@
     "canvasbox",
     "cdylib",
     "chrono",
+    "Cooldown",
+    "Cooldowns",
     "Danmaku",
     "Danmakus",
     "daterange",
