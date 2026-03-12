@@ -1,3 +1,4 @@
+import { useI18n } from "vue-i18n";
 import { StoresEnum } from "@/enums";
 
 /**
@@ -7,90 +8,80 @@ import { StoresEnum } from "@/enums";
 export const useDanmakuStore = defineStore(
   StoresEnum.DANMAKU,
   () => {
-    // 弹幕位置，目前只有scroll类型
+    const { t } = useI18n();
+    const fontSizeOptions = [
+      t("components.danmakuInput.fontSizeOptions.extraSmall"),
+      t("components.danmakuInput.fontSizeOptions.small"),
+      t("components.danmakuInput.fontSizeOptions.medium"),
+      t("components.danmakuInput.fontSizeOptions.large"),
+      t("components.danmakuInput.fontSizeOptions.extraLarge")
+    ];
+    const speedOptions = [
+      t("components.danmakuInput.speedOptions.slower"),
+      t("components.danmakuInput.speedOptions.medium"),
+      t("components.danmakuInput.speedOptions.faster")
+    ];
+    const displayAreaOptions = [
+      t("components.danmakuInput.displayAreaOptions.oneLine"),
+      t("components.danmakuInput.displayAreaOptions.twoLines"),
+      "25%",
+      "50%",
+      "80%"
+    ];
+
+    // TODO: 弹幕位置，目前只有scroll类型
     const position = ref<"scroll">("scroll");
 
-    // 弹幕字体大小，默认16px
-    const fontSize = ref<number>(16);
+    // 本地设置状态
+    const settings = reactive({
+      enabled: true, // 弹幕总开关
+      opacity: 100, // 透明度
+      fontSize: 3, // 字号滑块值 1-5
+      speed: 2, // 速度滑块值 1-3
+      displayArea: 3, // 显示区域滑块值 1-5
+      antiBlock: false // 强制防挡开关
+    });
 
-    // 弹幕透明度，默认100%
-    const opacity = ref<number>(100);
+    const actualFontSize = computed(() => {
+      const map: Record<number, number> = { 1: 12, 2: 14, 3: 16, 4: 18, 5: 20 };
+      return map[settings.fontSize] || 16; // 自动转换为真实像素
+    });
 
-    // 弹幕速度，默认2
-    const speed = ref<number>(2);
+    // 静态的滑块配置（只保留不再频繁变动的基础信息，不会打断滑动拖拽）
+    const sliderConfigs = computed(() => [
+      { key: "opacity" as const, label: t("components.danmakuInput.opacity"), min: 0, max: 100 },
+      { key: "displayArea" as const, label: t("components.danmakuInput.displayArea"), min: 1, max: 5 },
+      { key: "fontSize" as const, label: t("components.danmakuInput.fontSize"), min: 1, max: 5 },
+      { key: "speed" as const, label: t("components.danmakuInput.speed"), min: 1, max: 3 }
+    ]);
 
-    // 弹幕显示区域，默认3/5
-    const displayArea = ref<number>(3);
+    // 动态提取右侧的文本值，供页面独立绑定
+    const textValues = computed(() => ({
+      opacity: `${settings.opacity}%`,
+      displayArea: displayAreaOptions[settings.displayArea - 1] || "",
+      fontSize: fontSizeOptions[settings.fontSize - 1] || "",
+      speed: speedOptions[settings.speed - 1] || ""
+    }));
 
-    // 弹幕开关状态，默认开启
-    const enabled = ref<boolean>(true);
-
-    /**
-     * 设置弹幕字体大小
-     * @param size 字体大小
-     */
-    const setFontSize = (size: number) => {
-      fontSize.value = size;
-    };
-
-    /**
-     * 设置弹幕透明度
-     * @param value 透明度值（0-100）
-     */
-    const setOpacity = (value: number) => {
-      opacity.value = value;
-    };
-
-    /**
-     * 设置弹幕速度
-     * @param value 速度值（1-5）
-     */
-    const setSpeed = (value: number) => {
-      speed.value = value;
-    };
-
-    /**
-     * 设置弹幕显示区域
-     * @param value 显示区域值（1-5）
-     */
-    const setDisplayArea = (value: number) => {
-      displayArea.value = value;
-    };
-
-    /**
-     * 设置弹幕开关状态
-     * @param value 开关状态
-     */
-    const setEnabled = (value: boolean) => {
-      enabled.value = value;
-    };
-
-    /**
-     * 重置弹幕设置到默认值
-     */
+    /** 重置弹幕设置到默认值 */
     const resetSettings = () => {
-      fontSize.value = 16;
-      opacity.value = 100;
-      speed.value = 2;
-      displayArea.value = 3;
-      enabled.value = true;
+      settings.enabled = true;
+      settings.opacity = 100;
+      settings.fontSize = 3;
+      settings.speed = 2;
+      settings.displayArea = 3;
+      settings.antiBlock = false;
     };
 
     return {
       // 状态
       position,
-      fontSize,
-      opacity,
-      speed,
-      displayArea,
-      enabled,
+      settings,
+      textValues,
+      actualFontSize,
+      sliderConfigs,
 
       // 方法
-      setFontSize,
-      setOpacity,
-      setSpeed,
-      setDisplayArea,
-      setEnabled,
       resetSettings
     };
   },

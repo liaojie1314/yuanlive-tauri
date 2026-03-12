@@ -1,5 +1,5 @@
 <template>
-  <div v-resize="checkCompactMode" class="danmaku-input-container" v-if="isEnabled">
+  <div v-resize="checkCompactMode" class="danmaku-input-container">
     <div class="input-wrapper" :class="{ 'compact-mode': isCompactMode }">
       <div class="danmaku-controls-left" v-if="!isCompactMode">
         <div class="danmaku-toggle-btn" :class="{ active: isDanmakuEnabled }" @click="toggleDanmaku">
@@ -15,22 +15,21 @@
             @mouseleave="handleSettingsPanelLeave">
             <div class="settings-header">
               <span class="settings-title">{{ t("components.danmakuInput.settings") }}</span>
-              <div class="reset-btn" @click="resetSettings">
+              <div class="reset-btn" @click="danmakuStore.resetSettings">
                 <i-ph-arrow-counter-clockwise class="reset-icon" />
                 <span>{{ t("components.danmakuInput.reset") }}</span>
               </div>
             </div>
             <div class="settings-content">
-              <div class="settings-item" v-for="item in sliderConfigs" :key="item.key">
+              <div class="settings-item" v-for="item in danmakuStore.sliderConfigs" :key="item.key">
                 <span class="settings-label">{{ item.label }}</span>
                 <n-slider
-                  v-model:value="localSettings[item.key]"
+                  v-model:value="danmakuStore.settings[item.key]"
                   :min="item.min"
                   :max="item.max"
                   :step="1"
-                  :tooltip="false"
-                  @update:value="handleSettingsChange" />
-                <span class="settings-value-right">{{ item.text }}</span>
+                  :tooltip="false" />
+                <span class="settings-value-right">{{ danmakuStore.textValues[item.key] }}</span>
               </div>
 
               <div class="settings-divider"></div>
@@ -89,7 +88,7 @@
       @mouseleave="handleSettingsPanelLeave">
       <div class="settings-header" v-if="!showEmojiSelector">
         <span class="settings-title">{{ t("components.danmakuInput.settings") }}</span>
-        <div class="reset-btn" @click="resetSettings">
+        <div class="reset-btn" @click="danmakuStore.resetSettings">
           <i-ph-arrow-counter-clockwise class="reset-icon" />
           <span>{{ t("components.danmakuInput.reset") }}</span>
         </div>
@@ -107,16 +106,15 @@
           </div>
         </n-scrollbar>
         <template v-else>
-          <div class="settings-item" v-for="item in sliderConfigs" :key="item.key">
+          <div class="settings-item" v-for="item in danmakuStore.sliderConfigs" :key="item.key">
             <span class="settings-label">{{ item.label }}</span>
             <n-slider
-              v-model:value="localSettings[item.key]"
+              v-model:value="danmakuStore.settings[item.key]"
               :min="item.min"
               :max="item.max"
               :step="1"
-              :tooltip="false"
-              @update:value="handleSettingsChange" />
-            <span class="settings-value-right">{{ item.text }}</span>
+              :tooltip="false" />
+            <span class="settings-value-right">{{ danmakuStore.textValues[item.key] }}</span>
           </div>
 
           <div class="settings-divider"></div>
@@ -156,7 +154,6 @@
 
 <script setup lang="ts">
 import { useI18n } from "vue-i18n";
-import { useDebounceFn } from "@vueuse/core";
 
 import { emojis } from "@/utils/EmojiUtils";
 import { useDanmakuStore } from "@/stores/danmaku";
@@ -165,7 +162,6 @@ const { t } = useI18n();
 const danmakuStore = useDanmakuStore();
 
 defineProps<{
-  isEnabled: boolean;
   isDanmakuEnabled: boolean;
 }>();
 
@@ -180,91 +176,11 @@ let emojiPickerHideTimer: number | null = null;
 let emojiSelectorHideTimer: number | null = null;
 const settingsChangeDebounceTimer: number | null = null;
 
-const fontSizeOptions = [
-  t("components.danmakuInput.fontSizeOptions.extraSmall"),
-  t("components.danmakuInput.fontSizeOptions.small"),
-  t("components.danmakuInput.fontSizeOptions.medium"),
-  t("components.danmakuInput.fontSizeOptions.large"),
-  t("components.danmakuInput.fontSizeOptions.extraLarge")
-];
-const speedOptions = [
-  t("components.danmakuInput.speedOptions.slower"),
-  t("components.danmakuInput.speedOptions.medium"),
-  t("components.danmakuInput.speedOptions.faster")
-];
-const displayAreaOptions = [
-  t("components.danmakuInput.displayAreaOptions.oneLine"),
-  t("components.danmakuInput.displayAreaOptions.twoLines"),
-  "25%",
-  "50%",
-  "80%"
-];
-
-// 字体大小映射：从实际像素值到滑块值（1-5）
-const fontSizeToSliderMap: Record<number, number> = {
-  12: 1,
-  14: 2,
-  16: 3,
-  18: 4,
-  20: 5
-};
-
 const danmakuText = ref("");
 const showEmojiPicker = ref(false);
 const showDanmakuSettingsPanel = ref(false);
 const showEmojiSelector = ref(false);
 const isCompactMode = ref(false);
-
-/**
- * 从实际像素值获取对应的滑块值
- * @param pixelSize 实际字体像素大小
- * @returns 对应的滑块值（1-5）
- */
-const getSliderFontSize = (pixelSize: number): number => {
-  return fontSizeToSliderMap[pixelSize] || 3; // 默认返回适中大小
-};
-
-// 本地设置状态，用于滑块交互
-const localSettings = ref({
-  opacity: danmakuStore.opacity,
-  fontSize: getSliderFontSize(danmakuStore.fontSize),
-  speed: danmakuStore.speed,
-  displayArea: danmakuStore.displayArea
-});
-
-const fontSizeLabel = computed(() => fontSizeOptions[localSettings.value.fontSize - 1]);
-const speedLabel = computed(() => speedOptions[localSettings.value.speed - 1]);
-const displayAreaLabel = computed(() => displayAreaOptions[localSettings.value.displayArea - 1]);
-const sliderConfigs = computed(() => [
-  {
-    key: "opacity" as const,
-    label: t("components.danmakuInput.opacity"),
-    min: 0,
-    max: 100,
-    text: `${localSettings.value.opacity}%`
-  },
-  {
-    key: "displayArea" as const,
-    label: t("components.danmakuInput.displayArea"),
-    min: 1,
-    max: 5,
-    text: displayAreaLabel.value
-  },
-  {
-    key: "fontSize" as const,
-    label: t("components.danmakuInput.fontSize"),
-    min: 1,
-    max: 5,
-    text: fontSizeLabel.value
-  },
-  {
-    key: "speed" as const,
-    label: t("components.danmakuInput.speed"),
-    min: 1,
-    max: 3,
-    text: speedLabel.value
-  }
-]);
 
 /**
  * 处理emoji点击事件
@@ -273,14 +189,6 @@ const sliderConfigs = computed(() => [
 const handleEmojiClick = (emoji: string) => {
   danmakuText.value += emoji;
   showEmojiSelector.value = false;
-};
-
-/** 从store同步最新设置到本地状态 */
-const updateLocalSettingsFromStore = () => {
-  localSettings.value.opacity = danmakuStore.opacity;
-  localSettings.value.fontSize = getSliderFontSize(danmakuStore.fontSize);
-  localSettings.value.speed = danmakuStore.speed;
-  localSettings.value.displayArea = danmakuStore.displayArea;
 };
 
 /**
@@ -299,23 +207,6 @@ const handleSend = () => {
   }
 };
 
-/** 处理弹幕设置变化事件（防抖） */
-const handleSettingsChange = useDebounceFn(() => {
-  // 根据滑块值映射到实际像素值
-  const fontSizeMap: Record<number, number> = {
-    1: 12,
-    2: 14,
-    3: 16,
-    4: 18,
-    5: 20
-  };
-
-  danmakuStore.setFontSize(fontSizeMap[localSettings.value.fontSize]);
-  danmakuStore.setOpacity(localSettings.value.opacity);
-  danmakuStore.setSpeed(localSettings.value.speed);
-  danmakuStore.setDisplayArea(localSettings.value.displayArea);
-}, 300);
-
 /** 切换弹幕开关 */
 const toggleDanmaku = () => {
   emit("toggle-danmaku");
@@ -324,13 +215,6 @@ const toggleDanmaku = () => {
 /** 切换弹幕列表显示 */
 const toggleDanmakuList = () => {
   emit("toggle-danmaku-list");
-};
-
-/** 重置弹幕设置 */
-const resetSettings = () => {
-  danmakuStore.resetSettings();
-  updateLocalSettingsFromStore();
-  localSettings.value.fontSize = 3;
 };
 
 /**
@@ -344,8 +228,6 @@ const handleSelectEmoji = (emoji: string) => {
 
 /** 显示弹幕设置面板 */
 const showDanmakuSettings = () => {
-  // 打开设置面板时，从store同步最新设置
-  updateLocalSettingsFromStore();
   showDanmakuSettingsPanel.value = true;
   if (danmakuSettingsHideTimer) {
     clearTimeout(danmakuSettingsHideTimer);
@@ -452,13 +334,6 @@ const handleEmojiPickerLeave = () => {
     emojiPickerHideTimer = null;
   }, 100);
 };
-
-watch(
-  () => danmakuStore.fontSize,
-  (newSize) => {
-    localSettings.value.fontSize = getSliderFontSize(newSize);
-  }
-);
 
 onBeforeUnmount(() => {
   if (danmakuSettingsHideTimer) {

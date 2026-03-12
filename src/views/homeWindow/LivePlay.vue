@@ -90,6 +90,8 @@
           您的浏览器不支持视频播放。
         </video>
 
+        <danmaku-player ref="danmakuPlayerRef" />
+
         <div
           class="video-controls absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-3 z-30 transition-all duration-300 transform"
           :class="{
@@ -121,8 +123,46 @@
                 <i-mdi-rotate-3d class="w-5 h-5 text-white" />
               </div>
 
-              <div class="control-btn" @click="toggleDanmakuSettings">
-                <i-material-symbols-settings class="w-5 h-5 text-white" />
+              <div class="control-item relative" @mouseenter="showDanmakuSettings" @mouseleave="hideDanmakuSettings">
+                <div class="control-btn">
+                  <i-material-symbols-settings class="w-5 h-5 text-white" />
+                </div>
+
+                <div
+                  v-if="showDanmakuSettingsPanel"
+                  class="danmaku-settings-panel"
+                  @mouseenter="handleSettingsPanelEnter"
+                  @mouseleave="handleSettingsPanelLeave">
+                  <div class="settings-header">
+                    <span class="settings-title">{{ t("components.danmakuInput.settings") }}</span>
+                    <div class="reset-btn" @click="danmakuStore.resetSettings">
+                      <i-ph-arrow-counter-clockwise class="reset-icon" />
+                      <span>{{ t("components.danmakuInput.reset") }}</span>
+                    </div>
+                  </div>
+
+                  <div class="settings-content">
+                    <div class="settings-item" v-for="item in danmakuStore.sliderConfigs" :key="item.key">
+                      <span class="settings-label">{{ item.label }}</span>
+                      <n-slider
+                        v-model:value="danmakuStore.settings[item.key]"
+                        :min="item.min"
+                        :max="item.max"
+                        :step="1"
+                        :tooltip="false" />
+                      <span class="settings-value-right">{{ danmakuStore.textValues[item.key] }}</span>
+                    </div>
+
+                    <div class="settings-divider"></div>
+
+                    <div class="settings-item">
+                      <span class="settings-label">{{ t("components.danmakuInput.danmakuSwitch") }}</span>
+                      <div class="settings-arrow">
+                        <n-switch class="control-switch" v-model:value="danmakuStore.settings.enabled" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
 
               <div class="control-btn" @click="toggleGiftSettings">
@@ -472,13 +512,19 @@
 
 <script setup lang="ts">
 import mpegts from "mpegts.js";
+import { useI18n } from "vue-i18n";
 import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
 
+import { useDanmakuStore } from "@/stores/danmaku";
+
+const { t } = useI18n();
 const router = useRouter();
+const danmakuStore = useDanmakuStore();
 let unlistenResize: (() => void) | null = null;
 const appWindow = WebviewWindow.getCurrent();
 const videoRef = ref<HTMLVideoElement | null>(null);
 let flvPlayer: mpegts.Player | null = null;
+let danmakuSettingsHideTimer: number | null = null;
 
 // 跟踪每个popover的显示状态
 const popoverVisible = ref<Record<number, boolean>>({});
@@ -500,6 +546,38 @@ const currentResolution = ref("自动");
 const isFullscreen = ref(false);
 const showVolumeSlider = ref(false);
 const controlsVisible = ref(false);
+const showDanmakuSettingsPanel = ref(false);
+const danmakuPlayerRef = ref<InstanceType<typeof DanmakuPlayer> | null>(null);
+
+// 3. 拦截用户发送聊天事件，顺便飘一条弹幕
+const handleSendMessage = (content: string) => {
+  chatMessages.value.push({
+    user: currentUser.name,
+    level: currentUser.level,
+    avatar: "https://picsum.photos/id/1025/100/100",
+    content: content
+  });
+
+  // 发送弹幕到视频层，并传入 true 标记这是自己发送的
+  if (danmakuPlayerRef.value) {
+    danmakuPlayerRef.value.addDanmaku(content, true);
+  }
+};
+
+// 4. 模拟 WebSocket 接收弹幕数据
+let mockWsInterval: number | null = null;
+const mockDanmakuData = [
+  "哈哈哈",
+  "这操作神了！",
+  "前面的等等我",
+  "666666",
+  "泪目",
+  "前方高能反应",
+  "主播太强了",
+  "又下饭了",
+  "233333",
+  "啊啊啊啊啊啊啊"
+];
 
 // 计算控制条是否应该显示
 const shouldShowControls = computed(() => {
@@ -663,6 +741,43 @@ const chatMessages = ref([
 const remainingGifts = computed(() => {
   return gifts.slice(visibleGiftCount.value - 1);
 });
+
+/** 显示弹幕设置面板 */
+const showDanmakuSettings = () => {
+  showDanmakuSettingsPanel.value = true;
+  if (danmakuSettingsHideTimer) {
+    clearTimeout(danmakuSettingsHideTimer);
+    danmakuSettingsHideTimer = null;
+  }
+};
+
+/** 隐藏弹幕设置面板 */
+const hideDanmakuSettings = () => {
+  if (danmakuSettingsHideTimer) {
+    clearTimeout(danmakuSettingsHideTimer);
+  }
+  danmakuSettingsHideTimer = window.setTimeout(() => {
+    showDanmakuSettingsPanel.value = false;
+    danmakuSettingsHideTimer = null;
+  }, 100);
+};
+
+const handleSettingsPanelEnter = () => {
+  if (danmakuSettingsHideTimer) {
+    clearTimeout(danmakuSettingsHideTimer);
+    danmakuSettingsHideTimer = null;
+  }
+};
+
+const handleSettingsPanelLeave = () => {
+  if (danmakuSettingsHideTimer) {
+    clearTimeout(danmakuSettingsHideTimer);
+  }
+  danmakuSettingsHideTimer = window.setTimeout(() => {
+    showDanmakuSettingsPanel.value = false;
+    danmakuSettingsHideTimer = null;
+  }, 100);
+};
 
 // 切换更多礼物弹窗
 const toggleMoreGifts = () => {
@@ -962,14 +1077,14 @@ const toggleChat = () => {
   chatCollapsed.value = !chatCollapsed.value;
 };
 
-const handleSendMessage = (content: string) => {
-  chatMessages.value.push({
-    user: currentUser.name,
-    level: currentUser.level,
-    avatar: "https://picsum.photos/id/1025/100/100",
-    content: content
-  });
-};
+// const handleSendMessage = (content: string) => {
+//   chatMessages.value.push({
+//     user: currentUser.name,
+//     level: currentUser.level,
+//     avatar: "https://picsum.photos/id/1025/100/100",
+//     content: content
+//   });
+// };
 
 // 视频控制逻辑
 const togglePlay = () => {
@@ -1013,10 +1128,6 @@ const toggleScreenRotation = () => {
       videoRef.value.style.transform = "rotate(0deg) scale(1)";
     }
   }
-};
-
-const toggleDanmakuSettings = () => {
-  console.log("Toggle danmaku settings");
 };
 
 const toggleGiftSettings = () => {
@@ -1172,9 +1283,18 @@ onMounted(() => {
   onUnmounted(() => {
     document.removeEventListener("click", handleClickOutside);
   });
+
+  // 开启模拟 WebSocket 接收弹幕 (每 600ms 随机飘一条)
+  mockWsInterval = window.setInterval(() => {
+    if (danmakuPlayerRef.value && isPlaying.value) {
+      const randomText = mockDanmakuData[Math.floor(Math.random() * mockDanmakuData.length)];
+      danmakuPlayerRef.value.addDanmaku(randomText);
+    }
+  }, 600);
 });
 
 onUnmounted(() => {
+  if (danmakuSettingsHideTimer) clearTimeout(danmakuSettingsHideTimer);
   // 销毁播放器
   if (flvPlayer) {
     flvPlayer.destroy();
@@ -1202,6 +1322,8 @@ onUnmounted(() => {
   if (unlistenResize) {
     unlistenResize();
   }
+  // 清理模拟 WebSocket 定时器
+  if (mockWsInterval) clearInterval(mockWsInterval);
 });
 </script>
 
@@ -1558,5 +1680,104 @@ onUnmounted(() => {
 /* 确保弹窗内的礼物数量弹窗层级更高 */
 .more-gifts-popup :deep(.n-popover) {
   z-index: 1001 !important;
+}
+
+/* --- 弹幕设置面板样式 --- */
+.danmaku-settings-panel {
+  position: absolute;
+  /* 让面板悬浮在设置按钮正上方 */
+  bottom: calc(100% + 12px);
+  left: 50%;
+  transform: translateX(-50%);
+  width: 260px;
+  background-color: var(--bg-popover, rgba(20, 20, 20, 0.95));
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--line-color, rgba(255, 255, 255, 0.1));
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+  z-index: 1000;
+  animation: slideUp 0.2s ease;
+  cursor: default; /* 防止内部点击出现手型 */
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+.settings-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 15px;
+  border-bottom: 1px solid var(--line-color, rgba(255, 255, 255, 0.1));
+}
+
+.settings-title {
+  color: var(--text-color, #fff);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.reset-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  cursor: pointer;
+  border-radius: 4px;
+  color: var(--user-text-color, rgba(255, 255, 255, 0.7));
+  font-size: 12px;
+  transition: all 0.2s ease;
+}
+
+.reset-btn:hover {
+  background-color: var(--bg-left-menu-hover, rgba(255, 255, 255, 0.1));
+  color: var(--text-color, #fff);
+}
+
+.settings-content {
+  padding: 12px 15px;
+}
+
+.settings-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.settings-item:last-child {
+  margin-bottom: 0;
+}
+
+.settings-label {
+  color: var(--text-color, #fff);
+  font-size: 12px;
+  min-width: 60px;
+  flex-shrink: 0;
+}
+
+.settings-value-right {
+  color: var(--user-text-color, rgba(255, 255, 255, 0.7));
+  font-size: 12px;
+  min-width: 45px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.settings-arrow {
+  margin-left: auto;
+}
+
+.settings-divider {
+  height: 1px;
+  background-color: var(--line-color, rgba(255, 255, 255, 0.1));
+  margin: 12px 0;
 }
 </style>

@@ -12,15 +12,15 @@
       </div>
 
       <!-- Danmaku Container -->
-      <div v-if="danmakuStore.enabled" ref="danmakuContainerRef" class="danmaku-container">
+      <div v-if="danmakuStore.settings.enabled" ref="danmakuContainerRef" class="danmaku-container">
         <div
           v-for="danmaku in activeDanmakus"
           :key="danmaku.id"
           class="danmaku-item danmaku-scroll"
           :style="{
-            fontSize: `${danmakuStore.fontSize}px`,
-            opacity: danmakuStore.opacity / 100,
-            '--speed': danmakuStore.speed,
+            fontSize: `${danmakuStore.settings.fontSize}px`,
+            opacity: danmakuStore.settings.opacity / 100,
+            '--speed': danmakuStore.settings.speed,
             top: danmaku.top,
             marginLeft: danmaku.horizontalOffset ? `${danmaku.horizontalOffset}px` : '0px'
           }"
@@ -267,8 +267,7 @@
           <!-- Danmaku Input -->
           <danmaku-input
             class="control-item"
-            :is-enabled="true"
-            :is-danmaku-enabled="danmakuStore.enabled"
+            :is-danmaku-enabled="danmakuStore.settings.enabled"
             @send-danmaku="sendDanmaku"
             @toggle-danmaku="toggleDanmaku"
             @toggle-danmaku-list="toggleDanmakuList" />
@@ -727,7 +726,7 @@ const showDanmakuActions = (danmakuId: string) => {
       clearTimeout(timer);
       danmakuTimers.delete(danmakuId);
       const elapsed = Date.now() - danmaku.startTime;
-      const totalDuration = 12000 / danmakuStore.speed;
+      const totalDuration = 12000 / danmakuStore.settings.speed;
       danmaku.remainingDuration = Math.max(0, totalDuration - elapsed);
     }
   }
@@ -1115,8 +1114,8 @@ const toggleClearScreen = (val: boolean) => {
 
 /** 切换弹幕显示状态 */
 const toggleDanmaku = () => {
-  const newState = !danmakuStore.enabled;
-  danmakuStore.setEnabled(newState);
+  const newState = !danmakuStore.settings.enabled;
+  danmakuStore.settings.enabled = newState;
   emit("danmaku-toggle", newState);
 };
 
@@ -1133,7 +1132,7 @@ const timeStringToSeconds = (timeStr: string): number => {
 const updateLineHeight = () => {
   // 固定行高，确保足够的垂直间距，考虑字体大小和行间距
   // 增加行高系数，确保垂直方向有足够的间距，避免重叠
-  lineHeight.value = Math.max(45, danmakuStore.fontSize * 3.5);
+  lineHeight.value = Math.max(45, danmakuStore.settings.fontSize * 3.5);
 };
 
 /** 获取当前容器的最大行数
@@ -1144,7 +1143,7 @@ const getMaxLines = (): number => {
 
   // 根据displayArea计算最大行数
   let maxLines: number;
-  switch (danmakuStore.displayArea) {
+  switch (danmakuStore.settings.displayArea) {
     case 1: // 一行
       maxLines = 1;
       break;
@@ -1189,7 +1188,7 @@ const measureDanmakuWidth = (content: string): number => {
   // 创建一个临时元素来测量文本宽度
   const tempElement = document.createElement("div");
   tempElement.textContent = content;
-  tempElement.style.fontSize = `${danmakuStore.fontSize}px`;
+  tempElement.style.fontSize = `${danmakuStore.settings.fontSize}px`;
   tempElement.style.position = "absolute";
   tempElement.style.visibility = "hidden";
   tempElement.style.whiteSpace = "nowrap";
@@ -1239,7 +1238,7 @@ const generateDanmaku = (danmaku: Danmaku): Danmaku => {
 
 /** 更新当前活跃的弹幕列表，根据当前视频时间 */
 const updateActiveDanmakus = () => {
-  if (!playerRef.value || !danmakuStore.enabled) {
+  if (!playerRef.value || !danmakuStore.settings.enabled) {
     return;
   }
   const currentTime = playerRef.value.currentTime();
@@ -1254,7 +1253,7 @@ const updateActiveDanmakus = () => {
       !isAlreadyActive && !hasBeenDisplayed && (isWithinTimeWindow || (isZeroTimeDanmaku && currentTime < timeWindow));
     if (shouldAdd) {
       const newDanmaku = generateDanmaku(danmaku);
-      const animationDuration = 12000 / danmakuStore.speed;
+      const animationDuration = 12000 / danmakuStore.settings.speed;
       activeDanmakus.value.push(newDanmaku);
       displayedDanmakuIds.add(danmaku.id);
       setDanmakuTimer(newDanmaku.id, animationDuration);
@@ -1408,7 +1407,7 @@ onMounted(() => {
         const danmaku = activeDanmakus.value.find((d) => d.id === danmakuId);
         if (danmaku && danmaku.startTime) {
           const elapsed = Date.now() - danmaku.startTime;
-          const totalDuration = 12000 / danmakuStore.speed;
+          const totalDuration = 12000 / danmakuStore.settings.speed;
           danmaku.remainingDuration = Math.max(0, totalDuration - elapsed);
         }
       });
@@ -1509,7 +1508,7 @@ onMounted(() => {
             const hasBeenDisplayed = displayedDanmakuIds.has(danmaku.id);
             if (!isAlreadyActive && !hasBeenDisplayed) {
               const newDanmaku = generateDanmaku(danmaku);
-              const animationDuration = 12000 / danmakuStore.speed;
+              const animationDuration = 12000 / danmakuStore.settings.speed;
 
               activeDanmakus.value.push(newDanmaku);
               displayedDanmakuIds.add(danmaku.id);
