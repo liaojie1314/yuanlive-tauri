@@ -115,16 +115,47 @@
   },
   "thinkingBlock": {
     "think": "Thinking process",
-    "thinkDuration": "Deep-thought duration (${duration}s)"
+    "thinkDuration": "Deep-thought duration (${duration}s)",
+    "callTool": "Call tool:",
+    "toolResult": "Tool result:"
   },
   "videoBlock": {
     "video": "Video"
+  },
+  "citationBlock": {
+    "basedOnCitations": "Based on {count} citations",
+    "related": "Related"
+  },
+  "workspaceFiles": {
+    "context": "Context Files",
+    "generated": "Generated Files",
+    "emptyContext": "No context files",
+    "emptyGenerated": "No generated files",
+    "save": "Save",
+    "remove": "Remove"
+  },
+  "agentSettings": {
+    "title": "Agent & Extensions Settings",
+    "role": "Role Settings",
+    "selectRolePlaceholder": "Select a role...",
+    "customPromptPlaceholder": "Customize System Prompt...",
+    "mcp": {
+      "title": "Local MCP Plugins",
+      "windows": "Allow AI to read local system-level information and status",
+      "fs": "Allow AI to read and write authorized local project directories",
+      "shell": "Allow AI to execute safe terminal build commands"
+    }
   },
   "messageItem": {
     "ai": "AI助手",
     "placeholder": "Ask YuanLive AI",
     "resend": "Resend",
     "editAndResend": "Edit and resend",
+    "systemPermissionRequest": "System permission request",
+    "executeLocalTool": "AI requests to execute local operation",
+    "executeLocalToolDesc": ", may involve reading files or executing commands.",
+    "denyExecuteLocalTool": "Deny execution",
+    "allowExecuteLocalTool": "Allow execution",
     "label": {
       "edit": "Edit",
       "copy": "Copy text",
@@ -166,6 +197,9 @@
       "remainingAttachments": "Max {count} remaining attachments",
       "fileCountExceeded": "File count exceeded max limit"
     }
+  },
+  "trendingPrompts": {
+    "title": "Trending Prompts"
   },
   "searchResult": {
     "title": "Search results for: ",

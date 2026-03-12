@@ -2,7 +2,7 @@
   <div v-if="citations && citations.length > 0" class="mt-3 pt-2 border-t border-[--line-color] w-full">
     <div class="flex items-center gap-1 text-[10px] text-[--user-text-color] mb-1.5 opacity-80 select-none">
       <i-mdi-text-search class="w-3 h-3" />
-      <span>基于以下 {{ citations.length }} 个信息源生成</span>
+      <span>{{ $t("components.citationBlock.basedOnCitations", { count: citations.length }) }}</span>
     </div>
 
     <div class="flex flex-wrap gap-1.5">
@@ -43,7 +43,7 @@
           <div class="flex items-center justify-between border-b border-[--line-color] pb-1">
             <span class="text-xs font-bold text-[--text-color] truncate pr-4">{{ cite.title }}</span>
             <span v-if="cite.score" class="text-[10px] text-green-500 font-mono">
-              {{ (cite.score * 100).toFixed(1) }}% 相关
+              {{ (cite.score * 100).toFixed(1) }}% {{ $t("components.citationBlock.related") }}
             </span>
           </div>
           <div class="text-xs text-[--user-text-color] leading-relaxed line-clamp-5 select-text">

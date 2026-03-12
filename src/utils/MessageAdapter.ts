@@ -55,8 +55,18 @@ export function normalizeMessage(msg: MessageData): ContentBlock[] {
   const blocks: ContentBlock[] = [];
   const baseId = `msg-${msg.id}`;
 
-  if (msg.thinking && msg.thinking.trim()) {
-    blocks.push({ type: "thinking", id: `${baseId}-think`, content: msg.thinking, duration: msg.thinkingTime || 0 });
+  const hasThinkingText = typeof msg.thinking === "string" && msg.thinking.trim() !== "";
+  const hasToolCalls = Array.isArray(msg.toolCalls) && msg.toolCalls.length > 0;
+
+  // 只要有其一，就渲染思考积木块
+  if (hasThinkingText || hasToolCalls) {
+    blocks.push({
+      type: "thinking",
+      id: `${baseId}-think`,
+      content: msg.thinking || "",
+      duration: msg.thinkingTime || 0,
+      toolCalls: msg.toolCalls || []
+    });
   }
 
   const raw = msg.content;

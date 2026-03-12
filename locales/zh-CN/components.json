@@ -115,16 +115,27 @@
   },
   "thinkingBlock": {
     "think": "思考过程",
-    "thinkDuration": "已深度思考 ({duration}s)"
+    "thinkDuration": "已深度思考 ({duration}s)",
+    "callTool": "调用工具:",
+    "toolResult": "工具返回结果:"
   },
   "videoBlock": {
     "video": "视频"
+  },
+  "citationBlock": {
+    "basedOnCitations": "基于以下 {count} 个信息源生成",
+    "related": "相关"
   },
   "messageItem": {
     "ai": "AI助手",
     "placeholder": "问问 YuanLive AI",
     "resend": "重发",
     "editAndResend": "编辑并重发",
+    "systemPermissionRequest": "系统权限请求",
+    "executeLocalTool": "AI 请求执行本地操作",
+    "executeLocalToolDesc": "，可能涉及读取文件或执行命令。",
+    "denyExecuteLocalTool": "拒绝执行",
+    "allowExecuteLocalTool": "允许执行",
     "label": {
       "edit": "修改",
       "copy": "复制文本",
@@ -165,6 +176,29 @@
       "maxAttachments": "最多只能上传{count}个文件",
       "remainingAttachments": "最多只能再上传{count}个文件",
       "fileCountExceeded": "文件数量已达上限"
+    }
+  },
+  "trendingPrompts": {
+    "title": "发现建议"
+  },
+  "workspaceFiles": {
+    "context": "上下文文件",
+    "generated": "AI 生成产物",
+    "emptyContext": "当前对话暂无专属上下文",
+    "emptyGenerated": "暂无生成的代码或媒体文件",
+    "save": "保存",
+    "remove": "移除"
+  },
+  "agentSettings": {
+    "title": "Agent 与扩展配置",
+    "role": "角色设定",
+    "selectRolePlaceholder": "选择预设角色...",
+    "customPromptPlaceholder": "在这里输入自定义的 System Prompt，设定 AI 的行为方式...",
+    "mcp": {
+      "title": "本地 MCP 插件",
+      "windows": "允许 AI 读取本地系统级信息与状态",
+      "fs": "允许 AI 读写授权的本地项目目录",
+      "shell": "允许 AI 执行安全的终端构建命令"
     }
   },
   "searchResult": {

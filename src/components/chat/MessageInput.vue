@@ -628,6 +628,25 @@ const handleModelChange = (value: string) => {
   selectedModel.value = value;
 };
 
+/**
+ * 处理填充输入框事件
+ * @param text 要填充的文本
+ */
+const handleFillInput = (text: string) => {
+  messageText.value = text;
+  // 填充后让文本框自动获得焦点 TODO: 是否自动发送
+  nextTick(() => {
+    const inputEl = document.querySelector(".input-container textarea") as HTMLTextAreaElement;
+    if (inputEl) {
+      inputEl.focus();
+      inputEl.selectionStart = inputEl.value.length;
+      inputEl.selectionEnd = inputEl.value.length;
+    }
+  });
+};
+
+useMitt.on(MittEnum.FILL_MESSAGE_INPUT, handleFillInput);
+
 onMounted(() => {
   useMitt.on(MittEnum.GLOBAL_FILES_DROP, handleGlobalFilesDrop);
 

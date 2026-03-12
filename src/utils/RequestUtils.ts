@@ -77,9 +77,39 @@ export async function request<T = any>(
  */
 interface SseStreamEvent {
   requestId: string;
-  eventType: "chunk" | "done" | "error";
+  eventType: "chunk" | "done" | "error" | "tool_call";
   data?: string;
   error?: string;
+}
+
+// MCP Tool 的标准格式
+// export interface McpTool {
+//   name: string;
+//   description: string;
+//   parameters: Record<string, any>; // JSON Schema
+// }
+
+export interface AiStreamPayload {
+  clientMsgId: string;
+  conversationId: string;
+  content:
+    | string
+    | {
+        text: string;
+        images?: string[];
+        videos?: string[];
+        audios?: string[];
+        files?: string[];
+      };
+  options?: {
+    useReasoning?: boolean;
+    useNetwork?: boolean;
+  };
+  agentSettings?: {
+    systemPrompt?: string;
+    mcpTools?: any[];
+  };
+  toolResults?: any[];
 }
 
 /**
@@ -87,6 +117,7 @@ interface SseStreamEvent {
  */
 export interface StreamCallbacks {
   onChunk?: (chunk: string) => void;
+  onToolCall?: (toolCall: any) => void;
   onDone?: (fullContent: string) => void;
   onError?: (error: string) => void;
 }
@@ -94,26 +125,17 @@ export interface StreamCallbacks {
 /**
  * 发送 AI 流式消息
  * @param body 请求体
+ * @param requestId 请求id，用于取消
  * @param callbacks 回调函数
  */
 export async function messageSendStream(
-  body: {
-    conversationId: string;
-    content: string;
-    // 是否使用上下文
-    useContext?: boolean;
-    // 联网搜索
-    useNetwork?: boolean;
-    // 深度思考
-    useReasoning?: boolean;
-  },
+  body: AiStreamPayload,
+  requestId: string,
   callbacks?: StreamCallbacks
-) {
+): Promise<string> {
   const { invoke, Channel } = await import("@tauri-apps/api/core");
   const { TauriCommandEnum } = await import("@/enums");
 
-  // 生成唯一的请求 ID
-  const requestId = `ai-stream-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
   return new Promise<string>((resolve, reject) => {
     let fullContent = "";
     let isResolved = false;
@@ -129,16 +151,31 @@ export async function messageSendStream(
       switch (eventType) {
         case "chunk":
           if (data) {
-            fullContent += data;
-            callbacks?.onChunk?.(data);
+            try {
+              const parsedData = JSON.parse(data);
+              // 如果是工具调用指令，直接拦截并触发专门的回调，不当做普通文本处理
+              if (parsedData.status === "tool_call" && parsedData.toolCall) {
+                callbacks?.onToolCall?.(parsedData.toolCall);
+                return;
+              }
+              // 2如果是正常的结构化文本流，提取 chunk 字段
+              if (parsedData.chunk !== undefined) {
+                fullContent += parsedData.chunk;
+                callbacks?.onChunk?.(parsedData.chunk);
+                return;
+              }
+            } catch (_) {
+              // 解析失败说明后端传的不是 JSON，而是纯文本，走兜底逻辑原样拼接
+              fullContent += data;
+              callbacks?.onChunk?.(data);
+            }
           }
           break;
         case "done":
           if (!isResolved) {
             isResolved = true;
-            const finalContent = data || fullContent;
-            callbacks?.onDone?.(finalContent);
-            resolve(finalContent);
+            callbacks?.onDone?.(fullContent);
+            resolve(fullContent);
           }
           break;
         case "error":

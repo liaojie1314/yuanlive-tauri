@@ -8,7 +8,9 @@
       <chat-history-list
         :active-chat-id="activeChatId"
         :is-collapsed="isHistoryCollapsed"
-        @toggle-collapse="handleToggleCollapse" />
+        @toggle-collapse="handleToggleCollapse"
+        @select-chat="handleSelectChat"
+        @new-chat="handleNewChat" />
     </div>
 
     <div
@@ -17,7 +19,7 @@
         isHistoryCollapsed ? 'w-[calc(100%-55px)] lg:w-[calc(100%-55px)]' : ''
       ]">
       <n-scrollbar ref="scrollbarRef" class="flex-1">
-        <div ref="scrollContentRef" class="flex flex-col items-center w-full">
+        <div v-if="activeChatId" ref="scrollContentRef" class="flex flex-col items-center w-full">
           <div class="w-full max-w-[1000px]">
             <message-item
               v-for="msg in messages"
@@ -29,7 +31,38 @@
               @toggle-select="handleToggleMessageSelect"
               @resend-message="handleResend"
               @copy-message="handleCopy"
-              @refresh-message="handleRefresh" />
+              @refresh-message="handleRefresh"
+              @allow-tool="executeLocalTool(msg, $event, true)"
+              @deny-tool="executeLocalTool(msg, $event, false)" />
+          </div>
+        </div>
+
+        <div v-else class="flex flex-col items-center justify-center w-full h-full min-h-[60vh] select-none">
+          <div
+            class="w-16 h-16 bg-blue-500 rounded-2xl flex items-center justify-center text-white mb-6 shadow-lg shadow-blue-500/20">
+            <i-mdi-robot-outline class="w-10 h-10" />
+          </div>
+          <h2 class="text-2xl font-bold text-[--text-color] mb-4">{{ $t("home.aiChat.startChat") }}</h2>
+          <p class="text-sm text-[--user-text-color] opacity-80 mb-10">
+            {{ $t("home.aiChat.welcome") }}
+          </p>
+
+          <div class="flex gap-4 flex-wrap justify-center max-w-[800px]">
+            <div
+              class="px-5 py-2.5 rounded-full border border-[--line-color] bg-[--input-area-bg] hover:bg-[--tray-hover] cursor-pointer text-sm text-[--text-color] opacity-80 hover:opacity-100 transition-all hover:shadow-sm"
+              @click="handleQuickAction('帮我写一段 Python 代码')">
+              帮我写一段 Python 代码
+            </div>
+            <div
+              class="px-5 py-2.5 rounded-full border border-[--line-color] bg-[--input-area-bg] hover:bg-[--tray-hover] cursor-pointer text-sm text-[--text-color] opacity-80 hover:opacity-100 transition-all hover:shadow-sm"
+              @click="handleQuickAction('解释什么是闭包')">
+              解释什么是闭包
+            </div>
+            <div
+              class="px-5 py-2.5 rounded-full border border-[--line-color] bg-[--input-area-bg] hover:bg-[--tray-hover] cursor-pointer text-sm text-[--text-color] opacity-80 hover:opacity-100 transition-all hover:shadow-sm"
+              @click="handleQuickAction('如何优化 SQL 查询')">
+              如何优化 SQL 查询
+            </div>
           </div>
         </div>
       </n-scrollbar>
@@ -62,7 +95,7 @@
 
     <div
       class="w-0 lg:w-[20%] bg-[--tray-bg-color] border-l border-[--line-color] overflow-hidden transition-all duration-300 ease-in-out">
-      <div class="p-4 text-center text-[--user-text-color]">右侧面板</div>
+      <right-panel />
     </div>
   </div>
 </template>
@@ -71,7 +104,7 @@
 import { useI18n } from "vue-i18n";
 import type { ScrollbarInst } from "naive-ui";
 
-import type { MessageData } from "@/types/chat";
+import type { MessageData, ToolCallDetail } from "@/types/chat";
 import { messageCancelStream } from "@/utils/RequestUtils";
 
 defineOptions({ name: "AiChat" });
@@ -79,7 +112,7 @@ defineOptions({ name: "AiChat" });
 const { t } = useI18n();
 
 const chatStatus = ref<"loading" | "streaming" | "normal">("normal");
-const activeChatId = ref<string>("1");
+const activeChatId = ref<string>("");
 const isHistoryCollapsed = ref<boolean>(false);
 const scrollbarRef = ref<ScrollbarInst | null>(null);
 const scrollContentRef = ref<HTMLElement | null>(null);
@@ -151,165 +184,6 @@ const scrollToBottom = () => {
   });
 };
 
-// const initTestData = () => {
-//   messages.value = [
-//     // 1. 用户消息
-//     {
-//       id: 1,
-//       role: "user",
-//       sender: "我",
-//       avatar: "https://picsum.photos/id/1006/100/100",
-//       content: "请给我写一个 Vue3 的计数器组件，并解释一下原理。",
-//       time: "10:00"
-//     },
-//     // 2. AI 消息：带深度思考 + Markdown 代码
-//     {
-//       id: 2,
-//       role: "assistant",
-//       sender: "DeepSeek",
-//       avatar: "https://picsum.photos/id/1005/100/100",
-//       time: "10:01",
-//       thinking: `用户想要一个 Vue3 计数器组件。
-// 1. 我需要使用 <script setup> 语法。
-// 2. 需要引入 ref。
-// 3. 需要解释响应式原理。`,
-//       thinkingTime: 5,
-//       content: `好的，这是一个简单的 **Vue 3 计数器** 示例：
-
-// \`\`\`vue
-// <template>
-//   <button @click="count++">Count is: {{ count }}</button>
-// </template>
-
-// <script setup>
-// import { ref } from 'vue';
-// const count = ref(0);
-// <\/script>
-// \`\`\`
-
-// **原理：**
-// 使用 \`ref\` 创建响应式数据，Vue 会自动追踪依赖并在数据变化时更新 DOM。`,
-//       currentVersion: 2,
-//       versionCount: 3
-//     },
-//     // 3. AI 消息：混合内容 (图文混排)
-//     {
-//       id: 3,
-//       role: "assistant",
-//       sender: "AI助手",
-//       avatar: "https://picsum.photos/id/1011/100/100",
-//       time: "10:05",
-//       // 适配器会自动处理这种对象结构
-//       content: {
-//         text: "这是你要的风景图片，非常壮观：",
-//         images: ["https://picsum.photos/id/1018/800/400", "https://picsum.photos/id/1015/800/400"]
-//       }
-//     },
-//     // 4. 测试视频组件
-//     {
-//       id: 4,
-//       role: "assistant",
-//       sender: "AI助手",
-//       avatar: "https://picsum.photos/id/1005/100/100",
-//       time: "10:06",
-//       content: {
-//         text: "这是一段测试视频（Big Buck Bunny）：",
-//         videos: ["https://www.w3schools.com/html/mov_bbb.mp4"]
-//       }
-//     },
-
-//     // 5. 测试音频组件
-//     {
-//       id: 5,
-//       role: "assistant",
-//       sender: "AI助手",
-//       avatar: "https://picsum.photos/id/1005/100/100",
-//       time: "10:07",
-//       content: {
-//         text: "这是一段测试音频消息：",
-//         audios: ["https://www.w3schools.com/html/horse.mp3"]
-//       }
-//     }
-//   ];
-// };
-
-// const handleSendMessage = async (payload: {
-//   type: string;
-//   content: string | any;
-//   options: { useReasoning: boolean; useNetwork: boolean };
-// }) => {
-//   if (chatStatus.value !== "normal") return;
-
-//   // 1. 构造用户消息并推入列表
-//   const userMsg: MessageData = {
-//     id: Date.now(),
-//     role: "user",
-//     sender: "我",
-//     avatar: "https://picsum.photos/id/1006/100/100",
-//     content: payload.content,
-//     time: new Date().toLocaleTimeString()
-//   };
-//   messages.value.push(userMsg);
-//   scrollToBottom();
-
-//   // 2. 初始化 AI 响应状态
-//   chatStatus.value = "loading";
-//   const aiMsgId = Date.now() + 1;
-//   const aiMsg = ref<MessageData>({
-//     id: aiMsgId,
-//     role: "assistant",
-//     sender: "AI助手",
-//     avatar: "https://picsum.photos/id/1005/100/100",
-//     time: new Date().toLocaleTimeString(),
-//     thinking: "",
-//     content: "",
-//     thinkingTime: 0
-//   });
-//   messages.value.push(aiMsg.value);
-//   scrollToBottom();
-
-//   // 提取纯文本内容
-//   const textContent = typeof payload.content === "string" ? payload.content : (payload.content as any).text || "";
-
-//   // 3. 发送流式请求
-//   try {
-//     // 调用接口并记录返回的 Promise 逻辑（如果需要 requestId，需确保接口已返回）
-//     // 假设 messageSendStream 内部生成了 requestId 并通过某种方式暴露，
-//     // 或者你可以预生成 requestId 传给接口。
-//     const requestId = `ai-stream-${Date.now()}`;
-//     currentRequestId.value = requestId;
-
-//     await messageSendStream(
-//       {
-//         conversationId: activeChatId.value,
-//         content: textContent,
-//         useContext: true,
-//         useReasoning: payload.options.useReasoning,
-//         useNetwork: payload.options.useNetwork
-//       },
-//       {
-//         onChunk: (chunk: string) => {
-//           if (chatStatus.value === "loading") chatStatus.value = "streaming";
-//           aiMsg.value.content += chunk;
-//         },
-//         onDone: (fullContent: string) => {
-//           chatStatus.value = "normal";
-//           currentRequestId.value = null;
-//           console.log("消息：", fullContent);
-//         },
-//         onError: (error: string) => {
-//           chatStatus.value = "normal";
-//           currentRequestId.value = null;
-//           aiMsg.value.content += `\n\n**请求失败:** ${error}`;
-//         }
-//       }
-//     );
-//   } catch (error) {
-//     chatStatus.value = "normal";
-//     currentRequestId.value = null;
-//   }
-// };
-
 /** 取消当前 AI 消息生成 */
 const handleCancelAiResponse = async () => {
   if (currentRequestId.value) {
@@ -366,6 +240,13 @@ const handleSendMessage = (payload: {
   content: string;
   options: { useReasoning: boolean; useNetwork: boolean };
 }) => {
+  if (chatStatus.value !== "normal") return;
+
+  if (!activeChatId.value) {
+    activeChatId.value = "chat_" + Date.now();
+    // TODO: 这里可以发个事件告诉侧边栏去新增一条空历史记录
+  }
+
   // 1. 构造用户消息
   const userMsg: MessageData = {
     id: Date.now(),
@@ -379,17 +260,10 @@ const handleSendMessage = (payload: {
   messages.value.push(userMsg);
   scrollToBottom();
 
-  // 2. 模拟 AI 回复
-  simulateAiStreamResponse();
-};
-
-/**
- * 模拟流式输出 (不再需要复杂的 typingEffect，只需更新数据)
- * 找到 simulateAiStreamResponse 或你实际对接后端的流式接收函数
- */
-const simulateAiStreamResponse = () => {
+  // 2. 初始化 AI 消息气泡
+  chatStatus.value = "loading";
   const aiMsgId = Date.now() + 1;
-  const aiMsg = ref<MessageData>({
+  const aiMsg: MessageData = {
     id: aiMsgId,
     role: "assistant",
     sender: "AI助手",
@@ -398,67 +272,117 @@ const simulateAiStreamResponse = () => {
     thinking: "",
     content: "",
     thinkingTime: 0,
-    // 模拟的 RAG 检索数据
+    toolCalls: [],
     citations: [
       {
         id: 1,
-        title: "Tauri2_架构设计文档.pdf",
+        title: "agent-builder-tasks.md",
         type: "file",
-        snippet:
-          "Tauri 2.0 引入了全新的 IPC 架构，使得前端 Vue 进程能够以极低的延迟与 Rust 后端进行二进制数据通信，同时提供了更完善的插件系统 (Plugin System)...",
-        score: 0.92
-      },
-      {
-        id: 2,
-        title: "上周二历史对话",
-        type: "history",
-        snippet:
-          "用户询问了关于如何优化 Spring Cloud 高并发直播聊天室的架构。AI 建议使用 Redis 配合 WebSocket 集群进行消息分发...",
-        score: 0.85
-      },
-      {
-        id: 3,
-        title: "Vue 官方文档: 响应式原理",
-        type: "web",
-        snippet:
-          "Vue 3 使用了 Proxy 来代替 Vue 2 的 Object.defineProperty，这使得 Vue 能够完美拦截对象属性的添加、删除，以及数组索引的修改，极大地提升了性能。"
+        snippet: "本地任务清单文档，记录了所有待办事项和开发进度...",
+        score: 0.95
       }
     ]
-  });
+  };
 
-  // 消息对象刚插入时，调用一次滚动到底部
-  messages.value.push(aiMsg.value);
-  const fullThinking = "正在检索相关文档...\n匹配到 3 个高度相关的信息源。\n开始整合并生成最终回答...";
-  const fullContent =
-    "根据检索到的资料，流式输出测试成功！\n\n这证明了我们的前端架构不仅能丝滑处理 RAG 引用，还能完美兼容 `Tauri 2` 的进程通信与 `Vue 3` 的 Proxy 响应式系统。\n\n你可以把鼠标悬浮在底部的引用标签上，看看弹出的浮窗效果。";
+  messages.value.push(aiMsg);
+  scrollToBottom();
+  // 直接操作 aiMsg 是没有响应式的。
+  const reactiveAiMsg = messages.value[messages.value.length - 1];
+  // 3. 启动第一阶段模拟，传入代理对象
+  simulatePhase1(reactiveAiMsg);
+};
 
+/**
+ * 模拟阶段 1: 大模型思考并下发 tool_call 指令
+ * @param aiMsg 要更新的 AI 消息对象
+ */
+const simulatePhase1 = (aiMsg: MessageData) => {
+  chatStatus.value = "streaming";
+  const thinkText =
+    "用户要求读取本地任务清单，我需要调用 file_read 工具来获取 E 盘的 agent-builder-tasks.md 文件内容...\n";
   let tIndex = 0;
-  let cIndex = 0;
 
-  // 阶段 1: 输出思考过程
   const thinkInterval = setInterval(() => {
-    if (tIndex < fullThinking.length) {
-      aiMsg.value.thinking += fullThinking[tIndex];
-      aiMsg.value.thinkingTime = Math.floor(tIndex / 5);
+    if (tIndex < thinkText.length) {
+      aiMsg.thinking += thinkText[tIndex];
       tIndex++;
+      scrollToBottom();
     } else {
       clearInterval(thinkInterval);
-      startContentStream();
+
+      // 大模型停止生成文字，下发工具调用请求，状态设为 pending
+      aiMsg.toolCalls!.push({
+        id: "call_" + Date.now(),
+        name: "file_read",
+        args: { file_path: "E:/workspace/agent-builder-tasks.md" },
+        status: "pending"
+      });
+
+      // 释放输入框锁定，让用户可以点击授权卡片
+      chatStatus.value = "normal";
+      scrollToBottom();
     }
   }, 50);
+};
 
-  // 阶段 2: 输出正文
-  const startContentStream = () => {
-    const contentInterval = setInterval(() => {
-      if (cIndex < fullContent.length) {
-        aiMsg.value.content += fullContent[cIndex];
-        cIndex++;
-        // scrollToBottom(); // 记得在外部处理滚动
-      } else {
-        clearInterval(contentInterval);
-      }
-    }, 30);
-  };
+/**
+ * 执行或拒绝本地工具并通知大模型
+ * @param message 要更新的消息对象
+ * @param tool 要执行的工具调用详情
+ * @param isAllowed 是否允许执行该工具
+ */
+const executeLocalTool = async (message: MessageData, tool: ToolCallDetail, isAllowed: boolean) => {
+  chatStatus.value = "loading";
+
+  // 更新思考区块中的状态为执行中/错误
+  tool.status = isAllowed ? "executing" : "error";
+  tool.result = isAllowed ? "" : "用户拒绝了系统授权。";
+  scrollToBottom();
+
+  if (isAllowed) {
+    // 模拟 Tauri 读取耗时
+    setTimeout(() => {
+      tool.result = "## Agent 待办事项\n- M4-01: 数据库设计\n- M4-02: 后端 API 对接\n进度: 未开始";
+      tool.status = "success"; // 变成绿色打勾图标
+      scrollToBottom();
+
+      // 带着工具执行结果，触发第二阶段生成
+      simulatePhase2(message);
+    }, 1500);
+  } else {
+    setTimeout(() => {
+      simulatePhase2(message);
+    }, 500);
+  }
+};
+
+/**
+ * 模拟阶段 2: 大模型拿到本地工具结果后，继续生成最终回答
+ * @param aiMsg 要更新的 AI 消息对象
+ */
+const simulatePhase2 = (aiMsg: MessageData) => {
+  chatStatus.value = "streaming";
+
+  const toolResult = aiMsg.toolCalls![0].status;
+  const contentText =
+    toolResult === "success"
+      ? "我已经成功读取了本地文件！根据文件内容，你当前有以下待办事项：\n\n1. **M4-01**: 数据库设计\n2. **M4-02**: 后端 API 对接\n\n请问需要我帮忙写代码吗？"
+      : "好的，我已经取消了本地文件读取操作。如果你需要查询任务，请随时授权。";
+
+  let cIndex = 0;
+
+  const contentInterval = setInterval(() => {
+    if (cIndex < contentText.length) {
+      aiMsg.content += contentText[cIndex];
+      cIndex++;
+      scrollToBottom();
+    } else {
+      clearInterval(contentInterval);
+      chatStatus.value = "normal";
+      aiMsg.thinkingTime = 3;
+      scrollToBottom();
+    }
+  }, 30);
 };
 
 /**
@@ -472,6 +396,38 @@ const handleCopy = (id: string) => console.log("Copy", id);
  * @param id 消息ID
  */
 const handleRefresh = (id: string) => console.log("Refresh", id);
+
+/**
+ * 监听侧边栏点击某条历史记录
+ * @param id 历史记录ID
+ */
+const handleSelectChat = (id: string) => {
+  activeChatId.value = id;
+  // TODO: 真实项目中这里需要调用 API 拉取该 ID 的历史消息列表
+  messages.value = []; // 暂时模拟清空屏幕
+  chatStatus.value = "normal";
+  cancelMessageSelection();
+};
+
+/** 监听侧边栏点击新建对话 */
+const handleNewChat = () => {
+  activeChatId.value = ""; // 置空 ID 就会自动切回欢迎屏幕
+  messages.value = [];
+  chatStatus.value = "normal";
+  cancelMessageSelection();
+};
+
+/**
+ * 监听欢迎界面快捷操作点击
+ * @param text 快捷操作文本
+ */
+const handleQuickAction = (text: string) => {
+  handleSendMessage({
+    type: "text",
+    content: text,
+    options: { useReasoning: false, useNetwork: false }
+  });
+};
 
 onMounted(() => {
   // initTestData();

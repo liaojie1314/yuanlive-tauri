@@ -58,12 +58,41 @@
 
             <template v-else v-for="block in blocks" :key="block.id">
               <div class="w-full" @contextmenu="handleBlockContext(block)">
-                <thinking-block v-if="block.type === 'thinking'" :content="block.content" :duration="block.duration" />
+                <thinking-block
+                  v-if="block.type === 'thinking'"
+                  :content="block.content"
+                  :duration="block.duration"
+                  :tool-calls="block.toolCalls" />
                 <markdown-block v-else-if="block.type === 'text'" :content="block.content" :is-self="isSelf" />
                 <image-block v-else-if="block.type === 'image'" :url="block.url" />
                 <video-block v-else-if="block.type === 'video'" :url="block.url" :cover-img="block.coverImg" />
                 <audio-block v-else-if="block.type === 'audio'" :url="block.url" />
                 <file-block v-else-if="block.type === 'file'" :url="block.url" :name="block.name" :is-self="isSelf" />
+                <div
+                  v-if="!isSelf && pendingTool"
+                  class="mt-2 p-3 bg-orange-500/10 border border-orange-500/30 rounded-lg flex flex-col gap-2 pointer-events-auto">
+                  <div class="flex items-center gap-2 text-xs font-bold text-orange-600 dark:text-orange-400">
+                    <i-mdi-shield-alert-outline class="w-4 h-4" />
+                    {{ t("components.messageItem.systemPermissionRequest") }}
+                  </div>
+                  <div class="text-xs text-[--text-color] opacity-90">
+                    {{ t("components.messageItem.executeLocalTool") }}
+                    <strong>{{ pendingTool.name }}</strong>
+                    {{ t("components.messageItem.executeLocalToolDesc") }}
+                  </div>
+                  <div class="flex items-center justify-end gap-2 mt-1">
+                    <div
+                      class="px-3 py-1 text-xs rounded-md text-[--user-text-color] bg-[--input-area-bg] hover:bg-[--line-color] cursor-pointer transition-colors"
+                      @click="$emit('deny-tool', pendingTool)">
+                      {{ t("components.messageItem.denyExecuteLocalTool") }}
+                    </div>
+                    <div
+                      class="px-3 py-1 text-xs rounded-md bg-orange-500 text-white hover:bg-orange-600 shadow-sm cursor-pointer transition-colors"
+                      @click="$emit('allow-tool', pendingTool)">
+                      {{ t("components.messageItem.allowExecuteLocalTool") }}
+                    </div>
+                  </div>
+                </div>
               </div>
             </template>
 
@@ -159,7 +188,9 @@ const emit = defineEmits([
   "next-message",
   "resend-message",
   "enter-multi-select",
-  "toggle-select"
+  "toggle-select",
+  "allow-tool",
+  "deny-tool"
 ]);
 
 const activeBlock = ref<any>(null);
@@ -205,6 +236,12 @@ const contextMenuOptions = computed(() => {
   // 删除功能永远可用，因为它是针对整条消息的
   options.push({ label: t("components.messageItem.label.delete"), key: "delete" });
   return options;
+});
+const pendingTool = computed(() => {
+  if (props.message.toolCalls && props.message.toolCalls.length > 0) {
+    return props.message.toolCalls.find((t) => t.status === "pending");
+  }
+  return null;
 });
 
 /**

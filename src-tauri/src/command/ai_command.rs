@@ -5,13 +5,48 @@ use serde::{Deserialize, Serialize};
 use tauri::{ipc::Channel, State};
 use tracing::{error, info};
 
+//// 使用 untagged 宏，如果前端传字符串，解析为 Text；如果是对象，解析为 Mixed
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum AiMessageContent {
+    Text(String),
+    Mixed(MixedContent),
+}
+
+/// 图文/文件混合消息结构
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct MixedContent {
+    pub text: String,
+    pub images: Option<Vec<String>>,
+    pub videos: Option<Vec<String>>,
+    pub audios: Option<Vec<String>>,
+    pub files: Option<Vec<String>>,
+}
+
+/// 基础选项
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AiMessageOptions {
+    pub use_reasoning: Option<bool>,
+    pub use_network: Option<bool>,
+}
+
+/// Agent 设定
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AgentSettings {
+    pub system_prompt: Option<String>,
+    pub mcp_tools: Option<Vec<serde_json::Value>>,
+}
+
 /// SSE 流式数据事件
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SseStreamEvent {
     /// 请求ID，用于区分不同的请求
     pub request_id: String,
-    /// 事件类型: "chunk" | "done" | "error"
+    /// 事件类型: "chunk" | "done" | "error" | "tool_call"
     pub event_type: String,
     /// 数据内容
     pub data: Option<String>,
@@ -23,11 +58,12 @@ pub struct SseStreamEvent {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct AiMessageRequest {
+    pub client_msg_id: String, // 前端生成的临时 ID，用于消息对齐
     pub conversation_id: String,
-    pub content: String,
-    pub use_context: Option<bool>,
-    pub use_network: Option<bool>,
-    pub use_reasoning: Option<bool>,
+    pub content: AiMessageContent,
+    pub options: Option<AiMessageOptions>,
+    pub agent_settings: Option<AgentSettings>,
+    pub tool_results: Option<Vec<serde_json::Value>>, // 接收本地工具执行后的结果
 }
 
 /// 发送 AI 消息并监听 SSE 流式响应

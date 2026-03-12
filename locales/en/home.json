@@ -11,7 +11,9 @@
     "message": "message",
     "deleteSelected": "Delete selected",
     "confirmDeleteSelected": "Are you sure you want to delete the selected {count} messages?",
-    "stopGenerate": "Stop generating"
+    "stopGenerate": "Stop generating",
+    "startChat": "Start a new chat",
+    "welcome": "I am a smart assistant that can help you answer questions, write code, analyze data, and more."
   },
   "follow": {
     "followers": "Followers ({count})",

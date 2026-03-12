@@ -19,6 +19,7 @@ export interface ThinkingBlock extends BaseBlock {
   type: "thinking";
   content: string;
   duration: number;
+  toolCalls?: ToolCallDetail[];
 }
 
 export interface TextBlock extends BaseBlock {
@@ -45,6 +46,14 @@ export interface Citation {
   score?: number; // 相似度得分 (可选，用于展示相关性)
 }
 
+export interface ToolCallDetail {
+  id: string;
+  name: string;
+  args: any; // 工具参数
+  status: "pending" | "executing" | "success" | "error"; // pending状态代表正在等待用户授权
+  result?: string; // 执行完毕后的结果
+}
+
 export type ContentBlock = ThinkingBlock | TextBlock | ImageBlock | VideoBlock | AudioBlock | FileBlock;
 
 // 原始消息数据 (后端 API 返回的数据结构)
@@ -64,4 +73,5 @@ export interface MessageData {
   currentVersion?: number; // 当前版本号 (如 1)
   versionCount?: number; // 总版本数 (如 2)
   citations?: Citation[]; // 引用来源列表
+  toolCalls?: ToolCallDetail[];
 }
