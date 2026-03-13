@@ -219,6 +219,10 @@ fn get_invoke_handlers() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Se
     use crate::command::ai_command::{ai_message_cancel_stream, ai_message_send_stream};
     use crate::command::app_state_command::is_app_state_ready;
     use crate::command::file_command::get_files_meta;
+    use crate::command::fs_command::{
+        fs_create_dir, fs_get_file_info, fs_list_dir, fs_move_file, fs_read_file,
+        fs_read_file_lines, fs_search_file, fs_write_file,
+    };
     use crate::command::request_command::{login_command, request_command};
     use crate::command::setting_command::{get_settings, update_settings};
     use crate::command::token_command::remove_token;
@@ -276,6 +280,15 @@ fn get_invoke_handlers() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Se
         start_mcp,
         #[cfg(windows)]
         send_to_mcp,
+        // fs-mcp
+        fs_read_file_lines,
+        fs_search_file,
+        fs_read_file,
+        fs_write_file,
+        fs_list_dir,
+        fs_create_dir,
+        fs_move_file,
+        fs_get_file_info,
         #[cfg(desktop)]
         push_window_payload,
         #[cfg(desktop)]

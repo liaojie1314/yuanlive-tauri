@@ -11,6 +11,7 @@ pub struct FileMeta {
     exists: bool,
 }
 
+/// 获取文件元数据
 #[tauri::command]
 pub async fn get_files_meta(files_path: Vec<String>) -> Result<Vec<FileMeta>, String> {
     let mut files_meta: Vec<FileMeta> = Vec::with_capacity(files_path.len());

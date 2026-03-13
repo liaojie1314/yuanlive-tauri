@@ -42,6 +42,11 @@ const useSideOptions = () => {
       url: "/loginSetting",
       label: t("setting.login.title"),
       icon: "settings"
+    },
+    {
+      url: "/aiSetting",
+      label: t("setting.ai.title"),
+      icon: "robot"
     }
   ]);
 };

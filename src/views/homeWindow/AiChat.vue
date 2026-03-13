@@ -103,14 +103,19 @@
 <script setup lang="ts">
 import { useI18n } from "vue-i18n";
 import type { ScrollbarInst } from "naive-ui";
+import { arch, version } from "@tauri-apps/plugin-os";
 
 import type { MessageData, ToolCallDetail } from "@/types/chat";
 import { messageCancelStream } from "@/utils/RequestUtils";
+import { getOSType, isWindows } from "@/utils/PlatformUtils";
 
 defineOptions({ name: "AiChat" });
 
 const { t } = useI18n();
 
+const osType = ref();
+const osArch = ref();
+const osVersion = ref();
 const chatStatus = ref<"loading" | "streaming" | "normal">("normal");
 const activeChatId = ref<string>("");
 const isHistoryCollapsed = ref<boolean>(false);
@@ -280,6 +285,13 @@ const handleSendMessage = (payload: {
         type: "file",
         snippet: "本地任务清单文档，记录了所有待办事项和开发进度...",
         score: 0.95
+      },
+      {
+        id: 2,
+        title: "百度",
+        type: "web",
+        url: "https://www.baidu.com",
+        snippet: "本地任务清单文档，记录了所有待办事项和开发进度..."
       }
     ]
   };
@@ -431,6 +443,14 @@ const handleQuickAction = (text: string) => {
 
 onMounted(() => {
   // initTestData();
+  osType.value = getOSType();
+  osArch.value = arch();
+  osVersion.value = version();
+  if (isWindows()) {
+    const parts = version().split(".");
+    const build_number = Number(parts[2]);
+    osVersion.value = build_number > 22000 ? "11" : "10";
+  }
   scrollToBottom();
 });
 </script>

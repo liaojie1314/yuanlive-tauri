@@ -13,10 +13,12 @@ import { exit } from "@tauri-apps/plugin-process";
 import { onOpenUrl } from "@tauri-apps/plugin-deep-link";
 import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
 
+import { useAiStore } from "@/stores/ai";
 import { useUserStore } from "@/stores/user";
 import { useSettingStore } from "@/stores/setting";
 import { loadLanguage } from "@/services/i18n";
 import { ConnectionState } from "@/services/webSocketRust";
+import { useMcp } from "@/hooks/useMcp";
 import { useMitt } from "@/hooks/useMitt";
 import { useWindow } from "@/hooks/useWindow";
 import { useTauriListener } from "@/hooks/useTauriListener";
@@ -27,6 +29,8 @@ import { EventEnum, MittEnum, ThemeEnum, WsResponseMessageEnum } from "@/enums";
 const { t } = useI18n();
 const settingStore = useSettingStore();
 const userStore = useUserStore();
+const aiStore = useAiStore();
+const { initMcp, isReady } = useMcp();
 const { initTheme, normalizeThemeState, toggleTheme } = settingStore;
 const { themes, page } = storeToRefs(settingStore);
 const { addListener } = useTauriListener();
@@ -151,6 +155,16 @@ watch(
   () => themes.value.content,
   (theme) => {
     toggleTheme(theme);
+  }
+);
+
+watch(
+  () => aiStore.mcpConfig["windows-mcp"]?.enabled,
+  (isEnabled) => {
+    // 如果开关被打开，且底层的 isReady 还是 false (没初始化过)
+    if (isEnabled && !isReady.value) {
+      initMcp().catch((err) => console.error("动态唤醒 MCP 失败:", err));
+    }
   }
 );
 

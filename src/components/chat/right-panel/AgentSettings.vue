@@ -76,7 +76,6 @@
 import { useI18n } from "vue-i18n";
 import IconWindows from "~icons/mdi/microsoft-windows";
 import IconFolderSync from "~icons/mdi/folder-sync-outline";
-import IconConsole from "~icons/mdi/console-line";
 
 import { useAiStore } from "@/stores/ai";
 
@@ -111,55 +110,48 @@ const systemPrompt = computed({
 // MCP 插件逻辑
 const mcpList = ref([
   {
-    id: "mcp-windows",
+    id: "windows-mcp",
     name: "Windows MCP",
     desc: t("components.agentSettings.mcp.windows"),
     icon: markRaw(IconWindows),
     enabled: computed({
-      get: () => aiStore.activeMcps.includes("mcp-windows"),
-      set: (value) => {
-        if (value) {
-          if (!aiStore.activeMcps.includes("mcp-windows")) {
-            aiStore.activeMcps.push("mcp-windows");
-          }
+      get: () => {
+        return aiStore.mcpConfig["windows-mcp"]?.enabled ?? false;
+      },
+      set: (value: boolean) => {
+        // 如果配置已经存在，直接更新开启/关闭状态
+        if (aiStore.mcpConfig["windows-mcp"]) {
+          aiStore.mcpConfig["windows-mcp"].enabled = value;
         } else {
-          aiStore.activeMcps = aiStore.activeMcps.filter((id) => id !== "mcp-windows");
+          // 兜底逻辑：如果 store 里一开始没写这个 key 的默认值，给它初始化一下
+          aiStore.mcpConfig["windows-mcp"] = {
+            enabled: value,
+            activeTools: []
+          };
         }
       }
     })
   },
   {
-    id: "mcp-fs",
+    id: "fs-mcp",
     name: "File System MCP",
     desc: t("components.agentSettings.mcp.fs"),
     icon: markRaw(IconFolderSync),
     enabled: computed({
-      get: () => aiStore.activeMcps.includes("mcp-fs"),
-      set: (value) => {
+      get: () => aiStore.mcpConfig["fs-mcp"]?.enabled ?? false,
+      set: (value: boolean) => {
         if (value) {
-          if (!aiStore.activeMcps.includes("mcp-fs")) {
-            aiStore.activeMcps.push("mcp-fs");
+          if (!aiStore.mcpConfig["fs-mcp"]) {
+            aiStore.mcpConfig["fs-mcp"] = {
+              enabled: value,
+              activeTools: []
+            };
           }
         } else {
-          aiStore.activeMcps = aiStore.activeMcps.filter((id) => id !== "mcp-fs");
-        }
-      }
-    })
-  },
-  {
-    id: "mcp-shell",
-    name: "Terminal Shell MCP",
-    desc: t("components.agentSettings.mcp.shell"),
-    icon: markRaw(IconConsole),
-    enabled: computed({
-      get: () => aiStore.activeMcps.includes("mcp-shell"),
-      set: (value) => {
-        if (value) {
-          if (!aiStore.activeMcps.includes("mcp-shell")) {
-            aiStore.activeMcps.push("mcp-shell");
-          }
-        } else {
-          aiStore.activeMcps = aiStore.activeMcps.filter((id) => id !== "mcp-shell");
+          aiStore.mcpConfig["fs-mcp"] = {
+            enabled: value,
+            activeTools: []
+          };
         }
       }
     })

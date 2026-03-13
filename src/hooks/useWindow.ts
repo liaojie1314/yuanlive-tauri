@@ -190,6 +190,53 @@ export const useWindow = () => {
   };
 
   /**
+   * 专门用于打开外部网页（URL）的原生独立窗口
+   * @param title 窗口标题
+   * @param url 外部网址 (如 https://github.com)
+   */
+  const createExternalWebviewWindow = async (title: string, url: string) => {
+    if (!isDesktop()) return null;
+
+    let safeUrl = url;
+    if (!/^https?:\/\//i.test(safeUrl)) {
+      safeUrl = "https://" + safeUrl;
+    }
+
+    // 1. 基于 URL 生成唯一标识，防止同一个网页打开多个窗口
+    const hash = Array.from(safeUrl).reduce((s, c) => (Math.imul(31, s) + c.charCodeAt(0)) | 0, 0);
+    const uniqueLabel = `external_web_${Math.abs(hash)}`;
+
+    // 2. 检查窗口是否已存在，存在则直接置顶聚焦
+    const existingWin = await WebviewWindow.getByLabel(uniqueLabel);
+    if (existingWin) {
+      await existingWin.setFocus();
+      return existingWin;
+    }
+
+    // 3. 创建新窗口
+    const webview = new WebviewWindow(uniqueLabel, {
+      url: safeUrl,
+      title: title || "网页预览",
+      width: 1200,
+      height: 800,
+      minWidth: 1200,
+      minHeight: 800,
+      center: true,
+      resizable: true,
+      decorations: true,
+      hiddenTitle: false,
+      titleBarStyle: "visible",
+      transparent: false
+    });
+
+    await webview.once("tauri://error", (e) => {
+      console.error("外部网页窗口创建失败:", e);
+    });
+
+    return webview;
+  };
+
+  /**
    * 向指定标签的窗口发送载荷（payload），可用于窗口之间通信。
    * @param windowLabel - 要发送载荷的窗口标签，通常是在创建窗口时指定的 label。
    * @param payload - 要发送的 JSON 数据对象，不限制字段内容。
@@ -280,6 +327,7 @@ export const useWindow = () => {
   return {
     createWebviewWindow,
     createModalWindow,
+    createExternalWebviewWindow,
     sendWindowPayload,
     getWindowPayload,
     resizeWindow,

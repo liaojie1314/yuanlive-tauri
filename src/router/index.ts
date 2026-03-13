@@ -98,6 +98,11 @@ const getCommonRoutes = (): Array<RouteRecordRaw> => [
         path: "/shortcut",
         name: "shortcut",
         component: () => import("@/views/settingWindow/Shortcut.vue")
+      },
+      {
+        path: "/aiSetting",
+        name: "aiSetting",
+        component: () => import("@/views/settingWindow/AiSetting.vue")
       }
     ]
   },

@@ -1,10 +1,14 @@
 import { invoke } from "@tauri-apps/api/core";
-import { listen } from "@tauri-apps/api/event";
+import { UnlistenFn, listen } from "@tauri-apps/api/event";
 
 import { TauriCommandEnum } from "@/enums";
+import { useAiStore } from "@/stores/ai";
+
+const isReady = ref(false);
+const isInitializing = ref(false);
+let unlistenMcpMessage: UnlistenFn | null = null;
 
 export function useMcp() {
-  const isReady = ref(false);
   const pendingRequests = new Map<number, { resolve: (value: any) => void; reject: (reason?: any) => void }>();
   let messageIdCounter = 1;
 
@@ -15,37 +19,62 @@ export function useMcp() {
    * 3. 执行握手流程
    */
   async function initMcp() {
-    await listen<string>("mcp-message", (event) => {
-      try {
-        const response = JSON.parse(event.payload);
+    // 如果已经就绪，或者正在初始化中，直接 return，防止重复启动 .exe 和重复注册监听器
+    if (isReady.value || isInitializing.value) {
+      console.log("✅ MCP 已经就绪或正在初始化，跳过启动逻辑...");
+      return;
+    }
 
-        // 过滤掉没有 id 的通知消息
-        if (response.id && pendingRequests.has(response.id)) {
-          const { resolve, reject } = pendingRequests.get(response.id)!;
-          if (response.error) {
-            console.error("MCP 返回错误:", response.error);
-            reject(response.error);
-          } else {
-            resolve(response.result);
-          }
-          pendingRequests.delete(response.id);
-        }
-      } catch (e) {
-        console.error("解析 MCP 消息失败:", e, event.payload);
-      }
-    });
+    isInitializing.value = true;
 
     try {
-      await invoke(TauriCommandEnum.START_MCP);
-      console.log("MCP 进程启动，准备握手...");
+      // 1. 注册监听前，清理可能存在的旧监听（防御性编程）
+      if (unlistenMcpMessage) {
+        unlistenMcpMessage();
+      }
 
-      // 启动进程后，必须执行 MCP 标准握手流程
+      unlistenMcpMessage = await listen<string>("mcp-message", (event) => {
+        try {
+          const response = JSON.parse(event.payload);
+          if (response.id && pendingRequests.has(response.id)) {
+            const { resolve, reject } = pendingRequests.get(response.id)!;
+            if (response.error) {
+              reject(response.error);
+            } else {
+              resolve(response.result);
+            }
+            pendingRequests.delete(response.id);
+          }
+        } catch (e) {
+          console.error("解析 MCP 消息失败:", e, event.payload);
+        }
+      });
+
+      // 2. 启动进程
+      await invoke(TauriCommandEnum.START_MCP);
+      console.log("🚀 MCP 进程启动，准备握手...");
+
+      // 3. 握手
       await initHandshake();
 
+      // 4. 握手成功后，立刻拉取工具列表并缓存
+      console.log("正在拉取 windows-mcp 工具列表...");
+      const rawToolsResponse = await getToolsList();
+
+      const aiStore = useAiStore();
+      // 将拉取到的 Schema 数组存入全局 Store
+      if (rawToolsResponse && rawToolsResponse.tools) {
+        aiStore.cachedWindowsTools = rawToolsResponse.tools;
+        console.log(`✅ 成功缓存了 ${rawToolsResponse.tools.length} 个 Windows 工具`);
+      }
+
       isReady.value = true;
-      console.log("MCP 服务完全就绪！");
+      console.log("🎉 MCP 服务完全就绪！");
     } catch (e) {
-      console.error("MCP 服务启动失败:", e);
+      console.error("❌ MCP 服务启动失败:", e);
+    } finally {
+      // 无论成功还是失败，解除初始化中的锁定状态
+      isInitializing.value = false;
     }
   }
 
@@ -104,8 +133,8 @@ export function useMcp() {
    * 获取 MCP 支持的工具列表
    * @returns Promise 解析为工具列表数组
    */
-  async function getToolsList() {
-    return await requestMcp("tools/list");
+  async function getToolsList(): Promise<McpToolsResponse> {
+    return (await requestMcp("tools/list")) as McpToolsResponse;
   }
 
   /**

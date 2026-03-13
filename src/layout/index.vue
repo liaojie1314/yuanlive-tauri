@@ -17,9 +17,11 @@ import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
 
 import { MittEnum } from "@/enums";
 import { useMitt } from "@/hooks/useMitt";
+import { useMcp } from "@/hooks/useMcp";
 import { useLogin } from "@/hooks/useLogin";
 import { useCheckUpdate } from "@/hooks/useCheckUpdate";
 import { useOverlayController } from "@/hooks/useOverlayController";
+import { useAiStore } from "@/stores/ai";
 import { useGlobalStore } from "@/stores/global";
 import FileUtil from "@/utils/FileUtil";
 import { getFilesMeta } from "@/utils/PathUtils";
@@ -27,7 +29,9 @@ import rustWebSocketClient from "@/services/webSocketRust";
 
 const { t } = useI18n();
 const { logout } = useLogin();
+const { initMcp, isReady } = useMcp();
 const { checkUpdate, CHECK_UPDATE_TIME } = useCheckUpdate();
+const aiStore = useAiStore();
 const globalStore = useGlobalStore();
 const { firstEnter } = storeToRefs(globalStore);
 const appWindow = WebviewWindow.getCurrent();
@@ -177,6 +181,10 @@ onMounted(async () => {
       firstEnter.value = false;
     }
     await homeWindow.show();
+  }
+  if (aiStore.mcpConfig["windows-mcp"]?.enabled && !isReady.value) {
+    // 不用 await 阻塞主 UI 的渲染，让它在后台慢慢跑
+    initMcp().catch((err) => console.error("后台初始化 MCP 失败:", err));
   }
   await setupNativeFileDropListeners();
 });

@@ -99,6 +99,20 @@
     "selectDirectoryFailed": "Failed to choose directory",
     "selectDirectoryError": "Select directory failed"
   },
+  "ai": {
+    "title": "AI Settings",
+    "mcpPlugins": "MCP Plugins & Tools Control",
+    "fsMcpWhitelist": "fs-mcp File Operation Whitelist (Workspace Sandbox)",
+    "fsMcpWhitelistHint": "Only directories added here will be allowed for file read/write by AI.",
+    "addWhitelistDir": "add allowed dir",
+    "noWhitelistDir": "No whitelist paths added, AI cannot access local files",
+    "deleteWhitelistDir": "Delete whitelist path",
+    "fsMcp": "Local File System (fs-mcp)",
+    "fsMcpDesc": "Allows AI to read, write, search, and modify files.",
+    "windowsMcp": "Windows System Control (windows-mcp)",
+    "windowsMcpDesc": "Allows AI to control Windows systems.",
+    "selectWhitelistDir": "Select allowed AI workspace directory"
+  },
   "unknown": "Unknown",
   "footer": {
     "likeProduct": "Like this product? On",

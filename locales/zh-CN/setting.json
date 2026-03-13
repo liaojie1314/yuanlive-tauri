@@ -99,6 +99,20 @@
     "selectDirectoryFailed": "选择目录失败",
     "selectDirectoryError": "选择目录失败"
   },
+  "ai": {
+    "title": "AI 设置",
+    "mcpPlugins": "MCP 插件与工具控制",
+    "fsMcpWhitelist": "fs-mcp 文件操作白名单 (工作区沙盒)",
+    "fsMcpWhitelistHint": "只有添加到此处的目录，AI 才有权限进行文件读写，防范越权风险。",
+    "addWhitelistDir": "添加允许目录",
+    "noWhitelistDir": "暂无白名单路径，AI 无法操作本地文件",
+    "deleteWhitelistDir": "删除白名单路径",
+    "fsMcp": "本地文件系统(fs-mcp)",
+    "fsMcpDesc": "允许 AI 在下方授权的目录内进行文件的读写、搜索与修改。",
+    "windowsMcp": "Windows系统控制(windows-mcp)",
+    "windowsMcpDesc": "允许 AI 控制 Windows 系统，如重启、关机、打开应用等。",
+    "selectWhitelistDir": "选择允许 AI 访问的工作区目录"
+  },
   "unknown": "未知",
   "footer": {
     "likeProduct": "喜欢这款产品？ 在",

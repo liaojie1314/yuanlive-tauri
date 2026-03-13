@@ -30,6 +30,20 @@ declare global {
     mime_type: string;
     exists: boolean;
   }[];
+
+  export type McpTool = {
+    name: string;
+    description: string;
+    inputSchema: {
+      type: string;
+      properties: Recordable;
+      required: string[];
+    };
+  };
+
+  export interface McpToolsResponse {
+    tools: McpTool[];
+  }
 }
 
 export {};
