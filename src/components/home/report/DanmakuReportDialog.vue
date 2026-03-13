@@ -43,6 +43,10 @@ const dialogVisible = computed({
  * @param description 举报描述
  */
 const handleReportSubmit = (type: string, description: string) => {
-  emit("submit-report", props.danmakuIndex, type, description);
+  const reportType = reportTypes.find((item) => item.value === type);
+  if (!reportType) {
+    return;
+  }
+  emit("submit-report", props.danmakuIndex, reportType.label, description);
 };
 </script>

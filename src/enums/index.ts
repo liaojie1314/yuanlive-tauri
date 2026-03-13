@@ -66,6 +66,14 @@ export enum UrlEnum {
   GET_FOLLOWING = "getFollowing",
   // 获取关注的人的视频列表
   GET_VIDEO_LIST_BY_UID = "getVideoListByUid",
+  // 视频推荐
+  RECOMMEND_VIDEO = "recommendVideo",
+  // 点赞视频
+  LIKE_VIDEO = "likeVideo",
+  // 取消点赞视频
+  CANCEL_LIKE_VIDEO = "cancelLikeVideo",
+  // 不喜欢视频
+  UNLIKE_VIDEO = "unlikeVideo",
   // 生成登录二维码
   GENERATE_QR_CODE = "generateQRCode",
   // 检测二维码状态

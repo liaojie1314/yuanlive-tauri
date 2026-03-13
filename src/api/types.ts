@@ -60,6 +60,11 @@ export type UserInfoType = {
   userStats: UserStats;
 };
 
+export type LikeResp = {
+  isLiked: boolean;
+  count: number;
+};
+
 export type SearchResultItem = {
   // 视频
   video?: VideoItem;

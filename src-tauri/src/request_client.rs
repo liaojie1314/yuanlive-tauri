@@ -568,6 +568,10 @@ pub enum Url {
     GetFollowingLive,
     GetHotCategory,
     GetVideoListByUid,
+    RecommendVideo,
+    LikeVideo,
+    CancelLikeVideo,
+    UnlikeVideo,
     MessageSendStream,
     MapCoordTranslate,
     MapReverseGeocode,
@@ -604,6 +608,11 @@ impl Url {
             Url::Unfollow => (http::Method::DELETE, "user/follow/unfollow/{followUserId}"),
             Url::GetFollowing => (http::Method::GET, "user/follow/following"),
             Url::GetVideoListByUid => (http::Method::POST, "live/record/pageQueryRecordByUid"),
+            // 视频相关
+            Url::RecommendVideo => (http::Method::GET, "live/record/recommendVideo/{id}"),
+            Url::LikeVideo => (http::Method::GET, "live/record/likeVideo/{id}"),
+            Url::CancelLikeVideo => (http::Method::GET, "live/record/cancelLikeVideo/{id}"),
+            Url::UnlikeVideo => (http::Method::GET, "live/record/unlikeVideo/{id}"),
             // AI 相关
             Url::MessageSendStream => (http::Method::POST, "ai/chat/stream"),
             // 地图相关
@@ -643,6 +652,11 @@ impl Url {
             "unfollow" => Ok(Url::Unfollow),
             "getFollowing" => Ok(Url::GetFollowing),
             "getVideoListByUid" => Ok(Url::GetVideoListByUid),
+            // 视频相关
+            "recommendVideo" => Ok(Url::RecommendVideo),
+            "likeVideo" => Ok(Url::LikeVideo),
+            "cancelLikeVideo" => Ok(Url::CancelLikeVideo),
+            "unlikeVideo" => Ok(Url::UnlikeVideo),
             // AI 相关
             "messageSendStream" => Ok(Url::MessageSendStream),
             // 地图相关

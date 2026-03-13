@@ -42,6 +42,11 @@ const dialogVisible = computed({
  * @param description 举报描述
  */
 const handleReportSubmit = (type: string, description: string) => {
-  emit("submit-report", props.videoId, type, description);
+  // 获取label
+  const reportType = reportTypes.find((item) => item.value === type);
+  if (!reportType) {
+    return;
+  }
+  emit("submit-report", props.videoId, reportType.label, description);
 };
 </script>
