@@ -76,6 +76,11 @@ export type HotSearchItem = {
   content: string;
 };
 
+export type RecommendSearchItem = HotSearchItem & {
+  // 是否是最推荐
+  isMostRecommend: boolean;
+};
+
 //========follow========
 export type FollowItem = {
   followUserId: number;

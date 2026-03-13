@@ -48,6 +48,8 @@ export enum UrlEnum {
   GET_SEARCH_RESULT = "getSearchResult",
   // 获取5条热门搜索
   GET_HOT_SEARCH = "getHotSearch",
+  // 推荐8条搜索内容（2条最推荐+6条推荐）
+  GET_RECOMMEND_SEARCH = "getRecommendSearch",
   // 获取直播类别
   GET_LIVE_CATEGORY = "getLiveCategory",
   // 获取热门类别

@@ -65,7 +65,7 @@
             <div
               class="text-xs text-[--user-text-color] hover:text-[--text-color] flex items-center gap-1 transition-colors cursor-pointer"
               @click="handleRefreshSuggestions">
-              <i-mdi-refresh class="w-3 h-3" />
+              <i-mdi-refresh class="w-3 h-3" :class="{ 'rotate-animation': isRefreshing }" />
               {{ $t("components.searchBox.refresh") }}
             </div>
           </div>
@@ -74,9 +74,9 @@
               v-for="(item, index) in searchSuggestions"
               :key="index"
               class="py-1.5 px-2 cursor-pointer hover:bg-[--tray-hover] rounded transition-colors text-sm truncate"
-              @click="handleSuggestionClick(item)">
+              @click="handleSuggestionClick(item.content)">
               <span class="text-[--text-color]" :class="{ 'text-red-500 font-medium': index < 2 }">
-                {{ item }}
+                {{ item.content }}
               </span>
             </div>
           </div>
@@ -106,9 +106,9 @@
 
 <script setup lang="ts">
 import { useMitt } from "@/hooks/useMitt";
-import { getHotSearchApi } from "@/api/user";
 import { StorageKeyEnum, MittEnum } from "@/enums";
-import type { HotSearchItem } from "@/api/types.ts";
+import { getHotSearchApi, getRecommendSearchApi } from "@/api/user";
+import type { HotSearchItem, RecommendSearchItem } from "@/api/types.ts";
 
 defineOptions({
   name: "SearchBox"
@@ -132,19 +132,8 @@ const getSearchHistory = (): string[] => {
 };
 
 const searchHistory = ref<string[]>(getSearchHistory());
-
 // 搜索建议
-const searchSuggestions = ref<string[]>([
-  "基米说",
-  "不再曼波",
-  "最近最火的舞蹈",
-  "qq音乐蓝牙耳机",
-  "最后一哈",
-  "抖音必听的20首歌",
-  "公务员有多难考",
-  "喵喵手势舞"
-]);
-
+const searchSuggestions = ref<RecommendSearchItem[]>([]);
 // 最近热搜
 const hotSearches = ref<HotSearchItem[]>([]);
 
@@ -178,19 +167,19 @@ const handleHistoryClick = (item: string) => {
 
 /**
  * 处理搜索建议点击
- * @param item 点击的搜索建议项
+ * @param content 点击的搜索建议项内容
  */
-const handleSuggestionClick = (item: string) => {
-  searchQuery.value = item;
+const handleSuggestionClick = (content: string) => {
+  searchQuery.value = content;
   handleSearch();
 };
 
 /**
  * 处理热搜点击
- * @param item 点击的热搜项
+ * @param content 点击的热搜项内容
  */
-const handleTrendingClick = (item: string) => {
-  searchQuery.value = item;
+const handleTrendingClick = (content: string) => {
+  searchQuery.value = content;
   handleSearch();
 };
 
@@ -213,12 +202,9 @@ const handleRefreshSuggestions = () => {
   if (isRefreshing.value) return;
 
   isRefreshing.value = true;
-  // 模拟请求后端的延迟，500毫秒后停止旋转
-  setTimeout(() => {
-    // TODO: 更新 searchSuggestions.value 的数据
-    // searchSuggestions.value = ["新推荐1", "新推荐2", ...];
+  fetchRecommendSearch().finally(() => {
     isRefreshing.value = false;
-  }, 500);
+  });
 };
 
 /** 处理输入框失去焦点 */
@@ -243,9 +229,18 @@ const clearInput = () => {
 
 /** 获取热搜 */
 const fetchHotSearch = async () => {
-  const res = await getHotSearchApi();
+  hotSearches.value = (await getHotSearchApi()) || [];
+};
+
+/** 获取推荐搜索 */
+const fetchRecommendSearch = async () => {
+  const res = await getRecommendSearchApi();
   if (res) {
-    hotSearches.value = res;
+    // 将isMostRecommend为true的项放在前面
+    searchSuggestions.value = [
+      ...res.filter((item) => item.isMostRecommend),
+      ...res.filter((item) => !item.isMostRecommend)
+    ];
   }
 };
 
@@ -259,11 +254,25 @@ watch(
 
 onMounted(() => {
   fetchHotSearch();
+  fetchRecommendSearch();
 });
 </script>
 
 <style scoped>
 .search-dropdown-container {
   z-index: 50;
+}
+
+.rotate-animation {
+  animation: rotate 1s linear infinite;
+}
+
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 </style>
