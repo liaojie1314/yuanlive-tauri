@@ -1,7 +1,8 @@
 {
   "common": {
     "confirm": "确定",
-    "cancel": "取消"
+    "cancel": "取消",
+    "confirmDelete": "确认删除"
   },
   "contextMenu": {
     "multi-select": "多选",
@@ -279,6 +280,7 @@
     "autoplay": "连播",
     "clearScreen": "清屏",
     "dialog": {
+      "confirmCancel": "确认取消",
       "unfollowConfirm": "是否确认取消关注?",
       "cancelDownloadConfirm": "当前视频正在下载中，是否确定取消下载？"
     },
@@ -286,9 +288,24 @@
       "cancelDownloadSuccess": "已取消下载",
       "getVideoUrlFailed": "无法获取视频地址",
       "startDownloadVideo": "开始下载视频...",
+      "downloadComplete": "视频下载完成",
       "noVideoInfo": "无法获取当前视频信息",
       "videoLinkCopied": "视频链接已复制到剪贴板",
-      "copyFailed": "复制失败，请重试"
+      "copyFailed": "复制失败，请重试",
+      "shortcutsSaveSuccess": "快捷键保存成功"
+    },
+    "resolution": {
+      "2k": "超清2K",
+      "1080p": "高清1080P",
+      "720p": "高清720P",
+      "540p": "标清540P",
+      "auto": "智能"
+    },
+    "menu": {
+      "playPause": "播放/暂停",
+      "mute": "静音/取消静音",
+      "pip": "画中画模式",
+      "fullscreen": "全屏/退出全屏"
     }
   }
 }

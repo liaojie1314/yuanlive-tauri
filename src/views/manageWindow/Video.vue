@@ -118,6 +118,7 @@
 </template>
 
 <script setup lang="ts">
+import { useI18n } from "vue-i18n";
 import { darkTheme, lightTheme } from "naive-ui";
 import { DataTableColumns, NTag, NSpace, NButton } from "naive-ui";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
@@ -127,6 +128,7 @@ import { useEcharts } from "@/hooks/useEcharts";
 import { useSettingStore } from "@/stores/setting";
 import EditVideoModal from "./components/EditVideoModal.vue";
 
+const { t } = useI18n();
 const settingStore = useSettingStore();
 const { themes } = storeToRefs(settingStore);
 const naiveTheme = computed(() => (themes.value.content === ThemeEnum.DARK ? darkTheme : lightTheme));
@@ -469,7 +471,7 @@ const handleSaveEdit = (updatedData: VideoItem) => {
  */
 const handleDelete = (row: VideoItem) => {
   window.$dialog.warning({
-    title: "确认删除",
+    title: t("components.common.confirmDelete"),
     content: `确定要删除视频 "${row.title}" 吗？此操作无法恢复。`,
     positiveText: "确定删除",
     negativeText: "再想想",

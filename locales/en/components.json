@@ -1,7 +1,8 @@
 {
   "common": {
     "confirm": "Confirm",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "confirmDelete": "Confirm delete"
   },
   "contextMenu": {
     "multi-select": "Multi-select",
@@ -148,7 +149,7 @@
     }
   },
   "messageItem": {
-    "ai": "AI助手",
+    "ai": "AI assistant",
     "placeholder": "Ask YuanLive AI",
     "resend": "Resend",
     "editAndResend": "Edit and resend",
@@ -276,9 +277,10 @@
     "dislike": "dislike",
     "unfollow": "unfollow",
     "shortcuts": "shortcuts",
-    "autoplay": "autoplay",
-    "clearScreen": "clear screen",
+    "autoplay": "auto",
+    "clearScreen": "clear",
     "dialog": {
+      "confirmCancel": "Confirm cancel",
       "unfollowConfirm": "Are you sure you want to unfollow this user?",
       "cancelDownloadConfirm": "Are you sure you want to cancel the download?"
     },
@@ -286,9 +288,24 @@
       "cancelDownloadSuccess": "Cancel download success",
       "getVideoUrlFailed": "Failed to get video URL",
       "startDownloadVideo": "Start downloading video...",
+      "downloadComplete": "Download complete",
       "noVideoInfo": "Failed to get current video info",
       "videoLinkCopied": "Video link copied to clipboard",
-      "copyFailed": "Copy failed, please try again"
+      "copyFailed": "Copy failed, please try again",
+      "shortcutsSaveSuccess": "Shortcuts saved successfully"
+    },
+    "resolution": {
+      "2k": "2K",
+      "1080p": "1080P",
+      "720p": "720P",
+      "540p": "540P",
+      "auto": "Auto"
+    },
+    "menu": {
+      "playPause": "play/pause",
+      "mute": "mute/unmute",
+      "pip": "picture-in-picture",
+      "fullscreen": "fullscreen"
     }
   }
 }

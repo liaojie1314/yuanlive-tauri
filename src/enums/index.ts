@@ -192,7 +192,9 @@ export enum StoresEnum {
   // 图片查看器
   IMAGE_VIEWER = "imageViewer",
   // 视频查看器
-  VIDEO_VIEWER = "videoViewer"
+  VIDEO_VIEWER = "videoViewer",
+  // 快捷键
+  SHORTCUT = "shortcut"
 }
 
 /** 本地存储的key */

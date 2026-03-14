@@ -1,5 +1,5 @@
 <template>
-  <div class="flex h-full overflow-hidden">
+  <div class="flex h-full overflow-hidden select-none">
     <div
       :class="[
         'follow-container',

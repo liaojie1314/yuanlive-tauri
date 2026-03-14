@@ -158,6 +158,7 @@ const handleBatchDeleteMessages = () => {
   if (selectedMessageIds.value.size === 0) return;
 
   window.$dialog.warning({
+    title: t("components.common.confirmDelete"),
     content: t("home.aiChat.confirmDeleteSelected", { count: selectedMessageIds.value.size }),
     positiveText: t("components.common.confirm"),
     negativeText: t("components.common.cancel"),

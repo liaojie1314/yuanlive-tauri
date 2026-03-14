@@ -9,28 +9,9 @@ export const useDanmakuStore = defineStore(
   StoresEnum.DANMAKU,
   () => {
     const { t } = useI18n();
-    const fontSizeOptions = [
-      t("components.danmakuInput.fontSizeOptions.extraSmall"),
-      t("components.danmakuInput.fontSizeOptions.small"),
-      t("components.danmakuInput.fontSizeOptions.medium"),
-      t("components.danmakuInput.fontSizeOptions.large"),
-      t("components.danmakuInput.fontSizeOptions.extraLarge")
-    ];
-    const speedOptions = [
-      t("components.danmakuInput.speedOptions.slower"),
-      t("components.danmakuInput.speedOptions.medium"),
-      t("components.danmakuInput.speedOptions.faster")
-    ];
-    const displayAreaOptions = [
-      t("components.danmakuInput.displayAreaOptions.oneLine"),
-      t("components.danmakuInput.displayAreaOptions.twoLines"),
-      "25%",
-      "50%",
-      "80%"
-    ];
 
-    // TODO: 弹幕位置，目前只有scroll类型
-    const position = ref<"scroll">("scroll");
+    // 弹幕位置
+    const position = ref<"scroll" | "top" | "bottom">("scroll");
 
     // 本地设置状态
     const settings = reactive({
@@ -39,7 +20,8 @@ export const useDanmakuStore = defineStore(
       fontSize: 3, // 字号滑块值 1-5
       speed: 2, // 速度滑块值 1-3
       displayArea: 3, // 显示区域滑块值 1-5
-      antiBlock: false // 强制防挡开关
+      antiBlock: false, // 强制防挡开关
+      enableCombo: true // 同屏合并 (Combo) 开关，默认开启
     });
 
     const actualFontSize = computed(() => {
@@ -55,12 +37,32 @@ export const useDanmakuStore = defineStore(
       { key: "speed" as const, label: t("components.danmakuInput.speed"), min: 1, max: 3 }
     ]);
 
+    const fontSizeOptions = computed(() => [
+      t("components.danmakuInput.fontSizeOptions.extraSmall"),
+      t("components.danmakuInput.fontSizeOptions.small"),
+      t("components.danmakuInput.fontSizeOptions.medium"),
+      t("components.danmakuInput.fontSizeOptions.large"),
+      t("components.danmakuInput.fontSizeOptions.extraLarge")
+    ]);
+    const speedOptions = computed(() => [
+      t("components.danmakuInput.speedOptions.slower"),
+      t("components.danmakuInput.speedOptions.medium"),
+      t("components.danmakuInput.speedOptions.faster")
+    ]);
+    const displayAreaOptions = computed(() => [
+      t("components.danmakuInput.displayAreaOptions.oneLine"),
+      t("components.danmakuInput.displayAreaOptions.twoLines"),
+      "25%",
+      "50%",
+      "80%"
+    ]);
+
     // 动态提取右侧的文本值，供页面独立绑定
     const textValues = computed(() => ({
       opacity: `${settings.opacity}%`,
-      displayArea: displayAreaOptions[settings.displayArea - 1] || "",
-      fontSize: fontSizeOptions[settings.fontSize - 1] || "",
-      speed: speedOptions[settings.speed - 1] || ""
+      displayArea: displayAreaOptions.value[settings.displayArea - 1] || "",
+      fontSize: fontSizeOptions.value[settings.fontSize - 1] || "",
+      speed: speedOptions.value[settings.speed - 1] || ""
     }));
 
     /** 重置弹幕设置到默认值 */
@@ -71,6 +73,7 @@ export const useDanmakuStore = defineStore(
       settings.speed = 2;
       settings.displayArea = 3;
       settings.antiBlock = false;
+      settings.enableCombo = true;
     };
 
     return {

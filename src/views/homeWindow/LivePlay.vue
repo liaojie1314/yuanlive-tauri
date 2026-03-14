@@ -156,6 +156,46 @@
                     <div class="settings-divider"></div>
 
                     <div class="settings-item">
+                      <span class="settings-label">弹幕位置</span>
+                      <div class="position-options">
+                        <div
+                          class="position-btn"
+                          :class="{ active: danmakuStore.position === 'scroll' }"
+                          @click="danmakuStore.position = 'scroll'">
+                          滚动
+                        </div>
+                        <div
+                          class="position-btn"
+                          :class="{ active: danmakuStore.position === 'top' }"
+                          @click="danmakuStore.position = 'top'">
+                          顶部
+                        </div>
+                        <div
+                          class="position-btn"
+                          :class="{ active: danmakuStore.position === 'bottom' }"
+                          @click="danmakuStore.position = 'bottom'">
+                          底部
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="settings-divider"></div>
+
+                    <div class="settings-item">
+                      <span class="settings-label">防挡弹幕</span>
+                      <div class="settings-arrow">
+                        <n-switch class="control-switch" v-model:value="danmakuStore.settings.antiBlock" />
+                      </div>
+                    </div>
+
+                    <div class="settings-item">
+                      <span class="settings-label">同屏合并</span>
+                      <div class="settings-arrow">
+                        <n-switch class="control-switch" v-model:value="danmakuStore.settings.enableCombo" />
+                      </div>
+                    </div>
+
+                    <div class="settings-item">
                       <span class="settings-label">{{ t("components.danmakuInput.danmakuSwitch") }}</span>
                       <div class="settings-arrow">
                         <n-switch class="control-switch" v-model:value="danmakuStore.settings.enabled" />
@@ -1779,5 +1819,33 @@ onUnmounted(() => {
   height: 1px;
   background-color: var(--line-color, rgba(255, 255, 255, 0.1));
   margin: 12px 0;
+}
+
+.position-options {
+  display: flex;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.position-btn {
+  padding: 3px 10px;
+  font-size: 11px;
+  color: var(--user-text-color, rgba(255, 255, 255, 0.7));
+  border: 1px solid var(--line-color, rgba(255, 255, 255, 0.2));
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.position-btn:hover {
+  border-color: #ff0050;
+  color: #ff0050;
+}
+
+.position-btn.active {
+  background-color: #ff0050;
+  border-color: #ff0050;
+  color: #fff;
 }
 </style>

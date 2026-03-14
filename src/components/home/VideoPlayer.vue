@@ -12,41 +12,13 @@
       </div>
 
       <!-- Danmaku Container -->
-      <div v-if="danmakuStore.settings.enabled" ref="danmakuContainerRef" class="danmaku-container">
-        <div
-          v-for="danmaku in activeDanmakus"
-          :key="danmaku.id"
-          class="danmaku-item danmaku-scroll"
-          :style="{
-            fontSize: `${danmakuStore.settings.fontSize}px`,
-            opacity: danmakuStore.settings.opacity / 100,
-            '--speed': danmakuStore.settings.speed,
-            top: danmaku.top,
-            marginLeft: danmaku.horizontalOffset ? `${danmaku.horizontalOffset}px` : '0px'
-          }"
-          @mouseenter="showDanmakuActions(danmaku.id)"
-          @mouseleave="hideDanmakuActions()"
-          @click.stop>
-          <span class="danmaku-content">{{ danmaku.content }}</span>
-
-          <div v-if="hoveredDanmakuId === danmaku.id" class="danmaku-actions">
-            <span
-              class="danmaku-action-btn like-btn"
-              :class="{ liked: danmaku.isLiked }"
-              @click="toggleDanmakuLike(danmaku.id)"
-              :title="t('components.videoPlayer.like')">
-              <i-material-symbols-favorite v-if="danmaku.isLiked" class="iconify-icon" />
-              <i-material-symbols-favorite-outline v-else class="iconify-icon" />
-            </span>
-            <span
-              class="danmaku-action-btn report-btn"
-              @click="openDanmakuReportDialog(danmaku.id)"
-              :title="t('components.videoPlayer.report')">
-              <i-mdi-alert-outline class="iconify-icon" />
-            </span>
-          </div>
-        </div>
-      </div>
+      <danmaku-player
+        ref="danmakuPlayerRef"
+        :interactive="true"
+        :is-paused="!isPlaying"
+        :enable-combo="false"
+        @like="toggleDanmakuLike"
+        @report="openDanmakuReportDialog" />
 
       <!-- Right Side Interaction Panel -->
       <div v-if="!videoStore.clearScreen" class="interaction-panel" @click.stop>
@@ -349,25 +321,30 @@
     @submit-report="handleVideoReport" />
 
   <collection-folder-dialog v-model:show="showNewFolderDialog" @create-folder="handleCreateFolder" />
+
+  <shortcuts-dialog v-model:show="showShortcutsDialog" v-model="shortcutStore.shortcuts" @save="handleSaveShortcuts" />
 </template>
 
 <script setup lang="ts">
+import { writeText } from "@tauri-apps/plugin-clipboard-manager";
+import { BaseDirectory } from "@tauri-apps/plugin-fs";
 import videojs from "video.js";
 import "video.js/dist/video-js.css";
 import { useI18n } from "vue-i18n";
-import { BaseDirectory } from "@tauri-apps/plugin-fs";
-import { writeText } from "@tauri-apps/plugin-clipboard-manager";
 
 import { unfollowApi } from "@/api/follow";
-import { useVideoStore } from "@/stores/video";
-import { useDanmakuStore } from "@/stores/danmaku";
-import { usePlaylistStore } from "@/stores/playlist";
+import { cancelLikeVideoApi, likeVideoApi, recommendVideoApi, unlikeVideoApi } from "@/api/video";
 import { useDownload } from "@/hooks/useDownload";
 import { useFullscreen } from "@/hooks/useFullscreen";
+import { useDanmakuStore } from "@/stores/danmaku";
+import { usePlaylistStore } from "@/stores/playlist";
+import { useShortcutStore, type ShortcutConfig } from "@/stores/shortcut";
+import { useVideoStore } from "@/stores/video";
 import { formatTime } from "@/utils/FormattingUtils";
 
 const { t } = useI18n();
 const { isFullscreen } = useFullscreen();
+const shortcutStore = useShortcutStore();
 const playlistStore = usePlaylistStore();
 const danmakuStore = useDanmakuStore();
 const videoStore = useVideoStore();
@@ -408,34 +385,17 @@ interface Danmaku {
   content: string;
   isLiked: boolean;
   createdAt: number;
-  startTime?: number;
-  remainingDuration?: number;
-  top?: string; // 固定的垂直位置
-  horizontalOffset?: number; // 水平偏移量，用于避免同时出现的弹幕重叠
+  type?: "scroll" | "top" | "bottom";
 }
 
-// TODO: i18n
-const resolutionOptions = [
-  { label: "超清2K", key: "2k" },
-  { label: "高清1080P", key: "1080p" },
-  { label: "高清720P", key: "720p" },
-  { label: "标清540P", key: "540p" },
-  { label: "智能", key: "auto" }
-];
-let animationFrameIds: number[] = [];
 const playbackRates = [0.5, 0.75, 1.0, 1.25, 1.5, 2.0];
 const playbackRateOptions = playbackRates.map((rate) => ({ label: `${rate}x`, key: rate }));
-// 记录每行的活跃弹幕，用于计算水平偏移
-const lineDanmakus = new Map<number, Danmaku[]>();
-const danmakuTimers = new Map<string, NodeJS.Timeout>();
 const displayedDanmakuIds = new Set<string>();
 const eventListeners = new Map<string, (event: Event) => void>();
 
 const isFollowed = ref(true);
 const videoContainerRef = ref<HTMLDivElement | null>(null);
 const playerRef = ref<any>(null);
-const danmakuContainerRef = ref<HTMLDivElement | null>(null);
-const hoveredDanmakuId = ref<string | null>(null);
 const isMiniWindow = ref(false);
 const isPlaying = ref(false);
 // 交互状态
@@ -455,170 +415,166 @@ const showShareTooltip = ref(false);
 // 更多操作状态
 const showMoreTooltip = ref(false);
 // 弹幕列表状态
+const danmakuPlayerRef = ref<any>(null);
 const showDanmakuListDialog = ref(false);
 const showDanmakuReportDialog = ref(false);
 const showVideoReportDialog = ref(false);
 const selectedDanmakuIndex = ref(-1);
+const showShortcutsDialog = ref(false);
 const danmakuList = ref<Danmaku[]>([
-  {
-    id: "1",
-    time: "00:00",
-    content: "快跑 这期有脏东西（云耀欧了）",
-    isLiked: true,
-    createdAt: Date.now()
-  },
-  {
-    id: "2",
-    time: "00:00",
-    content: "不对劲还我植物大战僵尸",
-    isLiked: false,
-    createdAt: Date.now()
-  },
+  // 0秒：常规滚动开场
+  { id: "1", time: "00:00", content: "前方高能，请带好护目镜！", isLiked: true, createdAt: Date.now(), type: "scroll" },
+  { id: "2", time: "00:00", content: "第一第一第一", isLiked: false, createdAt: Date.now(), type: "scroll" },
+
+  // 1秒：测试顶部和底部专属悬停轨道
   {
     id: "3",
-    time: "00:00",
-    content: "《关于我开盒自己这件事》",
+    time: "00:01",
+    content: "【顶部】颜表立！红红火火恍恍惚惚",
     isLiked: true,
-    createdAt: Date.now()
+    createdAt: Date.now(),
+    type: "top"
   },
   {
     id: "4",
-    time: "00:00",
-    content: "我是不是有什么问题",
+    time: "00:01",
+    content: "【底部】空降指挥部在此！",
     isLiked: false,
-    createdAt: Date.now()
+    createdAt: Date.now(),
+    type: "bottom"
   },
-  {
-    id: "5",
-    time: "00:00",
-    content: "我都没看出来是你自己",
-    isLiked: false,
-    createdAt: Date.now()
-  },
-  {
-    id: "6",
-    time: "00:02",
-    content: "云耀，你在吗云耀",
-    isLiked: true,
-    createdAt: Date.now()
-  },
-  {
-    id: "7",
-    time: "00:02",
-    content: "现在知道自己多搞笑了吧",
-    isLiked: false,
-    createdAt: Date.now()
-  },
-  {
-    id: "8",
-    time: "00:02",
-    content: "云耀：我炸了",
-    isLiked: true,
-    createdAt: Date.now()
-  },
-  {
-    id: "9",
-    time: "00:02",
-    content: "你在教我做事？",
-    isLiked: false,
-    createdAt: Date.now()
-  },
-  {
-    id: "10",
-    time: "00:21",
-    content: "云耀的小表情太可爱了",
-    isLiked: true,
-    createdAt: Date.now()
-  },
-  {
-    id: "11",
-    time: "00:21",
-    content: "节目效果拉满",
-    isLiked: false,
-    createdAt: Date.now()
-  },
-  {
-    id: "12",
-    time: "00:21",
-    content: "我笑出眼泪了",
-    isLiked: true,
-    createdAt: Date.now()
-  },
-  {
-    id: "13",
-    time: "00:36",
-    content: "这波操作666",
-    isLiked: false,
-    createdAt: Date.now()
-  },
-  {
-    id: "14",
-    time: "00:36",
-    content: "主播反应太真实了",
-    isLiked: true,
-    createdAt: Date.now()
-  },
-  {
-    id: "15",
-    time: "00:37",
-    content: "我已经截图了",
-    isLiked: false,
-    createdAt: Date.now()
-  },
-  {
-    id: "16",
-    time: "00:40",
-    content: "这个视频我看了10遍",
-    isLiked: true,
-    createdAt: Date.now()
-  },
-  {
-    id: "17",
-    time: "00:41",
-    content: "弹幕大军来袭",
-    isLiked: false,
-    createdAt: Date.now()
-  },
-  {
-    id: "18",
-    time: "00:42",
-    content: "前方高能预警",
-    isLiked: true,
-    createdAt: Date.now()
-  },
-  {
-    id: "19",
-    time: "00:43",
-    content: "我来了我来了",
-    isLiked: false,
-    createdAt: Date.now()
-  },
-  {
-    id: "20",
-    time: "00:45",
-    content: "打卡打卡",
-    isLiked: true,
-    createdAt: Date.now()
-  }
+
+  // 2秒：测试同屏 Combo 合并功能 (相同时间、相同文本、密集出现) -> 屏幕上只会显示一条，旁边出现 "x6"
+  { id: "5", time: "00:02", content: "哈哈哈哈哈哈", isLiked: false, createdAt: Date.now(), type: "scroll" },
+  { id: "6", time: "00:02", content: "哈哈哈哈哈哈", isLiked: false, createdAt: Date.now(), type: "scroll" },
+  { id: "7", time: "00:02", content: "哈哈哈哈哈哈", isLiked: false, createdAt: Date.now(), type: "scroll" },
+  { id: "8", time: "00:02", content: "哈哈哈哈哈哈", isLiked: true, createdAt: Date.now(), type: "scroll" },
+  { id: "9", time: "00:02", content: "哈哈哈哈哈哈", isLiked: false, createdAt: Date.now(), type: "scroll" },
+  { id: "10", time: "00:02", content: "哈哈哈哈哈哈", isLiked: false, createdAt: Date.now(), type: "scroll" },
+
+  // 3秒：测试顶部弹幕的 Combo 合并
+  { id: "11", time: "00:03", content: "绝了！", isLiked: true, createdAt: Date.now(), type: "top" },
+  { id: "12", time: "00:03", content: "绝了！", isLiked: false, createdAt: Date.now(), type: "top" },
+  { id: "13", time: "00:03", content: "绝了！", isLiked: false, createdAt: Date.now(), type: "top" },
+
+  // 4秒：混合穿插
+  { id: "14", time: "00:04", content: "主播反应太真实了", isLiked: true, createdAt: Date.now(), type: "scroll" },
+  { id: "15", time: "00:04", content: "我已经截图了", isLiked: false, createdAt: Date.now(), type: "bottom" }
 ]);
-// 当前正在显示的弹幕列表
-const activeDanmakus = ref<Danmaku[]>([]);
-// TODO: i18n
-const videoMenuOptions = ref([
-  { label: "播放 / 暂停", action: "play-pause" },
-  { label: "静音 / 取消静音", action: "mute" },
-  { label: "画中画模式", action: "pip" },
-  { label: "全屏 / 退出全屏", action: "fullscreen" }
-]);
-// 弹幕行管理，使用轮询方式分配行
-const lineHeight = ref<number>(40); // 固定行高，确保足够的垂直间距
-// 当前行索引，用于轮询分配行
-const currentLineIndex = ref<number>(0);
 const showVolumeSlider = ref(false);
 const currentTime = ref(0);
 const duration = ref(0);
 const isLeftControlsCompact = ref(false);
 const showPauseOverlay = ref(false);
+const videoMenuOptions = computed(() => [
+  { label: t("components.videoPlayer.menu.playPause"), action: "play-pause" },
+  { label: t("components.videoPlayer.menu.mute"), action: "mute" },
+  { label: t("components.videoPlayer.menu.pip"), action: "pip" },
+  { label: t("components.videoPlayer.menu.fullscreen"), action: "fullscreen" }
+]);
+const resolutionOptions = computed(() => [
+  { label: t("components.videoPlayer.resolution.2k"), key: "2k" },
+  { label: t("components.videoPlayer.resolution.1080p"), key: "1080p" },
+  { label: t("components.videoPlayer.resolution.720p"), key: "720p" },
+  { label: t("components.videoPlayer.resolution.540p"), key: "540p" },
+  { label: t("components.videoPlayer.resolution.auto"), key: "auto" }
+]);
+
+/**
+ * 局部快捷键分发中心
+ * @param e 键盘事件对象
+ */
+const handleShortcutKeyDown = (e: KeyboardEvent) => {
+  // 如果焦点在输入框（输入弹幕或评论），绝对不触发快捷键！
+  const target = e.target as HTMLElement;
+  if (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable) {
+    return;
+  }
+
+  // 如果按键设置弹窗开着，也不触发播放器的快捷键
+  if (showShortcutsDialog.value) return;
+
+  // 将当前按键转为配置表中对应的格式
+  let currentKey = e.key.toUpperCase();
+  if (e.code === "Space") currentKey = "Space";
+
+  const config = shortcutStore.shortcuts;
+
+  // 根据匹配到的按键执行对应逻辑
+  switch (currentKey) {
+    case config.like:
+      e.preventDefault();
+      toggleLike();
+      break;
+    case config.favorite:
+      e.preventDefault();
+      toggleFavorite();
+      break;
+    case config.follow:
+      e.preventDefault();
+      toggleFollow();
+      break;
+    case config.profile:
+      e.preventDefault();
+      emit("open-panel", "detail");
+      break;
+    case config.comment:
+      e.preventDefault();
+      emit("open-panel", "comment");
+      break;
+    case config.copyLink:
+      e.preventDefault();
+      copyLink();
+      break;
+    case config.recommend:
+      e.preventDefault();
+      recommendVideo();
+      break;
+    case config.dislike:
+      e.preventDefault();
+      dislikeVideo();
+      break;
+    case config.toggleDanmaku:
+      e.preventDefault();
+      toggleDanmaku();
+      break;
+    case config.clearScreen:
+      e.preventDefault();
+      toggleClearScreen(!videoStore.clearScreen);
+      break;
+    case config.autoPlay:
+      e.preventDefault();
+      toggleAutoplay(!videoStore.autoplay);
+      break;
+    case config.fullscreen:
+      e.preventDefault();
+      toggleFullscreen();
+      break;
+    case config.miniWindow:
+      e.preventDefault();
+      toggleMiniWindow();
+      break;
+    case config.playPause:
+      e.preventDefault();
+      togglePlay();
+      break;
+  }
+};
+
+/**
+ * 处理保存快捷键配置
+ * @param newConfig 新的快捷键配置对象
+ */
+const handleSaveShortcuts = (newConfig: ShortcutConfig) => {
+  shortcutStore.shortcuts = newConfig;
+  window.$message?.success(t("components.videoPlayer.msg.shortcutsSaveSuccess"));
+};
+
+/** 打开快捷键弹窗 */
+const showShortcuts = () => {
+  showMoreTooltip.value = false;
+  showShortcutsDialog.value = true;
+};
 
 /**
  * 处理右键菜单项的点击事件
@@ -690,80 +646,49 @@ const handleVideoReport = (videoId: string | number, type: string, description: 
 };
 
 /**
- * 设置弹幕定时器
- * @param danmakuId 弹幕ID
- * @param duration 显示持续时间（毫秒）
- */
-const setDanmakuTimer = (danmakuId: string, duration: number) => {
-  const danmaku = activeDanmakus.value.find((d) => d.id === danmakuId);
-  if (danmaku) {
-    danmaku.startTime = Date.now();
-  }
-
-  const timer = setTimeout(() => {
-    if (hoveredDanmakuId.value !== danmakuId) {
-      const index = activeDanmakus.value.findIndex((d) => d.id === danmakuId);
-      if (index !== -1) {
-        activeDanmakus.value.splice(index, 1);
-      }
-      danmakuTimers.delete(danmakuId);
-    }
-  }, duration);
-
-  danmakuTimers.set(danmakuId, timer);
-};
-
-/**
- * 显示弹幕操作
- * @param danmakuId 弹幕ID
- */
-const showDanmakuActions = (danmakuId: string) => {
-  hoveredDanmakuId.value = danmakuId;
-  const danmaku = activeDanmakus.value.find((d) => d.id === danmakuId);
-  if (danmaku && danmaku.startTime) {
-    const timer = danmakuTimers.get(danmakuId);
-    if (timer) {
-      clearTimeout(timer);
-      danmakuTimers.delete(danmakuId);
-      const elapsed = Date.now() - danmaku.startTime;
-      const totalDuration = 12000 / danmakuStore.settings.speed;
-      danmaku.remainingDuration = Math.max(0, totalDuration - elapsed);
-    }
-  }
-};
-
-/** 隐藏弹幕操作 */
-const hideDanmakuActions = () => {
-  const prevHoveredId = hoveredDanmakuId.value;
-  hoveredDanmakuId.value = null;
-  if (prevHoveredId) {
-    const danmaku = activeDanmakus.value.find((d) => d.id === prevHoveredId);
-    if (danmaku && danmaku.remainingDuration !== undefined && danmaku.remainingDuration > 0) {
-      const timer = setTimeout(() => {
-        const index = activeDanmakus.value.findIndex((d) => d.id === prevHoveredId);
-        if (index !== -1) {
-          activeDanmakus.value.splice(index, 1);
-        }
-        danmakuTimers.delete(prevHoveredId);
-      }, danmaku.remainingDuration);
-      danmakuTimers.set(prevHoveredId, timer);
-      danmaku.remainingDuration = undefined;
-    }
-  }
-};
-
-/**
  * 切换弹幕点赞状态
  * @param danmakuId 弹幕ID
  */
-const toggleDanmakuLike = (danmakuId: string) => {
+const toggleDanmakuLike = (danmakuId: string | number) => {
   const danmaku = danmakuList.value.find((d) => d.id === danmakuId);
   if (danmaku) {
     danmaku.isLiked = !danmaku.isLiked;
   }
-  const activeDanmaku = activeDanmakus.value.find((d) => d.id === danmakuId);
-  if (activeDanmaku) {
-    activeDanmaku.isLiked = !activeDanmaku.isLiked;
+};
+
+/** 更新当前活跃的弹幕列表 */
+const updateActiveDanmakus = () => {
+  if (!playerRef.value || !danmakuStore.settings.enabled) return;
+
+  const currentTime = playerRef.value.currentTime();
+  danmakuList.value.forEach((danmaku) => {
+    const danmakuTime = timeStringToSeconds(danmaku.time);
+
+    // 如果还未被推送过，且进入了匹配窗口
+    if (!displayedDanmakuIds.has(danmaku.id)) {
+      if (currentTime >= danmakuTime && currentTime - danmakuTime < 1) {
+        danmakuPlayerRef.value?.addDanmaku(
+          danmaku.content,
+          false,
+          danmaku.id,
+          danmaku.isLiked,
+          danmaku.type || "scroll"
+        );
+        displayedDanmakuIds.add(danmaku.id);
+      }
+    }
+  });
+};
+
+/**
+ * 跳转视频时间
+ * @param time 跳转时间（秒）
+ */
+const seek = (time: number) => {
+  if (playerRef.value) {
+    playerRef.value.currentTime(time);
+    displayedDanmakuIds.clear();
+    danmakuPlayerRef.value?.clear(); // 调用子组件清屏
   }
 };
 
@@ -850,9 +775,15 @@ const setPlaybackRate = (key: number) => {
 };
 
 /** 切换点赞状态 */
-const toggleLike = () => {
-  isLiked.value = !isLiked.value;
-  likeCount.value += isLiked.value ? 1 : -1;
+const toggleLike = async () => {
+  let res;
+  if (!isLiked.value) {
+    res = await likeVideoApi(playlistStore.currentVideo?.id);
+  } else {
+    res = await cancelLikeVideoApi(playlistStore.currentVideo?.id);
+  }
+  isLiked.value = res?.isLiked || false;
+  likeCount.value = res?.count || 0;
 };
 
 /** 切换收藏状态 */
@@ -885,7 +816,7 @@ const copyLink = async () => {
   try {
     // 1. 优先使用 Tauri 原生剪贴板插件 (最稳妥、权限最高)
     await writeText(linkToCopy);
-    window.$message?.success("视频链接已复制到剪贴板");
+    window.$message?.success(t("components.videoPlayer.msg.videoLinkCopied"));
   } catch (tauriError) {
     console.warn("Tauri 原生剪贴板复制失败，尝试 Web API 降级:", tauriError);
     // 2. 降级方案：使用现代浏览器的 API 兜底
@@ -904,6 +835,7 @@ const downloadVideo = async () => {
   // 防止重复点击下载
   if (isDownloading.value) {
     window.$dialog?.warning({
+      title: t("components.videoPlayer.dialog.confirmCancel"),
       content: t("components.videoPlayer.dialog.cancelDownloadConfirm"),
       positiveText: t("components.common.confirm"),
       negativeText: t("components.common.cancel"),
@@ -948,20 +880,21 @@ const toggleMoreOptions = () => {
 /** 推荐视频 */
 const recommendVideo = () => {
   showMoreTooltip.value = false;
-  console.log("Recommend video");
+  recommendVideoApi(playlistStore.currentVideo?.id);
 };
 
 /** 不感兴趣 */
 const dislikeVideo = () => {
   showMoreTooltip.value = false;
-  console.log("Dislike video");
+  unlikeVideoApi(playlistStore.currentVideo?.id);
 };
 
 /** 切换关注状态 */
 const toggleFollow = async () => {
   showMoreTooltip.value = false;
   window.$dialog.warning({
-    content: t("components.videoPlayer.dialog.unfollowConfirm"),
+    content: t("components.videoPlayer.dialog.confirmCancel"),
+    title: t("components.videoPlayer.dialog.unfollowConfirm"),
     positiveText: t("components.common.confirm"),
     negativeText: t("components.common.cancel"),
     onPositiveClick: async () => {
@@ -977,12 +910,6 @@ const toggleFollow = async () => {
 const reportVideo = () => {
   showMoreTooltip.value = false;
   showVideoReportDialog.value = true;
-};
-
-/** 显示快捷键列表 */
-const showShortcuts = () => {
-  showMoreTooltip.value = false;
-  console.log("Show shortcuts list");
 };
 
 /**
@@ -1066,24 +993,6 @@ const togglePlay = () => {
 };
 
 /**
- * 跳转视频时间
- * @param time 跳转时间（秒）
- */
-const seek = (time: number) => {
-  if (playerRef.value) {
-    playerRef.value.currentTime(time);
-    displayedDanmakuIds.clear();
-    activeDanmakus.value = [];
-    danmakuTimers.forEach((timer) => {
-      clearTimeout(timer);
-    });
-    danmakuTimers.clear();
-    lineDanmakus.clear();
-    currentLineIndex.value = 0;
-  }
-};
-
-/**
  * 发送弹幕
  * @param content 弹幕内容
  * @param isImage 是否为图片弹幕
@@ -1128,142 +1037,6 @@ const timeStringToSeconds = (timeStr: string): number => {
   return minutes * 60 + seconds;
 };
 
-/** 更新行高，根据当前字体大小 */
-const updateLineHeight = () => {
-  // 固定行高，确保足够的垂直间距，考虑字体大小和行间距
-  // 增加行高系数，确保垂直方向有足够的间距，避免重叠
-  lineHeight.value = Math.max(45, danmakuStore.settings.fontSize * 3.5);
-};
-
-/** 获取当前容器的最大行数
- * @returns 最大行数
- */
-const getMaxLines = (): number => {
-  const containerHeight = danmakuContainerRef.value?.offsetHeight || 0;
-
-  // 根据displayArea计算最大行数
-  let maxLines: number;
-  switch (danmakuStore.settings.displayArea) {
-    case 1: // 一行
-      maxLines = 1;
-      break;
-    case 2: // 两行
-      maxLines = 2;
-      break;
-    case 3: // 25%
-      maxLines = Math.max(1, Math.floor((containerHeight * 0.25) / lineHeight.value));
-      break;
-    case 4: // 50%
-      maxLines = Math.max(1, Math.floor((containerHeight * 0.5) / lineHeight.value));
-      break;
-    case 5: // 80%
-      maxLines = Math.max(1, Math.floor((containerHeight * 0.8) / lineHeight.value));
-      break;
-    default:
-      maxLines = Math.max(1, Math.floor((containerHeight * 0.5) / lineHeight.value));
-  }
-
-  // 确保最大行数至少为1
-  return Math.max(1, maxLines);
-};
-
-/** 使用轮询方式分配行，确保弹幕均匀分布
- * @returns 分配的行索引
- */
-const assignLine = (): number => {
-  const maxLines = getMaxLines();
-  const lineIndex = currentLineIndex.value;
-
-  // 递增行索引，循环使用
-  currentLineIndex.value = (currentLineIndex.value + 1) % maxLines;
-
-  return lineIndex;
-};
-
-/** 测量弹幕内容的宽度
- * @param content 弹幕内容
- * @returns 弹幕内容的宽度
- */
-const measureDanmakuWidth = (content: string): number => {
-  // 创建一个临时元素来测量文本宽度
-  const tempElement = document.createElement("div");
-  tempElement.textContent = content;
-  tempElement.style.fontSize = `${danmakuStore.settings.fontSize}px`;
-  tempElement.style.position = "absolute";
-  tempElement.style.visibility = "hidden";
-  tempElement.style.whiteSpace = "nowrap";
-  tempElement.style.padding = "4px 8px";
-  document.body.appendChild(tempElement);
-
-  const width = tempElement.offsetWidth;
-  document.body.removeChild(tempElement);
-
-  return width;
-};
-
-/**
- * 生成新的弹幕对象，包含固定的垂直位置和水平偏移
- * @param danmaku 原始弹幕对象
- * @returns 包含垂直位置和水平偏移的弹幕对象
- */
-const generateDanmaku = (danmaku: Danmaku): Danmaku => {
-  // 更新行高
-  updateLineHeight();
-  // 使用轮询方式分配行
-  const targetLineIndex = assignLine();
-  // 计算垂直位置，确保足够的垂直间距
-  const top = `${targetLineIndex * lineHeight.value}px`;
-  // 不再使用累积的偏移量，为每个弹幕生成独立的偏移量
-  // 只考虑当前活跃的同一行弹幕，计算水平偏移量
-  const currentLineActiveDanmakus = activeDanmakus.value.filter((d) => {
-    // 获取当前弹幕的top值，与目标行比较
-    const danmakuTop = parseInt(d.top || "0", 10);
-    const targetTop = targetLineIndex * lineHeight.value;
-    return danmakuTop === targetTop;
-  });
-  // 计算当前行已占用的总宽度，只考虑当前活跃的弹幕
-  const totalWidth = currentLineActiveDanmakus.reduce((sum, d) => {
-    return sum + (measureDanmakuWidth(d.content) + 20); // 20px作为弹幕之间的间距
-  }, 0);
-  // 计算水平偏移量，确保与前一个弹幕有20px的间距
-  const horizontalOffset = totalWidth;
-  // 不再使用lineDanmakus存储，避免累积偏移量
-  // 直接使用activeDanmakus来管理当前活跃的弹幕
-  return {
-    ...danmaku,
-    top, // 存储固定的垂直位置
-    horizontalOffset // 存储水平偏移量，用于调整初始位置
-  };
-};
-
-/** 更新当前活跃的弹幕列表，根据当前视频时间 */
-const updateActiveDanmakus = () => {
-  if (!playerRef.value || !danmakuStore.settings.enabled) {
-    return;
-  }
-  const currentTime = playerRef.value.currentTime();
-  danmakuList.value.forEach((danmaku) => {
-    const danmakuTime = timeStringToSeconds(danmaku.time);
-    const isAlreadyActive = activeDanmakus.value.some((d) => d.id === danmaku.id);
-    const hasBeenDisplayed = displayedDanmakuIds.has(danmaku.id);
-    const timeWindow = 1;
-    const isZeroTimeDanmaku = danmakuTime === 0;
-    const isWithinTimeWindow = currentTime >= danmakuTime && currentTime - danmakuTime < timeWindow;
-    const shouldAdd =
-      !isAlreadyActive && !hasBeenDisplayed && (isWithinTimeWindow || (isZeroTimeDanmaku && currentTime < timeWindow));
-    if (shouldAdd) {
-      const newDanmaku = generateDanmaku(danmaku);
-      const animationDuration = 12000 / danmakuStore.settings.speed;
-      activeDanmakus.value.push(newDanmaku);
-      displayedDanmakuIds.add(danmaku.id);
-      setDanmakuTimer(newDanmaku.id, animationDuration);
-    }
-  });
-  activeDanmakus.value = activeDanmakus.value.filter((danmaku) => {
-    return danmakuTimers.has(danmaku.id) || hoveredDanmakuId.value === danmaku.id;
-  });
-};
-
 /** 切换弹幕列表显示 */
 const toggleDanmakuList = () => {
   console.log("Toggle danmaku list");
@@ -1304,7 +1077,7 @@ const toggleMiniWindow = async () => {
 
 onLoaded((result) => {
   if (result === "success") {
-    window.$message?.success("视频下载完成");
+    window.$message?.success(t("components.videoPlayer.msg.downloadComplete"));
   }
 });
 
@@ -1378,21 +1151,6 @@ onMounted(() => {
       isPlaying.value = true;
       showPauseOverlay.value = false;
       emit("play");
-      activeDanmakus.value.forEach((danmaku) => {
-        if (danmaku.remainingDuration !== undefined && danmaku.remainingDuration > 0) {
-          const timer = setTimeout(() => {
-            if (hoveredDanmakuId.value !== danmaku.id) {
-              const index = activeDanmakus.value.findIndex((d) => d.id === danmaku.id);
-              if (index !== -1) {
-                activeDanmakus.value.splice(index, 1);
-              }
-              danmakuTimers.delete(danmaku.id);
-            }
-          }, danmaku.remainingDuration);
-          danmakuTimers.set(danmaku.id, timer);
-          danmaku.remainingDuration = undefined;
-        }
-      });
     };
     player.on("play", playHandler);
     eventListeners.set("play", playHandler);
@@ -1401,16 +1159,6 @@ onMounted(() => {
       isPlaying.value = false;
       showPauseOverlay.value = true;
       emit("pause");
-      danmakuTimers.forEach((timer, danmakuId) => {
-        clearTimeout(timer);
-        danmakuTimers.delete(danmakuId);
-        const danmaku = activeDanmakus.value.find((d) => d.id === danmakuId);
-        if (danmaku && danmaku.startTime) {
-          const elapsed = Date.now() - danmaku.startTime;
-          const totalDuration = 12000 / danmakuStore.settings.speed;
-          danmaku.remainingDuration = Math.max(0, totalDuration - elapsed);
-        }
-      });
     };
     player.on("pause", pauseHandler);
     eventListeners.set("pause", pauseHandler);
@@ -1418,13 +1166,7 @@ onMounted(() => {
     const endedHandler = () => {
       emit("ended");
       displayedDanmakuIds.clear();
-      activeDanmakus.value = [];
-      danmakuTimers.forEach((timer) => {
-        clearTimeout(timer);
-      });
-      danmakuTimers.clear();
-      lineDanmakus.clear();
-      currentLineIndex.value = 0;
+      danmakuPlayerRef.value?.clear(); // 调用子组件清屏
     };
     player.on("ended", endedHandler);
     eventListeners.set("ended", endedHandler);
@@ -1445,13 +1187,7 @@ onMounted(() => {
       emit("timeupdate", current, total);
       if (current < 0.5 && !hasResetThisSession) {
         displayedDanmakuIds.clear();
-        activeDanmakus.value = [];
-        danmakuTimers.forEach((timer) => {
-          clearTimeout(timer);
-        });
-        danmakuTimers.clear();
-        lineDanmakus.clear();
-        currentLineIndex.value = 0;
+        danmakuPlayerRef.value?.clear(); // 替换掉原来清空 Map 和 Array 的那堆逻辑
         hasResetThisSession = true;
       } else if (current >= 0.5) {
         hasResetThisSession = false;
@@ -1494,27 +1230,20 @@ onMounted(() => {
       console.log("Video data loaded successfully");
       if (playerRef.value) {
         displayedDanmakuIds.clear();
-        activeDanmakus.value = [];
-        danmakuTimers.forEach((timer) => {
-          clearTimeout(timer);
-        });
-        danmakuTimers.clear();
-        lineDanmakus.clear();
-        currentLineIndex.value = 0;
+        danmakuPlayerRef.value?.clear();
+
+        // 初始化推送 0 秒弹幕
         danmakuList.value.forEach((danmaku) => {
           const danmakuTime = timeStringToSeconds(danmaku.time);
-          if (danmakuTime === 0) {
-            const isAlreadyActive = activeDanmakus.value.some((d) => d.id === danmaku.id);
-            const hasBeenDisplayed = displayedDanmakuIds.has(danmaku.id);
-            if (!isAlreadyActive && !hasBeenDisplayed) {
-              const newDanmaku = generateDanmaku(danmaku);
-              const animationDuration = 12000 / danmakuStore.settings.speed;
-
-              activeDanmakus.value.push(newDanmaku);
-              displayedDanmakuIds.add(danmaku.id);
-
-              setDanmakuTimer(newDanmaku.id, animationDuration);
-            }
+          if (danmakuTime === 0 && !displayedDanmakuIds.has(danmaku.id)) {
+            danmakuPlayerRef.value?.addDanmaku(
+              danmaku.content,
+              false,
+              danmaku.id,
+              danmaku.isLiked,
+              danmaku.type || "scroll"
+            );
+            displayedDanmakuIds.add(danmaku.id);
           }
         });
       }
@@ -1544,6 +1273,7 @@ onMounted(() => {
     console.error("Failed to initialize video player:", error);
     emit("error", error);
   }
+  document.addEventListener("keydown", handleShortcutKeyDown);
 });
 
 onBeforeUnmount(() => {
@@ -1551,15 +1281,8 @@ onBeforeUnmount(() => {
     playerRef.value.dispose();
     playerRef.value = null;
   }
-  danmakuTimers.clear();
-  animationFrameIds.forEach((id) => {
-    cancelAnimationFrame(id);
-  });
-  animationFrameIds = [];
   displayedDanmakuIds.clear();
-  activeDanmakus.value = [];
-  lineDanmakus.clear();
-  currentLineIndex.value = 0;
+  document.removeEventListener("keydown", handleShortcutKeyDown);
 });
 
 defineExpose({
@@ -2335,91 +2058,6 @@ defineExpose({
   }
 }
 
-// Danmaku Styles
-.danmaku-container {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: calc(100% - 80px);
-  pointer-events: none;
-  overflow: hidden;
-  z-index: 80;
-}
-
-.danmaku-item {
-  position: absolute;
-  white-space: nowrap;
-  font-size: 16px;
-  color: #ffffff;
-  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
-  cursor: pointer;
-  pointer-events: auto;
-  padding: 4px 8px;
-  border-radius: 4px;
-  transition: all 0.2s ease;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  z-index: 100;
-  margin: 0;
-  line-height: 1.4;
-  box-sizing: border-box;
-  overflow: visible;
-}
-
-.danmaku-item {
-  animation-play-state: running;
-  transition: animation-play-state 0.1s ease;
-}
-
-.danmaku-item:hover {
-  background-color: rgba(0, 0, 0, 0.3);
-  transform: scale(1.05);
-  z-index: 1000 !important;
-  animation-play-state: paused !important;
-}
-
-.video-player-container.paused .danmaku-item {
-  animation-play-state: paused;
-}
-
-.danmaku-scroll {
-  left: 100%;
-  animation: danmaku-scroll linear forwards;
-  animation-duration: calc(12s / var(--speed, 1));
-  animation-fill-mode: forwards;
-  animation-timing-function: linear;
-  animation-play-state: running;
-}
-
-.danmaku-top,
-.danmaku-bottom {
-  left: 50%;
-  transform: translateX(-50%);
-  background-color: rgba(0, 0, 0, 0.3);
-  padding: 4px 12px;
-  border-radius: 16px;
-}
-
-.danmaku-top {
-  top: 10px;
-}
-
-.danmaku-bottom {
-  bottom: 10px;
-  top: auto;
-}
-
-@keyframes danmaku-scroll {
-  from {
-    left: 100%; /* Start from outside the right edge */
-  }
-  to {
-    left: -300%; /* Move completely outside the left edge, using a larger value to ensure even long弹幕 disappear */
-  }
-}
-
 // Collection Tooltip Styles
 .collection-tooltip {
   width: 200px;
@@ -2663,59 +2301,6 @@ defineExpose({
 
 .recommend-btn .more-btn-icon {
   color: #fff !important;
-}
-
-.danmaku-content {
-  flex: 1;
-  line-height: 1.4;
-}
-
-.danmaku-actions {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background-color: rgba(0, 0, 0, 0.6);
-  padding: 2px 8px;
-  border-radius: 12px;
-  opacity: 1;
-  transition: opacity 0.2s ease;
-}
-
-.danmaku-action-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 24px;
-  height: 24px;
-  cursor: pointer;
-  border-radius: 50%;
-  transition: all 0.2s ease;
-  color: #ffffff;
-}
-
-.like-btn {
-  color: #ff0050;
-}
-
-.like-btn.liked {
-  color: #ff0050;
-  animation: heartBeat 0.3s ease;
-}
-
-@keyframes heartBeat {
-  0% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.2);
-  }
-  100% {
-    transform: scale(1);
-  }
-}
-
-.report-btn {
-  color: #ffcc00;
 }
 
 .control-item {

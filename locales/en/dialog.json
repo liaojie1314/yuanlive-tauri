@@ -94,5 +94,41 @@
       "phoneLengthError": "Phone number length is incorrect",
       "liveCategory": "Please select a live category"
     }
+  },
+  "shortcuts": {
+    "title": "Keyboard Shortcuts",
+    "wait": "wait",
+    "restoreDefaults": "Restore Defaults",
+    "save": "Save Changes",
+    "space": "space",
+    "interactive": {
+      "title": "Interactive",
+      "like": "like/unlike",
+      "favorite": "favorite/unfavorite",
+      "follow": "follow/unfollow",
+      "profile": "enter author profile",
+      "comment": "comment",
+      "copyLink": "copy share link",
+      "recommend": "recommend to friends",
+      "dislike": "dislike"
+    },
+    "playback": {
+      "title": "Playback",
+      "toggleDanmaku": "toggle danmaku",
+      "clearScreen": "clear screen",
+      "autoPlay": "auto play",
+      "fullscreen": "fullscreen",
+      "watchLater": "watch later",
+      "miniWindow": "mini window",
+      "volumeUp": "volume up",
+      "pageUp": "page up",
+      "forward": "forward/backward",
+      "playPause": "play/pause"
+    },
+    "msg": {
+      "systemShortcut": "System preset combination keys are not supported for modification",
+      "keyOccupied": "Key {key} is already occupied, please choose another",
+      "restoreDefaultSuccess": "Default settings restored, please click save to apply"
+    }
   }
 }

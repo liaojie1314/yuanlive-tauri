@@ -620,9 +620,9 @@ impl Url {
             Url::MapReverseGeocode => (http::Method::GET, "map/geocode/reverse"),
             Url::MapStatic => (http::Method::GET, "map/static"),
             // 文件上传相关
-            Url::UploadChunk => (http::Method::POST, "api/upload/chunk"),
-            Url::CheckUploadedChunks => (http::Method::GET, "api/upload/check"),
-            Url::MergeChunks => (http::Method::POST, "api/upload/merge"),
+            Url::UploadChunk => (http::Method::POST, "user/minio/chunk"),
+            Url::CheckUploadedChunks => (http::Method::GET, "user/minio/upload/check"),
+            Url::MergeChunks => (http::Method::POST, "user/minio/upload/merge"),
         }
     }
 

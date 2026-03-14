@@ -94,5 +94,41 @@
       "phoneLengthError": "手机号长度不正确",
       "liveCategory": "请选择直播分区"
     }
+  },
+  "shortcuts": {
+    "title": "键盘快捷键",
+    "wait": "等待按键",
+    "restoreDefaults": "恢复默认",
+    "save": "保存修改",
+    "space": "空格",
+    "interactive": {
+      "title": "互动类",
+      "like": "点赞/取消点赞",
+      "favorite": "收藏/取消收藏",
+      "follow": "关注/取消关注",
+      "profile": "进入作者主页",
+      "comment": "评论",
+      "copyLink": "复制分享口令",
+      "recommend": "推荐给朋友",
+      "dislike": "不感兴趣"
+    },
+    "playback": {
+      "title": "播放类",
+      "toggleDanmaku": "开始/关闭弹幕",
+      "clearScreen": "清屏",
+      "autoPlay": "自动连播",
+      "fullscreen": "全屏",
+      "watchLater": "稍后再看",
+      "miniWindow": "小窗模式",
+      "volumeUp": "音量调整",
+      "pageUp": "上下翻页",
+      "forward": "快进快退",
+      "playPause": "暂停"
+    },
+    "msg": {
+      "systemShortcut": "系统预设组合键暂不支持修改",
+      "keyOccupied": "按键 {key} 已被占用，请更换",
+      "restoreDefaultSuccess": "已恢复默认设置，请点击保存生效"
+    }
   }
 }

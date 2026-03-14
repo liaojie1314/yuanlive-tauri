@@ -257,6 +257,7 @@ const handleSelectAll = (checked: boolean) => {
 /** 处理批量删除选中对话 */
 const handleBatchDelete = () => {
   window.$dialog.warning({
+    title: t("components.common.confirmDelete"),
     content: t("components.chatHistoryList.deleteSelected", { count: selectedIds.value.size }),
     positiveText: t("components.common.confirm"),
     negativeText: t("components.common.cancel"),
@@ -333,6 +334,7 @@ const handleMenuSelect = (key: string) => {
  */
 const handleDelete = (id: string) => {
   window.$dialog.warning({
+    title: t("components.common.confirmDelete"),
     content: t("components.chatHistoryList.deleteConfirm"),
     positiveText: t("components.common.confirm"),
     negativeText: t("components.common.cancel"),
@@ -356,6 +358,7 @@ const handleDelete = (id: string) => {
 /** 处理清空所有历史 */
 const handleClearAll = () => {
   window.$dialog.warning({
+    title: t("components.common.confirmDelete"),
     content: t("components.chatHistoryList.clearAllConfirm"),
     positiveText: t("components.common.confirm"),
     negativeText: t("components.common.cancel"),
