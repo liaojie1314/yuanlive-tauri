@@ -95,7 +95,7 @@ const {
   onSuccess: (downloadUrl) => {
     // 上传成功后，更新本地预览头像
     form.avatar = downloadUrl;
-    // TODO: 更新用户信息store
+    userInfo && (userInfo.avatar = downloadUrl);
   }
 });
 

@@ -175,8 +175,8 @@ export const useUpload = () => {
    * @param task 上传任务
    * @returns 合并后的文件 URL
    */
-  const mergeChunks = async (task: UploadTask): Promise<{ url: string }> => {
-    return await invoke<{ url: string }>(TauriCommandEnum.MERGE_CHUNKS_COMMAND, {
+  const mergeChunks = async (task: UploadTask): Promise<string> => {
+    return await invoke<string>(TauriCommandEnum.MERGE_CHUNKS_COMMAND, {
       fileHash: task.taskId,
       fileName: task.file.name,
       totalChunks: task.chunks.length,
@@ -238,7 +238,7 @@ export const useUpload = () => {
 
       const mergeResult = await mergeChunks(task);
 
-      const result = { success: true, taskId: task.taskId, url: mergeResult.url };
+      const result = { success: true, taskId: task.taskId, url: mergeResult };
       triggerComplete(result);
 
       task.status = "completed";
@@ -327,7 +327,7 @@ export const useUpload = () => {
       task.progress.uploaded = task.progress.total;
       triggerProgress(task.progress);
 
-      triggerComplete({ success: true, taskId, url: mergeResult.url });
+      triggerComplete({ success: true, taskId, url: mergeResult });
 
       task.status = "completed";
       uploadStatus.value = "completed";
