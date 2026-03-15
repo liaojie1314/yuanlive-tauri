@@ -39,7 +39,8 @@
       "videoSizeLimit": "视频大小不能超过 {count}GB",
       "inputVideoTitle": "请输入视频标题",
       "publishSuccess": "发布成功！",
-      "publishFailed": "发布失败，请重试"
+      "publishFailed": "发布失败，请重试",
+      "coverUploadFailed": "封面上传失败，请重试"
     }
   },
   "followList": {

@@ -93,6 +93,12 @@
     "placeholder": "发一条友好的弹幕吧",
     "danmakuSwitch": "弹幕开关",
     "send": "发送",
+    "position": "弹幕位置",
+    "scroll": "滚动",
+    "top": "顶部",
+    "bottom": "底部",
+    "preventObscuring": "防挡弹幕",
+    "mergeSameDanmaku": "同屏合并",
     "fontSizeOptions": {
       "extraSmall": "超小",
       "small": "小号",

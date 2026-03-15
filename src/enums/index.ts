@@ -6,6 +6,10 @@ export enum UploadSceneEnum {
   CHAT = "chat",
   /** 头像 */
   AVATAR = "avatar",
+  /** 视频封面 */
+  VIDEO_COVER = "videoCover",
+  /** 直播封面 */
+  LIVE_COVER = "liveCover",
   /** 视频 */
   VIDEO = "video"
 }

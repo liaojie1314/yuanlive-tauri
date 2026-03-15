@@ -77,9 +77,11 @@ export const useUpload = () => {
 
   const getDefaultConfigByScene = (scene: UploadSceneEnum) => {
     switch (scene) {
-      case "avatar":
+      case UploadSceneEnum.AVATAR:
+      case UploadSceneEnum.VIDEO_COVER:
+      case UploadSceneEnum.LIVE_COVER:
         return { chunkSize: 1 * 1024 * 1024, retryCount: 3, directUploadThreshold: 1 * 1024 * 1024 };
-      case "video":
+      case UploadSceneEnum.VIDEO:
         return { chunkSize: 10 * 1024 * 1024, retryCount: 5, directUploadThreshold: 10 * 1024 * 1024 };
       default:
         return { chunkSize: 5 * 1024 * 1024, retryCount: 3, directUploadThreshold: 5 * 1024 * 1024 };

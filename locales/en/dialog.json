@@ -39,7 +39,8 @@
       "videoSizeLimit": "Video size cannot exceed {count}GB",
       "inputVideoTitle": "Please enter the video title",
       "publishSuccess": "Publish success!",
-      "publishFailed": "Publish failed, please try again"
+      "publishFailed": "Publish failed, please try again",
+      "coverUploadFailed": "Cover upload failed, please try again"
     }
   },
   "followList": {

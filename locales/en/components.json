@@ -93,6 +93,12 @@
     "placeholder": "Send a friendly danmaku",
     "danmakuSwitch": "danmaku switch",
     "send": "send",
+    "position": "position",
+    "scroll": "scroll",
+    "top": "top",
+    "bottom": "btm",
+    "preventObscuring": "prevent obscuring",
+    "mergeSameDanmaku": "merge",
     "fontSizeOptions": {
       "extraSmall": "ex-small",
       "small": "small",

@@ -36,7 +36,7 @@
 
           <div class="flex-1 space-y-4">
             <n-form-item
-              label="{{ $t('dialog.uploadVideo.videoTitle') }}"
+              :label="$t('dialog.uploadVideo.videoTitle')"
               :show-label="true"
               label-style="color: var(--text-color);">
               <n-input
@@ -119,9 +119,12 @@
 import { useI18n } from "vue-i18n";
 import type { UploadFileInfo } from "naive-ui";
 
-import { useVideoFrame } from "@/hooks/useVideoFrame.ts";
+import { UploadSceneEnum } from "@/enums";
+import { useUpload } from "@/hooks/useUpload";
+import { useVideoFrame } from "@/hooks/useVideoFrame";
 
 const { t } = useI18n();
+const { uploadFile } = useUpload();
 const { videoUrl, frames, isGenerating, generateFrames, clearFrames } = useVideoFrame();
 
 interface Props {
@@ -138,7 +141,8 @@ const isSubmitting = ref(false);
 const form = reactive({
   title: "",
   description: "",
-  coverUrl: ""
+  coverUrl: "",
+  videoUrl: ""
 });
 
 const dialogVisible = computed({
@@ -178,11 +182,19 @@ const handleVideoChange = async (data: { file: UploadFileInfo }) => {
  * 处理封面上传
  * @param data 封面文件信息
  */
-const handleCoverUpload = (data: { file: UploadFileInfo }) => {
+const handleCoverUpload = async (data: { file: UploadFileInfo }) => {
   const file = data.file.file;
   if (file) {
-    const url = URL.createObjectURL(file);
-    form.coverUrl = url;
+    try {
+      // 先使用临时 URL 显示预览
+      const tempUrl = URL.createObjectURL(file);
+      form.coverUrl = tempUrl;
+      // 然后上传封面文件
+      form.coverUrl = await uploadFile(file, UploadSceneEnum.AVATAR);
+    } catch (error) {
+      console.error("封面上传失败:", error);
+      window.$message.error(t("dialog.uploadVideo.msg.coverUploadFailed"));
+    }
   }
 };
 
@@ -205,10 +217,19 @@ const handleSubmit = async () => {
   try {
     isSubmitting.value = true;
 
-    // TODO: 上传视频
+    // 上传视频
+    form.videoUrl = await uploadFile(videoFile.value!, UploadSceneEnum.VIDEO);
 
-    // 模拟上传延迟
-    await new Promise((resolve) => setTimeout(resolve, 2000));
+    console.log(form);
+
+    // 上传封面(生成的视频帧)
+    // if (form.coverUrl && !form.coverUrl.startsWith("data:")) {
+    //   // 从 coverUrl 创建 File 对象
+    //   const response = await fetch(form.coverUrl);
+    //   const blob = await response.blob();
+    //   const coverFile = new File([blob], "cover.jpg", { type: "image/jpeg" });
+    //   await uploadFile(coverFile, UploadSceneEnum.AVATAR);
+    // }
 
     window.$message.success(t("dialog.uploadVideo.msg.publishSuccess"));
     emit("success");

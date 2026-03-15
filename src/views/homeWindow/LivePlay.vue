@@ -156,25 +156,25 @@
                     <div class="settings-divider"></div>
 
                     <div class="settings-item">
-                      <span class="settings-label">弹幕位置</span>
+                      <span class="settings-label">{{ t("components.danmakuInput.position") }}</span>
                       <div class="position-options">
                         <div
                           class="position-btn"
                           :class="{ active: danmakuStore.position === 'scroll' }"
                           @click="danmakuStore.position = 'scroll'">
-                          滚动
+                          {{ t("components.danmakuInput.scroll") }}
                         </div>
                         <div
                           class="position-btn"
                           :class="{ active: danmakuStore.position === 'top' }"
                           @click="danmakuStore.position = 'top'">
-                          顶部
+                          {{ t("components.danmakuInput.top") }}
                         </div>
                         <div
                           class="position-btn"
                           :class="{ active: danmakuStore.position === 'bottom' }"
                           @click="danmakuStore.position = 'bottom'">
-                          底部
+                          {{ t("components.danmakuInput.bottom") }}
                         </div>
                       </div>
                     </div>
@@ -182,14 +182,14 @@
                     <div class="settings-divider"></div>
 
                     <div class="settings-item">
-                      <span class="settings-label">防挡弹幕</span>
+                      <span class="settings-label">{{ t("components.danmakuInput.preventObscuring") }}</span>
                       <div class="settings-arrow">
                         <n-switch class="control-switch" v-model:value="danmakuStore.settings.antiBlock" />
                       </div>
                     </div>
 
                     <div class="settings-item">
-                      <span class="settings-label">同屏合并</span>
+                      <span class="settings-label">{{ t("components.danmakuInput.mergeSameDanmaku") }}</span>
                       <div class="settings-arrow">
                         <n-switch class="control-switch" v-model:value="danmakuStore.settings.enableCombo" />
                       </div>
