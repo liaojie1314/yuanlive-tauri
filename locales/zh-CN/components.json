@@ -214,9 +214,12 @@
     "addTo": "将",
     "addToKnowledgeDesc": "添加至知识库，AI 将在未来的对话中长久记忆这份文档。",
     "chooseKnowledge": "选择目标知识库",
+    "newKnowledge": "新建知识库",
+    "newKnowledgePlaceholder": "请输入新知识库名称...",
     "selectKnowledgePlaceholder": "请选择知识库",
     "confirm": "确认添加",
     "msg": {
+      "emptyKnowledgeName": "请输入知识库名称",
       "success": "已成功添加到知识库！",
       "error": "添加失败，请重试。"
     }

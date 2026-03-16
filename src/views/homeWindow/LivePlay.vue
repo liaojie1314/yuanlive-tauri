@@ -626,11 +626,11 @@ const shouldShowControls = computed(() => {
 
 // 清晰度选项
 const resolutionOptions = [
-  { label: "超清2K", key: "2k" },
-  { label: "高清1080P", key: "1080p" },
-  { label: "高清720P", key: "720p" },
-  { label: "标清540P", key: "540p" },
-  { label: "自动", key: "auto" }
+  { label: t("components.videoPlayer.resolution.2k"), key: "2k" },
+  { label: t("components.videoPlayer.resolution.1080p"), key: "1080p" },
+  { label: t("components.videoPlayer.resolution.720p"), key: "720p" },
+  { label: t("components.videoPlayer.resolution.540p"), key: "540p" },
+  { label: t("components.videoPlayer.resolution.auto"), key: "auto" }
 ];
 
 // 动画帧ID存储
@@ -987,8 +987,8 @@ const amountOptions = [
 
 // 充值金额选项
 const rechargeOptions = [
-  { diamonds: 60, price: 6 },
   { diamonds: 10, price: 1 },
+  { diamonds: 60, price: 6 },
   { diamonds: 300, price: 30 },
   { diamonds: 1000, price: 100 },
   { diamonds: 2980, price: 298 },

@@ -64,7 +64,15 @@
     "usernamePlaceholder": "Set your username",
     "desc": "Description",
     "descPlaceholder": "Introduce yourself",
-    "save": "Save changes"
+    "save": "Save changes",
+    "email": "Email",
+    "emailPlaceholder": "Used for login",
+    "password": "Password",
+    "passwordPlaceholder": "Please enter your password",
+    "gender": "Gender",
+    "male": "male",
+    "female": "female",
+    "unknown": "unknown"
   },
   "applyStreamer": {
     "title": "Apply to be a Streamer",

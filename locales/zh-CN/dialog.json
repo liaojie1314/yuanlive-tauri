@@ -64,7 +64,15 @@
     "usernamePlaceholder": "设置你的用户名",
     "desc": "个人简介",
     "descPlaceholder": "介绍一下自己吧",
-    "save": "保存修改"
+    "save": "保存修改",
+    "email": "邮箱",
+    "emailPlaceholder": "用于登录",
+    "password": "密码",
+    "passwordPlaceholder": "请输入密码",
+    "gender": "性别",
+    "male": "男",
+    "female": "女",
+    "unknown": "未知"
   },
   "applyStreamer": {
     "title": "申请成为主播",

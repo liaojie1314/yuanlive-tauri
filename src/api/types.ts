@@ -53,7 +53,7 @@ export type UserInfoType = {
   avatar?: string;
   // 用户名
   username: string;
-  // 性别 1为男性，2为女性
+  // 性别
   gender: string;
   // 设备类型
   device: string;

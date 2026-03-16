@@ -214,9 +214,12 @@
     "addTo": "Add",
     "addToKnowledgeDesc": "Add to knowledge base, AI will remember this document in future conversations.",
     "chooseKnowledge": "Choose knowledge base",
+    "newKnowledge": "new",
+    "newKnowledgePlaceholder": "Please input new knowledge base name...",
     "selectKnowledgePlaceholder": "Select knowledge base",
     "confirm": "Confirm add",
     "msg": {
+      "emptyKnowledgeName": "Please input knowledge base name",
       "success": "Successfully added to knowledge base!",
       "error": "Failed to add to knowledge base, please try again."
     }
