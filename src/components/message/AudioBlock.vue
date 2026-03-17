@@ -38,8 +38,8 @@
       </div>
 
       <div class="flex justify-between text-[10px] text-[--user-text-color] font-mono mt-0.5 opacity-80">
-        <span>{{ formatTime(currentTime) }}</span>
-        <span>{{ formatTime(duration) }}</span>
+        <span>{{ formatSecondsToTimeStr(currentTime) }}</span>
+        <span>{{ formatSecondsToTimeStr(duration) }}</span>
       </div>
     </div>
 
@@ -53,7 +53,7 @@
 </template>
 
 <script setup lang="ts">
-import { formatTime } from "@/utils/FormattingUtils";
+import { formatSecondsToTimeStr } from "@/utils/FormattingUtils";
 
 defineOptions({
   name: "AudioBlock"

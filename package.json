@@ -24,6 +24,8 @@
     "tauri:dev": "tauri dev",
     "======== 打包桌面应用程序 ========": "",
     "tauri:build": "tauri build",
+    "======== 启动安卓程序 ========": "",
+    "android:dev": "tauri android dev",
     "======== 安装依赖前执行 ========": "",
     "preinstall": "pnpm dlx only-allow pnpm && node scripts/check-all.js",
     "======== 安装依赖后执行复制依赖文件 ========": "",

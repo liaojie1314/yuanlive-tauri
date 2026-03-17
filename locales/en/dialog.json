@@ -35,12 +35,24 @@
     "extractFrame": "Extracting video frame...",
     "currentCover": "Current Cover",
     "publishVideo": "Publish Video",
+    "videoChapters": "Video Chapters (Optional)",
+    "chapterTitle": "Chapter Title",
+    "addChapter": "Add Chapter",
+    "chapterTip": "Tip: You can add up to {count} chapters, with a minimum gap of {gap} seconds between each chapter.",
+    "totalDuration": "Total Duration:",
     "msg": {
       "videoSizeLimit": "Video size cannot exceed {count}GB",
       "inputVideoTitle": "Please enter the video title",
       "publishSuccess": "Publish success!",
       "publishFailed": "Publish failed, please try again",
-      "coverUploadFailed": "Cover upload failed, please try again"
+      "coverUploadFailed": "Cover upload failed, please try again",
+      "chapterTimeAndTitle": "Please fill in the chapter time and title",
+      "maxChapterCount": "You can add up to {count} chapters",
+      "chapterTimeFormatError": "Time format is incorrect, please use mm:ss format, e.g. 01:30",
+      "chapterTimeTooCloseToEnd": "Chapters cannot be too close to the end of the video (reserved {gap} seconds)",
+      "chapterTimeGapError": "Chapters must have a minimum gap of {gap} seconds",
+      "onlySupport": "Only supports MP4, MOV, MKV formats",
+      "readDragVideoFailed": "Failed to read dragged video, please try again"
     }
   },
   "followList": {

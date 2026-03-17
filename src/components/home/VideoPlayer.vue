@@ -204,16 +204,139 @@
       </div>
 
       <!-- Progress Bar -->
-      <div class="progress-bar-container" @click.stop>
+      <div
+        v-show="showChapterPanel"
+        class="absolute left-4 w-[220px] max-h-[300px] bg-[var(--bg-popover)] border border-[var(--line-color)] rounded-xl shadow-[0_8px_24px_rgba(0,0,0,0.15)] z-[130] flex flex-col overflow-hidden transition-all duration-300"
+        style="bottom: 155px"
+        @click.stop>
+        <div
+          class="px-3 py-2.5 border-b border-[var(--line-color)] flex justify-between items-center bg-[var(--bg-setting-item)] shrink-0">
+          <span class="text-[13px] font-medium text-[var(--text-color)] tracking-wide">
+            {{ t("components.videoPlayer.videoChapters") }} ({{ computedChapters.length }})
+          </span>
+          <i-mdi-close
+            class="text-[16px] text-[var(--user-text-color)] hover:text-[#ff0050] cursor-pointer transition-colors"
+            @click="showChapterPanel = false" />
+        </div>
+
+        <n-scrollbar class="flex-1">
+          <div class="p-1.5 flex flex-col gap-0.5">
+            <div
+              v-for="(chap, index) in computedChapters"
+              :key="index"
+              class="flex items-center gap-2.5 px-2.5 py-2 rounded-md cursor-pointer transition-all duration-200"
+              :class="
+                currentChapterIndex === index ? 'bg-[var(--bg-setting-item)]' : 'hover:bg-[var(--bg-left-menu-hover)]'
+              "
+              @click="selectChapter(chap)">
+              <div
+                class="text-[12px] font-mono shrink-0"
+                :class="currentChapterIndex === index ? 'text-[#ff0050]' : 'text-[var(--user-text-color)]'">
+                {{ formatSecondsToTimeStr(chap.startTime) }}
+              </div>
+              <div
+                class="flex-1 text-[12px] leading-snug truncate"
+                :class="currentChapterIndex === index ? 'text-[#ff0050] font-medium' : 'text-[var(--text-color)]'">
+                {{ chap.title }}
+              </div>
+              <div v-if="currentChapterIndex === index" class="shrink-0 flex items-center justify-center">
+                <i-mdi-chart-bar class="text-[#ff0050] text-[14px] animate-pulse" />
+              </div>
+            </div>
+          </div>
+        </n-scrollbar>
+      </div>
+
+      <div
+        v-if="computedChapters.length > 1 && currentChapter"
+        class="absolute left-4 flex items-center overflow-hidden bg-[var(--bg-popover)] border border-[var(--line-color)] rounded-full z-[100] shadow-[0_2px_8px_rgba(0,0,0,0.1)] pointer-events-auto transition-colors"
+        style="bottom: 115px">
+        <div
+          class="flex items-center px-3 py-1.5 cursor-pointer transition-colors rounded-l-full group/chapter"
+          :class="showChapterPanel ? 'bg-[var(--bg-left-menu-hover)]' : 'hover:bg-[var(--bg-left-menu-hover)]'"
+          @click.stop="showChapterPanel = !showChapterPanel"
+          :title="t('components.videoPlayer.viewAllChapters')">
+          <i-mdi-format-list-bulleted
+            class="text-[15px] mr-1.5 transition-colors"
+            :class="
+              showChapterPanel ? 'text-[#ff0050]' : 'text-[var(--user-text-color)] group-hover/chapter:text-[#ff0050]'
+            " />
+          <span
+            class="text-[12px] max-w-[120px] truncate font-medium transition-colors"
+            :class="
+              showChapterPanel ? 'text-[#ff0050]' : 'text-[var(--text-color)] group-hover/chapter:text-[#ff0050]'
+            ">
+            {{ currentChapter.title }}
+          </span>
+          <i-mdi-chevron-up
+            class="text-[16px] ml-0.5 transition-transform duration-300"
+            :class="
+              showChapterPanel
+                ? 'rotate-180 text-[#ff0050]'
+                : 'text-[var(--user-text-color)] group-hover/chapter:text-[#ff0050]'
+            " />
+        </div>
+
+        <template v-if="nextChapter">
+          <div class="w-[1px] h-[12px] bg-[var(--line-color)]"></div>
+          <div
+            class="flex items-center px-3 py-1.5 text-[12px] text-[var(--user-text-color)] hover:text-[var(--text-color)] hover:bg-[var(--bg-left-menu-hover)] cursor-pointer group/next transition-colors rounded-r-full"
+            @click.stop="jumpToNextChapter"
+            :title="t('components.videoPlayer.jumpToNextChapter')">
+            <span>{{ t("components.videoPlayer.nextChapter") }}</span>
+            <i-mdi-chevron-right class="text-[15px] group-hover/next:translate-x-0.5 transition-transform" />
+          </div>
+        </template>
+      </div>
+
+      <div
+        ref="progressContainerRef"
+        class="progress-bar-container group"
+        @click.stop
+        @mouseenter="hoveringProgress = true"
+        @mouseleave="hoveringProgress = false"
+        @mousemove="handleProgressMouseMove">
+        <div
+          v-show="hoveringProgress"
+          class="absolute bottom-full mb-2 transform -translate-x-1/2 bg-[var(--bg-popover)] border border-[var(--line-color)] shadow-[0_4px_12px_rgba(0,0,0,0.15)] px-3 py-1.5 rounded-[6px] flex flex-col items-center pointer-events-none z-[120] transition-opacity duration-200"
+          :style="{ left: hoverX + 'px' }">
+          <span v-if="hoverChapterTitle" class="text-[12px] font-bold text-[#ff0050] mb-0.5 whitespace-nowrap">
+            {{ hoverChapterTitle }}
+          </span>
+          <span class="text-[12px] text-[var(--text-color)] font-mono leading-none">
+            {{ formatSecondsToTimeStr(hoverTime) }}
+          </span>
+        </div>
+
+        <div
+          class="absolute w-full top-1/2 transform -translate-y-1/2 flex gap-[2px] pointer-events-none z-10 h-[3px] transition-all duration-200 group-hover:h-[4px]">
+          <div
+            v-for="(chap, index) in computedChapters"
+            :key="index"
+            class="h-full bg-[rgba(255,255,255,0.2)] relative overflow-hidden rounded-[2px]"
+            :style="{ width: chap.durationRatio * 100 + '%' }">
+            <div
+              class="absolute left-0 top-0 h-full bg-[#ff0050] rounded-[2px]"
+              :style="{ width: getChapterPlayedRatio(chap) * 100 + '%' }"></div>
+          </div>
+        </div>
+
         <n-slider
           v-model:value="currentTime"
           :max="duration"
           :step="0.1"
           :tooltip="false"
           @update:value="seek"
-          class="progress-bar"
+          class="progress-bar-slider z-20"
           :show-input="false"
-          :show-tooltip="false" />
+          :show-tooltip="false">
+          <template #thumb>
+            <div
+              class="custom-thumb-icon flex items-center justify-center transition-transform duration-200 scale-100 group-hover:scale-[1.2] -translate-y-[1px]">
+              <i-mdi-cat class="text-[#ff0050] text-[20px] filter drop-shadow-[0_0_4px_rgba(255,0,80,0.6)]" />
+            </div>
+          </template>
+        </n-slider>
       </div>
 
       <!-- Custom Controls -->
@@ -231,8 +354,8 @@
           <!-- Playback Progress -->
           <div class="control-item">
             <span class="progress-text">
-              {{ formatTime(currentTime) }}
-              <span v-if="!isLeftControlsCompact">/ {{ formatTime(duration) }}</span>
+              {{ formatSecondsToTimeStr(currentTime) }}
+              <span v-if="!isLeftControlsCompact">/ {{ formatSecondsToTimeStr(duration) }}</span>
             </span>
           </div>
 
@@ -340,7 +463,7 @@ import { useDanmakuStore } from "@/stores/danmaku";
 import { usePlaylistStore } from "@/stores/playlist";
 import { useShortcutStore, type ShortcutConfig } from "@/stores/shortcut";
 import { useVideoStore } from "@/stores/video";
-import { formatTime } from "@/utils/FormattingUtils";
+import { formatSecondsToTimeStr } from "@/utils/FormattingUtils";
 
 const { t } = useI18n();
 const { isFullscreen } = useFullscreen();
@@ -398,6 +521,21 @@ const videoContainerRef = ref<HTMLDivElement | null>(null);
 const playerRef = ref<any>(null);
 const isMiniWindow = ref(false);
 const isPlaying = ref(false);
+// 进度条容器引用
+const progressContainerRef = ref<HTMLElement | null>(null);
+// 模拟视频章节数据
+const chapters = ref([
+  { startTime: 0, title: "开场介绍" },
+  { startTime: 10, title: "高能预警名场面" },
+  { startTime: 20, title: "核心原理解析" },
+  { startTime: 30, title: "片尾感谢与彩蛋" }
+]);
+// 进度条 Hover 预览状态
+const hoveringProgress = ref(false);
+const showChapterPanel = ref(false);
+const hoverX = ref(0);
+const hoverTime = ref(0);
+const hoverChapterTitle = ref("");
 // 交互状态
 const isLiked = ref(false);
 const likeCount = ref(0);
@@ -479,6 +617,93 @@ const resolutionOptions = computed(() => [
   { label: t("components.videoPlayer.resolution.540p"), key: "540p" },
   { label: t("components.videoPlayer.resolution.auto"), key: "auto" }
 ]);
+// 动态计算每个章节的占比和结束时间
+const computedChapters = computed(() => {
+  // 如果没有章节数据，就生成一个占满全长的默认章节
+  if (!duration.value || chapters.value.length === 0) {
+    return [{ startTime: 0, endTime: Math.max(duration.value, 1), title: "", durationRatio: 1 }];
+  }
+  return chapters.value.map((chap, index) => {
+    const endTime = index < chapters.value.length - 1 ? chapters.value[index + 1].startTime : duration.value;
+    const validDuration = duration.value > 0 ? duration.value : 1;
+    return {
+      ...chap,
+      endTime,
+      durationRatio: Math.max(0, (endTime - chap.startTime) / validDuration)
+    };
+  });
+});
+
+// 计算当前处于哪个章节索引
+const currentChapterIndex = computed(() => {
+  if (computedChapters.value.length <= 1) return -1;
+  const index = computedChapters.value.findIndex(
+    (c) => currentTime.value >= c.startTime && currentTime.value < c.endTime
+  );
+  return index !== -1 ? index : computedChapters.value.length - 1;
+});
+
+// 获取当前章节数据
+const currentChapter = computed(() => {
+  if (currentChapterIndex.value === -1) return null;
+  return computedChapters.value[currentChapterIndex.value];
+});
+
+// 获取下一章节数据
+const nextChapter = computed(() => {
+  if (currentChapterIndex.value === -1 || currentChapterIndex.value >= computedChapters.value.length - 1) return null;
+  return computedChapters.value[currentChapterIndex.value + 1];
+});
+
+/**
+ * 在章节列表中选择某个章节
+ * @param chap 要选择的章节数据对象
+ */
+const selectChapter = (chap: any) => {
+  if (playerRef.value) {
+    seek(chap.startTime);
+    if (!isPlaying.value) togglePlay();
+    showChapterPanel.value = false; // 跳转后自动关闭面板
+  }
+};
+
+/** 执行跳转到下一章 */
+const jumpToNextChapter = () => {
+  if (nextChapter.value && playerRef.value) {
+    seek(nextChapter.value.startTime);
+    if (!isPlaying.value) togglePlay();
+  }
+};
+
+/**
+ * 计算某个章节内部的已播放进度 (0% - 100%)
+ * @param chap 章节数据对象
+ * @returns 已播放进度比例 (0-1之间的浮点数)
+ */
+const getChapterPlayedRatio = (chap: any) => {
+  if (currentTime.value <= chap.startTime) return 0;
+  if (currentTime.value >= chap.endTime) return 1;
+  const range = chap.endTime - chap.startTime;
+  return range > 0 ? (currentTime.value - chap.startTime) / range : 0;
+};
+
+/**
+ * 处理鼠标在进度条上移动，计算悬浮时间和章节
+ * @param e 鼠标移动事件对象
+ */
+const handleProgressMouseMove = (e: MouseEvent) => {
+  if (!progressContainerRef.value || duration.value === 0) return;
+  const rect = progressContainerRef.value.getBoundingClientRect();
+  let percent = (e.clientX - rect.left) / rect.width;
+  percent = Math.max(0, Math.min(1, percent)); // 限制在 0-1 之间
+
+  hoverX.value = percent * rect.width;
+  hoverTime.value = percent * duration.value;
+
+  // 找到当前悬停的章节
+  const chap = computedChapters.value.find((c) => hoverTime.value >= c.startTime && hoverTime.value < c.endTime);
+  hoverChapterTitle.value = chap?.title || "";
+};
 
 /**
  * 局部快捷键分发中心
@@ -694,6 +919,12 @@ const seek = (time: number) => {
 
 /** 处理容器点击事件，切换播放状态 */
 const handleContainerClick = () => {
+  // 如果章节面板开着，点击视频任意区域则只关闭面板，不暂停视频
+  if (showChapterPanel.value) {
+    showChapterPanel.value = false;
+    return;
+  }
+
   if (playerRef.value) {
     if (isPlaying.value) {
       playerRef.value.pause();
@@ -1646,56 +1877,53 @@ defineExpose({
   --n-slider-handle-box-shadow: 0 0 0 2px var(--line-color) !important;
 }
 
-// Progress Bar
 .progress-bar-container {
   position: absolute;
-  bottom: 38px;
+  bottom: 50px; // 距离底部留点空间
   left: 0;
   width: 100%;
+  height: 16px; // 足够鼠标 hover 的热区高度
   z-index: 90;
   margin: 0;
   box-sizing: border-box;
   overflow: visible;
+  cursor: pointer;
 }
 
-.progress-bar {
+// 重写 N-Slider，使其轨道隐形，仅保留 Thumb
+.progress-bar-slider {
   width: 100% !important;
-  height: 2px;
-  margin-bottom: 4px;
-  margin-left: 0;
-  margin-right: 0;
-  transition: height 0.2s ease;
+  height: 100%;
+  display: flex;
+  align-items: center;
 
-  &:hover {
-    height: 4px;
-  }
-
-  :deep(.n-slider-rail) {
-    height: 100%;
-    background-color: rgba(255, 255, 255, 0.2);
-    border-radius: 2px;
-  }
-
+  :deep(.n-slider-rail),
   :deep(.n-slider-rail__fill) {
-    background-color: rgba(255, 255, 255, 0.5);
-    border-radius: 2px;
-    transition: background-color 0.2s ease;
+    background-color: transparent !important;
   }
 
+  // 自定义滑块容器
   :deep(.n-slider-handle) {
-    opacity: 0;
+    opacity: 0; /* 默认完全隐藏 */
     transition: opacity 0.2s ease;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    width: auto !important;
+    height: auto !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
+}
 
-  &:hover {
-    :deep(.n-slider-rail__fill) {
-      background-color: #ff0050;
-    }
+// 当鼠标悬浮在整个进度条容器上时，显示出滑块图标
+.progress-bar-container:hover .progress-bar-slider :deep(.n-slider-handle) {
+  opacity: 1;
+}
 
-    :deep(.n-slider-handle) {
-      opacity: 1;
-    }
-  }
+.custom-thumb-icon {
+  pointer-events: none;
 }
 
 // Custom Controls
@@ -1724,7 +1952,7 @@ defineExpose({
 .interaction-panel {
   position: absolute;
   right: 10px;
-  bottom: 55px;
+  bottom: 60px;
   display: flex;
   flex-direction: column;
   align-items: center;

@@ -40,6 +40,7 @@ const tauriFileDropUnlisteners: UnlistenFn[] = [];
 // 导入Web Worker
 const timerWorker = new Worker(new URL("@/workers/timer.worker.ts", import.meta.url));
 
+const isVideoUploadOpen = ref(false);
 // 是否需要阻塞首屏
 const requiresInitialSync = ref(true);
 const loadingPercentage = ref(10);
@@ -119,7 +120,25 @@ const handleNativeFileDrop = async (paths: string[]) => {
 /** 设置原生文件拖拽监听 */
 const setupNativeFileDropListeners = async () => {
   try {
-    const unlisten = await appWindow.onDragDropEvent((event) => {
+    const unlisten = await appWindow.onDragDropEvent(async (event) => {
+      // 如果视频弹窗处于打开状态
+      if (isVideoUploadOpen.value) {
+        isDraggingFiles.value = false;
+
+        // 当真正松开鼠标放下文件时
+        if (event.payload.type === "drop") {
+          const paths = event.payload.paths || [];
+          if (paths.length > 0) {
+            // 复用你已经写好的 buildPathUploadFiles 方法解析文件
+            const pathFiles = await buildPathUploadFiles(paths);
+            if (pathFiles.length > 0) {
+              // 专门发送给视频上传弹窗
+              useMitt.emit(MittEnum.VIDEO_MODAL_FILE_DROP, pathFiles);
+            }
+          }
+        }
+        return; // 拦截结束
+      }
       if (event.payload.type === "enter") {
         const paths = event.payload.paths || [];
         if (paths.length > 0) {
@@ -166,6 +185,9 @@ timerWorker.onmessage = (e) => {
 };
 
 onMounted(async () => {
+  useMitt.on(MittEnum.TOGGLE_VIDEO_UPLOAD_MODAL, (isOpen: boolean) => {
+    isVideoUploadOpen.value = isOpen;
+  });
   timerWorker.postMessage({
     type: "startTimer",
     msgId: "checkUpdate",

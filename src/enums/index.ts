@@ -25,7 +25,11 @@ export enum MittEnum {
   /** 更新提示 */
   CHECK_UPDATE = "checkUpdate",
   /** 强制更新 */
-  DO_UPDATE = "doUpdate"
+  DO_UPDATE = "doUpdate",
+  /** 上传视频弹窗状态 */
+  TOGGLE_VIDEO_UPLOAD_MODAL = "toggleVideoUploadModal",
+  /** 上传视频弹窗文件拖拽 */
+  VIDEO_MODAL_FILE_DROP = "videoModalFileDrop"
 }
 
 /** 主题类型 */

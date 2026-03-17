@@ -288,6 +288,10 @@
     "shortcuts": "shortcuts",
     "autoplay": "auto",
     "clearScreen": "clear",
+    "videoChapters": "chapters",
+    "viewAllChapters": "view all chapters",
+    "nextChapter": "next",
+    "jumpToNextChapter": "jump to next chapter",
     "dialog": {
       "confirmCancel": "Confirm cancel",
       "unfollowConfirm": "Are you sure you want to unfollow this user?",

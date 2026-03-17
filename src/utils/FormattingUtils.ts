@@ -101,7 +101,7 @@ export const formatBottomText = (text: string, maxLength = 6, omission = "...") 
  * @param time 时间（秒）
  * @returns 格式化后的时间字符串
  */
-export const formatTime = (time: number) => {
+export const formatSecondsToTimeStr = (time: number) => {
   if (Number.isNaN(time) || !Number.isFinite(time)) return "00:00";
   const m = Math.floor(time / 60)
     .toString()
@@ -110,6 +110,19 @@ export const formatTime = (time: number) => {
     .toString()
     .padStart(2, "0");
   return `${m}:${s}`;
+};
+
+/**
+ * 格式化时间 (mm:ss -> 秒)
+ * @param timeStr 时间字符串（mm:ss）
+ * @returns 格式化后的时间（秒）
+ */
+export const formatTimeStrToSeconds = (timeStr: string): number => {
+  const parts = timeStr.split(":").map(Number);
+  if (parts.length === 2 && !isNaN(parts[0]) && !isNaN(parts[1])) {
+    return parts[0] * 60 + parts[1];
+  }
+  return -1; // 格式错误
 };
 
 /**

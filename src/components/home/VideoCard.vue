@@ -27,7 +27,7 @@
       <div
         v-if="video.duration"
         class="absolute bottom-2 right-2 bg-black/70 backdrop-blur-[2px] text-white text-[10px] px-1.5 py-0.5 rounded">
-        {{ formatTime(video.duration) }}
+        {{ formatSecondsToTimeStr(video.duration) }}
       </div>
     </div>
 
@@ -41,7 +41,7 @@
 </template>
 
 <script setup lang="ts">
-import { formatNumber, formatTime } from "@/utils/FormattingUtils";
+import { formatNumber, formatSecondsToTimeStr } from "@/utils/FormattingUtils";
 
 defineOptions({
   name: "VideoCard"

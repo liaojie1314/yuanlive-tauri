@@ -2,33 +2,29 @@ export function useVideoFrame() {
   const videoUrl = ref<string>("");
   const frames = ref<string[]>([]);
   const isGenerating = ref(false);
+  const videoDuration = ref<number>(0);
 
-  /**
-   * 生成视频预览帧
-   * @param file 视频文件对象
-   * @param count 需要生成的帧数，默认为 8 张
-   */
   const generateFrames = async (file: File, count: number = 8) => {
     isGenerating.value = true;
     frames.value = [];
 
-    // 创建 URL
     if (videoUrl.value) URL.revokeObjectURL(videoUrl.value);
     videoUrl.value = URL.createObjectURL(file);
 
     const video = document.createElement("video");
     video.src = videoUrl.value;
     video.muted = true;
-    video.crossOrigin = "anonymous"; // 处理跨域问题
-    video.currentTime = 1; // 从第1秒开始，避开可能的黑屏开头
+    video.preload = "auto";
 
-    // 等待元数据加载以获取时长
-    await new Promise((resolve) => {
-      video.onloadedmetadata = () => resolve(true);
+    // 等待 loadeddata 确保有画面数据，而不仅仅是元数据
+    await new Promise((resolve, reject) => {
+      video.onloadeddata = () => resolve(true);
+      video.onerror = (e) => reject(e);
     });
 
+    videoDuration.value = video.duration; // 保存总时长
     const duration = video.duration;
-    const interval = duration / (count + 1); // 分布间隔
+    const interval = duration / (count + 1);
     const canvas = document.createElement("canvas");
     const ctx = canvas.getContext("2d");
 
@@ -36,38 +32,34 @@ export function useVideoFrame() {
       const time = i * interval;
       video.currentTime = time;
 
-      // 等待seek完成
       await new Promise((resolve) => {
         video.onseeked = () => resolve(true);
       });
 
-      // 设置画布尺寸
-      canvas.width = video.videoWidth / 4; // 缩小尺寸优化性能
+      canvas.width = video.videoWidth / 4;
       canvas.height = video.videoHeight / 4;
 
-      ctx?.drawImage(video, 0, 0, canvas.width, canvas.height);
-      const dataUrl = canvas.toDataURL("image/jpeg", 0.7);
-      frames.value.push(dataUrl);
+      try {
+        ctx?.drawImage(video, 0, 0, canvas.width, canvas.height);
+        const dataUrl = canvas.toDataURL("image/jpeg", 0.7);
+        frames.value.push(dataUrl);
+      } catch (e) {
+        console.error("提取帧失败:", e);
+      }
     }
 
     isGenerating.value = false;
-    // 清理
     video.remove();
   };
 
   const clearFrames = () => {
     frames.value = [];
+    videoDuration.value = 0;
     if (videoUrl.value) {
       URL.revokeObjectURL(videoUrl.value);
       videoUrl.value = "";
     }
   };
 
-  return {
-    videoUrl,
-    frames,
-    isGenerating,
-    generateFrames,
-    clearFrames
-  };
+  return { videoUrl, frames, isGenerating, videoDuration, generateFrames, clearFrames };
 }

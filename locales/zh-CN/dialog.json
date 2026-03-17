@@ -35,12 +35,24 @@
     "extractFrame": "正在提取视频帧...",
     "currentCover": "当前封面",
     "publishVideo": "发布视频",
+    "videoChapters": "视频章节（选填）",
+    "chapterTitle": "章节标题",
+    "addChapter": "添加",
+    "chapterTip": "提示：最多添加 {count} 个章节，章节间隔不少于 {gap} 秒。",
+    "totalDuration": "总时长：",
     "msg": {
       "videoSizeLimit": "视频大小不能超过 {count}GB",
       "inputVideoTitle": "请输入视频标题",
       "publishSuccess": "发布成功！",
       "publishFailed": "发布失败，请重试",
-      "coverUploadFailed": "封面上传失败，请重试"
+      "coverUploadFailed": "封面上传失败，请重试",
+      "chapterTimeAndTitle": "请填写章节时间和标题",
+      "maxChapterCount": "最多只能添加 {count} 个章节",
+      "chapterTimeFormatError": "时间格式有误，请使用 mm:ss 格式，例如 01:30",
+      "chapterTimeTooCloseToEnd": "章节不能过于接近视频末尾（需预留 {gap} 秒）",
+      "chapterTimeGapError": "章节之间至少需要间隔 {gap} 秒",
+      "onlySupport": "仅支持 MP4, MOV, MKV 格式视频",
+      "readDragVideoFailed": "读取拖拽视频失败，请重试"
     }
   },
   "followList": {

@@ -110,7 +110,7 @@ const cropperRef = ref<AvatarCropperInstance>();
 // 本地表单数据
 const form = reactive({
   username: userInfo?.username || "",
-  description: "",
+  description: userInfo?.description || "",
   avatar: userInfo?.avatar,
   email: userInfo?.email || "",
   password: "",

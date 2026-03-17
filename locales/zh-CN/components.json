@@ -288,6 +288,10 @@
     "shortcuts": "快捷键列表",
     "autoplay": "连播",
     "clearScreen": "清屏",
+    "viewAllChapters": "查看全部章节",
+    "videoChapters": "视频章节",
+    "nextChapter": "下一节",
+    "jumpToNextChapter": "跳转至下一章",
     "dialog": {
       "confirmCancel": "确认取消",
       "unfollowConfirm": "是否确认取消关注?",
