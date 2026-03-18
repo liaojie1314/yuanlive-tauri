@@ -74,17 +74,32 @@ import { listen } from "@tauri-apps/api/event";
 import { readFile } from "@tauri-apps/plugin-fs";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 
-import VueOfficeDocx from "@vue-office/docx/lib/v3/vue-office-docx.mjs";
-import VueOfficeExcel from "@vue-office/excel/lib/v3/vue-office-excel.mjs";
-import VueOfficePdf from "@vue-office/pdf/lib/v3/vue-office-pdf.mjs";
-import VueOfficePptx from "@vue-office/pptx/lib/v3/vue-office-pptx.mjs";
-
 import { useWindow } from "@/hooks/useWindow";
 import { useTauriListener } from "@/hooks/useTauriListener";
 
 const { t } = useI18n();
 const { getWindowPayload } = useWindow();
 const { addListener } = useTauriListener();
+const loadingComponent = {
+  template: `<div class="w-full h-full flex-center text-gray-500">正在加载解析引擎...</div>`
+};
+
+const VueOfficeDocx = defineAsyncComponent({
+  loader: () => import("@vue-office/docx/lib/v3/vue-office-docx.mjs"),
+  loadingComponent
+});
+const VueOfficeExcel = defineAsyncComponent({
+  loader: () => import("@vue-office/excel/lib/v3/vue-office-excel.mjs"),
+  loadingComponent
+});
+const VueOfficePdf = defineAsyncComponent({
+  loader: () => import("@vue-office/pdf/lib/v3/vue-office-pdf.mjs"),
+  loadingComponent
+});
+const VueOfficePptx = defineAsyncComponent({
+  loader: () => import("@vue-office/pptx/lib/v3/vue-office-pptx.mjs"),
+  loadingComponent
+});
 
 type PayloadData = {
   uid: string;
@@ -107,7 +122,7 @@ const mdParser = new MarkdownIt({
     if (lang && hljs.getLanguage(lang)) {
       try {
         return hljs.highlight(str, { language: lang }).value;
-      } catch (__) {}
+      } catch (_) {}
     }
     return "";
   }

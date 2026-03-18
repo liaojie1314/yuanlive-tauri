@@ -99,7 +99,7 @@ export default defineConfig(({ mode }: ConfigEnv) => {
       cssCodeSplit: true, // 启用 CSS 代码拆分
       minify: "esbuild" as const, // 指定使用哪种混淆器
       // chunk 大小警告的限制(kb)
-      chunkSizeWarningLimit: 1200,
+      chunkSizeWarningLimit: 3000,
       // esbuild配置，解决低版本浏览器兼容性问题
       esbuild: {
         supported: {

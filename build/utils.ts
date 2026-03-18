@@ -62,7 +62,14 @@ const wrapperEnv = (envConf: Recordable): ViteEnv => {
     VITE_CDN: false,
     VITE_COMPRESSION: "none",
     VITE_CRYPTO_SECRET_KEY: "",
-    VITE_CRYPTO_SECRET_IV: ""
+    VITE_CRYPTO_SECRET_IV: "",
+    VITE_APP_NAME: "",
+    VITE_PC_URL: "",
+    VITE_SERVICE_URL: "",
+    VITE_ADMIN_URL: "",
+    VITE_UPGRADE_LINK_ACCESS_KEY: "",
+    VITE_GITHUB_TOKEN: "",
+    VITE_GITEE_TOKEN: ""
   };
 
   for (const envName of Object.keys(envConf)) {
