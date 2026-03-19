@@ -12,6 +12,9 @@
     },
     "video": {
       "title": "视频举报"
+    },
+    "live": {
+      "title": "直播间举报"
     }
   },
   "collectionFolder": {
@@ -151,5 +154,9 @@
       "keyOccupied": "按键 {key} 已被占用，请更换",
       "restoreDefaultSuccess": "已恢复默认设置，请点击保存生效"
     }
+  },
+  "customAmount": {
+    "placeholder": "请输入自定义金额",
+    "msg": "请输入有效的充值金额（1-1000000）"
   }
 }

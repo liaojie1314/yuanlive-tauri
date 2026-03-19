@@ -42,10 +42,43 @@
               class="vip-btn bg-purple-500 text-white text-xs px-3 py-1 rounded-full hover:bg-purple-600 transition-colors cursor-pointer">
               加会员
             </div>
-            <div
-              class="more-btn w-8 h-8 rounded-full bg-[--left-item-bg-color] flex items-center justify-center text-[--action-bar-icon-color] hover:bg-[--action-bar-icon-hover] transition-colors cursor-pointer">
-              <i-mdi-dots-horizontal class="w-5 h-5" />
-            </div>
+            <n-popover
+              trigger="hover"
+              placement="bottom-end"
+              :show-arrow="false"
+              style="
+                padding: 12px;
+                border-radius: 12px;
+                background-color: var(--bg-popover);
+                border: 1px solid var(--line-color);
+              ">
+              <template #trigger>
+                <div
+                  class="more-btn w-8 h-8 rounded-full bg-[--left-item-bg-color] flex items-center justify-center text-[--action-bar-icon-color] hover:bg-[--action-bar-icon-hover] transition-colors cursor-pointer">
+                  <i-mdi-dots-horizontal class="w-5 h-5" />
+                </div>
+              </template>
+
+              <div class="flex items-center gap-2">
+                <div
+                  class="flex items-center justify-center gap-2 bg-[--bg-setting-item] hover:bg-[--bg-menu-hover] text-[--text-color] px-5 py-2 rounded-lg cursor-pointer transition-colors"
+                  @click="copyRoomLink">
+                  <i-mdi-link-variant class="w-4 h-4 opacity-80" />
+                  <span class="text-sm font-medium">复制链接</span>
+                </div>
+
+                <div
+                  class="w-9 h-9 flex items-center justify-center bg-[--bg-setting-item] hover:bg-[--bg-menu-hover] text-[--text-color] rounded-lg cursor-pointer transition-colors">
+                  <i-material-symbols-qr-code class="w-5 h-5 opacity-80" />
+                </div>
+
+                <div
+                  class="w-9 h-9 flex items-center justify-center bg-[--bg-setting-item] hover:bg-[--bg-menu-hover] text-[--text-color] rounded-lg cursor-pointer transition-colors"
+                  @click="openReportDialog">
+                  <i-mdi-alert-outline class="w-5 h-5 opacity-80" />
+                </div>
+              </div>
+            </n-popover>
           </div>
         </div>
 
@@ -86,9 +119,7 @@
           playsinline
           :controls="false"
           @play="isPlaying = true"
-          @pause="isPlaying = false">
-          您的浏览器不支持视频播放。
-        </video>
+          @pause="isPlaying = false"></video>
 
         <danmaku-player ref="danmakuPlayerRef" />
 
@@ -444,34 +475,45 @@
             <div
               v-for="(option, index) in rechargeOptions"
               :key="index"
-              @click="selectAmount(option.diamonds)"
+              @click="selectFixedAmount(option.diamonds)"
               :class="[
-                'recharge-option cursor-pointer rounded-md py-3 px-2 text-center transition-all duration-200 transform hover:scale-105',
-                selectedAmount === option.diamonds
-                  ? 'bg-red-500 text-white font-bold shadow-lg'
-                  : 'bg-[--bg-setting-item] text-[--text-color] hover:bg-[--bg-menu-hover]'
+                'recharge-option cursor-pointer rounded-md py-3 px-2 text-center transition-all duration-200 transform hover:scale-105 border-2',
+                selectedAmount === option.diamonds && !isCustomSelected
+                  ? 'bg-red-500 text-white font-bold shadow-lg border-red-500'
+                  : 'bg-[--bg-setting-item] text-[--text-color] border-transparent hover:bg-[--bg-menu-hover]'
               ]">
-              <div class="text-sm">{{ option.diamonds }}钻石</div>
+              <div class="text-sm">{{ (option.diamonds * 1).toLocaleString() }} 钻石</div>
               <div
                 class="text-xs mt-1 opacity-80"
-                :class="selectedAmount === option.diamonds ? 'text-white' : 'text-[--user-text-color]'">
+                :class="
+                  selectedAmount === option.diamonds && !isCustomSelected ? 'text-white' : 'text-[--user-text-color]'
+                ">
                 ¥{{ option.price }}
               </div>
             </div>
+
             <div
-              @click="selectAmount(0)"
               :class="[
-                'recharge-option cursor-pointer rounded-md py-3 px-2 text-center transition-all duration-200 transform hover:scale-105',
-                selectedAmount === 0
-                  ? 'bg-red-500 text-white font-bold shadow-lg'
-                  : 'bg-[--bg-setting-item] text-[--text-color] hover:bg-[--bg-menu-hover]'
-              ]">
-              <div class="text-sm">自定义金额</div>
-              <div
-                class="text-xs mt-1 opacity-80"
-                :class="selectedAmount === 0 ? 'text-white' : 'text-[--user-text-color]'">
-                最高100万元
-              </div>
+                'recharge-option cursor-pointer rounded-md text-center transition-all duration-200 transform hover:scale-105 border-2 flex flex-col items-center justify-center',
+                isCustomSelected
+                  ? 'bg-pink-100 border-red-500 shadow-sm py-2 px-1'
+                  : 'bg-[--bg-setting-item] border-transparent hover:bg-[--bg-menu-hover] py-3 px-2'
+              ]"
+              @click="!confirmedCustomPrice ? openCustomInput() : (isCustomSelected = true)">
+              <template v-if="confirmedCustomPrice > 0">
+                <div class="text-[13px] font-bold text-[--text-color]">
+                  {{ (confirmedCustomPrice * 10).toLocaleString() }} 钻石
+                </div>
+                <div class="text-xs mt-1 text-[--user-text-color] font-medium flex items-center justify-center">
+                  ¥{{ confirmedCustomPrice }}
+                  <span class="text-red-500 ml-1" @click.stop="openCustomInput">修改</span>
+                </div>
+              </template>
+
+              <template v-else>
+                <div class="text-sm text-[--text-color]">自定义金额</div>
+                <div class="text-xs mt-1 text-[--user-text-color] opacity-80">最高100万元</div>
+              </template>
             </div>
           </div>
         </div>
@@ -486,9 +528,7 @@
             <div class="payment-info flex flex-col gap-2 flex-1">
               <div class="amount-info text-left">
                 <div class="text-sm text-[--text-color]">应付金额</div>
-                <div class="text-xl font-bold text-red-500 mt-1">
-                  ¥{{ rechargeOptions.find((opt) => opt.diamonds === selectedAmount)?.price || 0 }}
-                </div>
+                <div class="text-xl font-bold text-red-500 mt-1">¥{{ payPrice }}</div>
               </div>
 
               <div class="payment-methods flex flex-col gap-2 w-full">
@@ -548,6 +588,11 @@
       </chat-panel>
     </div>
   </div>
+  <custom-amount-dialog
+    v-model:show="customAmountInputVisible"
+    :initial-value="confirmedCustomPrice"
+    @confirm="handleCustomAmountConfirm" />
+  <live-report-dialog v-model:show="showReportDialog" room-id="1001" @submit-report="handleLiveReport" />
 </template>
 
 <script setup lang="ts">
@@ -572,8 +617,12 @@ const popoverVisible = ref<Record<number, boolean>>({});
 const moreGiftsVisible = ref(false);
 // 控制充值弹窗的显示状态
 const rechargeVisible = ref(false);
+const customAmountInputVisible = ref(false); // 控制输入弹窗显示
+const confirmedCustomPrice = ref(0); // 确认后的自定义人民币金额
+const isCustomSelected = ref(false); // 当前是否选中了自定义选项
+const showReportDialog = ref(false);
 // 选中的充值金额
-const selectedAmount = ref(60);
+const selectedAmount = ref(10);
 // 用户余额
 const balance = ref(0);
 // 视频控制相关状态
@@ -781,6 +830,21 @@ const chatMessages = ref([
 const remainingGifts = computed(() => {
   return gifts.slice(visibleGiftCount.value - 1);
 });
+
+// 打开举报弹窗的方法
+const openReportDialog = () => {
+  showReportDialog.value = true;
+};
+
+// 4. 处理举报提交的方法
+const handleLiveReport = (roomId: number | string, type: string, description: string) => {
+  console.log(`举报房间: ${roomId}, 类型: ${type}, 描述: ${description}`);
+  // 这里可以调用后端的 API 接口提交举报数据
+  // api.submitReport({...})
+
+  window.$message?.success("举报已提交，感谢您共建清朗直播环境！");
+  showReportDialog.value = false; // 关闭弹窗
+};
 
 /** 显示弹幕设置面板 */
 const showDanmakuSettings = () => {
@@ -1034,9 +1098,27 @@ const closeRecharge = () => {
   rechargeVisible.value = false;
 };
 
-// 选择充值金额
-const selectAmount = (diamonds: number) => {
+// 计算当前的人民币应付金额 (扫码支付展示)
+const payPrice = computed(() => {
+  if (isCustomSelected.value) {
+    return confirmedCustomPrice.value;
+  }
+  return rechargeOptions.find((opt) => opt.diamonds === selectedAmount.value)?.price || 0;
+});
+
+const selectFixedAmount = (diamonds: number) => {
   selectedAmount.value = diamonds;
+  isCustomSelected.value = false;
+};
+
+const openCustomInput = () => {
+  customAmountInputVisible.value = true;
+};
+
+const handleCustomAmountConfirm = (val: number) => {
+  confirmedCustomPrice.value = val;
+  selectedAmount.value = val * 10; // 假设 1元 = 10钻石
+  isCustomSelected.value = true;
 };
 
 // 处理充值提交
@@ -1242,6 +1324,17 @@ const handleVolumeWheel = (event: WheelEvent) => {
   setVolume(newVolume);
 };
 
+// 复制直播间链接逻辑
+const copyRoomLink = async () => {
+  try {
+    // TODO
+    window.$message?.success("链接复制成功");
+  } catch (err) {
+    console.error("复制失败:", err);
+    window.$message?.error("复制失败，请重试");
+  }
+};
+
 onMounted(() => {
   // 使用 mpegts 初始化 FLV 播放
   if (mpegts.getFeatureList().mseLivePlayback && videoRef.value) {
@@ -1292,12 +1385,14 @@ onMounted(() => {
     // 关闭充值弹窗
     const rechargePopup = document.querySelector(".recharge-popup");
     const rechargeBtn = document.querySelector(".recharge-btn");
+    const customModal = document.querySelector(".custom-amount-modal");
     if (
       rechargeVisible.value &&
       rechargePopup &&
       !rechargePopup.contains(event.target as Node) &&
       rechargeBtn &&
-      !rechargeBtn.contains(event.target as Node)
+      !rechargeBtn.contains(event.target as Node) &&
+      !(customModal && customModal.contains(event.target as Node))
     ) {
       closeRecharge();
     }

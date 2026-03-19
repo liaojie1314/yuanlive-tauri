@@ -6,16 +6,14 @@
         :key="tab.id"
         @click="activeTab = tab.id"
         :class="[
-          'flex-1 py-2 text-center text-sm transition-colors whitespace-nowrap min-w-0 cursor-pointer',
+          'flex-1 py-1 my-1 mx-2 text-center text-sm transition-colors whitespace-nowrap min-w-0 cursor-pointer rounded-md',
           activeTab === tab.id
-            ? 'text-[--left-active-text-color] font-medium border-b-2 border-red-500'
+            ? 'text-[--left-active-text-color] bg-[--btn-secondary-border] font-medium border-b-2 border-red-500'
             : 'text-[--left-text-color] hover:text-[--left-active-text-color]'
         ]">
-        <div class="flex items-center justify-center min-w-0">
+        <div class="flex items-center justify-center px-1 min-w-0">
           <span class="truncate">{{ tab.name }}</span>
-          <span v-if="tab.count !== undefined" class="text-xs text-[--disabled-color] ml-1 flex-shrink-0">
-            ({{ tab.count }})
-          </span>
+          <span v-if="tab.count !== undefined" class="text-xs ml-1 flex-shrink-0">({{ tab.count }})</span>
         </div>
       </div>
     </div>

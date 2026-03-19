@@ -12,6 +12,9 @@
     },
     "video": {
       "title": "Video Report"
+    },
+    "live": {
+      "title": "Live Report"
     }
   },
   "collectionFolder": {
@@ -151,5 +154,9 @@
       "keyOccupied": "Key {key} is already occupied, please choose another",
       "restoreDefaultSuccess": "Default settings restored, please click save to apply"
     }
+  },
+  "customAmount": {
+    "placeholder": "Please enter a custom amount",
+    "msg": "Please enter a valid custom amount (1-1000000)"
   }
 }
