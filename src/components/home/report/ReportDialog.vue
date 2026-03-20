@@ -1,15 +1,15 @@
 <template>
-  <base-dialog v-model:show="dialogVisible" :title="title" :height="showImageUpload ? '520px' : '400px'" width="420px">
+  <base-dialog width="420px" v-model:show="dialogVisible" :title="title" :height="showImageUpload ? '520px' : '400px'">
     <template #default>
-      <div class="report-container max-w-[400px] mx-auto">
+      <div class="report-container mx-auto max-w-[400px]">
         <div class="report-types">
           <div
             v-for="type in reportTypes"
-            :key="type.value"
             class="report-type-item"
+            :key="type.value"
             @click="selectedReportType = type.value">
             <div class="radio-button">
-              <div class="radio-inner" v-if="selectedReportType === type.value"></div>
+              <div v-if="selectedReportType === type.value" class="radio-inner"></div>
             </div>
             <div class="report-type-label">{{ type.label }}</div>
           </div>
@@ -17,18 +17,18 @@
 
         <div class="report-description">
           <textarea
-            v-model="reportDescription"
-            :placeholder="placeholder || t('dialog.report.placeholder')"
             maxlength="140"
+            rows="4"
             class="description-input"
-            rows="4"></textarea>
+            v-model="reportDescription"
+            :placeholder="placeholder || t('dialog.report.placeholder')"></textarea>
           <div class="description-counter">{{ reportDescription.length }}/140</div>
         </div>
 
         <div v-if="showImageUpload" class="image-upload-section mb-5">
-          <div class="text-sm text-[--text-color] mb-2 font-medium">
+          <div class="mb-2 text-sm font-medium text-[--text-color]">
             {{ t("dialog.report.provideEvidence") }}
-            <span class="text-[--user-text-color] font-normal text-xs">
+            <span class="text-xs font-normal text-[--user-text-color]">
               ({{ t("dialog.report.optional") }}, {{ selectedImages.length }}/{{ maxImages }})
             </span>
           </div>
@@ -36,23 +36,23 @@
             <!-- 图片预览列表 -->
             <div
               v-for="(img, index) in selectedImages"
-              :key="index"
-              class="relative w-16 h-16 rounded-md overflow-hidden border border-[--line-color] group">
-              <img :src="convertFileSrc(img)" class="w-full h-full object-cover" />
+              class="group relative h-16 w-16 overflow-hidden rounded-md border border-[--line-color]"
+              :key="index">
+              <img class="h-full w-full object-cover" :src="convertFileSrc(img)" />
               <!-- 删除按钮 -->
               <div
-                class="absolute top-0 right-0 bg-black/60 text-white w-5 h-5 flex items-center justify-center rounded-bl-md cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity hover:bg-[#ff0050]"
+                class="absolute top-0 right-0 flex h-5 w-5 cursor-pointer items-center justify-center rounded-bl-md bg-black/60 text-white opacity-0 transition-opacity group-hover:opacity-100 hover:bg-[#ff0050]"
                 @click="removeImage(index)">
-                <i-mdi-close class="w-3 h-3" />
+                <i-mdi-close class="h-3 w-3" />
               </div>
             </div>
 
             <!-- 上传触发按钮 -->
             <div
               v-if="selectedImages.length < maxImages"
-              class="w-16 h-16 rounded-md border border-dashed border-[--line-color] flex flex-col items-center justify-center cursor-pointer bg-[--bg-setting-item] hover:border-[#ff0050] hover:text-[#ff0050] text-[--user-text-color] transition-colors"
+              class="flex h-16 w-16 cursor-pointer flex-col items-center justify-center rounded-md border border-dashed border-[--line-color] bg-[--bg-setting-item] text-[--user-text-color] transition-colors hover:border-[#ff0050] hover:text-[#ff0050]"
               @click="handleSelectImage">
-              <i-mdi-plus class="w-6 h-6" />
+              <i-mdi-plus class="h-6 w-6" />
             </div>
           </div>
         </div>

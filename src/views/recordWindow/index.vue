@@ -1,24 +1,24 @@
 <template>
   <main
-    class="size-full select-none bg-[--right-bg-color] text-[--text-color] overflow-hidden flex flex-col transition-colors duration-300">
+    class="flex size-full flex-col overflow-hidden bg-[--right-bg-color] text-[--text-color] transition-colors duration-300 select-none">
     <action-bar />
 
     <div
       data-tauri-drag-region
-      class="h-50px flex-none flex items-center justify-between px-20px bg-[--tray-bg-color] backdrop-blur-md border-b border-[--line-color] z-50">
-      <span class="ml-4 text-(14px [--text-color]) font-bold">直播工作台</span>
-      <n-tag :type="statusType" size="small" round :bordered="false">
+      class="h-50px px-20px z-50 flex flex-none items-center justify-between border-b border-[--line-color] bg-[--tray-bg-color] backdrop-blur-md">
+      <span class="text-(14px [--text-color]) ml-4 font-bold">直播工作台</span>
+      <n-tag size="small" round :type="statusType" :bordered="false">
         {{ statusText }}
         <template #icon v-if="isStreaming">
-          <div class="size-6px rounded-full bg-current animate-pulse"></div>
+          <div class="size-6px animate-pulse rounded-full bg-current"></div>
         </template>
       </n-tag>
     </div>
 
-    <div class="flex-1 flex p-20px gap-20px overflow-hidden h-full">
-      <div class="flex-1 flex flex-col gap-4 min-w-0 h-full">
+    <div class="p-20px gap-20px flex h-full flex-1 overflow-hidden">
+      <div class="flex h-full min-w-0 flex-1 flex-col gap-4">
         <div
-          class="flex-1 min-h-0 relative bg-[--right-bg-color] rounded-12px border border-[--line-color] overflow-hidden shadow-sm group">
+          class="rounded-12px group relative min-h-0 flex-1 overflow-hidden border border-[--line-color] bg-[--right-bg-color] shadow-sm">
           <canvas
             ref="canvasEl"
             class="size-full object-contain"
@@ -29,7 +29,7 @@
 
           <div
             v-if="!isStreaming && !isPreviewing"
-            class="absolute inset-0 flex flex-col items-center justify-center bg-[--bg-modal] backdrop-blur-sm z-10">
+            class="absolute inset-0 z-10 flex-col-x-center justify-center bg-[--bg-modal] backdrop-blur-sm">
             <span class="text-(24px [--text-color]) font-bold tracking-widest opacity-80">WAITING FOR SIGNAL</span>
             <span class="text-(12px [--left-text-color]) mt-2">请配置参数并开始推流</span>
           </div>
@@ -37,7 +37,7 @@
           <Transition name="fade">
             <div
               v-if="showStatusToast"
-              class="absolute bottom-4 right-4 px-3 py-1 bg-[--bg-popover] rounded-full text-(10px [--text-color]) backdrop-blur-md border border-[--line-color] pointer-events-none select-none shadow-md">
+              class="text-(10px [--text-color]) pointer-events-none absolute right-4 bottom-4 rounded-full border border-[--line-color] bg-[--bg-popover] px-3 py-1 shadow-md backdrop-blur-md select-none">
               {{
                 currentMode === "FFmpeg"
                   ? "🚀 FFmpeg Accelerated"
@@ -50,9 +50,9 @@
         </div>
 
         <div
-          class="h-auto flex-none bg-[--bg-setting-item] rounded-12px p-16px border border-[--line-color] flex gap-8 items-center shadow-sm">
+          class="rounded-12px p-16px flex h-auto flex-none items-center gap-8 border border-[--line-color] bg-[--bg-setting-item] shadow-sm">
           <div class="flex-1">
-            <div class="flex justify-between text-(12px [--left-text-color]) mb-1">
+            <div class="text-(12px [--left-text-color]) mb-1 flex justify-between">
               <span>系统音量 (屏幕)</span>
               <span>{{ (sysVolume * 100).toFixed(0) }}%</span>
             </div>
@@ -63,7 +63,7 @@
               :format-tooltip="(v: number) => `${(v * 100).toFixed(0)}%`" />
           </div>
           <div class="flex-1">
-            <div class="flex justify-between text-(12px [--left-text-color]) mb-1">
+            <div class="text-(12px [--left-text-color]) mb-1 flex justify-between">
               <span>麦克风增强</span>
               <span>{{ (micVolume * 100).toFixed(0) }}%</span>
             </div>
@@ -77,116 +77,116 @@
       </div>
 
       <div
-        class="w-320px flex flex-col bg-[--bg-setting-item] rounded-12px border border-[--line-color] backdrop-blur-md overflow-hidden h-full shadow-sm">
-        <div class="flex-none p-20px pb-10px border-b border-[--line-color]">
-          <div class="text-(16px [--text-color]) font-bold flex items-center gap-2">
+        class="w-320px rounded-12px flex h-full flex-col overflow-hidden border border-[--line-color] bg-[--bg-setting-item] shadow-sm backdrop-blur-md">
+        <div class="p-20px pb-10px flex-none border-b border-[--line-color]">
+          <div class="text-(16px [--text-color]) flex-y-center gap-2 font-bold">
             <span class="i-carbon-settings text-[--action-bar-icon-color]"></span>
             推流配置
           </div>
         </div>
 
-        <div class="flex-1 min-h-0 bg-[--right-bg-color]">
+        <div class="min-h-0 flex-1 bg-[--right-bg-color]">
           <n-scrollbar content-class="p-20px pt-0">
-            <n-flex vertical :size="16" class="mt-4">
-              <div class="bg-[--left-item-bg-color] p-12px rounded-8px">
-                <span class="text-(12px [--left-text-color]) block mb-1">推流房间号</span>
+            <n-flex vertical class="mt-4" :size="16">
+              <div class="p-12px rounded-8px bg-[--left-item-bg-color]">
+                <span class="text-(12px [--left-text-color]) mb-1 block">推流房间号</span>
                 <n-input
-                  v-model:value="roomId"
                   placeholder="room-001"
-                  :disabled="isStreaming || isPreviewing"
                   class="!bg-transparent"
+                  v-model:value="roomId"
+                  :disabled="isStreaming || isPreviewing"
                   :bordered="false" />
               </div>
 
               <n-divider class="!my-0 bg-[--line-color]" />
 
               <n-flex vertical :size="12">
-                <div class="flex items-center justify-between">
+                <div class="flex-between-center">
                   <span class="text-(14px [--text-color]) font-bold">画面合成 & 美颜</span>
-                  <n-switch v-model:value="beautyConfig.enable" size="small">
+                  <n-switch size="small" v-model:value="beautyConfig.enable">
                     <template #checked>ON</template>
                     <template #unchecked>OFF</template>
                   </n-switch>
                 </div>
 
                 <n-collapse-transition :show="beautyConfig.enable">
-                  <div class="bg-[--bg-left-menu] p-3 rounded-8px flex flex-col gap-4 border border-[--line-color]">
-                    <div class="flex items-center gap-2">
+                  <div class="rounded-8px flex flex-col gap-4 border border-[--line-color] bg-[--bg-left-menu] p-3">
+                    <div class="flex-y-center gap-2">
                       <span class="text-(12px [--left-text-color]) w-8 text-right">磨皮</span>
-                      <n-slider v-model:value="beautyConfig.smooth" :step="0.1" :min="0" :max="2" class="flex-1" />
+                      <n-slider class="flex-1" v-model:value="beautyConfig.smooth" :step="0.1" :min="0" :max="2" />
                     </div>
-                    <div class="flex items-center gap-2">
+                    <div class="flex-y-center gap-2">
                       <span class="text-(12px [--left-text-color]) w-8 text-right">美白</span>
-                      <n-slider v-model:value="beautyConfig.whiten" :step="0.05" :min="1.0" :max="1.5" class="flex-1" />
+                      <n-slider class="flex-1" v-model:value="beautyConfig.whiten" :step="0.05" :min="1.0" :max="1.5" />
                     </div>
-                    <div class="flex items-center gap-2">
+                    <div class="flex-y-center gap-2">
                       <span class="text-(12px [--left-text-color]) w-8 text-right">红润</span>
-                      <n-slider v-model:value="beautyConfig.rosy" :step="0.05" :min="1.0" :max="2.0" class="flex-1" />
+                      <n-slider class="flex-1" v-model:value="beautyConfig.rosy" :step="0.05" :min="1.0" :max="2.0" />
                     </div>
                   </div>
                 </n-collapse-transition>
 
                 <div
-                  class="flex items-center justify-between bg-[--left-item-bg-color] p-10px rounded-8px border border-[--line-color]">
+                  class="p-10px rounded-8px flex-between-center border border-[--line-color] bg-[--left-item-bg-color]">
                   <span class="text-(13px [--user-text-color])">画中画摄像头</span>
-                  <n-switch v-model:value="enableCamera" :disabled="isStreaming" size="small" />
+                  <n-switch size="small" v-model:value="enableCamera" :disabled="isStreaming" />
                 </div>
               </n-flex>
 
               <n-divider class="!my-2 bg-[--line-color]" />
 
-              <div class="flex items-center justify-between mb-2">
+              <div class="mb-2 flex-between-center">
                 <span class="text-(14px [--text-color]) font-bold">✨ 趣味滤镜</span>
               </div>
 
-              <n-select v-model:value="effectConfig.mode" :options="effectOptions" size="small" class="mb-3" />
+              <n-select size="small" class="mb-3" v-model:value="effectConfig.mode" :options="effectOptions" />
 
-              <div v-if="effectConfig.mode === 'bulge'" class="bg-[--bg-left-menu] p-2 rounded-8px mb-2">
-                <div class="flex items-center gap-2">
+              <div v-if="effectConfig.mode === 'bulge'" class="rounded-8px mb-2 bg-[--bg-left-menu] p-2">
+                <div class="flex-y-center gap-2">
                   <span class="text-(10px [--left-text-color])">变形程度</span>
-                  <n-slider v-model:value="effectConfig.bulgeStrength" :step="0.1" :min="-1" :max="1" class="flex-1" />
+                  <n-slider class="flex-1" v-model:value="effectConfig.bulgeStrength" :step="0.1" :min="-1" :max="1" />
                 </div>
               </div>
 
-              <div v-if="effectConfig.mode === 'mosaic'" class="bg-[--bg-left-menu] p-2 rounded-8px mb-2">
-                <div class="flex items-center gap-2">
+              <div v-if="effectConfig.mode === 'mosaic'" class="rounded-8px mb-2 bg-[--bg-left-menu] p-2">
+                <div class="flex-y-center gap-2">
                   <span class="text-(10px [--left-text-color])">格子大小</span>
-                  <n-slider v-model:value="effectConfig.mosaicScale" :step="1" :min="5" :max="50" class="flex-1" />
+                  <n-slider class="flex-1" v-model:value="effectConfig.mosaicScale" :step="1" :min="5" :max="50" />
                 </div>
               </div>
 
-              <div class="flex items-center gap-2">
+              <div class="flex-y-center gap-2">
                 <span class="text-(12px [--left-text-color]) w-8 text-right">暗角</span>
-                <n-slider v-model:value="effectConfig.vignette" :step="0.05" :min="0" :max="0.8" class="flex-1" />
+                <n-slider class="flex-1" v-model:value="effectConfig.vignette" :step="0.05" :min="0" :max="0.8" />
               </div>
 
               <n-divider class="!my-2 bg-[--line-color]" />
 
-              <div class="flex items-center justify-between">
+              <div class="flex-between-center">
                 <span class="text-(12px [--text-color]) font-bold">🟢 绿幕抠图</span>
-                <n-switch v-model:value="beautyConfig.greenScreen" size="small" />
+                <n-switch size="small" v-model:value="beautyConfig.greenScreen" />
               </div>
 
               <n-collapse-transition :show="beautyConfig.greenScreen">
-                <div class="bg-[--bg-left-menu] p-2 rounded-8px mt-2 flex flex-col gap-2 border border-[--line-color]">
-                  <div class="flex items-center gap-2">
+                <div class="rounded-8px mt-2 flex flex-col gap-2 border border-[--line-color] bg-[--bg-left-menu] p-2">
+                  <div class="flex-y-center gap-2">
                     <span class="text-(10px [--left-text-color]) w-8 text-right">容差</span>
                     <n-slider
+                      class="flex-1"
                       v-model:value="beautyConfig.greenSimilarity"
                       :step="0.01"
                       :min="0"
-                      :max="0.6"
-                      class="flex-1" />
+                      :max="0.6" />
                   </div>
 
-                  <div class="flex items-center gap-2">
+                  <div class="flex-y-center gap-2">
                     <span class="text-(10px [--left-text-color]) w-8 text-right">平滑</span>
                     <n-slider
+                      class="flex-1"
                       v-model:value="beautyConfig.greenSmoothness"
                       :step="0.01"
                       :min="0"
-                      :max="0.4"
-                      class="flex-1" />
+                      :max="0.4" />
                   </div>
 
                   <div class="text-(10px [--user-text-color]) px-1">* 提示: 请保证光线均匀，避免阴影</div>
@@ -194,21 +194,21 @@
               </n-collapse-transition>
 
               <n-divider class="!my-2 bg-[--line-color]" />
-              <div class="flex items-center justify-between">
+              <div class="flex-between-center">
                 <span class="text-(12px [--text-color]) font-bold">🤖 AI 虚拟背景</span>
-                <n-switch v-model:value="beautyConfig.virtualBg" size="small" />
+                <n-switch size="small" v-model:value="beautyConfig.virtualBg" />
               </div>
               <n-collapse-transition :show="beautyConfig.virtualBg">
-                <div class="bg-[--bg-left-menu] p-3 mt-2 rounded-8px flex flex-col gap-3 border border-[--line-color]">
+                <div class="rounded-8px mt-2 flex flex-col gap-3 border border-[--line-color] bg-[--bg-left-menu] p-3">
                   <span class="text-xs text-[--left-text-color]">背景模式</span>
 
-                  <div class="grid grid-cols-3 gap-2 h-16">
+                  <div class="grid h-16 grid-cols-3 gap-2">
                     <div
-                      class="relative rounded-lg cursor-pointer border-2 transition-all flex items-center justify-center overflow-hidden group"
+                      class="group relative flex cursor-pointer items-center justify-center overflow-hidden rounded-lg border-2 transition-all"
                       :class="
                         beautyConfig.bgType === 'green'
                           ? 'border-green-500 bg-green-900/20'
-                          : 'border-[--line-color] hover:border-[--disabled-color] bg-[--left-item-bg-color]'
+                          : 'border-[--line-color] bg-[--left-item-bg-color] hover:border-[--disabled-color]'
                       "
                       @click="beautyConfig.bgType = 'green'">
                       <div class="size-6 rounded bg-[#00FF00] shadow-lg"></div>
@@ -216,35 +216,35 @@
                     </div>
 
                     <div
-                      class="relative rounded-lg cursor-pointer border-2 transition-all flex items-center justify-center overflow-hidden group"
+                      class="group relative flex cursor-pointer items-center justify-center overflow-hidden rounded-lg border-2 transition-all"
                       :class="
                         beautyConfig.bgType === 'blur'
                           ? 'border-blue-500 bg-blue-900/20'
-                          : 'border-[--line-color] hover:border-[--disabled-color] bg-[--left-item-bg-color]'
+                          : 'border-[--line-color] bg-[--left-item-bg-color] hover:border-[--disabled-color]'
                       "
                       @click="beautyConfig.bgType = 'blur'">
-                      <div class="i-carbon-blur text-xl mb-2 text-[--left-text-color]"></div>
+                      <div class="i-carbon-blur mb-2 text-xl text-[--left-text-color]"></div>
                       <span class="absolute bottom-1 text-[10px] text-[--left-text-color]">虚化</span>
                     </div>
 
                     <div
-                      class="relative rounded-lg cursor-pointer border-2 transition-all flex items-center justify-center overflow-hidden group"
+                      class="group relative flex cursor-pointer items-center justify-center overflow-hidden rounded-lg border-2 transition-all"
                       :class="
                         beautyConfig.bgType === 'image'
                           ? 'border-purple-500'
-                          : 'border-[--line-color] hover:border-[--disabled-color] bg-[--left-item-bg-color]'
+                          : 'border-[--line-color] bg-[--left-item-bg-color] hover:border-[--disabled-color]'
                       "
                       @click="handleImageModeClick">
                       <img
                         v-if="bgImage.src"
-                        :src="bgImage.src"
-                        class="absolute inset-0 size-full object-cover opacity-60 group-hover:opacity-40 transition-opacity" />
+                        class="absolute inset-0 size-full object-cover opacity-60 transition-opacity group-hover:opacity-40"
+                        :src="bgImage.src" />
 
-                      <div class="z-10 flex flex-col items-center">
+                      <div class="z-10 flex-col-x-center">
                         <div
                           class="text-xl text-[--text-color]"
                           :class="bgImage.src ? 'i-carbon-image-copy' : 'i-carbon-add'"></div>
-                        <span class="text-[10px] text-[--left-text-color] mt-1">
+                        <span class="mt-1 text-[10px] text-[--left-text-color]">
                           {{ bgImage.src ? (beautyConfig.bgType === "image" ? "更换" : "自定义") : "上传" }}
                         </span>
                       </div>
@@ -254,14 +254,14 @@
               </n-collapse-transition>
               <n-divider class="!my-2 bg-[--line-color]" />
 
-              <div class="flex items-center justify-between">
+              <div class="flex-between-center">
                 <span class="text-(12px [--text-color]) font-bold">🖼️ 品牌水印</span>
-                <n-switch v-model:value="watermarkConfig.enable" size="small" />
+                <n-switch size="small" v-model:value="watermarkConfig.enable" />
               </div>
 
               <n-collapse-transition :show="watermarkConfig.enable">
-                <div class="bg-[--bg-left-menu] p-2 mt-2 rounded-8px flex flex-col gap-2 border border-[--line-color]">
-                  <div class="flex items-center gap-2 mb-1">
+                <div class="rounded-8px mt-2 flex flex-col gap-2 border border-[--line-color] bg-[--bg-left-menu] p-2">
+                  <div class="mb-1 flex-y-center gap-2">
                     <div class="relative flex-1">
                       <n-button
                         size="tiny"
@@ -274,24 +274,24 @@
                     </div>
                   </div>
 
-                  <div class="flex items-center gap-2">
+                  <div class="flex-y-center gap-2">
                     <span class="text-(10px [--left-text-color]) w-8 text-right">大小</span>
-                    <n-slider v-model:value="watermarkConfig.scale" :step="0.05" :min="0.1" :max="2.0" class="flex-1" />
+                    <n-slider class="flex-1" v-model:value="watermarkConfig.scale" :step="0.05" :min="0.1" :max="2.0" />
                   </div>
 
-                  <div class="flex items-center gap-2">
+                  <div class="flex-y-center gap-2">
                     <span class="text-(10px [--left-text-color]) w-8 text-right">透明</span>
-                    <n-slider v-model:value="watermarkConfig.opacity" :step="0.05" :min="0" :max="1.0" class="flex-1" />
+                    <n-slider class="flex-1" v-model:value="watermarkConfig.opacity" :step="0.05" :min="0" :max="1.0" />
                   </div>
 
-                  <div class="flex items-center gap-2">
+                  <div class="flex-y-center gap-2">
                     <span class="text-(10px [--left-text-color]) w-8 text-right">X轴</span>
-                    <n-slider v-model:value="watermarkConfig.x" :step="10" :min="0" :max="1800" class="flex-1" />
+                    <n-slider class="flex-1" v-model:value="watermarkConfig.x" :step="10" :min="0" :max="1800" />
                   </div>
 
-                  <div class="flex items-center gap-2">
+                  <div class="flex-y-center gap-2">
                     <span class="text-(10px [--left-text-color]) w-8 text-right">Y轴</span>
-                    <n-slider v-model:value="watermarkConfig.y" :step="10" :min="0" :max="1000" class="flex-1" />
+                    <n-slider class="flex-1" v-model:value="watermarkConfig.y" :step="10" :min="0" :max="1000" />
                   </div>
                 </div>
               </n-collapse-transition>
@@ -299,7 +299,7 @@
           </n-scrollbar>
         </div>
 
-        <div class="flex-none p-20px pt-10px bg-gradient-to-t from-[--right-bg-color] to-transparent">
+        <div class="p-20px pt-10px flex-none bg-gradient-to-t from-[--right-bg-color] to-transparent">
           <n-button
             block
             class="!h-44px !text-16px !font-bold shadow-lg"
@@ -309,7 +309,7 @@
             {{ isStreaming ? "停止直播" : "开始直播" }}
           </n-button>
 
-          <div class="mt-3 text-center text-(11px [--user-text-color])">
+          <div class="text-(11px [--user-text-color]) mt-3 text-center">
             当前环境: {{ ffmpegInstalled ? "已检测到 FFmpeg" : "未检测到 FFmpeg (WebRTC)" }}
           </div>
         </div>
@@ -584,7 +584,6 @@ const stopEverything = async () => {
   } else if (currentMode.value === "WebRTC") {
     if (pc) pc.close();
   }
-
   // 停止所有媒体流
   [screenStream, cameraStream, micStream].forEach((stream) => {
     stream?.getTracks().forEach((t) => t.stop());

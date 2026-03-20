@@ -1,31 +1,31 @@
 <template>
   <div
     v-if="show"
-    class="custom-amount-modal absolute inset-0 z-[2000] flex items-center justify-center bg-black/40 backdrop-blur-sm"
+    class="custom-amount-modal absolute inset-0 z-[2000] flex-center bg-black/40 backdrop-blur-sm"
     @click.self="handleCancel">
-    <div class="bg-[--bg-popover] rounded-2xl p-6 w-[320px] shadow-2xl border border-[--line-color]">
-      <div class="bg-[--bg-setting-item] rounded-xl flex items-center px-4 py-3 mb-6 border border-[--line-color]">
-        <span class="text-lg font-medium text-[--text-color] mr-2">¥</span>
+    <div class="w-[320px] rounded-2xl border border-[--line-color] bg-[--bg-popover] p-6 shadow-2xl">
+      <div class="mb-6 flex-y-center rounded-xl border border-[--line-color] bg-[--bg-setting-item] px-4 py-3">
+        <span class="mr-2 text-lg font-medium text-[--text-color]">¥</span>
         <input
           ref="inputRef"
-          v-model="inputValue"
           type="number"
-          :placeholder="t('dialog.customAmount.placeholder')"
-          class="bg-transparent border-none outline-none text-[--text-color] flex-1 text-base placeholder-[--user-text-color]"
-          @keyup.enter="handleConfirm"
           min="1"
-          max="1000000" />
+          max="1000000"
+          class="flex-1 border-none bg-transparent text-base text-[--text-color] placeholder-[--user-text-color] outline-none"
+          v-model="inputValue"
+          :placeholder="t('dialog.customAmount.placeholder')"
+          @keyup.enter="handleConfirm" />
       </div>
 
       <div class="flex justify-end gap-3">
         <div
-          @click.stop="handleCancel"
-          class="px-5 py-2 rounded-lg bg-[--bg-setting-item] text-[--text-color] border border-[--line-color] hover:bg-[--bg-menu-hover] transition-colors cursor-pointer text-sm font-medium flex items-center justify-center">
+          class="flex cursor-pointer items-center justify-center rounded-lg border border-[--line-color] bg-[--bg-setting-item] px-5 py-2 text-sm font-medium text-[--text-color] transition-colors hover:bg-[--bg-menu-hover]"
+          @click.stop="handleCancel">
           {{ t("components.common.cancel") }}
         </div>
         <div
-          @click.stop="handleConfirm"
-          class="px-5 py-2 rounded-lg bg-red-500 text-white hover:bg-red-600 transition-colors cursor-pointer text-sm font-medium flex items-center justify-center shadow-md shadow-red-500/20">
+          class="flex cursor-pointer items-center justify-center rounded-lg bg-red-500 px-5 py-2 text-sm font-medium text-white shadow-md shadow-red-500/20 transition-colors hover:bg-red-600"
+          @click.stop="handleConfirm">
           {{ t("components.common.confirm") }}
         </div>
       </div>

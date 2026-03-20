@@ -1,5 +1,5 @@
 <template>
-  <div class="w-full h-full bg-[--home-bg-color] p-4 overflow-hidden">
+  <div class="h-full w-full overflow-hidden bg-[--home-bg-color] p-4">
     <div class="absolute top-6 left-6 z-50">
       <n-button secondary circle class="shadow-md" @click="handleBack">
         <template #icon>
@@ -9,9 +9,9 @@
     </div>
     <div
       ref="fullscreenWrapperRef"
-      class="w-full h-full flex flex-row relative rounded-lg overflow-hidden bg-black shadow-sm"
+      class="relative flex h-full w-full flex-row overflow-hidden rounded-lg bg-black shadow-sm"
       :class="{ 'is-fullscreen': isFullscreen }">
-      <div class="flex-1 relative h-full">
+      <div class="relative h-full flex-1">
         <video-player
           v-if="playlistStore.currentVideo"
           :controls="true"
@@ -23,9 +23,9 @@
       </div>
 
       <video-side-panel
+        class="side-panel-transition"
         v-model:show="showSidePanel"
         v-model:tab="activePanelTab"
-        class="side-panel-transition"
         :class="{ 'fullscreen-overlay': isFullscreen }" />
     </div>
   </div>

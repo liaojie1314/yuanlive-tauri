@@ -1,10 +1,10 @@
 <template>
-  <div id="layout" class="relative flex min-w-310px bg-[--right-bg-color] h-full">
-    <div class="flex flex-1 min-h-0">
+  <div id="layout" class="min-w-310px relative flex h-full bg-[--right-bg-color]">
+    <div class="flex min-h-0 flex-1">
       <AsyncLeft />
       <AsyncRight />
     </div>
-    <div v-if="overlayVisible" class="absolute inset-0 z-10 flex items-center justify-center">
+    <div v-if="overlayVisible" class="absolute inset-0 z-10 flex-center">
       <loading-spinner :percentage="loadingPercentage" :loading-text="loadingText" />
     </div>
   </div>

@@ -60,9 +60,9 @@
         <n-tooltip
           placement="left"
           trigger="hover"
+          v-model:show="showCollectionTooltip"
           :raw="true"
-          :show-arrow="false"
-          v-model:show="showCollectionTooltip">
+          :show-arrow="false">
           <template #trigger>
             <div class="interaction-item favorite-item" @click="toggleFavorite">
               <div class="interaction-icon favorite-icon" :class="{ favorited: isFavorited }">
@@ -84,7 +84,7 @@
               <div class="no-collections-text">{{ t("components.videoPlayer.noCollections") }}</div>
             </div>
             <div v-else class="collection-list">
-              <div v-for="folder in collectionFolders" :key="folder.id" class="collection-item">
+              <div v-for="folder in collectionFolders" class="collection-item" :key="folder.id">
                 <div class="folder-info">
                   <i-material-symbols-folder class="iconify-icon folder-icon" />
                   <div class="folder-name">{{ folder.name }}</div>
@@ -108,7 +108,7 @@
           </div>
         </n-tooltip>
 
-        <n-tooltip placement="left" trigger="hover" :raw="true" :show-arrow="false" v-model:show="showShareTooltip">
+        <n-tooltip placement="left" trigger="hover" v-model:show="showShareTooltip" :raw="true" :show-arrow="false">
           <template #trigger>
             <div class="interaction-item share-item" @click="toggleShare">
               <div class="interaction-icon share-icon">
@@ -149,7 +149,7 @@
           <div class="tooltip-content">{{ t("components.videoPlayer.listenVideo") }}</div>
         </n-tooltip>
 
-        <n-tooltip placement="left-end" trigger="hover" :raw="true" :show-arrow="false" v-model:show="showMoreTooltip">
+        <n-tooltip placement="left-end" trigger="hover" v-model:show="showMoreTooltip" :raw="true" :show-arrow="false">
           <template #trigger>
             <div class="more-item" @click="toggleMoreOptions">
               <div class="more-icon">
@@ -206,41 +206,41 @@
       <!-- Progress Bar -->
       <div
         v-show="showChapterPanel"
-        class="absolute left-4 w-[220px] max-h-[300px] bg-[var(--bg-popover)] border border-[var(--line-color)] rounded-xl shadow-[0_8px_24px_rgba(0,0,0,0.15)] z-[130] flex flex-col overflow-hidden transition-all duration-300"
         style="bottom: 155px"
+        class="absolute left-4 z-[130] flex max-h-[300px] w-[220px] flex-col overflow-hidden rounded-xl border border-[var(--line-color)] bg-[var(--bg-popover)] shadow-[0_8px_24px_rgba(0,0,0,0.15)] transition-all duration-300"
         @click.stop>
         <div
-          class="px-3 py-2.5 border-b border-[var(--line-color)] flex justify-between items-center bg-[var(--bg-setting-item)] shrink-0">
-          <span class="text-[13px] font-medium text-[var(--text-color)] tracking-wide">
+          class="flex shrink-0 items-center justify-between border-b border-[var(--line-color)] bg-[var(--bg-setting-item)] px-3 py-2.5">
+          <span class="text-[13px] font-medium tracking-wide text-[var(--text-color)]">
             {{ t("components.videoPlayer.videoChapters") }} ({{ computedChapters.length }})
           </span>
           <i-mdi-close
-            class="text-[16px] text-[var(--user-text-color)] hover:text-[#ff0050] cursor-pointer transition-colors"
+            class="cursor-pointer text-[16px] text-[var(--user-text-color)] transition-colors hover:text-[#ff0050]"
             @click="showChapterPanel = false" />
         </div>
 
         <n-scrollbar class="flex-1">
-          <div class="p-1.5 flex flex-col gap-0.5">
+          <div class="flex flex-col gap-0.5 p-1.5">
             <div
               v-for="(chap, index) in computedChapters"
+              class="flex cursor-pointer items-center gap-2.5 rounded-md px-2.5 py-2 transition-all duration-200"
               :key="index"
-              class="flex items-center gap-2.5 px-2.5 py-2 rounded-md cursor-pointer transition-all duration-200"
               :class="
                 currentChapterIndex === index ? 'bg-[var(--bg-setting-item)]' : 'hover:bg-[var(--bg-left-menu-hover)]'
               "
               @click="selectChapter(chap)">
               <div
-                class="text-[12px] font-mono shrink-0"
+                class="shrink-0 font-mono text-[12px]"
                 :class="currentChapterIndex === index ? 'text-[#ff0050]' : 'text-[var(--user-text-color)]'">
                 {{ formatSecondsToTimeStr(chap.startTime) }}
               </div>
               <div
-                class="flex-1 text-[12px] leading-snug truncate"
-                :class="currentChapterIndex === index ? 'text-[#ff0050] font-medium' : 'text-[var(--text-color)]'">
+                class="flex-1 truncate text-[12px] leading-snug"
+                :class="currentChapterIndex === index ? 'font-medium text-[#ff0050]' : 'text-[var(--text-color)]'">
                 {{ chap.title }}
               </div>
-              <div v-if="currentChapterIndex === index" class="shrink-0 flex items-center justify-center">
-                <i-mdi-chart-bar class="text-[#ff0050] text-[14px] animate-pulse" />
+              <div v-if="currentChapterIndex === index" class="flex shrink-0 items-center justify-center">
+                <i-mdi-chart-bar class="animate-pulse text-[14px] text-[#ff0050]" />
               </div>
             </div>
           </div>
@@ -249,27 +249,27 @@
 
       <div
         v-if="computedChapters.length > 1 && currentChapter"
-        class="absolute left-4 flex items-center overflow-hidden bg-[var(--bg-popover)] border border-[var(--line-color)] rounded-full z-[100] shadow-[0_2px_8px_rgba(0,0,0,0.1)] pointer-events-auto transition-colors"
-        style="bottom: 115px">
+        style="bottom: 115px"
+        class="pointer-events-auto absolute left-4 z-[100] flex-y-center overflow-hidden rounded-full border border-[var(--line-color)] bg-[var(--bg-popover)] shadow-[0_2px_8px_rgba(0,0,0,0.1)] transition-colors">
         <div
-          class="flex items-center px-3 py-1.5 cursor-pointer transition-colors rounded-l-full group/chapter"
+          class="group/chapter flex cursor-pointer items-center rounded-l-full px-3 py-1.5 transition-colors"
           :class="showChapterPanel ? 'bg-[var(--bg-left-menu-hover)]' : 'hover:bg-[var(--bg-left-menu-hover)]'"
-          @click.stop="showChapterPanel = !showChapterPanel"
-          :title="t('components.videoPlayer.viewAllChapters')">
+          :title="t('components.videoPlayer.viewAllChapters')"
+          @click.stop="showChapterPanel = !showChapterPanel">
           <i-mdi-format-list-bulleted
-            class="text-[15px] mr-1.5 transition-colors"
+            class="mr-1.5 text-[15px] transition-colors"
             :class="
               showChapterPanel ? 'text-[#ff0050]' : 'text-[var(--user-text-color)] group-hover/chapter:text-[#ff0050]'
             " />
           <span
-            class="text-[12px] max-w-[120px] truncate font-medium transition-colors"
+            class="max-w-[120px] truncate text-[12px] font-medium transition-colors"
             :class="
               showChapterPanel ? 'text-[#ff0050]' : 'text-[var(--text-color)] group-hover/chapter:text-[#ff0050]'
             ">
             {{ currentChapter.title }}
           </span>
           <i-mdi-chevron-up
-            class="text-[16px] ml-0.5 transition-transform duration-300"
+            class="ml-0.5 text-[16px] transition-transform duration-300"
             :class="
               showChapterPanel
                 ? 'rotate-180 text-[#ff0050]'
@@ -278,13 +278,13 @@
         </div>
 
         <template v-if="nextChapter">
-          <div class="w-[1px] h-[12px] bg-[var(--line-color)]"></div>
+          <div class="h-[12px] w-[1px] bg-[var(--line-color)]"></div>
           <div
-            class="flex items-center px-3 py-1.5 text-[12px] text-[var(--user-text-color)] hover:text-[var(--text-color)] hover:bg-[var(--bg-left-menu-hover)] cursor-pointer group/next transition-colors rounded-r-full"
-            @click.stop="jumpToNextChapter"
-            :title="t('components.videoPlayer.jumpToNextChapter')">
+            class="group/next flex cursor-pointer items-center rounded-r-full px-3 py-1.5 text-[12px] text-[var(--user-text-color)] transition-colors hover:bg-[var(--bg-left-menu-hover)] hover:text-[var(--text-color)]"
+            :title="t('components.videoPlayer.jumpToNextChapter')"
+            @click.stop="jumpToNextChapter">
             <span>{{ t("components.videoPlayer.nextChapter") }}</span>
-            <i-mdi-chevron-right class="text-[15px] group-hover/next:translate-x-0.5 transition-transform" />
+            <i-mdi-chevron-right class="text-[15px] transition-transform group-hover/next:translate-x-0.5" />
           </div>
         </template>
       </div>
@@ -298,42 +298,42 @@
         @mousemove="handleProgressMouseMove">
         <div
           v-show="hoveringProgress"
-          class="absolute bottom-full mb-2 transform -translate-x-1/2 bg-[var(--bg-popover)] border border-[var(--line-color)] shadow-[0_4px_12px_rgba(0,0,0,0.15)] px-3 py-1.5 rounded-[6px] flex flex-col items-center pointer-events-none z-[120] transition-opacity duration-200"
+          class="pointer-events-none absolute bottom-full z-[120] mb-2 flex -translate-x-1/2 transform flex-col items-center rounded-[6px] border border-[var(--line-color)] bg-[var(--bg-popover)] px-3 py-1.5 shadow-[0_4px_12px_rgba(0,0,0,0.15)] transition-opacity duration-200"
           :style="{ left: hoverX + 'px' }">
-          <span v-if="hoverChapterTitle" class="text-[12px] font-bold text-[#ff0050] mb-0.5 whitespace-nowrap">
+          <span v-if="hoverChapterTitle" class="mb-0.5 text-[12px] font-bold whitespace-nowrap text-[#ff0050]">
             {{ hoverChapterTitle }}
           </span>
-          <span class="text-[12px] text-[var(--text-color)] font-mono leading-none">
+          <span class="font-mono text-[12px] leading-none text-[var(--text-color)]">
             {{ formatSecondsToTimeStr(hoverTime) }}
           </span>
         </div>
 
         <div
-          class="absolute w-full top-1/2 transform -translate-y-1/2 flex gap-[2px] pointer-events-none z-10 h-[3px] transition-all duration-200 group-hover:h-[4px]">
+          class="pointer-events-none absolute top-1/2 z-10 flex h-[3px] w-full -translate-y-1/2 transform gap-[2px] transition-all duration-200 group-hover:h-[4px]">
           <div
             v-for="(chap, index) in computedChapters"
+            class="relative h-full overflow-hidden rounded-[2px] bg-[rgba(255,255,255,0.2)]"
             :key="index"
-            class="h-full bg-[rgba(255,255,255,0.2)] relative overflow-hidden rounded-[2px]"
             :style="{ width: chap.durationRatio * 100 + '%' }">
             <div
-              class="absolute left-0 top-0 h-full bg-[#ff0050] rounded-[2px]"
+              class="absolute top-0 left-0 h-full rounded-[2px] bg-[#ff0050]"
               :style="{ width: getChapterPlayedRatio(chap) * 100 + '%' }"></div>
           </div>
         </div>
 
         <n-slider
+          class="progress-bar-slider z-20"
           v-model:value="currentTime"
           :max="duration"
           :step="0.1"
           :tooltip="false"
-          @update:value="seek"
-          class="progress-bar-slider z-20"
           :show-input="false"
-          :show-tooltip="false">
+          :show-tooltip="false"
+          @update:value="seek">
           <template #thumb>
             <div
-              class="custom-thumb-icon flex items-center justify-center transition-transform duration-200 scale-100 group-hover:scale-[1.2] -translate-y-[1px]">
-              <i-mdi-cat class="text-[#ff0050] text-[20px] filter drop-shadow-[0_0_4px_rgba(255,0,80,0.6)]" />
+              class="custom-thumb-icon flex -translate-y-[1px] scale-100 items-center justify-center transition-transform duration-200 group-hover:scale-[1.2]">
+              <i-mdi-cat class="text-[20px] text-[#ff0050] drop-shadow-[0_0_4px_rgba(255,0,80,0.6)] filter" />
             </div>
           </template>
         </n-slider>
@@ -369,13 +369,13 @@
         </div>
 
         <div class="right-controls">
-          <div class="control-item" v-show="!isPanelOpen || isFullscreen">
+          <div v-show="!isPanelOpen || isFullscreen" class="control-item">
             <span class="control-text">{{ t("components.videoPlayer.autoplay") }}</span>
-            <n-switch v-model:value="videoStore.autoplay" @update:value="toggleAutoplay" class="control-switch" />
+            <n-switch class="control-switch" v-model:value="videoStore.autoplay" @update:value="toggleAutoplay" />
           </div>
-          <div class="control-item" v-show="!isPanelOpen || isFullscreen">
+          <div v-show="!isPanelOpen || isFullscreen" class="control-item">
             <span class="control-text">{{ t("components.videoPlayer.clearScreen") }}</span>
-            <n-switch v-model:value="videoStore.clearScreen" @update:value="toggleClearScreen" class="control-switch" />
+            <n-switch class="control-switch" v-model:value="videoStore.clearScreen" @update:value="toggleClearScreen" />
           </div>
           <div class="control-item">
             <n-dropdown :options="resolutionOptions" @select="switchResolution">
@@ -408,11 +408,11 @@
             </div>
 
             <div
-              class="volume-slider-container"
               v-show="showVolumeSlider"
+              class="volume-slider-container"
               @mouseenter="showVolumeSlider = true"
               @mouseleave="showVolumeSlider = false">
-              <n-slider v-model:value="videoStore.volume" :min="0" :max="100" @update:value="setVolume" vertical />
+              <n-slider vertical v-model:value="videoStore.volume" :min="0" :max="100" @update:value="setVolume" />
             </div>
           </div>
 

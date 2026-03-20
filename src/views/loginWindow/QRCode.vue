@@ -1,18 +1,18 @@
 <template>
-  <n-config-provider :theme="naiveTheme" data-tauri-drag-region class="login-box size-full rounded-8px select-none">
-    <action-bar :max-w="false" proxy data-tauri-drag-region />
+  <n-config-provider data-tauri-drag-region class="login-box rounded-8px size-full select-none" :theme="naiveTheme">
+    <action-bar proxy data-tauri-drag-region :max-w="false" />
 
-    <n-flex justify="center" class="mt-15px" data-tauri-drag-region>
-      <img src="/vite.svg" class="w-140px h-60px drop-shadow-xl" alt="" data-tauri-drag-region />
+    <n-flex justify="center" data-tauri-drag-region class="mt-15px">
+      <img src="/vite.svg" alt="" data-tauri-drag-region class="w-140px h-60px drop-shadow-xl" />
     </n-flex>
 
     <!-- 二维码 -->
-    <n-flex justify="center" class="mt-25px" data-tauri-drag-region>
-      <n-skeleton v-if="loading" style="border-radius: 12px" :width="204" :height="204" :sharp="false" size="medium" />
+    <n-flex justify="center" data-tauri-drag-region class="mt-25px">
+      <n-skeleton v-if="loading" style="border-radius: 12px" size="medium" :width="204" :height="204" :sharp="false" />
       <div v-else class="relative">
         <n-qr-code
-          :size="180"
           class="rounded-12px"
+          :size="180"
           :class="{ blur: scanStatus.show || refreshing }"
           :value="qrCodeValue"
           :color="qrCodeColor"
@@ -27,10 +27,10 @@
         <n-flex
           v-if="scanStatus.show"
           vertical
-          :size="12"
           align="center"
-          class="w-full absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"
-          style="pointer-events: none">
+          style="pointer-events: none"
+          class="absolute top-1/2 left-1/2 w-full -translate-x-1/2 -translate-y-1/2 transform"
+          :size="12">
           <svg class="size-42px animate-pulse">
             <use :href="`#${scanStatus.icon}`"></use>
           </svg>
@@ -40,10 +40,10 @@
         <n-flex
           v-if="refreshing"
           vertical
-          :size="12"
           align="center"
-          class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"
-          style="pointer-events: none">
+          style="pointer-events: none"
+          class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 transform"
+          :size="12">
           <n-spin size="small" />
           <span class="text-(16px #e3e3e3)">{{ t("auth.qr.overlay.refreshing") }}</span>
         </n-flex>
@@ -55,7 +55,7 @@
     </n-flex>
 
     <!-- 底部操作栏 -->
-    <n-flex justify="center" class="text-14px mt-48px" data-tauri-drag-region>
+    <n-flex justify="center" data-tauri-drag-region class="text-14px mt-48px">
       <div class="color-#13987f cursor-pointer" @click="router.push('/login')">
         {{ t("auth.qr.actions.accountLogin") }}
       </div>

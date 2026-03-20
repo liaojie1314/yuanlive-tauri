@@ -13,7 +13,7 @@
           </div>
         </div>
         <div class="close-btn" @click="handleClose">
-          <i-mdi-close class="w-5 h-5" />
+          <i-mdi-close class="h-5 w-5" />
         </div>
       </div>
 
@@ -21,30 +21,30 @@
         <div v-show="activeTab === 'detail'" class="h-full w-full">
           <n-scrollbar class="h-full" @scroll="handleDetailScroll">
             <div class="p-4 text-[--text-color]">
-              <div class="flex items-center justify-between mb-4">
-                <div class="font-medium text-[15px]">{{ playlistStore.currentUsername }}</div>
+              <div class="mb-4 flex-between-center">
+                <div class="text-[15px] font-medium">{{ playlistStore.currentUsername }}</div>
 
                 <button class="follow-btn" :class="{ 'is-followed': isFollowed }" @click="toggleFollow">
                   {{ isFollowed ? $t("components.videoSidePanel.followed") : $t("components.videoSidePanel.follow") }}
                 </button>
               </div>
 
-              <p class="text-sm mb-6 leading-relaxed">
+              <p class="mb-6 text-sm leading-relaxed">
                 {{ videoDesc }}
               </p>
 
               <div class="video-grid">
                 <div
                   v-for="(video, index) in playlistStore.videoList"
-                  :key="video.id"
                   class="video-card group"
+                  :key="video.id"
                   @click="playlistStore.playSpecificVideo(video)">
-                  <img :src="video.coverUrl" class="video-cover" />
+                  <img class="video-cover" :src="video.coverUrl" />
 
                   <div v-if="index !== playlistStore.currentVideoIndex" class="video-mask"></div>
 
                   <div v-if="index !== playlistStore.currentVideoIndex" class="like-info">
-                    <i-ph-heart-fill class="text-white w-3 h-3" />
+                    <i-ph-heart-fill class="h-3 w-3 text-white" />
                     <span>{{ video.likeCount }}</span>
                   </div>
 
@@ -66,15 +66,15 @@
           </n-scrollbar>
         </div>
 
-        <div v-show="activeTab === 'comment'" class="h-full w-full relative overflow-hidden">
+        <div v-show="activeTab === 'comment'" class="relative h-full w-full overflow-hidden">
           <n-scrollbar class="h-full">
-            <div class="px-4 py-3 box-border">
-              <div class="text-xs text-[--user-text-color] mb-4">
+            <div class="box-border px-4 py-3">
+              <div class="mb-4 text-xs text-[--user-text-color]">
                 {{ $t("components.videoSidePanel.totalComments", { total: totalComments }) }}
               </div>
 
-              <div v-for="comment in commentList" :key="comment.id" class="comment-item">
-                <img :src="comment.user.avatar" class="avatar" />
+              <div v-for="comment in commentList" class="comment-item" :key="comment.id">
+                <img class="avatar" :src="comment.user.avatar" />
                 <div class="comment-main border-b border-[--line-color] pb-4">
                   <div class="user-info">
                     <span class="username">{{ comment.user.username }}</span>
@@ -85,7 +85,7 @@
 
                   <template v-if="!comment.isDisliked">
                     <div class="content-text">{{ comment.content }}</div>
-                    <img v-if="comment.image" :src="comment.image" class="comment-image" />
+                    <img v-if="comment.image" class="comment-image" :src="comment.image" />
                   </template>
                   <div v-else class="collapsed-message">
                     <i-mdi-information-outline class="collapse-icon" />
@@ -123,12 +123,12 @@
                           : $t("components.videoSidePanel.expandReplies", { count: comment.replies.length })
                       }}
                     </span>
-                    <i-mdi-chevron-down :class="{ 'rotate-180': comment.showReplies }" class="transition-transform" />
+                    <i-mdi-chevron-down class="transition-transform" :class="{ 'rotate-180': comment.showReplies }" />
                   </div>
 
                   <div v-show="comment.showReplies" class="replies-container">
-                    <div v-for="reply in comment.replies" :key="reply.id" class="comment-item reply-item">
-                      <img :src="reply.user.avatar" class="avatar-small" />
+                    <div v-for="reply in comment.replies" class="comment-item reply-item" :key="reply.id">
+                      <img class="avatar-small" :src="reply.user.avatar" />
                       <div class="comment-main">
                         <div class="user-info">
                           <span class="username">{{ reply.user.username }}</span>
@@ -139,7 +139,7 @@
 
                         <template v-if="!reply.isDisliked">
                           <div class="content-text">{{ reply.content }}</div>
-                          <img v-if="reply.image" :src="reply.image" class="comment-image" />
+                          <img v-if="reply.image" class="comment-image" :src="reply.image" />
                         </template>
                         <div v-else class="collapsed-message">
                           <i-mdi-information-outline class="collapse-icon" />
@@ -183,17 +183,17 @@
 
         <div class="input-wrapper">
           <input
-            v-model="commentText"
             type="text"
-            :placeholder="$t('components.videoSidePanel.placeholder')"
             class="comment-input"
+            v-model="commentText"
+            :placeholder="$t('components.videoSidePanel.placeholder')"
             @keyup.enter="submitComment" />
           <div class="action-icons">
-            <i-ph-image class="icon" @click="handleImageUpload" :title="$t('components.videoSidePanel.uploadImage')" />
+            <i-ph-image class="icon" :title="$t('components.videoSidePanel.uploadImage')" @click="handleImageUpload" />
             <i-ph-smiley
               class="icon"
-              @click.stop="showEmojiPicker = !showEmojiPicker"
-              :title="$t('components.videoSidePanel.emoji')" />
+              :title="$t('components.videoSidePanel.emoji')"
+              @click.stop="showEmojiPicker = !showEmojiPicker" />
           </div>
         </div>
 

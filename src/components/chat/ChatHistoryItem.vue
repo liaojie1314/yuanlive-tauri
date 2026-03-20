@@ -1,51 +1,51 @@
 <template>
   <context-menu :menu="selectionMode ? [] : contextMenuOptions" @select="handleContextMenuSelect">
-    <div class="relative group px-2 py-1">
+    <div class="group relative px-2 py-1">
       <div
-        class="flex items-center p-2 rounded-lg cursor-pointer transition-colors duration-200 gap-2"
+        class="flex cursor-pointer items-center gap-2 rounded-lg p-2 transition-colors duration-200"
         :class="[
           /* 多选模式下不显示高亮背景，防止视觉干扰 */
           active && !selectionMode ? 'bg-[--bg-left-active]' : 'hover:bg-[--tray-hover]'
         ]"
         @click="selectionMode ? $emit('toggle-select') : $emit('click')">
-        <div v-if="selectionMode" class="flex-shrink-0 flex items-center" @click.stop="$emit('toggle-select')">
-          <n-checkbox :checked="selected" size="small" />
+        <div v-if="selectionMode" class="flex flex-shrink-0 items-center" @click.stop="$emit('toggle-select')">
+          <n-checkbox size="small" :checked="selected" />
         </div>
 
-        <div v-if="!isRenaming" class="flex items-center flex-1 min-w-0">
+        <div v-if="!isRenaming" class="flex min-w-0 flex-1 items-center">
           <div
-            class="text-sm truncate select-none transition-colors"
-            :class="[active && !selectionMode ? 'text-[--left-active-text-color] font-medium' : 'text-[--text-color]']">
+            class="truncate text-sm transition-colors select-none"
+            :class="[active && !selectionMode ? 'font-medium text-[--left-active-text-color]' : 'text-[--text-color]']">
             {{ title }}
           </div>
-          <i-mdi-pin class="w-3 h-3 ml-2 flex-shrink-0 text-[--action-bar-icon-color] opacity-70" v-if="isPinned" />
+          <i-mdi-pin v-if="isPinned" class="ml-2 h-3 w-3 flex-shrink-0 text-[--action-bar-icon-color] opacity-70" />
         </div>
 
         <div v-else class="flex-1" @click.stop>
           <n-input
-            v-model:value="editTitle"
-            class="w-full"
             size="tiny"
+            ref="renameInputRef"
+            class="w-full"
+            v-model:value="editTitle"
             @blur="handleRenameCancel"
-            @keyup.enter="handleRenameConfirm"
-            ref="renameInputRef" />
+            @keyup.enter="handleRenameConfirm" />
         </div>
 
         <n-dropdown
           v-if="!selectionMode"
           trigger="click"
+          placement="bottom-start"
           :options="menuOptions"
           :show-arrow="false"
-          placement="bottom-start"
           @select="handleMenuSelect"
           @click.stop>
           <div
-            class="w-6 h-6 flex items-center justify-center rounded-md transition-colors opacity-0 group-hover:opacity-100"
+            class="flex h-6 w-6 items-center justify-center rounded-md opacity-0 transition-colors group-hover:opacity-100"
             :class="[
-              active ? 'opacity-100 text-[--left-active-text-color]' : 'text-[--action-bar-icon-color]',
+              active ? 'text-[--left-active-text-color] opacity-100' : 'text-[--action-bar-icon-color]',
               'hover:bg-[--tray-hover]'
             ]">
-            <i-mdi-dots-vertical class="w-4 h-4" />
+            <i-mdi-dots-vertical class="h-4 w-4" />
           </div>
         </n-dropdown>
       </div>

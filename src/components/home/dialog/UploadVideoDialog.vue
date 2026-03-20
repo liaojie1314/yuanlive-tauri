@@ -1,15 +1,15 @@
 <template>
-  <base-dialog v-model:show="dialogVisible" :title="t('dialog.uploadVideo.title')" width="700px">
-    <div class="flex flex-col max-h-[75vh] min-h-[450px]">
-      <div v-if="!videoFile" class="flex-1 flex items-center justify-center p-8">
+  <base-dialog width="700px" v-model:show="dialogVisible" :title="t('dialog.uploadVideo.title')">
+    <div class="flex max-h-[75vh] min-h-[450px] flex-col">
+      <div v-if="!videoFile" class="flex flex-1 items-center justify-center p-8">
         <n-upload
           directory-dnd
           accept="video/mp4,video/quicktime,video/x-matroska"
           :max="1"
-          @change="handleVideoChange"
-          :show-file-list="false">
-          <n-upload-dragger class="!bg-[--home-bg-color] !border-[--line-color] hover:!border-blue-500">
-            <div class="flex flex-col items-center gap-3 py-6 px-12">
+          :show-file-list="false"
+          @change="handleVideoChange">
+          <n-upload-dragger class="!border-[--line-color] !bg-[--home-bg-color] hover:!border-blue-500">
+            <div class="flex-col-x-center gap-3 px-12 py-6">
               <i-mdi-cloud-upload class="text-6xl text-blue-500/50" />
               <div class="text-base font-medium text-[--text-color]">{{ t("dialog.uploadVideo.uploadMessage") }}</div>
               <p class="text-xs text-[--user-text-color]">
@@ -21,16 +21,16 @@
       </div>
 
       <template v-else>
-        <div class="flex-1 min-h-0 relative">
+        <div class="relative min-h-0 flex-1">
           <n-scrollbar class="absolute inset-0 pr-4">
             <div class="animate-fade-in space-y-6 pb-4">
               <div class="flex gap-5">
-                <div class="w-[220px] shrink-0 aspect-video bg-black rounded-lg overflow-hidden relative group">
-                  <video :src="videoUrl" class="w-full h-full object-contain"></video>
+                <div class="group relative aspect-video w-[220px] shrink-0 overflow-hidden rounded-lg bg-black">
+                  <video class="h-full w-full object-contain" :src="videoUrl"></video>
                   <div
-                    class="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                    class="absolute inset-0 flex cursor-pointer items-center justify-center bg-black/50 opacity-0 transition-opacity group-hover:opacity-100"
                     @click="handleReupload">
-                    <span class="text-white text-sm flex items-center gap-1">
+                    <span class="flex-y-center gap-1 text-sm text-white">
                       <i-mdi-refresh />
                       {{ t("dialog.uploadVideo.reupload") }}
                     </span>
@@ -39,75 +39,75 @@
 
                 <div class="flex-1 space-y-4">
                   <n-form-item
+                    label-style="color: var(--text-color);"
                     :label="t('dialog.uploadVideo.videoTitle')"
-                    :show-label="true"
-                    label-style="color: var(--text-color);">
+                    :show-label="true">
                     <n-input
-                      v-model:value="form.title"
-                      :placeholder="t('dialog.uploadVideo.videoTitlePlaceholder')"
                       maxlength="50"
                       show-count
+                      clearable
                       class="border-(1px solid #90909080) rounded-md"
-                      clearable />
+                      v-model:value="form.title"
+                      :placeholder="t('dialog.uploadVideo.videoTitlePlaceholder')" />
                   </n-form-item>
 
                   <n-form-item
+                    label-style="color: var(--text-color);"
                     :label="t('dialog.uploadVideo.videoDesc')"
-                    :show-label="true"
-                    label-style="color: var(--text-color);">
+                    :show-label="true">
                     <n-input
-                      v-model:value="form.description"
                       type="textarea"
+                      class="border-(1px solid #90909080) rounded-md"
+                      v-model:value="form.description"
                       :placeholder="t('dialog.uploadVideo.videoDescPlaceholder')"
-                      :autosize="{ minRows: 2, maxRows: 3 }"
-                      class="border-(1px solid #90909080) rounded-md" />
+                      :autosize="{ minRows: 2, maxRows: 3 }" />
                   </n-form-item>
                 </div>
               </div>
 
-              <n-form-item :show-label="true" label-style="color: var(--text-color); width: 100%; display: flex;">
+              <n-form-item label-style="color: var(--text-color); width: 100%; display: flex;" :show-label="true">
                 <template #label>
-                  <div class="flex justify-between items-center w-full">
+                  <div class="flex w-full items-center justify-between">
                     <span>{{ t("dialog.uploadVideo.videoChapters") }}</span>
-                    <span v-if="videoDuration > 0" class="text-[12px] text-[--user-text-color] font-normal font-mono">
+                    <span v-if="videoDuration > 0" class="font-mono text-[12px] font-normal text-[--user-text-color]">
                       {{ t("dialog.uploadVideo.totalDuration") }} {{ formatSecondsToTimeStr(videoDuration) }}
                     </span>
                   </div>
                 </template>
 
                 <div class="w-full space-y-3">
-                  <div class="flex items-center gap-3 w-full">
+                  <div class="flex w-full items-center gap-3">
                     <n-input
-                      v-model:value="newChapter.timeStr"
                       placeholder="00:00"
                       style="width: 80px"
-                      class="shrink-0 border-(1px solid #90909080) rounded-md"
+                      class="border-(1px solid #90909080) shrink-0 rounded-md"
+                      v-model:value="newChapter.timeStr"
                       @keyup.enter="handleAddChapter" />
                     <n-input
+                      style="flex: 1; min-width: 0"
+                      maxlength="30"
+                      class="border-(1px solid #90909080) rounded-md"
                       v-model:value="newChapter.title"
                       :placeholder="t('dialog.uploadVideo.chapterTitle')"
-                      style="flex: 1; min-width: 0"
-                      class="border-(1px solid #90909080) rounded-md"
-                      maxlength="30"
                       @keyup.enter="handleAddChapter" />
-                    <n-button secondary type="primary" @click="handleAddChapter" class="shrink-0 px-5">
+                    <n-button secondary type="primary" class="shrink-0 px-5" @click="handleAddChapter">
                       {{ t("dialog.uploadVideo.addChapter") }}
                     </n-button>
                   </div>
 
                   <div
                     v-if="form.chapters.length > 0"
-                    class="bg-[--tray-bg-color] p-3 rounded-md border border-[--line-color] space-y-2 max-h-[140px] overflow-y-auto">
+                    class="max-h-[140px] space-y-2 overflow-y-auto rounded-md border border-[--line-color] bg-[--tray-bg-color] p-3">
                     <div
                       v-for="(chapter, index) in form.chapters"
-                      :key="index"
-                      class="flex justify-between items-center bg-[--home-bg-color] px-3 py-1.5 rounded text-sm">
-                      <div class="flex items-center gap-3">
-                        <span class="text-blue-500 font-mono">{{ chapter.timeStr }}</span>
+                      class="flex-between-center rounded bg-[--home-bg-color] px-3 py-1.5 text-sm"
+                      :key="index">
+                      <div class="flex-y-center gap-3">
+                        <span class="font-mono text-blue-500">{{ chapter.timeStr }}</span>
                         <span class="text-[--text-color]">{{ chapter.title }}</span>
                       </div>
                       <i-mdi-close
-                        class="text-[--user-text-color] hover:text-red-500 cursor-pointer transition-colors"
+                        class="cursor-pointer text-[--user-text-color] transition-colors hover:text-red-500"
                         @click="removeChapter(index)" />
                     </div>
                   </div>
@@ -124,8 +124,8 @@
               </n-form-item>
 
               <div class="border-t border-[--line-color] pt-5">
-                <div class="flex justify-between items-center mb-3">
-                  <span class="text-sm font-medium text-[--text-color] whitespace-nowrap shrink-0 mr-2">
+                <div class="mb-3 flex-between-center">
+                  <span class="mr-2 shrink-0 text-sm font-medium whitespace-nowrap text-[--text-color]">
                     {{ t("dialog.uploadVideo.cover") }}
                   </span>
                   <n-upload accept="image/*" :show-file-list="false" @change="handleCoverUpload">
@@ -136,8 +136,8 @@
                   </n-upload>
                 </div>
 
-                <div class="bg-[--tray-bg-color] p-3 rounded-lg border border-[--line-color]">
-                  <div v-if="isGenerating" class="flex justify-center py-4">
+                <div class="rounded-lg border border-[--line-color] bg-[--tray-bg-color] p-3">
+                  <div v-if="isGenerating" class="flex-x-center py-4">
                     <n-spin size="small">
                       <template #description>{{ t("dialog.uploadVideo.extractFrame") }}</template>
                     </n-spin>
@@ -145,24 +145,24 @@
 
                   <div v-else class="flex gap-3">
                     <div
-                      class="relative w-[140px] aspect-video rounded-md overflow-hidden border-2 border-blue-500 shrink-0 bg-black">
-                      <img :src="form.coverUrl || frames[0]" class="w-full h-full object-contain" />
+                      class="relative aspect-video w-[140px] shrink-0 overflow-hidden rounded-md border-2 border-blue-500 bg-black">
+                      <img class="h-full w-full object-contain" :src="form.coverUrl || frames[0]" />
                       <div
-                        class="absolute bottom-0 right-0 bg-blue-500 text-white text-[10px] px-1.5 py-0.5 rounded-tl">
+                        class="absolute right-0 bottom-0 rounded-tl bg-blue-500 px-1.5 py-0.5 text-[10px] text-white">
                         {{ t("dialog.uploadVideo.currentCover") }}
                       </div>
                     </div>
 
-                    <div class="flex-1 min-w-0">
+                    <div class="min-w-0 flex-1">
                       <n-scrollbar ref="coverScrollbarRef" x-scrollable @wheel.prevent="handleCoverWheel">
-                        <div class="flex gap-3 pb-2 min-w-max">
+                        <div class="flex min-w-max gap-3 pb-2">
                           <div
                             v-for="(frame, index) in frames"
+                            class="aspect-video w-[140px] shrink-0 cursor-pointer overflow-hidden rounded-md border-2 bg-black transition-all hover:border-blue-300"
                             :key="index"
-                            class="w-[140px] aspect-video rounded-md overflow-hidden cursor-pointer border-2 transition-all hover:border-blue-300 shrink-0 bg-black"
                             :class="form.coverUrl === frame ? 'border-blue-500' : 'border-transparent'"
                             @click="form.coverUrl = frame">
-                            <img :src="frame" class="w-full h-full object-contain" loading="lazy" />
+                            <img loading="lazy" class="h-full w-full object-contain" :src="frame" />
                           </div>
                         </div>
                       </n-scrollbar>
@@ -174,14 +174,14 @@
           </n-scrollbar>
         </div>
 
-        <div class="shrink-0 flex justify-end gap-3 pt-4 mt-2 border-t border-[--line-color]">
-          <n-button @click="closeDialog" class="px-6">{{ t("components.common.cancel") }}</n-button>
+        <div class="mt-2 flex shrink-0 justify-end gap-3 border-t border-[--line-color] pt-4">
+          <n-button class="px-6" @click="closeDialog">{{ t("components.common.cancel") }}</n-button>
           <n-button
             type="primary"
+            class="px-6"
             :loading="isSubmitting"
             :disabled="!videoFile || !form.title"
-            @click="handleSubmit"
-            class="px-6">
+            @click="handleSubmit">
             {{ t("dialog.uploadVideo.publishVideo") }}
           </n-button>
         </div>

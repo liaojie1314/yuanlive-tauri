@@ -1,9 +1,9 @@
 <template>
-  <div class="flex flex-col gap-3 w-full">
-    <div class="flex items-center gap-2 px-1 select-none">
+  <div class="flex w-full flex-col gap-3">
+    <div class="flex-y-center gap-2 px-1 select-none">
       <div
-        class="w-6 h-6 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-500 border border-blue-500/20">
-        <i-mdi-compass-outline class="w-4 h-4" />
+        class="flex h-6 w-6 items-center justify-center rounded-full border border-blue-500/20 bg-blue-500/10 text-blue-500">
+        <i-mdi-compass-outline class="h-4 w-4" />
       </div>
       <span class="text-sm font-bold text-[--text-color]">{{ $t("components.trendingPrompts.title") }}</span>
     </div>
@@ -11,23 +11,23 @@
     <div class="flex flex-col gap-1">
       <div
         v-for="(item, index) in prompts"
+        class="group relative cursor-pointer overflow-hidden rounded-xl border border-[--line-color] bg-[--input-area-bg] p-3 transition-all duration-300 hover:border-blue-500/30 hover:bg-[--tray-hover] hover:shadow-sm"
         :key="index"
-        class="group relative p-3 rounded-xl border border-[--line-color] bg-[--input-area-bg] hover:bg-[--tray-hover] hover:border-blue-500/30 hover:shadow-sm transition-all duration-300 cursor-pointer overflow-hidden"
         @click="handleSelect(item)">
         <div
-          class="absolute inset-0 bg-gradient-to-br from-blue-500/0 to-blue-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
+          class="pointer-events-none absolute inset-0 bg-gradient-to-br from-blue-500/0 to-blue-500/5 opacity-0 transition-opacity duration-300 group-hover:opacity-100"></div>
 
-        <div class="flex items-start gap-3 relative z-10">
-          <div class="flex flex-col flex-1 min-w-0">
-            <span class="text-sm text-[--text-color] font-medium truncate">{{ item.title }}</span>
-            <span class="text-xs text-[--user-text-color] mt-1 line-clamp-2 leading-relaxed opacity-80">
+        <div class="relative z-10 flex items-start gap-3">
+          <div class="flex min-w-0 flex-1 flex-col">
+            <span class="truncate text-sm font-medium text-[--text-color]">{{ item.title }}</span>
+            <span class="mt-1 line-clamp-2 text-xs leading-relaxed text-[--user-text-color] opacity-80">
               {{ item.desc }}
             </span>
           </div>
 
           <div
-            class="w-5 h-5 rounded-full flex items-center justify-center bg-[--bg-popover] border border-[--line-color] shadow-sm opacity-0 group-hover:opacity-100 transform translate-x-2 group-hover:translate-x-0 transition-all duration-300 flex-shrink-0">
-            <i-mdi-arrow-top-right class="w-3 h-3 text-[--user-text-color] group-hover:text-blue-500" />
+            class="flex h-5 w-5 flex-shrink-0 translate-x-2 transform items-center justify-center rounded-full border border-[--line-color] bg-[--bg-popover] opacity-0 shadow-sm transition-all duration-300 group-hover:translate-x-0 group-hover:opacity-100">
+            <i-mdi-arrow-top-right class="h-3 w-3 text-[--user-text-color] group-hover:text-blue-500" />
           </div>
         </div>
       </div>

@@ -15,7 +15,7 @@
             v-if="(visibleMenu && visibleMenu.length > 0) || (visibleSpecialMenu && visibleSpecialMenu.length > 0)"
             class="menu-list">
             <div v-for="(item, index) in visibleMenu" :key="index">
-              <div class="menu-item-disabled" v-if="item.disabled" @click.prevent="$event.preventDefault()">
+              <div v-if="item.disabled" class="menu-item-disabled" @click.prevent="$event.preventDefault()">
                 <div class="menu-item-content">
                   <svg v-if="getMenuItemProp(item, 'icon')">
                     <use :href="`#${getMenuItemProp(item, 'icon')}`"></use>
@@ -24,9 +24,9 @@
                 </div>
               </div>
               <div
+                v-else
                 class="menu-item"
                 :class="{ 'menu-item-danger': isDangerousItem(item) }"
-                v-else
                 @click="handleClick(item)"
                 @mouseenter="handleMouseEnter(item, index)"
                 @mouseleave="handleMouseLeave">
@@ -43,13 +43,13 @@
             </div>
 
             <div v-if="visibleSpecialMenu.length > 0" class="flex-col-y-center gap-6px">
-              <div v-if="visibleMenu && visibleMenu.length > 0" class="h-1px bg-[--line-color] m-[2px_8px]"></div>
+              <div v-if="visibleMenu && visibleMenu.length > 0" class="h-1px m-[2px_8px] bg-[--line-color]"></div>
               <div
-                @click="handleClick(item)"
+                v-for="item in visibleSpecialMenu"
                 class="menu-item"
                 :class="{ 'menu-item-danger': isDangerousItem(item) }"
-                v-for="item in visibleSpecialMenu"
-                :key="item.label">
+                :key="item.label"
+                @click="handleClick(item)">
                 <svg v-if="getMenuItemProp(item, 'icon')">
                   <use :href="`#${getMenuItemProp(item, 'icon')}`"></use>
                 </svg>
@@ -63,8 +63,8 @@
           <div class="menu-list">
             <div
               v-for="(subItem, subIndex) in activeSubmenu"
-              :key="subIndex"
               class="menu-item"
+              :key="subIndex"
               :class="{ 'menu-item-danger': isDangerousItem(subItem) }">
               <div class="menu-item-content" @click="handleSubItemClick(subItem)">
                 <svg v-if="getMenuItemProp(subItem, 'icon')" class="check-icon">

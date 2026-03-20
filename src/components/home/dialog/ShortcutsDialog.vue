@@ -1,22 +1,22 @@
 <template>
-  <base-dialog v-model:show="dialogVisible" :title="t('dialog.shortcuts.title')" height="540px" width="600px">
+  <base-dialog height="540px" width="600px" v-model:show="dialogVisible" :title="t('dialog.shortcuts.title')">
     <template #default>
       <div
-        class="flex w-full border-t border-[var(--line-color)] bg-[var(--bg-popover)] text-[var(--text-color)] overflow-hidden"
-        style="height: 460px">
+        style="height: 460px"
+        class="flex w-full overflow-hidden border-t border-[var(--line-color)] bg-[var(--bg-popover)] text-[var(--text-color)]">
         <div
-          class="w-[140px] border-r border-[var(--line-color)] p-2 flex flex-col gap-1 shrink-0 z-10 bg-[var(--bg-popover)]">
+          class="z-10 flex w-[140px] shrink-0 flex-col gap-1 border-r border-[var(--line-color)] bg-[var(--bg-popover)] p-2">
           <div
             v-for="tab in tabs"
+            class="flex cursor-pointer items-center gap-2.5 rounded-[6px] px-3 py-2.5 text-[13px] transition-all select-none"
             :key="tab.id"
-            class="flex items-center gap-2.5 px-3 py-2.5 rounded-[6px] cursor-pointer text-[13px] transition-all select-none"
             :class="[
               activeTab === tab.id
-                ? 'bg-[var(--bg-setting-item)] text-[var(--text-color)] font-medium shadow-[0_2px_4px_rgba(0,0,0,0.05)]'
+                ? 'bg-[var(--bg-setting-item)] font-medium text-[var(--text-color)] shadow-[0_2px_4px_rgba(0,0,0,0.05)]'
                 : 'text-[var(--user-text-color)] hover:bg-[var(--bg-left-menu-hover)]'
             ]"
             @click="scrollToGroup(tab.id)">
-            <div class="flex items-center justify-center text-[16px]">
+            <div class="flex-center text-[16px]">
               <i-mdi-heart-outline v-if="tab.id === 'interactive'" />
               <i-mdi-play-circle-outline v-else-if="tab.id === 'playback'" />
             </div>
@@ -24,28 +24,28 @@
           </div>
         </div>
 
-        <div class="flex-1 flex flex-col h-full bg-[var(--bg-popover)] overflow-hidden">
-          <div class="flex-1 h-0">
+        <div class="flex h-full flex-1 flex-col overflow-hidden bg-[var(--bg-popover)]">
+          <div class="h-0 flex-1">
             <n-scrollbar ref="scrollbarRef" style="height: 100%" @scroll="handleScroll">
               <div class="px-6 py-4 pb-12">
-                <div v-for="tab in tabs" :key="tab.id" :id="`shortcut-group-${tab.id}`" class="mb-8 last:mb-0">
-                  <div class="text-[15px] font-semibold mb-2 text-[var(--text-color)]">
+                <div v-for="tab in tabs" class="mb-8 last:mb-0" :key="tab.id" :id="`shortcut-group-${tab.id}`">
+                  <div class="mb-2 text-[15px] font-semibold text-[var(--text-color)]">
                     {{ tab.label }}
                   </div>
 
                   <div class="flex flex-col">
                     <div
                       v-for="item in shortcutStructure[tab.id]"
-                      :key="item.key"
-                      class="flex justify-between items-center h-[46px] border-b border-[var(--line-color)] last:border-none">
+                      class="flex h-[46px] items-center justify-between border-b border-[var(--line-color)] last:border-none"
+                      :key="item.key">
                       <span class="text-[13px] text-[var(--user-text-color)]">{{ item.label }}</span>
 
                       <div
-                        class="flex items-center justify-center min-w-[60px] h-[28px] px-3 rounded-[6px] text-[13px] cursor-pointer transition-all select-none font-mono"
+                        class="flex h-[28px] min-w-[60px] cursor-pointer items-center justify-center rounded-[6px] px-3 font-mono text-[13px] transition-all select-none"
                         :class="[
                           recordingKey === item.key
-                            ? 'bg-[rgba(255,0,80,0.1)] text-[#ff0050] border border-[#ff0050] animate-pulse shadow-sm'
-                            : 'bg-[var(--bg-setting-item)] hover:bg-[var(--bg-left-menu-hover)] text-[var(--text-color)] border border-transparent'
+                            ? 'animate-pulse border border-[#ff0050] bg-[rgba(255,0,80,0.1)] text-[#ff0050] shadow-sm'
+                            : `border border-transparent bg-[var(--bg-setting-item)] text-[var(--text-color)] hover:bg-[var(--bg-left-menu-hover)]`
                         ]"
                         @click="startRecording(item.key)">
                         <span v-if="recordingKey === item.key">{{ t("dialog.shortcuts.wait") }}</span>
@@ -59,8 +59,8 @@
           </div>
 
           <div
-            class="h-[60px] shrink-0 border-t border-[var(--line-color)] flex justify-between items-center px-6 bg-[var(--bg-popover)] z-10">
-            <n-button secondary size="small" @click="restoreDefaults" class="!px-4">
+            class="z-10 flex h-[60px] shrink-0 items-center justify-between border-t border-[var(--line-color)] bg-[var(--bg-popover)] px-6">
+            <n-button secondary size="small" class="!px-4" @click="restoreDefaults">
               <template #icon>
                 <i-mdi-refresh />
               </template>

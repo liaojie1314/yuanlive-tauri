@@ -1,46 +1,46 @@
 <template>
-  <div class="h-screen flex flex-col bg-[--right-bg-color] overflow-hidden">
+  <div class="flex h-screen flex-col overflow-hidden bg-[--right-bg-color]">
     <action-bar class="flex-none" />
 
-    <div class="flex-1 w-full relative overflow-hidden bg-[#f0f0f0]">
-      <div v-if="renderError" class="size-full flex flex-col items-center justify-center text-gray-500 gap-3">
-        <i-mdi-alert-circle class="w-12 h-12 text-red-400" />
+    <div class="relative w-full flex-1 overflow-hidden bg-[#f0f0f0]">
+      <div v-if="renderError" class="flex size-full flex-col items-center justify-center gap-3 text-gray-500">
+        <i-mdi-alert-circle class="h-12 w-12 text-red-400" />
         <div class="text-sm">{{ t("preview.file.renderError") }}</div>
         <div class="text-xs opacity-70">{{ t("preview.file.renderErrorTip") }}</div>
       </div>
 
       <VueOfficeDocx
         v-else-if="isShowWord"
-        :src="resourceSrc"
         class="size-full"
+        :src="resourceSrc"
         @rendered="onRendered"
         @error="handleRenderError" />
       <VueOfficePdf
         v-else-if="isShowPdf"
-        :src="resourceSrc"
         class="size-full"
+        :src="resourceSrc"
         @rendered="onRendered"
         @error="handleRenderError" />
       <VueOfficeExcel
         v-else-if="isShowExcel"
-        :src="resourceSrc"
         class="size-full"
+        :src="resourceSrc"
         @rendered="onRendered"
         @error="handleRenderError" />
       <VueOfficePptx
         v-else-if="isShowPpt"
-        :src="resourceSrc"
         class="size-full"
+        :src="resourceSrc"
         @rendered="onRendered"
         @error="handleRenderError" />
 
       <n-scrollbar v-else-if="isShowMd" class="h-full w-full bg-white">
-        <div class="markdown-body" v-html="mdHtml"></div>
+        <div v-html="mdHtml" class="markdown-body"></div>
       </n-scrollbar>
 
       <n-scrollbar v-else-if="isShowText" class="h-full w-full bg-white">
         <div class="p-6">
-          <pre class="whitespace-pre-wrap font-mono text-sm text-gray-800 leading-relaxed">{{ txtContent }}</pre>
+          <pre class="font-mono text-sm leading-relaxed whitespace-pre-wrap text-gray-800">{{ txtContent }}</pre>
         </div>
       </n-scrollbar>
 
@@ -50,8 +50,8 @@
         </div>
       </n-scrollbar>
 
-      <div v-else class="size-full flex flex-col items-center justify-center text-gray-500 gap-3">
-        <i-mdi-file-document-alert class="w-12 h-12 text-gray-400" />
+      <div v-else class="flex size-full flex-col items-center justify-center gap-3 text-gray-500">
+        <i-mdi-file-document-alert class="h-12 w-12 text-gray-400" />
         <div class="text-sm">
           {{ getErrorMessage() }}
         </div>

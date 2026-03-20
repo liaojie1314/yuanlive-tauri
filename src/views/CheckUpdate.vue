@@ -1,12 +1,12 @@
 <template>
-  <div class="size-full bg-[--bg-popover] select-none cursor-default">
+  <div class="size-full cursor-default bg-[--bg-popover] select-none">
     <!--顶部操作栏-->
     <action-bar :is-drag="false" :max-w="false" :min-w="false" />
 
-    <n-flex v-if="loading" vertical justify="center" class="mt-6px box-border px-12px">
-      <n-skeleton text :repeat="1" class="rounded-8px h-30px w-120px" />
-      <n-skeleton text :repeat="1" class="rounded-8px h-300px" />
-      <n-skeleton text :repeat="1" class="rounded-8px w-80px h-30px m-[0_0_0_auto]" />
+    <n-flex v-if="loading" vertical justify="center" class="mt-6px px-12px box-border">
+      <n-skeleton text class="rounded-8px h-30px w-120px" :repeat="1" />
+      <n-skeleton text class="rounded-8px h-300px" :repeat="1" />
+      <n-skeleton text class="rounded-8px w-80px h-30px m-[0_0_0_auto]" :repeat="1" />
     </n-flex>
     <n-flex v-else vertical justify="center" class="p-14px box-border select-none">
       <n-flex justify="space-between" align="center">
@@ -17,11 +17,11 @@
           </n-flex>
 
           <n-flex v-if="newVersion" align="center" class="relative">
-            <i-material-symbols-keyboard-arrow-right class="w-24px h-24px select-none color-#ccc" />
+            <i-material-symbols-keyboard-arrow-right class="w-24px h-24px color-#ccc select-none" />
 
-            <p class="relative text-(20px #13987f) font-500">{{ newVersion }}</p>
+            <p class="text-(20px #13987f) font-500 relative">{{ newVersion }}</p>
 
-            <span class="absolute top--10px right--44px p-[4px_8px] bg-#f6dfe3ff rounded-6px text-(12px #ce304f)">
+            <span class="top--10px right--44px bg-#f6dfe3ff rounded-6px text-(12px #ce304f) absolute p-[4px_8px]">
               {{ t("update.checkUpdate.newTag") }}
             </span>
           </n-flex>
@@ -46,7 +46,7 @@
               {{ logVisible ? t("update.checkUpdate.collapse") : t("update.checkUpdate.expand") }}
             </span>
             <i-material-symbols-keyboard-arrow-down
-              class="w-16px h-16px select-none color-#13987f ml-2px transition-transform duration-300"
+              class="w-16px h-16px color-#13987f ml-2px transition-transform duration-300 select-none"
               :class="{ 'rotate-180': !logVisible }"></i-material-symbols-keyboard-arrow-down>
           </n-flex>
         </n-button>
@@ -55,9 +55,9 @@
         v-show="logVisible"
         class="overflow-hidden transition-all duration-300"
         :class="logVisible ? 'h-460px' : 'h-0'">
-        <n-scrollbar class="p-[0_10px] box-border">
+        <n-scrollbar class="box-border p-[0_10px]">
           <div v-if="newCommitLog.length > 0">
-            <div class="p-[4px_8px] mt-4px w-fit bg-#f6dfe3ff rounded-6px text-(12px #ce304f)">
+            <div class="mt-4px bg-#f6dfe3ff rounded-6px text-(12px #ce304f) w-fit p-[4px_8px]">
               {{ newVersion }}
             </div>
 
@@ -65,7 +65,7 @@
               <n-timeline-item v-for="(log, index) in newCommitLog" :key="index" :content="log.message">
                 <template #icon>
                   <n-icon :size="32">
-                    <img class="size-32px" :src="`/emoji/${log.icon}.webp`" alt="" />
+                    <img alt="" class="size-32px" :src="`/emoji/${log.icon}.webp`" />
                   </n-icon>
                 </template>
               </n-timeline-item>
@@ -74,9 +74,9 @@
             <n-flex>
               <n-flex vertical :size="20">
                 <i-material-symbols-keyboard-arrow-right
-                  class="m-[4px_40px] w-24px h-24px select-none rotate-270 color-#ccc" />
+                  class="w-24px h-24px color-#ccc m-[4px_40px] rotate-270 select-none" />
 
-                <span class="p-[4px_8px] w-fit bg-#f1f1f1 rounded-6px text-(12px #999)">{{ currentVersion }}</span>
+                <span class="bg-#f1f1f1 rounded-6px text-(12px #999) w-fit p-[4px_8px]">{{ currentVersion }}</span>
               </n-flex>
             </n-flex>
           </div>
@@ -85,7 +85,7 @@
             <n-timeline-item v-for="(log, index) in commitLog" :key="index" :content="log.message">
               <template #icon>
                 <n-icon :size="32">
-                  <img class="size-32px" :src="`/emoji/${log.icon}.webp`" alt="" />
+                  <img alt="" class="size-32px" :src="`/emoji/${log.icon}.webp`" />
                 </n-icon>
               </template>
             </n-timeline-item>
@@ -93,8 +93,8 @@
         </n-scrollbar>
       </div>
       <n-flex justify="end" class="mt-10px">
-        <n-button :onclick="dismissUpdate" secondary>{{ t("update.checkUpdate.ignore") }}</n-button>
-        <n-button :onclick="doUpdate" secondary type="primary">{{ t("update.checkUpdate.updateNow") }}</n-button>
+        <n-button secondary :onclick="dismissUpdate">{{ t("update.checkUpdate.ignore") }}</n-button>
+        <n-button secondary type="primary" :onclick="doUpdate">{{ t("update.checkUpdate.updateNow") }}</n-button>
       </n-flex>
     </n-flex>
   </div>

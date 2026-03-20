@@ -2,7 +2,7 @@
   <n-flex vertical :size="40">
     <n-flex vertical class="text-(14px [--text-color])" :size="16">
       <span class="pl-10px">{{ t("setting.ai.mcpPlugins") }}</span>
-      <n-flex class="item" :size="12" vertical>
+      <n-flex vertical class="item" :size="12">
         <div v-for="(mcp, index) in mcpList" :key="mcp.id">
           <n-flex align="center" justify="space-between" class="py-4px">
             <div>
@@ -14,7 +14,7 @@
 
           <n-collapse-transition v-if="mcpConfig[mcp.id]" :show="mcpConfig[mcp.id].enabled">
             <div
-              class="mt-12px p-12px bg-[var(--bg-setting-item)] filter-brightness-95 dark:filter-brightness-110 rounded-8px">
+              class="mt-12px p-12px filter-brightness-95 dark:filter-brightness-110 rounded-8px bg-[var(--bg-setting-item)]">
               <n-checkbox-group v-model:value="mcpConfig[mcp.id].activeTools">
                 <n-grid :cols="2" :y-gap="16" :x-gap="16">
                   <n-gi v-for="tool in mcp.tools" :key="tool.name">
@@ -35,7 +35,7 @@
 
     <n-flex vertical class="text-(14px [--text-color])" :size="16">
       <span class="pl-10px">{{ t("setting.ai.fsMcpWhitelist") }}</span>
-      <n-flex class="item" :size="12" vertical>
+      <n-flex vertical class="item" :size="12">
         <n-flex align="center" justify="space-between">
           <span class="text-12px color-[#909090]">{{ t("setting.ai.fsMcpWhitelistHint") }}</span>
           <n-button size="small" type="primary" secondary @click="handleAddPath">
@@ -43,18 +43,18 @@
           </n-button>
         </n-flex>
 
-        <span class="w-full h-1px bg-[--line-color]"></span>
+        <span class="h-1px w-full bg-[--line-color]"></span>
 
-        <n-empty v-if="allowedWorkspaces.length === 0" :description="t('setting.ai.noWhitelistDir')" class="py-20px" />
+        <n-empty v-if="allowedWorkspaces.length === 0" class="py-20px" :description="t('setting.ai.noWhitelistDir')" />
 
-        <n-flex v-else vertical :size="8" class="mt-8px">
+        <n-flex v-else vertical class="mt-8px" :size="8">
           <n-flex
             v-for="(path, index) in allowedWorkspaces"
-            :key="index"
             align="center"
             justify="space-between"
-            class="bg-[var(--bg-left-menu)] p-10px rounded-6px border-(1px solid transparent) hover:border-[var(--border-active-color)] transition-all">
-            <span class="text-13px font-mono break-all flex-1">{{ path }}</span>
+            class="p-10px rounded-6px border-(1px solid transparent) bg-[var(--bg-left-menu)] transition-all hover:border-[var(--border-active-color)]"
+            :key="index">
+            <span class="text-13px flex-1 font-mono break-all">{{ path }}</span>
             <n-button size="tiny" quaternary type="error" @click="removePath(index)">
               {{ t("setting.ai.deleteWhitelistDir") }}
             </n-button>
@@ -125,7 +125,7 @@ const removePath = (index: number) => {
 
 <style scoped lang="scss">
 .item {
-  @apply bg-[--bg-setting-item] rounded-12px size-full p-16px box-border border-(solid 1px [--line-color]) custom-shadow;
+  @apply rounded-12px p-16px border-(solid 1px [--line-color]) custom-shadow box-border size-full bg-[--bg-setting-item];
 }
 
 // 覆盖一下 Naive UI 分割线的默认边距

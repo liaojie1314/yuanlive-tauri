@@ -1,101 +1,101 @@
 <template>
-  <div class="flex flex-col max-w-[800px] w-full min-w-0">
-    <div v-if="attachments.length > 0" class="flex flex-wrap gap-2 m-1 p-1 select-none w-[calc(100%-16px)]">
-      <div v-for="(item, index) in attachments" :key="index" class="relative flex-shrink-0 group cursor-default">
+  <div class="flex w-full max-w-[800px] min-w-0 flex-col">
+    <div v-if="attachments.length > 0" class="m-1 flex w-[calc(100%-16px)] flex-wrap gap-2 p-1 select-none">
+      <div v-for="(item, index) in attachments" class="group relative flex-shrink-0 cursor-default" :key="index">
         <div
           v-if="item.type === 'image'"
-          class="w-16 h-16 rounded-lg overflow-hidden border border-[--line-color] bg-[--input-area-bg] cursor-pointer hover:opacity-90 transition-opacity"
+          class="h-16 w-16 cursor-pointer overflow-hidden rounded-lg border border-[--line-color] bg-[--input-area-bg] transition-opacity hover:opacity-90"
           @click="handleAttachmentClick(item)">
-          <img :src="item.previewUrl" alt="img" class="w-full h-full object-cover" />
+          <img alt="img" class="h-full w-full object-cover" :src="item.previewUrl" />
         </div>
 
         <div
           v-else
-          class="w-16 h-16 rounded-lg border border-[--line-color] bg-[--input-area-bg] flex-center flex-col gap-1 shadow-sm hover:shadow-md transition-shadow select-none cursor-pointer hover:bg-[--tray-hover]"
+          class="flex-center h-16 w-16 cursor-pointer flex-col gap-1 rounded-lg border border-[--line-color] bg-[--input-area-bg] shadow-sm transition-shadow select-none hover:bg-[--tray-hover] hover:shadow-md"
           :title="item.name"
           @click="handleAttachmentClick(item)">
-          <span class="text-sm text-[--text-color] font-medium w-full truncate text-center">
+          <span class="w-full truncate text-center text-sm font-medium text-[--text-color]">
             {{ item.name }}
           </span>
 
-          <div class="flex-center mt-1 gap-1 w-full opacity-80">
+          <div class="flex-center mt-1 w-full gap-1 opacity-80">
             <img
+              class="h-5 w-5 flex-shrink-0 object-contain"
               :src="`/file/${getFileSuffix(item.name || '')}.svg`"
-              :alt="getFileSuffix(item.name || '')"
-              class="w-5 h-5 object-contain flex-shrink-0" />
+              :alt="getFileSuffix(item.name || '')" />
 
-            <span class="text-[10px] text-[--user-text-color] uppercase font-bold truncate max-w-[2rem]">
+            <span class="max-w-[2rem] truncate text-[10px] font-bold text-[--user-text-color] uppercase">
               {{ getFileSuffix(item.name) }}
             </span>
           </div>
         </div>
 
         <div
-          class="absolute top-[-4px] right-[-4px] w-5 h-5 rounded-full bg-[--action-bar-icon-color] text-[--tray-bg-color] flex items-center justify-center cursor-pointer hover:bg-red-500 transition-colors shadow-sm z-10 opacity-0 group-hover:opacity-100"
+          class="absolute top-[-4px] right-[-4px] z-10 flex h-5 w-5 cursor-pointer items-center justify-center rounded-full bg-[--action-bar-icon-color] text-[--tray-bg-color] opacity-0 shadow-sm transition-colors group-hover:opacity-100 hover:bg-red-500"
           @click.stop="removeAttachment(index)">
-          <i-mdi-close class="w-3 h-3" />
+          <i-mdi-close class="h-3 w-3" />
         </div>
       </div>
     </div>
 
-    <div v-resize="handleResize" class="input-container flex flex-col bg-[--input-area-bg] rounded-lg p-2 m-1">
+    <div v-resize="handleResize" class="input-container m-1 flex flex-col rounded-lg bg-[--input-area-bg] p-2">
       <n-input
         v-if="!isVoiceMode"
-        v-model:value="messageText"
         type="textarea"
+        class="w-full !bg-transparent"
+        v-model:value="messageText"
         :placeholder="t('components.messageInput.placeholder')"
         :min-height="40"
         :max-height="120"
         :autosize="{ minRows: 1, maxRows: 5 }"
-        class="w-full !bg-transparent"
-        @keydown.enter="handleEnterKey"
         :bordered="false"
-        :show-count="false" />
+        :show-count="false"
+        @keydown.enter="handleEnterKey" />
 
-      <div v-if="!isVoiceMode" class="flex justify-between items-center mt-3 pt-2 border-t border-[--line-color]">
-        <div class="flex items-center gap-3">
+      <div v-if="!isVoiceMode" class="mt-3 flex-between-center border-t border-[--line-color] pt-2">
+        <div class="flex-y-center gap-3">
           <n-popover
-            class="p-0 bg-[--bg-popover] select-none border border-[--line-color]"
-            :show-arrow="false"
             trigger="click"
-            v-model:show="showAttachPopover">
+            class="border border-[--line-color] bg-[--bg-popover] p-0 select-none"
+            v-model:show="showAttachPopover"
+            :show-arrow="false">
             <template #trigger>
               <div
-                class="flex items-center gap-1 px-4 py-1.5 text-sm text-[--text-color] rounded-full cursor-pointer transition-colors border"
+                style="border-color: var(--btn-secondary-border)"
+                class="flex cursor-pointer items-center gap-1 rounded-full border px-4 py-1.5 text-sm text-[--text-color] transition-colors"
                 :class="
                   showAttachPopover
                     ? 'bg-[--btn-secondary-hover]'
                     : 'bg-[--btn-secondary-bg] hover:bg-[--btn-secondary-hover]'
                 "
-                style="border-color: var(--btn-secondary-border)"
                 :title="t('components.messageInput.attach')">
-                <i-mdi-paperclip class="w-4 h-4" />
+                <i-mdi-paperclip class="h-4 w-4" />
                 <span v-if="showButtonText">{{ t("components.messageInput.attach") }}</span>
               </div>
             </template>
-            <div class="menu-list space-y-1 p-1 rounded-md">
+            <div class="menu-list space-y-1 rounded-md p-1">
               <div
-                class="menu-item flex items-center gap-2 px-3 py-2 text-sm text-[--text-color] hover:bg-[--tray-hover] rounded-md cursor-pointer transition-colors"
+                class="menu-item flex cursor-pointer items-center gap-2 rounded-md px-3 py-2 text-sm text-[--text-color] transition-colors hover:bg-[--tray-hover]"
                 @click="handleMenuClick('file')">
-                <i-mdi-file-upload-outline class="w-4 h-4" />
+                <i-mdi-file-upload-outline class="h-4 w-4" />
                 <span>{{ t("components.messageInput.uploadFile") }}</span>
               </div>
               <div
-                class="menu-item flex items-center gap-2 px-3 py-2 text-sm text-[--text-color] hover:bg-[--tray-hover] rounded-md cursor-pointer transition-colors"
+                class="menu-item flex cursor-pointer items-center gap-2 rounded-md px-3 py-2 text-sm text-[--text-color] transition-colors hover:bg-[--tray-hover]"
                 @click="handleMenuClick('photo')">
-                <i-mdi-image-outline class="w-4 h-4" />
+                <i-mdi-image-outline class="h-4 w-4" />
                 <span>{{ t("components.messageInput.uploadPhoto") }}</span>
               </div>
               <div
-                class="menu-item flex items-center gap-2 px-3 py-2 text-sm text-[--text-color] hover:bg-[--tray-hover] rounded-md cursor-pointer transition-colors"
+                class="menu-item flex cursor-pointer items-center gap-2 rounded-md px-3 py-2 text-sm text-[--text-color] transition-colors hover:bg-[--tray-hover]"
                 @click="handleMenuClick('screenshot')">
-                <i-mdi-camera class="w-4 h-4" />
+                <i-mdi-camera class="h-4 w-4" />
                 <span>{{ t("components.messageInput.takeScreenshot") }}</span>
               </div>
               <div
-                class="menu-item flex items-center gap-2 px-3 py-2 text-sm text-[--text-color] hover:bg-[--tray-hover] rounded-md cursor-pointer transition-colors"
+                class="menu-item flex cursor-pointer items-center gap-2 rounded-md px-3 py-2 text-sm text-[--text-color] transition-colors hover:bg-[--tray-hover]"
                 @click="handleMenuClick('camera')">
-                <i-mdi-camera-plus class="w-4 h-4" />
+                <i-mdi-camera-plus class="h-4 w-4" />
                 <span>{{ t("components.messageInput.takePhoto") }}</span>
               </div>
             </div>
@@ -103,55 +103,55 @@
 
           <div class="relative">
             <n-select
-              v-model:value="selectedModel"
-              :options="modelOptions"
               placeholder="auto"
               class="w-32"
-              @update:value="handleModelChange"
-              :render-label="renderLabel" />
+              v-model:value="selectedModel"
+              :options="modelOptions"
+              :render-label="renderLabel"
+              @update:value="handleModelChange" />
           </div>
 
           <div
-            class="flex items-center gap-1 px-4 py-1.5 text-sm rounded-full cursor-pointer transition-all duration-200 border"
+            class="flex cursor-pointer items-center gap-1 rounded-full border px-4 py-1.5 text-sm transition-all duration-200"
             :class="{
-              'text-blue-500 bg-blue-500/15 border-blue-500/50': isThinkActive,
-              'text-[--text-color] bg-[--btn-secondary-bg] border-[--btn-secondary-border] hover:bg-[--btn-secondary-hover]':
+              'border-blue-500/50 bg-blue-500/15 text-blue-500': isThinkActive,
+              [`border-[--btn-secondary-border] bg-[--btn-secondary-bg] text-[--text-color] hover:bg-[--btn-secondary-hover]`]:
                 !isThinkActive
             }"
             :title="t('components.messageInput.think')"
             @click="isThinkActive = !isThinkActive">
-            <i-mdi-lightbulb-outline class="w-4 h-4" />
+            <i-mdi-lightbulb-outline class="h-4 w-4" />
             <span v-if="showButtonText">{{ t("components.messageInput.think") }}</span>
           </div>
 
           <div
-            class="flex items-center gap-1 px-4 py-1.5 text-sm rounded-full cursor-pointer transition-all duration-200 border"
+            class="flex cursor-pointer items-center gap-1 rounded-full border px-4 py-1.5 text-sm transition-all duration-200"
             :class="{
-              'text-blue-500 bg-blue-500/15 border-blue-500/50': isSearchActive,
-              'text-[--text-color] bg-[--btn-secondary-bg] border-[--btn-secondary-border] hover:bg-[--btn-secondary-hover]':
+              'border-blue-500/50 bg-blue-500/15 text-blue-500': isSearchActive,
+              [`border-[--btn-secondary-border] bg-[--btn-secondary-bg] text-[--text-color] hover:bg-[--btn-secondary-hover]`]:
                 !isSearchActive
             }"
             :title="t('components.messageInput.search')"
             @click="isSearchActive = !isSearchActive">
-            <i-mdi-magnify class="w-4 h-4" />
+            <i-mdi-magnify class="h-4 w-4" />
             <span v-if="showButtonText">{{ t("components.messageInput.search") }}</span>
           </div>
         </div>
 
-        <div class="flex items-center gap-3">
+        <div class="flex-y-center gap-3">
           <div
-            class="flex items-center justify-center w-8 h-8 text-[--text-color] rounded-full cursor-pointer transition-colors border bg-[--btn-secondary-bg] border-[--btn-secondary-border] hover:bg-[--btn-secondary-hover]"
+            class="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border border-[--btn-secondary-border] bg-[--btn-secondary-bg] text-[--text-color] transition-colors hover:bg-[--btn-secondary-hover]"
             :title="t('components.messageInput.voiceMessage')"
             @click="handleVoiceClick">
-            <i-mdi-microphone-outline class="w-4 h-4" />
+            <i-mdi-microphone-outline class="h-4 w-4" />
           </div>
 
           <n-button circle type="primary" :disabled="isBtnDisabled" @click="sendMessage">
             <template #icon>
               <n-icon>
-                <i-material-symbols-arrow-upward v-if="status === 'normal'" class="w-4 h-4" />
-                <i-material-symbols-pause v-else-if="status === 'streaming'" class="w-4 h-4" />
-                <i-mdi-loading v-else class="w-4 h-4 animate-spin" />
+                <i-material-symbols-arrow-upward v-if="status === 'normal'" class="h-4 w-4" />
+                <i-material-symbols-pause v-else-if="status === 'streaming'" class="h-4 w-4" />
+                <i-mdi-loading v-else class="h-4 w-4 animate-spin" />
               </n-icon>
             </template>
           </n-button>

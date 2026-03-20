@@ -1,11 +1,11 @@
 <template>
   <n-modal
-    :show="show"
     preset="card"
-    :title="t('components.addToKnowledge.title')"
-    class="w-[400px]"
-    :bordered="false"
     size="small"
+    class="w-[400px]"
+    :show="show"
+    :title="t('components.addToKnowledge.title')"
+    :bordered="false"
     @update:show="$emit('update:show', $event)">
     <div class="flex flex-col gap-4">
       <div class="text-sm text-[--user-text-color]">
@@ -15,28 +15,28 @@
       </div>
 
       <div class="flex flex-col gap-2">
-        <div class="flex items-center justify-between">
+        <div class="flex-between-center">
           <span class="text-xs font-bold text-[--text-color]">
             {{ t("components.addToKnowledge.chooseKnowledge") }}
           </span>
-          <span class="text-xs text-blue-500 cursor-pointer hover:underline transition-all" @click="toggleCreateMode">
+          <span class="cursor-pointer text-xs text-blue-500 transition-all hover:underline" @click="toggleCreateMode">
             {{ isCreatingNew ? t("components.common.cancel") : "+ " + t("components.addToKnowledge.newKnowledge") }}
           </span>
         </div>
 
         <n-select
           v-if="!isCreatingNew"
+          size="small"
           v-model:value="selectedKbId"
           :options="knowledgeBases"
-          :placeholder="t('components.addToKnowledge.selectKnowledgePlaceholder')"
-          size="small" />
+          :placeholder="t('components.addToKnowledge.selectKnowledgePlaceholder')" />
 
         <n-input
           v-else
-          v-model:value="newKbName"
-          :placeholder="t('components.addToKnowledge.newKnowledgePlaceholder')"
           size="small"
           class="border-(1px solid #90909080)"
+          v-model:value="newKbName"
+          :placeholder="t('components.addToKnowledge.newKnowledgePlaceholder')"
           @keyup.enter="handleSubmit" />
       </div>
     </div>

@@ -1,14 +1,14 @@
 <template>
   <div
     ref="containerRef"
-    class="danmaku-container absolute inset-0 pointer-events-none overflow-hidden z-20"
+    v-show="store.settings.enabled"
+    class="danmaku-container pointer-events-none absolute inset-0 z-20 overflow-hidden"
     :class="{ 'is-paused': isPaused }"
-    :style="{ '--container-width': `${width}px` }"
-    v-show="store.settings.enabled">
+    :style="{ '--container-width': `${width}px` }">
     <div
       v-for="item in activeDanmakus"
-      :key="item.id"
       class="danmaku-track-item absolute whitespace-nowrap will-change-transform"
+      :key="item.id"
       :class="[`type-${item.type}`]"
       :style="{
         /* 顶部安全距离 10px 防止贴边太死 */
@@ -22,9 +22,9 @@
       @mouseleave="interactive ? (hoveredId = null) : null"
       @animationend.self="handleAnimationEnd(item.id)">
       <div
-        class="danmaku-inner flex items-center gap-2 px-3.5 py-1 rounded-full transition-all duration-200"
+        class="danmaku-inner flex-y-center gap-2 rounded-full px-3.5 py-1 transition-all duration-200"
         :class="{
-          'border-2 border-gray': item.isMe,
+          'border-gray border-2': item.isMe,
           'pointer-events-auto cursor-pointer': interactive,
           'is-hovered': hoveredId === item.id
         }"
@@ -36,8 +36,8 @@
 
         <span
           v-if="item.count > 1"
-          :key="item.comboKey"
-          class="combo-badge ml-1 px-1.5 py-0 rounded text-xs font-bold text-white bg-[#ff0050] animate-pop">
+          class="combo-badge animate-pop ml-1 rounded bg-[#ff0050] px-1.5 py-0 text-xs font-bold text-white"
+          :key="item.comboKey">
           x{{ item.count }}
         </span>
 
@@ -45,15 +45,15 @@
           <span
             class="danmaku-action-btn like-btn"
             :class="{ liked: item.isLiked }"
-            @click.stop="handleLike(item)"
-            :title="t('components.videoPlayer.like')">
+            :title="t('components.videoPlayer.like')"
+            @click.stop="handleLike(item)">
             <i-material-symbols-favorite v-if="item.isLiked" class="iconify-icon" />
             <i-material-symbols-favorite-outline v-else class="iconify-icon" />
           </span>
           <span
             class="danmaku-action-btn report-btn"
-            @click.stop="handleReport(item)"
-            :title="t('components.videoPlayer.report')">
+            :title="t('components.videoPlayer.report')"
+            @click.stop="handleReport(item)">
             <i-mdi-alert-outline class="iconify-icon" />
           </span>
         </div>

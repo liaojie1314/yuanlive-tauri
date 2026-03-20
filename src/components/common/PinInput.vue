@@ -1,17 +1,19 @@
 <template>
-  <div class="flex justify-center">
+  <div class="flex-x-center">
     <div class="flex space-x-2">
       <input
         v-for="(_, index) in digits"
-        :key="index"
         type="text"
         maxlength="1"
         spellCheck="false"
         autoComplete="off"
         autoCorrect="off"
         autoCapitalize="off"
+        ref="pinInputs"
+        v-model="digits[index]"
+        :key="index"
         :class="[
-          'text-center rounded-8px',
+          'rounded-8px text-center',
           'border-(2px solid transparent)',
           'focus:border-(2px solid #13987f)',
           'focus:outline-none',
@@ -26,11 +28,9 @@
           maxWidth: size,
           maxHeight: size
         }"
-        v-model="digits[index]"
         @input="handleInput(index)"
         @keydown="handleKeydown($event, index)"
-        @paste="handlePaste($event, index)"
-        ref="pinInputs" />
+        @paste="handlePaste($event, index)" />
     </div>
   </div>
 </template>

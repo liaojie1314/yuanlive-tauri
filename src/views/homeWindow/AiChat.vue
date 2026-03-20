@@ -1,8 +1,8 @@
 <template>
-  <div class="h-[calc(100%-24px)] flex flex-row w-full overflow-auto">
+  <div class="flex h-[calc(100%-24px)] w-full flex-row overflow-auto">
     <div
       :class="[
-        'transition-all duration-300 ease-in-out bg-[--tray-bg-color] border-r border-[--line-color]',
+        'border-r border-[--line-color] bg-[--tray-bg-color] transition-all duration-300 ease-in-out',
         isHistoryCollapsed ? 'w-[55px]' : 'w-[20%] min-w-[200px]'
       ]">
       <chat-history-list
@@ -15,11 +15,11 @@
 
     <div
       :class="[
-        'w-[80%] lg:w-[60%] flex flex-col transition-all duration-300 ease-in-out min-w-0',
+        'flex w-[80%] min-w-0 flex-col transition-all duration-300 ease-in-out lg:w-[60%]',
         isHistoryCollapsed ? 'w-[calc(100%-55px)] lg:w-[calc(100%-55px)]' : ''
       ]">
       <n-scrollbar ref="scrollbarRef" class="flex-1">
-        <div v-if="activeChatId" ref="scrollContentRef" class="flex flex-col items-center w-full">
+        <div v-if="activeChatId" ref="scrollContentRef" class="flex w-full flex-col items-center">
           <div class="w-full max-w-[1000px]">
             <message-item
               v-for="msg in messages"
@@ -37,29 +37,29 @@
           </div>
         </div>
 
-        <div v-else class="flex flex-col items-center justify-center w-full h-full min-h-[60vh] select-none">
+        <div v-else class="flex h-full min-h-[60vh] w-full flex-col items-center justify-center select-none">
           <div
-            class="w-16 h-16 bg-blue-500 rounded-2xl flex items-center justify-center text-white mb-6 shadow-lg shadow-blue-500/20">
-            <i-mdi-robot-outline class="w-10 h-10" />
+            class="mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-500 text-white shadow-lg shadow-blue-500/20">
+            <i-mdi-robot-outline class="h-10 w-10" />
           </div>
-          <h2 class="text-2xl font-bold text-[--text-color] mb-4">{{ $t("home.aiChat.startChat") }}</h2>
-          <p class="text-sm text-[--user-text-color] opacity-80 mb-10">
+          <h2 class="mb-4 text-2xl font-bold text-[--text-color]">{{ $t("home.aiChat.startChat") }}</h2>
+          <p class="mb-10 text-sm text-[--user-text-color] opacity-80">
             {{ $t("home.aiChat.welcome") }}
           </p>
 
-          <div class="flex gap-4 flex-wrap justify-center max-w-[800px]">
+          <div class="flex max-w-[800px] flex-wrap justify-center gap-4">
             <div
-              class="px-5 py-2.5 rounded-full border border-[--line-color] bg-[--input-area-bg] hover:bg-[--tray-hover] cursor-pointer text-sm text-[--text-color] opacity-80 hover:opacity-100 transition-all hover:shadow-sm"
+              class="cursor-pointer rounded-full border border-[--line-color] bg-[--input-area-bg] px-5 py-2.5 text-sm text-[--text-color] opacity-80 transition-all hover:bg-[--tray-hover] hover:opacity-100 hover:shadow-sm"
               @click="handleQuickAction('帮我写一段 Python 代码')">
               帮我写一段 Python 代码
             </div>
             <div
-              class="px-5 py-2.5 rounded-full border border-[--line-color] bg-[--input-area-bg] hover:bg-[--tray-hover] cursor-pointer text-sm text-[--text-color] opacity-80 hover:opacity-100 transition-all hover:shadow-sm"
+              class="cursor-pointer rounded-full border border-[--line-color] bg-[--input-area-bg] px-5 py-2.5 text-sm text-[--text-color] opacity-80 transition-all hover:bg-[--tray-hover] hover:opacity-100 hover:shadow-sm"
               @click="handleQuickAction('解释什么是闭包')">
               解释什么是闭包
             </div>
             <div
-              class="px-5 py-2.5 rounded-full border border-[--line-color] bg-[--input-area-bg] hover:bg-[--tray-hover] cursor-pointer text-sm text-[--text-color] opacity-80 hover:opacity-100 transition-all hover:shadow-sm"
+              class="cursor-pointer rounded-full border border-[--line-color] bg-[--input-area-bg] px-5 py-2.5 text-sm text-[--text-color] opacity-80 transition-all hover:bg-[--tray-hover] hover:opacity-100 hover:shadow-sm"
               @click="handleQuickAction('如何优化 SQL 查询')">
               如何优化 SQL 查询
             </div>
@@ -67,7 +67,7 @@
         </div>
       </n-scrollbar>
 
-      <div class="py-1 flex justify-center w-full bg-[--tray-bg-color]">
+      <div class="flex w-full justify-center bg-[--tray-bg-color] py-1">
         <message-input
           v-if="!isMessageSelectionMode"
           :status="chatStatus"
@@ -76,14 +76,14 @@
 
         <div
           v-else
-          class="w-full max-w-[800px] flex items-center justify-between bg-[--input-area-bg] rounded-lg p-4 m-1 border border-[--line-color] shadow-sm transition-all">
+          class="m-1 flex w-full max-w-[800px] items-center justify-between rounded-lg border border-[--line-color] bg-[--input-area-bg] p-4 shadow-sm transition-all">
           <div class="text-sm font-medium text-[--user-text-color]">
             {{ t("home.aiChat.selected") }}
-            <span class="text-blue-500 mx-1">{{ selectedMessageIds.size }}</span>
+            <span class="mx-1 text-blue-500">{{ selectedMessageIds.size }}</span>
             {{ t("home.aiChat.message") }}
           </div>
 
-          <div class="flex items-center gap-4">
+          <div class="flex-y-center gap-4">
             <n-button quaternary @click="cancelMessageSelection">{{ t("components.common.cancel") }}</n-button>
             <n-button type="error" :disabled="selectedMessageIds.size === 0" @click="handleBatchDeleteMessages">
               {{ t("home.aiChat.deleteSelected") }}
@@ -94,7 +94,7 @@
     </div>
 
     <div
-      class="w-0 lg:w-[20%] bg-[--tray-bg-color] border-l border-[--line-color] overflow-hidden transition-all duration-300 ease-in-out">
+      class="w-0 overflow-hidden border-l border-[--line-color] bg-[--tray-bg-color] transition-all duration-300 ease-in-out lg:w-[20%]">
       <right-panel />
     </div>
   </div>

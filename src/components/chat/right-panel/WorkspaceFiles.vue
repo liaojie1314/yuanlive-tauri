@@ -1,49 +1,49 @@
 <template>
-  <div class="flex flex-col gap-6 w-full">
-    <div v-for="section in sections" :key="section.id" class="flex flex-col gap-3">
-      <div class="flex items-center justify-between px-1 select-none">
-        <div class="flex items-center gap-2">
-          <div class="w-6 h-6 rounded-full flex items-center justify-center border" :class="section.colorClass">
-            <i-mdi-database-outline v-if="section.id === 'context'" class="w-4 h-4" />
-            <i-mdi-auto-fix v-else class="w-4 h-4" />
+  <div class="flex w-full flex-col gap-6">
+    <div v-for="section in sections" class="flex flex-col gap-3" :key="section.id">
+      <div class="flex-between-center px-1 select-none">
+        <div class="flex-y-center gap-2">
+          <div class="flex h-6 w-6 items-center justify-center rounded-full border" :class="section.colorClass">
+            <i-mdi-database-outline v-if="section.id === 'context'" class="h-4 w-4" />
+            <i-mdi-auto-fix v-else class="h-4 w-4" />
           </div>
           <span class="text-sm font-bold text-[--text-color]">{{ section.title }}</span>
         </div>
         <span
           v-if="section.files.length > 0"
-          class="text-xs font-mono text-[--user-text-color] bg-[--input-area-bg] px-2 py-0.5 rounded-md border border-[--line-color]">
+          class="rounded-md border border-[--line-color] bg-[--input-area-bg] px-2 py-0.5 font-mono text-xs text-[--user-text-color]">
           {{ section.files.length }}
         </span>
       </div>
 
-      <div v-if="section.files.length > 0" class="flex flex-wrap gap-2.5 select-none mt-1">
-        <div v-for="(item, index) in section.files" :key="index" class="relative flex-shrink-0 group cursor-default">
+      <div v-if="section.files.length > 0" class="mt-1 flex flex-wrap gap-2.5 select-none">
+        <div v-for="(item, index) in section.files" class="group relative flex-shrink-0 cursor-default" :key="index">
           <div
             v-if="['image', 'video'].includes(item.type)"
-            class="w-14 h-14 sm:w-16 sm:h-16 rounded-lg overflow-hidden border border-[--line-color] bg-[--input-area-bg] cursor-pointer hover:opacity-90 transition-opacity shadow-sm relative"
+            class="relative h-14 w-14 cursor-pointer overflow-hidden rounded-lg border border-[--line-color] bg-[--input-area-bg] shadow-sm transition-opacity hover:opacity-90 sm:h-16 sm:w-16"
             @click="handlePreview(item)">
-            <img :src="item.previewUrl" alt="img" class="w-full h-full object-cover" />
+            <img alt="img" class="h-full w-full object-cover" :src="item.previewUrl" />
             <div
               v-if="item.type === 'video'"
-              class="absolute bottom-1 left-1 bg-black/50 text-white rounded p-0.5 backdrop-blur-sm">
-              <i-mdi-play class="w-3 h-3" />
+              class="absolute bottom-1 left-1 rounded bg-black/50 p-0.5 text-white backdrop-blur-sm">
+              <i-mdi-play class="h-3 w-3" />
             </div>
           </div>
 
           <div
             v-else
-            class="w-14 h-14 sm:w-16 sm:h-16 rounded-lg border border-[--line-color] bg-[--input-area-bg] flex items-center justify-center flex-col gap-1 shadow-sm hover:shadow-md transition-shadow select-none cursor-pointer hover:bg-[--tray-hover]"
+            class="flex h-14 w-14 cursor-pointer flex-col items-center justify-center gap-1 rounded-lg border border-[--line-color] bg-[--input-area-bg] shadow-sm transition-shadow select-none hover:bg-[--tray-hover] hover:shadow-md sm:h-16 sm:w-16"
             :title="item.name"
             @click="handlePreview(item)">
-            <span class="text-xs text-[--text-color] font-medium w-full px-1 truncate text-center">
+            <span class="w-full truncate px-1 text-center text-xs font-medium text-[--text-color]">
               {{ item.name }}
             </span>
-            <div class="flex items-center mt-0.5 gap-1 w-full justify-center opacity-80">
+            <div class="mt-0.5 flex w-full items-center justify-center gap-1 opacity-80">
               <img
+                class="h-4 w-4 flex-shrink-0 object-contain"
                 :src="`/file/${getFileSuffix(item.name || '')}.svg`"
-                :alt="getFileSuffix(item.name || '')"
-                class="w-4 h-4 object-contain flex-shrink-0" />
-              <span class="text-[9px] text-[--user-text-color] uppercase font-bold truncate max-w-[2rem]">
+                :alt="getFileSuffix(item.name || '')" />
+              <span class="max-w-[2rem] truncate text-[9px] font-bold text-[--user-text-color] uppercase">
                 {{ getFileSuffix(item.name) }}
               </span>
             </div>
@@ -51,10 +51,10 @@
 
           <div
             v-if="section.id === 'generated'"
-            class="absolute top-[-6px] right-[-6px] w-5 h-5 rounded-full bg-[--action-bar-icon-color] text-[--tray-bg-color] flex items-center justify-center cursor-pointer transition-colors shadow-sm z-10 opacity-0 group-hover:opacity-100 hover:bg-blue-500"
+            class="absolute top-[-6px] right-[-6px] z-10 flex h-5 w-5 cursor-pointer items-center justify-center rounded-full bg-[--action-bar-icon-color] text-[--tray-bg-color] opacity-0 shadow-sm transition-colors group-hover:opacity-100 hover:bg-blue-500"
             :title="t('components.workspaceFiles.save')"
             @click.stop="section.onAction(index, item)">
-            <i-mdi-download class="w-3 h-3" />
+            <i-mdi-download class="h-3 w-3" />
           </div>
 
           <n-dropdown
@@ -64,9 +64,9 @@
             :options="contextMenuOptions"
             @select="(key) => handleContextAction(key, index, item)">
             <div
-              class="absolute top-[-6px] right-[-6px] w-5 h-5 rounded-full bg-[--action-bar-icon-color] text-[--tray-bg-color] flex items-center justify-center cursor-pointer transition-colors shadow-sm z-10 opacity-0 group-hover:opacity-100 hover:bg-gray-500"
+              class="absolute top-[-6px] right-[-6px] z-10 flex h-5 w-5 cursor-pointer items-center justify-center rounded-full bg-[--action-bar-icon-color] text-[--tray-bg-color] opacity-0 shadow-sm transition-colors group-hover:opacity-100 hover:bg-gray-500"
               @click.stop>
-              <i-mdi-dots-horizontal class="w-3 h-3" />
+              <i-mdi-dots-horizontal class="h-3 w-3" />
             </div>
           </n-dropdown>
         </div>
@@ -74,7 +74,7 @@
 
       <div
         v-else
-        class="text-center py-6 text-xs text-[--user-text-color] border border-dashed border-[--line-color] rounded-xl bg-[--input-area-bg] mt-1">
+        class="mt-1 rounded-xl border border-dashed border-[--line-color] bg-[--input-area-bg] py-6 text-center text-xs text-[--user-text-color]">
         {{ section.emptyText }}
       </div>
     </div>

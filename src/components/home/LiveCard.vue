@@ -1,38 +1,38 @@
 <template>
   <n-card
-    :bordered="false"
     content-style="padding: 0;"
-    class="w-full rounded-lg overflow-hidden bg-[--tray-bg-color] shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer group"
-    hoverable>
+    hoverable
+    class="group w-full cursor-pointer overflow-hidden rounded-lg bg-[--tray-bg-color] shadow-sm transition-all duration-200 hover:shadow-md"
+    :bordered="false">
     <template #cover>
-      <div class="relative w-full aspect-video overflow-hidden">
+      <div class="relative aspect-video w-full overflow-hidden">
         <img
+          loading="lazy"
+          class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
           :src="coverUrl"
-          :alt="title"
-          class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-          loading="lazy" />
+          :alt="title" />
 
         <div class="absolute top-2 left-2">
           <n-badge value="live" type="error" dot processing />
-          <span class="ml-1 text-xs text-white bg-red-500 px-1 rounded">Live</span>
+          <span class="ml-1 rounded bg-red-500 px-1 text-xs text-white">Live</span>
         </div>
 
         <div
-          class="absolute bottom-2 right-2 flex items-center gap-1 bg-black/60 backdrop-blur-[2px] text-white px-2 py-1 rounded text-xs">
+          class="absolute right-2 bottom-2 flex-y-center gap-1 rounded bg-black/60 px-2 py-1 text-xs text-white backdrop-blur-[2px]">
           <n-icon size="14" color="white">
             <i-mdi-eye-outline />
           </n-icon>
-          <span class="text-white text-xs">{{ hotScore }}</span>
+          <span class="text-xs text-white">{{ hotScore }}</span>
         </div>
       </div>
     </template>
 
-    <div class="p-3 flex flex-col gap-1">
-      <n-text class="text-sm font-medium text-[--text-color] truncate block">
+    <div class="flex flex-col gap-1 p-3">
+      <n-text class="block truncate text-sm font-medium text-[--text-color]">
         {{ title }}
       </n-text>
 
-      <n-text class="text-xs text-[--user-text-color] truncate block">
+      <n-text class="block truncate text-xs text-[--user-text-color]">
         {{ anchorName }}
       </n-text>
     </div>

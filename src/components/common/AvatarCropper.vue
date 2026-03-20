@@ -1,29 +1,29 @@
 <template>
   <n-modal
-    :show="props.show"
-    @update:show="$emit('update:show', $event)"
-    :mask-closable="false"
+    transform-origin="center"
     class="rounded-8px"
-    transform-origin="center">
-    <div class="bg-[--bg-edit] w-560px h-480px box-border flex flex-col items-center justify-between">
+    :show="props.show"
+    :mask-closable="false"
+    @update:show="$emit('update:show', $event)">
+    <div class="w-560px h-480px box-border flex-col-x-center justify-between bg-[--bg-edit]">
       <!-- 标题栏 -->
-      <n-flex :size="6" vertical class="w-full">
+      <n-flex vertical class="w-full" :size="6">
         <div
           v-if="isMac()"
-          @click="closeWindow"
-          class="mac-close size-13px shadow-inner bg-#ed6a5eff rounded-50% mt-6px select-none absolute left-6px">
-          <svg class="hidden size-7px color-#000 select-none absolute top-3px left-3px">
+          class="mac-close size-13px bg-#ed6a5eff rounded-50% mt-6px left-6px absolute shadow-inner select-none"
+          @click="closeWindow">
+          <svg class="size-7px color-#000 top-3px left-3px absolute hidden select-none">
             <use href="#close"></use>
           </svg>
         </div>
 
-        <n-flex class="text-(14px [--text-color]) select-none pt-6px" justify="center">
+        <n-flex justify="center" class="text-(14px [--text-color]) pt-6px select-none">
           {{ t("components.avatarCropper.title") }}
         </n-flex>
 
         <svg
           v-if="isWindows()"
-          class="size-14px cursor-pointer pt-6px select-none absolute right-6px"
+          class="size-14px pt-6px right-6px absolute cursor-pointer select-none"
           @click="closeWindow">
           <use href="#close"></use>
         </svg>
@@ -52,12 +52,12 @@
         <n-flex vertical class="px-20px">
           <!-- 圆形预览 -->
           <div class="mb-20px">
-            <div class="text-14px text-[--text-color] mb-8px">
+            <div class="text-14px mb-8px text-[--text-color]">
               {{ t("components.avatarCropper.preview.round") }}
             </div>
             <div class="preview-wrapper">
               <div
-                class="rounded-full preview-content"
+                class="preview-content rounded-full"
                 :style="{
                   width: previewUrl?.w + 'px',
                   height: previewUrl?.h + 'px',
@@ -75,7 +75,7 @@
 
           <!-- 方形预览 -->
           <div>
-            <div class="text-14px text-[--text-color] mb-8px w-120px">
+            <div class="text-14px mb-8px w-120px text-[--text-color]">
               {{ t("components.avatarCropper.preview.square") }}
             </div>
             <div class="preview-wrapper">
@@ -97,9 +97,9 @@
           </div>
         </n-flex>
       </n-flex>
-      <n-flex class="p-12px" align="center" justify="center" :size="12">
-        <n-button quaternary @click="closeWindow" :disabled="loading">{{ t("components.common.cancel") }}</n-button>
-        <n-button secondary type="primary" @click="handleCrop" :loading="loading">{{ loadingText }}</n-button>
+      <n-flex align="center" justify="center" class="p-12px" :size="12">
+        <n-button quaternary :disabled="loading" @click="closeWindow">{{ t("components.common.cancel") }}</n-button>
+        <n-button secondary type="primary" :loading="loading" @click="handleCrop">{{ loadingText }}</n-button>
       </n-flex>
     </div>
   </n-modal>

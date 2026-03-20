@@ -1,11 +1,12 @@
 <template>
   <n-flex vertical :size="24">
     <!-- 扫描进度 -->
-    <n-flex class="item" :size="16" vertical>
+    <n-flex vertical class="item" :size="16">
       <!-- 进度条 -->
       <n-flex justify="center" align="center" class="py-20px">
         <n-progress
           type="multiple-circle"
+          style="width: 160px; height: 160px"
           :circle-gap="-16"
           :color="showDiskUsage ? ['var(--warning-text)', '#13987f'] : ['#13987f']"
           :rail-style="[
@@ -19,9 +20,8 @@
           "
           :processing="scanning"
           :offset-degree="180"
-          style="width: 160px; height: 160px"
           :stroke-width="16">
-          <n-flex vertical align="center" justify="center" :size="4" class="text-center">
+          <n-flex vertical align="center" justify="center" class="text-center" :size="4">
             <span class="text-(18px [--text-color] center)">
               {{ showDiskUsage ? scanFilesUsagePercentage.toFixed(2) : scanningProgress.toFixed(0) }}%
             </span>
@@ -110,7 +110,7 @@
       <span class="pl-10px">{{ t("setting.storage.directory") }}</span>
 
       <!-- 存储目录设置 -->
-      <n-flex class="item" :size="16" vertical>
+      <n-flex vertical class="item" :size="16">
         <!-- 路径类型选择 -->
         <n-flex align="center" justify="space-between">
           <span>{{ t("setting.storage.pathType") }}</span>
@@ -120,13 +120,13 @@
           </n-radio-group>
         </n-flex>
 
-        <span class="w-full h-1px bg-[--line-color]"></span>
+        <span class="h-1px w-full bg-[--line-color]"></span>
 
         <!-- 当前扫描目录显示 -->
         <n-flex align="center" justify="space-between">
           <span>{{ t("setting.storage.currDir") }}</span>
           <n-flex vertical align="end" :size="8">
-            <span :title="currentDirectory" class="text-(12px #666) max-w-300px truncate cursor-default">
+            <span class="text-(12px #666) max-w-300px cursor-default truncate" :title="currentDirectory">
               {{ currentDirectory || t("setting.storage.fetchingDirectory") }}
             </span>
             <n-flex :size="8">
@@ -134,11 +134,11 @@
                 v-if="pathType === 'custom'"
                 secondary
                 size="small"
-                @click="selectCustomDirectory"
-                :disabled="scanning">
+                :disabled="scanning"
+                @click="selectCustomDirectory">
                 {{ scanning ? t("setting.storage.scanning") : t("setting.storage.selectDirectory") }}
               </n-button>
-              <n-button size="small" color="#13987f" @click="startScan" :disabled="scanning || !currentDirectory">
+              <n-button size="small" color="#13987f" :disabled="scanning || !currentDirectory" @click="startScan">
                 {{ scanning ? t("setting.storage.scanning") : t("setting.storage.startScan") }}
               </n-button>
             </n-flex>
@@ -221,6 +221,6 @@ onMounted(async () => {
 
 <style scoped lang="scss">
 .item {
-  @apply bg-[--bg-setting-item] rounded-12px size-full p-12px box-border border-(solid 1px [--line-color]) custom-shadow;
+  @apply rounded-12px p-12px border-(solid 1px [--line-color]) custom-shadow box-border size-full bg-[--bg-setting-item];
 }
 </style>

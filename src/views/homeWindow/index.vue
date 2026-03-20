@@ -1,7 +1,7 @@
 <template>
   <n-scrollbar>
-    <div class="home-container p-4 h-full select-none text-[--text-color]">
-      <div class="sticky top-0 z-50 -mt-4 -mx-4 pt-4 px-4 pb-2 mb-2 bg-[--right-bg-color]">
+    <div class="home-container h-full p-4 text-[--text-color] select-none">
+      <div class="sticky top-0 z-50 -mx-4 -mt-4 mb-2 bg-[--right-bg-color] px-4 pt-4 pb-2">
         <search-box class="mx-auto" />
       </div>
 
@@ -15,14 +15,14 @@
           :active-child-category="activeChildCategory"
           @category-change="handleCategoryChange" />
 
-        <div v-if="activeCategory === 'all'" class="grid grid-cols-5 gap-4 mt-4">
+        <div v-if="activeCategory === 'all'" class="mt-4 grid grid-cols-5 gap-4">
           <div
-            class="relative col-span-3 rounded-lg overflow-hidden bg-black cursor-pointer hover:opacity-90 transition-opacity flex flex-col"
+            class="relative col-span-3 flex cursor-pointer flex-col overflow-hidden rounded-lg bg-black transition-opacity hover:opacity-90"
             @click="navigateToLive(bigLive.id)">
-            <img :src="bigLive.coverImg" class="w-full h-full object-cover" />
-            <div class="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 to-transparent text-white">
-              <div class="flex items-center gap-4 text-sm">
-                <span class="flex items-center gap-1">
+            <img class="h-full w-full object-cover" :src="bigLive.coverImg" />
+            <div class="absolute right-0 bottom-0 left-0 bg-gradient-to-t from-black/80 to-transparent p-4 text-white">
+              <div class="flex-y-center gap-4 text-sm">
+                <span class="flex-y-center gap-1">
                   <i-mdi-eye />
                   {{ bigLive.hotScore }}
                 </span>
@@ -31,17 +31,17 @@
             </div>
           </div>
 
-          <div class="col-span-2 grid grid-cols-2 grid-rows-2 gap-4 h-full">
+          <div class="col-span-2 grid h-full grid-cols-2 grid-rows-2 gap-4">
             <div
               v-for="item in sideLiveList"
+              class="side-featured-item flex cursor-pointer flex-col gap-2 transition-opacity hover:opacity-90"
               :key="item.id"
-              class="side-featured-item flex flex-col gap-2 cursor-pointer hover:opacity-90 transition-opacity"
               @click="navigateToLive(item.id)">
-              <div class="relative rounded-lg overflow-hidden bg-black flex-1">
-                <img :src="item.coverImg" :alt="item.title" class="w-full h-full object-cover" loading="lazy" />
+              <div class="relative flex-1 overflow-hidden rounded-lg bg-black">
+                <img loading="lazy" class="h-full w-full object-cover" :src="item.coverImg" :alt="item.title" />
               </div>
-              <div class="flex flex-col gap-1 min-h-[40px]">
-                <h4 class="text-sm font-medium truncate">{{ item.title }}</h4>
+              <div class="flex min-h-[40px] flex-col gap-1">
+                <h4 class="truncate text-sm font-medium">{{ item.title }}</h4>
                 <div class="text-xs text-[--user-text-color]">
                   <span class="block">{{ item.hotScore }}</span>
                   <span class="block">{{ item.anchorName }}</span>
@@ -51,21 +51,21 @@
           </div>
         </div>
 
-        <div v-if="activeCategory === 'all'" class="grid grid-cols-2 gap-6 mt-8">
+        <div v-if="activeCategory === 'all'" class="mt-8 grid grid-cols-2 gap-6">
           <div>
-            <div class="text-lg font-medium mb-4">{{ $t("home.index.myFollow") }}</div>
-            <div class="bg-[--tray-bg-color] rounded-lg h-[110px] flex items-center transition-colors duration-300">
+            <div class="mb-4 text-lg font-medium">{{ $t("home.index.myFollow") }}</div>
+            <div class="flex h-[110px] items-center rounded-lg bg-[--tray-bg-color] transition-colors duration-300">
               <n-scrollbar x-scrollable class="m-4 h-full">
-                <div class="flex gap-6 min-w-max py-[10px]">
-                  <div v-for="follow in followLiveList" :key="follow.roomId" class="flex flex-col items-center">
+                <div class="flex min-w-max gap-6 py-[10px]">
+                  <div v-for="follow in followLiveList" class="flex-col-x-center" :key="follow.roomId">
                     <div class="relative">
                       <img
+                        loading="lazy"
+                        class="h-14 w-14 rounded-full object-cover"
                         :src="follow.avatar"
-                        :alt="follow.username"
-                        class="w-14 h-14 rounded-full object-cover"
-                        loading="lazy" />
+                        :alt="follow.username" />
                       <div
-                        class="absolute bottom-0 right-0 w-3 h-3 bg-red-500 rounded-full border-2 border-[--tray-bg-color]"></div>
+                        class="absolute right-0 bottom-0 h-3 w-3 rounded-full border-2 border-[--tray-bg-color] bg-red-500"></div>
                     </div>
                     <div class="mt-1 text-center">
                       <div class="text-sm font-medium">{{ follow.username }}</div>
@@ -77,12 +77,12 @@
           </div>
 
           <div>
-            <div class="text-lg font-medium mb-4">{{ $t("home.index.hotTags") }}</div>
+            <div class="mb-4 text-lg font-medium">{{ $t("home.index.hotTags") }}</div>
             <div class="grid grid-cols-3 gap-3">
               <div
                 v-for="tag in hotTags"
+                class="cursor-pointer rounded-lg bg-[--tray-bg-color] p-[14px] text-center text-sm font-medium transition-colors duration-300 hover:bg-[--tray-hover]"
                 :key="tag.id"
-                class="bg-[--tray-bg-color] rounded-lg p-[14px] text-center text-sm font-medium cursor-pointer hover:bg-[--tray-hover] transition-colors duration-300"
                 @click="handleCategoryChange(tag.parentValue, tag.value)">
                 {{ tag.label }}
               </div>
@@ -90,10 +90,10 @@
           </div>
         </div>
 
-        <div v-if="activeCategory === 'all'" class="text-lg font-medium mb-4 mt-4">{{ $t("home.index.moreLive") }}</div>
+        <div v-if="activeCategory === 'all'" class="mt-4 mb-4 text-lg font-medium">{{ $t("home.index.moreLive") }}</div>
 
-        <div class="grid grid-cols-4 gap-4 mt-4">
-          <div v-for="item in liveList" :key="item.id" class="cursor-pointer" @click="navigateToLive(item.id)">
+        <div class="mt-4 grid grid-cols-4 gap-4">
+          <div v-for="item in liveList" class="cursor-pointer" :key="item.id" @click="navigateToLive(item.id)">
             <live-card
               :cover-url="item.coverImg"
               :title="item.title"

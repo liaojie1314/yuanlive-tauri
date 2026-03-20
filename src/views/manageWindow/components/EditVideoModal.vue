@@ -3,43 +3,43 @@
     <n-card
       style="width: 700px; max-width: 95vw"
       title="编辑视频信息"
-      :bordered="false"
       size="huge"
       role="dialog"
       aria-modal="true"
-      class="bg-[var(--tray-bg-color)] border border-[var(--line-color)] rounded-xl">
+      class="rounded-xl border border-[var(--line-color)] bg-[var(--tray-bg-color)]"
+      :bordered="false">
       <template #header-extra>
         <n-button text circle class="text-[var(--text-color)] hover:bg-[var(--line-color)]" @click="close">
           <i-mdi-close />
         </n-button>
       </template>
       <n-scrollbar style="max-height: 60vh" class="pr-2">
-        <n-form ref="formRef" :model="form" label-placement="left" label-width="80px" class="mt-2">
+        <n-form ref="formRef" label-placement="left" label-width="80px" class="mt-2" :model="form">
           <n-form-item label="视频标题">
             <n-input
-              v-model:value="form.title"
               placeholder="请输入视频标题"
               maxlength="50"
               show-count
-              class="border-(1px solid #90909080)" />
+              class="border-(1px solid #90909080)"
+              v-model:value="form.title" />
           </n-form-item>
 
           <n-form-item label="视频简介">
             <n-input
               type="textarea"
-              v-model:value="form.description"
               placeholder="请输入视频简介"
               class="border-(1px solid #90909080)"
+              v-model:value="form.description"
               :autosize="{ minRows: 3, maxRows: 5 }" />
           </n-form-item>
 
           <n-form-item label="视频封面">
-            <div class="flex flex-col gap-3 w-full">
+            <div class="flex w-full flex-col gap-3">
               <div class="flex items-end gap-4">
                 <div
-                  class="w-48 aspect-video rounded-lg overflow-hidden border border-[var(--line-color)] relative group bg-black">
-                  <img :src="form.coverUrl" class="w-full h-full object-cover" />
-                  <div class="absolute bottom-0 right-0 bg-blue-500 text-white text-xs px-1.5 py-0.5 rounded-tl-lg">
+                  class="group relative aspect-video w-48 overflow-hidden rounded-lg border border-[var(--line-color)] bg-black">
+                  <img class="h-full w-full object-cover" :src="form.coverUrl" />
+                  <div class="absolute right-0 bottom-0 rounded-tl-lg bg-blue-500 px-1.5 py-0.5 text-xs text-white">
                     当前封面
                   </div>
                 </div>
@@ -55,9 +55,9 @@
                   <n-button
                     size="small"
                     secondary
-                    @click="triggerFrameExtract"
                     :disabled="!hasVideoSource"
-                    :loading="isGenerating">
+                    :loading="isGenerating"
+                    @click="triggerFrameExtract">
                     <template #icon><i-mdi-filmstrip /></template>
                     从视频提取
                   </n-button>
@@ -65,24 +65,22 @@
               </div>
 
               <n-collapse-transition :show="showFrameSelector">
-                <div class="bg-[var(--bg-setting-item)] p-3 rounded-lg border border-[var(--line-color)]">
-                  <div class="text-xs text-[var(--user-text-color)] mb-2 flex justify-between">
+                <div class="rounded-lg border border-[var(--line-color)] bg-[var(--bg-setting-item)] p-3">
+                  <div class="mb-2 flex justify-between text-xs text-[var(--user-text-color)]">
                     <span>点击选择一帧作为封面</span>
                     <span v-if="isGenerating">生成中...</span>
                   </div>
                   <n-scrollbar x-scrollable class="pb-2">
-                    <div class="flex gap-2 min-w-max">
+                    <div class="flex min-w-max gap-2">
                       <div
                         v-for="(frame, index) in frames"
+                        class="relative aspect-video w-32 cursor-pointer rounded border-2 transition-all hover:border-blue-400"
                         :key="index"
-                        class="w-32 aspect-video rounded border-2 cursor-pointer transition-all hover:border-blue-400 relative"
                         :class="form.coverUrl === frame ? 'border-blue-500' : 'border-transparent'"
                         @click="form.coverUrl = frame">
-                        <img :src="frame" class="w-full h-full object-cover" />
-                        <div
-                          v-if="form.coverUrl === frame"
-                          class="absolute inset-0 bg-blue-500/20 flex items-center justify-center">
-                          <i-mdi-check class="text-white text-2xl drop-shadow-md" />
+                        <img class="h-full w-full object-cover" :src="frame" />
+                        <div v-if="form.coverUrl === frame" class="absolute inset-0 flex-center bg-blue-500/20">
+                          <i-mdi-check class="text-2xl text-white drop-shadow-md" />
                         </div>
                       </div>
                     </div>
@@ -93,24 +91,24 @@
           </n-form-item>
 
           <n-form-item label="源文件">
-            <div class="w-full flex flex-col gap-2">
+            <div class="flex w-full flex-col gap-2">
               <div
-                class="flex items-center justify-between w-full p-3 bg-[var(--bg-setting-item)] rounded border border-[var(--line-color)] overflow-hidden box-border">
-                <div class="flex items-center gap-2 text-sm text-[var(--text-color)] flex-1 w-0 mr-4">
-                  <i-mdi-file-video-outline class="text-blue-500 text-lg flex-shrink-0" />
+                class="box-border flex w-full items-center justify-between overflow-hidden rounded border border-[var(--line-color)] bg-[var(--bg-setting-item)] p-3">
+                <div class="mr-4 flex w-0 flex-1 items-center gap-2 text-sm text-[var(--text-color)]">
+                  <i-mdi-file-video-outline class="flex-shrink-0 text-lg text-blue-500" />
                   <span class="truncate" :title="videoFileName">{{ videoFileName }}</span>
                 </div>
 
-                <div class="flex items-center gap-2 flex-shrink-0">
+                <div class="flex flex-shrink-0 items-center gap-2">
                   <n-tooltip trigger="hover" v-if="!newVideoFile">
                     <template #trigger>
                       <n-button
                         size="tiny"
                         secondary
                         circle
-                        @click="handleDownload"
                         :loading="isDownloading"
-                        :disabled="isDownloading || !form.videoUrl">
+                        :disabled="isDownloading || !form.videoUrl"
+                        @click="handleDownload">
                         <template #icon>
                           <span v-if="isDownloading" class="text-[10px]">{{ downloadProgress }}</span>
                           <i-mdi-download v-else />
@@ -122,26 +120,26 @@
 
                   <n-upload
                     accept="video/*"
+                    class="block w-auto"
                     :show-file-list="false"
-                    @change="handleReplaceVideo"
                     :max="1"
-                    class="w-auto block">
+                    @change="handleReplaceVideo">
                     <n-button size="tiny" type="primary" ghost>替换源文件</n-button>
                   </n-upload>
                 </div>
               </div>
 
-              <span class="text-xs text-orange-500" v-if="newVideoFile">* 已选择新视频，保存后生效。</span>
+              <span v-if="newVideoFile" class="text-xs text-orange-500">* 已选择新视频，保存后生效。</span>
             </div>
           </n-form-item>
 
           <n-form-item label="视频状态">
-            <div class="flex items-center gap-4">
+            <div class="flex-y-center gap-4">
               <n-tag :type="statusTagType" :bordered="false">{{ statusText }}</n-tag>
 
               <n-popconfirm v-if="form.status !== 'auditing'" @positive-click="toggleStatus">
                 <template #trigger>
-                  <n-button size="small" :type="form.status === 'offline' ? 'success' : 'error'" secondary>
+                  <n-button size="small" secondary :type="form.status === 'offline' ? 'success' : 'error'">
                     {{ form.status === "offline" ? "申请上架" : "下架视频" }}
                   </n-button>
                 </template>

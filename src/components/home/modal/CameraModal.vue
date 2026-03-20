@@ -1,26 +1,26 @@
 <template>
   <n-modal
-    v-model:show="showModal"
     preset="card"
+    class="w-full max-w-[800px] bg-[--bg-modal]!"
+    v-model:show="showModal"
     :title="t('components.camera.title')"
-    class="max-w-[800px] w-full bg-[--bg-modal]!"
     :on-after-leave="handleAfterLeave"
     :mask-closable="false">
-    <div class="flex flex-col items-center gap-4 relative rounded-lg overflow-hidden min-h-[400px]">
+    <div class="relative flex min-h-[400px] flex-col items-center gap-4 overflow-hidden rounded-lg">
       <video
         v-show="!photoUrl"
         ref="videoRef"
-        class="w-full h-full object-contain transform -scale-x-100"
         autoplay
         playsinline
-        muted></video>
+        muted
+        class="h-full w-full -scale-x-100 transform object-contain"></video>
 
-      <img v-if="photoUrl" :src="photoUrl" class="w-full h-full object-contain" />
+      <img v-if="photoUrl" class="h-full w-full object-contain" :src="photoUrl" />
 
       <canvas ref="canvasRef" class="hidden"></canvas>
 
-      <div class="absolute bottom-6 flex gap-4 z-10">
-        <n-button v-if="!photoUrl" circle type="primary" class="w-14 h-14 !text-2xl" @click="handleCapture">
+      <div class="absolute bottom-6 z-10 flex gap-4">
+        <n-button v-if="!photoUrl" circle type="primary" class="h-14 w-14 !text-2xl" @click="handleCapture">
           <template #icon><i-mdi-camera /></template>
         </n-button>
 

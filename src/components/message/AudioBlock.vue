@@ -1,43 +1,43 @@
 <template>
   <div
-    class="audio-block my-2 flex items-center gap-2.5 p-2 bg-[--input-area-bg] rounded-full border border-[--line-color] min-w-[280px] max-w-[350px] shadow-sm select-none">
-    <div class="flex items-center gap-1.5 flex-shrink-0 ml-1">
+    class="audio-block my-2 flex max-w-[350px] min-w-[280px] items-center gap-2.5 rounded-full border border-[--line-color] bg-[--input-area-bg] p-2 shadow-sm select-none">
+    <div class="ml-1 flex flex-shrink-0 items-center gap-1.5">
       <div
-        class="cursor-pointer text-[--user-text-color] hover:text-[--message-render-color] opacity-60 hover:opacity-100 transition-colors flex items-center justify-center w-6 h-6"
+        class="flex h-6 w-6 cursor-pointer items-center justify-center text-[--user-text-color] opacity-60 transition-colors hover:text-[--message-render-color] hover:opacity-100"
         :title="$t('components.audioBlock.back')"
         @click="skip(-5)">
         <i-material-symbols-fast-rewind-rounded class="text-[18px]" />
       </div>
 
       <div
-        class="cursor-pointer w-8 h-8 flex items-center justify-center rounded-full bg-[--message-render-color] text-white flex-shrink-0 shadow-sm transition-transform active:scale-95"
+        class="flex h-8 w-8 flex-shrink-0 cursor-pointer items-center justify-center rounded-full bg-[--message-render-color] text-white shadow-sm transition-transform active:scale-95"
         @click="togglePlay">
         <i-material-symbols-pause-rounded v-if="isPlaying" class="text-lg" />
-        <i-material-symbols-play-arrow-rounded v-else class="text-lg ml-0.5" />
+        <i-material-symbols-play-arrow-rounded v-else class="ml-0.5 text-lg" />
       </div>
 
       <div
-        class="cursor-pointer text-[--user-text-color] hover:text-[--message-render-color] opacity-60 hover:opacity-100 transition-colors flex items-center justify-center w-6 h-6"
+        class="flex h-6 w-6 cursor-pointer items-center justify-center text-[--user-text-color] opacity-60 transition-colors hover:text-[--message-render-color] hover:opacity-100"
         :title="$t('components.audioBlock.forward')"
         @click="skip(5)">
         <i-material-symbols-fast-forward-rounded class="text-[18px]" />
       </div>
     </div>
 
-    <div class="flex-1 flex flex-col gap-1 pr-3">
+    <div class="flex flex-1 flex-col gap-1 pr-3">
       <div
         ref="progressBarRef"
-        class="h-[5px] bg-[--line-color] rounded-full relative cursor-pointer hover:h-[6px] transition-all"
+        class="relative h-[5px] cursor-pointer rounded-full bg-[--line-color] transition-all hover:h-[6px]"
         @click="seekAudio">
         <div
-          class="absolute left-0 top-0 bottom-0 bg-[--message-render-color] rounded-full pointer-events-none"
+          class="pointer-events-none absolute top-0 bottom-0 left-0 rounded-full bg-[--message-render-color]"
           :style="{ width: progress + '%' }">
           <div
-            class="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 w-2.5 h-2.5 bg-white rounded-full shadow-[0_0_2px_rgba(0,0,0,0.5)] border border-[--message-render-color]"></div>
+            class="absolute top-1/2 right-0 h-2.5 w-2.5 translate-x-1/2 -translate-y-1/2 rounded-full border border-[--message-render-color] bg-white shadow-[0_0_2px_rgba(0,0,0,0.5)]"></div>
         </div>
       </div>
 
-      <div class="flex justify-between text-[10px] text-[--user-text-color] font-mono mt-0.5 opacity-80">
+      <div class="mt-0.5 flex justify-between font-mono text-[10px] text-[--user-text-color] opacity-80">
         <span>{{ formatSecondsToTimeStr(currentTime) }}</span>
         <span>{{ formatSecondsToTimeStr(duration) }}</span>
       </div>

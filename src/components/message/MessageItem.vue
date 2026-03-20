@@ -1,129 +1,171 @@
 <template>
   <div
-    class="message-row flex mb-6 w-full box-border transition-all duration-200"
-    :class="[selectionMode ? 'cursor-pointer hover:bg-[--tray-hover] p-2 rounded-lg' : '']"
+    class="message-row mb-6 box-border flex w-full transition-all duration-200"
+    :class="[selectionMode ? 'cursor-pointer rounded-lg p-3 hover:bg-[--tray-hover]' : '']"
     @click="selectionMode ? $emit('toggle-select', message.id) : null">
-    <div v-if="selectionMode" class="flex items-center justify-center w-8 mr-2 mt-1 flex-shrink-0">
-      <n-checkbox :checked="selected" size="large" />
+    <div v-if="selectionMode" class="mt-1 mr-2 flex w-8 flex-shrink-0 items-center justify-center">
+      <n-checkbox size="large" :checked="selected" />
     </div>
 
-    <div class="flex flex-grow min-w-0" :class="isSelf ? 'justify-end' : 'justify-start'">
+    <div class="flex min-w-0 flex-grow" :class="isSelf ? 'justify-end' : 'justify-start'">
       <div v-if="!isSelf" class="avatar-col mr-3 flex-shrink-0" :class="{ 'pointer-events-none': selectionMode }">
-        <div class="w-9 h-9 rounded-full bg-[--line-color] overflow-hidden">
-          <img :src="message.avatar" class="w-full h-full object-cover" />
+        <div class="h-9 w-9 overflow-hidden rounded-full bg-[--line-color]">
+          <img class="h-full w-full object-cover" :src="message.avatar" />
         </div>
       </div>
 
-      <div class="content-col flex flex-col max-w-[85%] min-w-0" :class="isSelf ? 'items-end' : 'items-start'">
-        <div v-if="!isSelf" class="text-xs text-[--user-text-color] mb-1 ml-1">
+      <div class="content-col flex max-w-[85%] min-w-0 flex-col" :class="isSelf ? 'items-end' : 'items-start'">
+        <div v-if="!isSelf" class="mb-1 ml-1 text-xs text-[--user-text-color]">
           {{ message.sender || t("components.messageItem.ai") }}
         </div>
 
         <context-menu :menu="selectionMode ? [] : contextMenuOptions" @select="handleContextMenuSelect">
           <div
-            class="bubble-container select-text flex flex-col gap-1 rounded-xl shadow-sm border min-w-0 overflow-hidden w-fit box-border transition-all duration-300"
+            style="max-width: 100%"
+            class="bubble-container box-border flex w-fit min-w-0 flex-col gap-1 overflow-hidden rounded-xl border shadow-sm transition-all duration-300 select-text"
             :class="[
               bubbleClasses,
               isEditing
-                ? 'min-w-[300px] w-[95%] sm:w-[400px] !bg-[--tray-bg-color] !border-[--line-color] shadow-md p-1'
+                ? 'w-[95%] min-w-[300px] !border-[--line-color] !bg-[--tray-bg-color] p-1 shadow-md sm:w-[400px]'
                 : 'p-3',
               selectionMode ? 'pointer-events-none' : ''
             ]"
-            style="max-width: 100%"
             @contextmenu="handleBubbleContext">
-            <div v-if="isEditing" class="flex flex-col w-full p-1.5 pointer-events-auto">
+            <div v-if="isEditing" class="pointer-events-auto flex w-full flex-col p-1.5">
               <div class="px-2">
                 <n-input
-                  v-model:value="editText"
                   type="textarea"
                   autosize
-                  :bordered="false"
+                  autofocus
                   class="edit-textarea w-full !bg-transparent"
-                  :placeholder="t('components.messageItem.placeholder')"
-                  autofocus />
+                  v-model:value="editText"
+                  :bordered="false"
+                  :placeholder="t('components.messageItem.placeholder')" />
               </div>
-              <div class="flex justify-end gap-2 mt-2 pt-2 border-t border-[--line-color] px-1">
+              <div class="mt-2 flex justify-end gap-2 border-t border-[--line-color] px-1 pt-2">
                 <div
-                  class="px-3 py-1 text-xs rounded-md text-[--user-text-color] bg-[--input-area-bg] hover:bg-[--line-color] transition-colors border border-[--line-color] cursor-pointer"
+                  class="cursor-pointer rounded-md border border-[--line-color] bg-[--input-area-bg] px-3 py-1 text-xs text-[--user-text-color] transition-colors hover:bg-[--line-color]"
                   @click="cancelEdit">
                   {{ t("components.common.cancel") }}
                 </div>
                 <div
-                  class="px-3 py-1 text-xs rounded-md bg-blue-600 text-white hover:bg-blue-700 shadow-sm transition-all active:scale-95 whitespace-nowrap cursor-pointer"
+                  class="cursor-pointer rounded-md bg-blue-600 px-3 py-1 text-xs whitespace-nowrap text-white shadow-sm transition-all hover:bg-blue-700 active:scale-95"
                   @click="submitEdit">
                   {{ t("components.messageItem.resend") }}
                 </div>
               </div>
             </div>
 
-            <template v-else v-for="block in blocks" :key="block.id">
-              <div class="w-full" @contextmenu="handleBlockContext(block)">
-                <thinking-block
-                  v-if="block.type === 'thinking'"
-                  :content="block.content"
-                  :duration="block.duration"
-                  :tool-calls="block.toolCalls" />
-                <markdown-block v-else-if="block.type === 'text'" :content="block.content" :is-self="isSelf" />
-                <image-block v-else-if="block.type === 'image'" :url="block.url" />
-                <video-block v-else-if="block.type === 'video'" :url="block.url" :cover-img="block.coverImg" />
-                <audio-block v-else-if="block.type === 'audio'" :url="block.url" />
-                <file-block v-else-if="block.type === 'file'" :url="block.url" :name="block.name" :is-self="isSelf" />
+            <template v-else>
+              <div class="relative w-full">
+                <n-tooltip v-if="isSelf && showCollapseToggle" placement="bottom-end">
+                  <template #trigger>
+                    <div
+                      class="absolute -top-1 -right-1 z-10 flex h-6 w-6 cursor-pointer items-center justify-center rounded-full bg-black/15 text-white shadow-sm backdrop-blur-md transition-colors hover:bg-black/25"
+                      @click.stop="isCollapsed = !isCollapsed">
+                      <i-mdi-chevron-down v-if="isCollapsed" class="h-4 w-4" />
+                      <i-mdi-chevron-up v-else class="h-4 w-4" />
+                    </div>
+                  </template>
+                  {{ isCollapsed ? t("components.messageItem.expand") : t("components.messageItem.collapse") }}
+                </n-tooltip>
+
                 <div
-                  v-if="!isSelf && pendingTool"
-                  class="mt-2 p-3 bg-orange-500/10 border border-orange-500/30 rounded-lg flex flex-col gap-2 pointer-events-auto">
-                  <div class="flex items-center gap-2 text-xs font-bold text-orange-600 dark:text-orange-400">
-                    <i-mdi-shield-alert-outline class="w-4 h-4" />
-                    {{ t("components.messageItem.systemPermissionRequest") }}
-                  </div>
-                  <div class="text-xs text-[--text-color] opacity-90">
-                    {{ t("components.messageItem.executeLocalTool") }}
-                    <strong>{{ pendingTool.name }}</strong>
-                    {{ t("components.messageItem.executeLocalToolDesc") }}
-                  </div>
-                  <div class="flex items-center justify-end gap-2 mt-1">
+                  ref="contentRef"
+                  class="w-full overflow-hidden transition-[max-height] duration-300 ease-in-out"
+                  :class="[
+                    isSelf && isCollapsed && showCollapseToggle ? 'max-h-[140px]' : 'max-h-[5000px]',
+                    isSelf && showCollapseToggle ? 'pr-7' : ''
+                  ]">
+                  <div v-for="block in blocks" class="w-full" :key="block.id" @contextmenu="handleBlockContext(block)">
+                    <thinking-block
+                      v-if="block.type === 'thinking'"
+                      :content="block.content"
+                      :duration="block.duration"
+                      :tool-calls="block.toolCalls" />
+
                     <div
-                      class="px-3 py-1 text-xs rounded-md text-[--user-text-color] bg-[--input-area-bg] hover:bg-[--line-color] cursor-pointer transition-colors"
-                      @click="$emit('deny-tool', pendingTool)">
-                      {{ t("components.messageItem.denyExecuteLocalTool") }}
-                    </div>
+                      v-else-if="block.type === 'text' && isSelf"
+                      v-text="block.content"
+                      class="text-[13px] leading-relaxed break-words whitespace-pre-wrap"></div>
+
+                    <markdown-block
+                      v-else-if="block.type === 'text' && !isSelf"
+                      :content="block.content"
+                      :is-self="isSelf" />
+
+                    <image-block v-else-if="block.type === 'image'" :url="block.url" />
+                    <video-block v-else-if="block.type === 'video'" :url="block.url" :cover-img="block.coverImg" />
+                    <audio-block v-else-if="block.type === 'audio'" :url="block.url" />
+                    <file-block
+                      v-else-if="block.type === 'file'"
+                      :url="block.url"
+                      :name="block.name"
+                      :is-self="isSelf" />
+
                     <div
-                      class="px-3 py-1 text-xs rounded-md bg-orange-500 text-white hover:bg-orange-600 shadow-sm cursor-pointer transition-colors"
-                      @click="$emit('allow-tool', pendingTool)">
-                      {{ t("components.messageItem.allowExecuteLocalTool") }}
+                      v-if="!isSelf && pendingTool"
+                      class="pointer-events-auto mt-2 flex flex-col gap-2 rounded-lg border border-orange-500/30 bg-orange-500/10 p-3">
+                      <div class="flex-y-center gap-2 text-xs font-bold text-orange-600 dark:text-orange-400">
+                        <i-mdi-shield-alert-outline class="h-4 w-4" />
+                        {{ t("components.messageItem.systemPermissionRequest") }}
+                      </div>
+                      <div class="text-xs text-[--text-color] opacity-90">
+                        {{ t("components.messageItem.executeLocalTool") }}
+                        <strong>{{ pendingTool.name }}</strong>
+                        {{ t("components.messageItem.executeLocalToolDesc") }}
+                      </div>
+                      <div class="mt-1 flex-end-center gap-2">
+                        <div
+                          class="cursor-pointer rounded-md bg-[--input-area-bg] px-3 py-1 text-xs text-[--user-text-color] transition-colors hover:bg-[--line-color]"
+                          @click="$emit('deny-tool', pendingTool)">
+                          {{ t("components.messageItem.denyExecuteLocalTool") }}
+                        </div>
+                        <div
+                          class="cursor-pointer rounded-md bg-orange-500 px-3 py-1 text-xs text-white shadow-sm transition-colors hover:bg-orange-600"
+                          @click="$emit('allow-tool', pendingTool)">
+                          {{ t("components.messageItem.allowExecuteLocalTool") }}
+                        </div>
+                      </div>
                     </div>
                   </div>
+
+                  <citation-block
+                    v-if="!isSelf && message.citations && message.citations.length > 0"
+                    :citations="message.citations" />
                 </div>
+
+                <div
+                  v-if="isSelf && isCollapsed && showCollapseToggle"
+                  style="background: linear-gradient(to top, var(--message-render-color) 0%, transparent 100%)"
+                  class="pointer-events-none absolute right-0 bottom-0 left-0 h-10 rounded-b-lg"></div>
               </div>
             </template>
-
-            <citation-block
-              v-if="!isSelf && message.citations && message.citations.length > 0"
-              :citations="message.citations" />
           </div>
         </context-menu>
 
         <div
           v-show="!selectionMode"
-          class="flex items-center justify-between mt-1 w-full px-1"
+          class="mt-1 flex w-full items-center justify-between px-1"
           :class="isSelf ? 'flex-row-reverse' : ''">
-          <div class="flex items-center gap-3 overflow-x-auto scrollbar-none">
-            <div v-if="!isSelf && message.versionCount && message.versionCount > 1" class="flex items-center gap-1">
+          <div class="scrollbar-none flex-y-center gap-3 overflow-x-auto">
+            <div v-if="!isSelf && message.versionCount && message.versionCount > 1" class="flex-y-center gap-1">
               <i-material-symbols-keyboard-arrow-left
                 class="action-icon"
-                :class="{ 'opacity-30 pointer-events-none': message.currentVersion === 1 }"
+                :class="{ 'pointer-events-none opacity-30': message.currentVersion === 1 }"
                 @click="handlePrevVersion" />
-              <span class="text-xs text-[--user-text-color] font-mono">
+              <span class="font-mono text-xs text-[--user-text-color]">
                 {{ message.currentVersion }}/{{ message.versionCount }}
               </span>
               <i-material-symbols-keyboard-arrow-right
                 class="action-icon"
-                :class="{ 'opacity-30 pointer-events-none': message.currentVersion === message.versionCount }"
+                :class="{ 'pointer-events-none opacity-30': message.currentVersion === message.versionCount }"
                 @click="handleNextVersion" />
             </div>
 
-            <div class="flex items-center gap-2">
-              <div class="flex items-center justify-center relative">
-                <i-material-symbols-check v-if="isCopied" class="text-green-500 text-sm" />
+            <div class="flex-y-center gap-2">
+              <div class="relative flex-center">
+                <i-material-symbols-check v-if="isCopied" class="text-sm text-green-500" />
                 <i-material-symbols-content-copy v-else class="action-icon text-sm" @click="handleCopyMessage" />
               </div>
               <i-material-symbols-edit-outline
@@ -141,15 +183,15 @@
               </template>
             </div>
           </div>
-          <div class="text-[10px] text-[--user-text-color] opacity-80 flex-shrink-0" :class="isSelf ? 'mr-4' : 'ml-4'">
+          <div class="flex-shrink-0 text-[10px] text-[--user-text-color] opacity-80" :class="isSelf ? 'mr-4' : 'ml-4'">
             {{ message.time }}
           </div>
         </div>
       </div>
 
       <div v-if="isSelf" class="avatar-col ml-3 flex-shrink-0" :class="{ 'pointer-events-none': selectionMode }">
-        <div class="w-9 h-9 rounded-full bg-[--line-color] overflow-hidden">
-          <img :src="message.avatar" class="w-full h-full object-cover" />
+        <div class="h-9 w-9 overflow-hidden rounded-full bg-[--line-color]">
+          <img class="h-full w-full object-cover" :src="message.avatar" />
         </div>
       </div>
     </div>
@@ -196,6 +238,9 @@ const emit = defineEmits([
 const activeBlock = ref<any>(null);
 const isEditing = ref(false);
 const editText = ref("");
+const isCollapsed = ref(true); // 默认折叠
+const showCollapseToggle = ref(false); // 是否需要显示右上角按钮
+const contentRef = ref<HTMLElement | null>(null);
 
 const isSelf = computed(() => props.message.role === "user");
 const blocks = computed(() => normalizeMessage(props.message));
@@ -440,6 +485,38 @@ const handleNextVersion = () =>
   props.message.versionCount &&
   props.message.currentVersion < props.message.versionCount &&
   emit("next-message", props.message.id);
+
+/** 计算内容实际高度，判断是否显示折叠按钮 */
+const checkContentHeight = () => {
+  if (!isSelf.value || !contentRef.value) return;
+
+  const hasText = blocks.value.some((b: any) => b.type === "text");
+  if (!hasText) {
+    showCollapseToggle.value = false;
+    return;
+  }
+
+  // 计算高度
+  if (contentRef.value.scrollHeight > 140) {
+    showCollapseToggle.value = true;
+  } else {
+    showCollapseToggle.value = false;
+  }
+};
+
+// 如果用户编辑了当前消息重新发送，内容变动时重新计算高度
+watch(
+  () => props.message.content,
+  () => {
+    nextTick(checkContentHeight);
+  },
+  { deep: true }
+);
+
+onMounted(() => {
+  // 组件挂载完毕后，稍微延迟等待内部 Markdown 或代码块渲染完毕，再计算高度
+  nextTick(() => setTimeout(checkContentHeight, 50));
+});
 </script>
 
 <style scoped>
@@ -454,7 +531,7 @@ const handleNextVersion = () =>
   scrollbar-width: none;
 }
 .action-icon {
-  @apply text-[--user-text-color] hover:text-[--message-render-color] cursor-pointer transition-all duration-200;
+  @apply cursor-pointer text-[--user-text-color] transition-all duration-200 hover:text-[--message-render-color];
 }
 .action-icon:hover {
   transform: translateY(-1px);

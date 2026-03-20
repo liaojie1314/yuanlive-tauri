@@ -1,61 +1,61 @@
 <template>
   <n-config-provider
-    :theme="naiveTheme"
-    class="bg-[#d8eee2] dark:bg-[#0f2027] size-full rounded-8px select-none overflow-hidden">
+    class="rounded-8px size-full overflow-hidden bg-[#d8eee2] select-none dark:bg-[#0f2027]"
+    :theme="naiveTheme">
     <!--顶部操作栏-->
     <action-bar :max-w="false" />
 
-    <n-flex vertical class="w-full size-full mt-20px">
+    <n-flex vertical class="mt-20px size-full w-full">
       <!-- 标题 -->
       <n-flex justify="center" class="w-full">
         <p class="text-(18px [--text-color]) select-none">{{ t("auth.forget.title") }}</p>
       </n-flex>
 
       <!-- 步骤条 -->
-      <n-steps size="small" class="w-full px-40px mt-20px" :current="currentStep" :status="stepStatus">
+      <n-steps size="small" class="px-40px mt-20px w-full" :current="currentStep" :status="stepStatus">
         <n-step :title="t('auth.forget.steps.verify.title')" :description="t('auth.forget.steps.verify.desc')" />
         <n-step :title="t('auth.forget.steps.reset.title')" :description="t('auth.forget.steps.reset.desc')" />
         <n-step :title="t('auth.forget.steps.done.title')" :description="t('auth.forget.steps.done.desc')" />
       </n-steps>
 
       <!-- 第一步：验证邮箱 -->
-      <div v-if="currentStep === 1" class="w-full max-w-300px mx-auto mt-80px">
+      <div v-if="currentStep === 1" class="max-w-300px mt-80px mx-auto w-full">
         <n-form ref="formRef" :model="formData" :rules="emailRules">
           <!-- 邮箱输入 -->
           <n-form-item path="email" :label="t('auth.forget.form.emailLabel')">
             <n-input
-              :allow-input="noSideSpace"
-              class="border-(1px solid #90909080) no-indent-input w-300px!"
-              v-model:value="formData.email"
-              :placeholder="t('auth.forget.form.emailPlaceholder')"
               spellCheck="false"
               autoComplete="off"
               autoCorrect="off"
               autoCapitalize="off"
-              clearable />
+              clearable
+              class="border-(1px solid #90909080) no-indent-input w-300px!"
+              v-model:value="formData.email"
+              :allow-input="noSideSpace"
+              :placeholder="t('auth.forget.form.emailPlaceholder')" />
           </n-form-item>
 
           <!-- 邮箱验证码 -->
           <n-form-item path="emailCode" :label="t('auth.forget.form.codeLabel')">
             <n-flex :size="8">
-              <div class="flex gap-1 max-w-300px">
+              <div class="max-w-300px flex gap-1">
                 <n-input
-                  :allow-input="noSideSpace"
-                  class="border-(1px solid #90909080) no-indent-input max-w-200px"
-                  v-model:value="formData.emailCode"
-                  :placeholder="t('auth.forget.form.codePlaceholder')"
                   spellCheck="false"
                   autoComplete="off"
                   autoCorrect="off"
                   autoCapitalize="off"
-                  maxlength="6" />
+                  maxlength="6"
+                  class="border-(1px solid #90909080) no-indent-input max-w-200px"
+                  v-model:value="formData.emailCode"
+                  :allow-input="noSideSpace"
+                  :placeholder="t('auth.forget.form.codePlaceholder')" />
                 <n-button
                   color="#13987f"
                   ghost
+                  class="min-w-80px h-34px w-fit"
                   :disabled="sendBtnDisabled"
                   :loading="sendingEmailCode"
-                  @click="sendEmailCode"
-                  class="min-w-80px w-fit h-34px">
+                  @click="sendEmailCode">
                   {{ emailCodeBtnText }}
                 </n-button>
               </div>
@@ -63,37 +63,37 @@
           </n-form-item>
 
           <n-button
-            :loading="verifyLoading"
-            :disabled="nextDisabled"
             tertiary
             style="color: #fff"
-            @click="verifyEmail"
-            class="mt-10px w-full gradient-button">
+            class="mt-10px gradient-button w-full"
+            :loading="verifyLoading"
+            :disabled="nextDisabled"
+            @click="verifyEmail">
             {{ t("auth.forget.buttons.next") }}
           </n-button>
         </n-form>
       </div>
 
       <!-- 第二步：设置新密码 -->
-      <div v-if="currentStep === 2" class="w-full max-w-300px mx-auto mt-30px">
+      <div v-if="currentStep === 2" class="max-w-300px mt-30px mx-auto w-full">
         <n-form ref="passwordFormRef" :model="passwordForm" :rules="passwordRules">
           <!-- 新密码 -->
           <n-form-item path="password" :label="t('auth.forget.form.passwordLabel')">
-            <n-flex vertical :size="8" class="w-full">
+            <n-flex vertical class="w-full" :size="8">
               <n-input
-                :allow-input="noSideSpace"
-                class="border-(1px solid #90909080) w-full no-indent-input"
-                v-model:value="passwordForm.password"
                 type="password"
                 show-password-on="click"
-                :placeholder="t('auth.forget.form.passwordPlaceholder')"
                 maxlength="16"
                 spellCheck="false"
                 autoComplete="off"
                 autoCorrect="off"
                 autoCapitalize="off"
-                minlength="6" />
-              <n-flex vertical :size="4" class="space-y-4px">
+                minlength="6"
+                class="border-(1px solid #90909080) no-indent-input w-full"
+                v-model:value="passwordForm.password"
+                :allow-input="noSideSpace"
+                :placeholder="t('auth.forget.form.passwordPlaceholder')" />
+              <n-flex vertical class="space-y-4px" :size="4">
                 <Validation
                   :value="passwordForm.password"
                   :message="t('auth.forget.passwordHints.length')"
@@ -112,20 +112,20 @@
 
           <!-- 确认密码 -->
           <n-form-item path="confirmPassword" :label="t('auth.forget.form.confirmLabel')">
-            <n-flex vertical :size="8" class="w-full">
+            <n-flex vertical class="w-full" :size="8">
               <n-input
-                :allow-input="noSideSpace"
-                class="border-(1px solid #90909080) w-full no-indent-input"
-                v-model:value="passwordForm.confirmPassword"
                 type="password"
                 show-password-on="click"
-                :placeholder="t('auth.forget.form.confirmPlaceholder')"
                 spellCheck="false"
                 autoComplete="off"
                 autoCorrect="off"
                 autoCapitalize="off"
                 maxlength="16"
-                minlength="6" />
+                minlength="6"
+                class="border-(1px solid #90909080) no-indent-input w-full"
+                v-model:value="passwordForm.confirmPassword"
+                :allow-input="noSideSpace"
+                :placeholder="t('auth.forget.form.confirmPlaceholder')" />
               <n-flex vertical :size="4">
                 <Validation
                   :value="passwordForm.confirmPassword"
@@ -135,14 +135,14 @@
             </n-flex>
           </n-form-item>
 
-          <n-flex :size="16" class="mt-30px">
-            <n-button @click="goBack" class="flex-1">{{ t("auth.forget.buttons.prev") }}</n-button>
+          <n-flex class="mt-30px" :size="16">
+            <n-button class="flex-1" @click="goBack">{{ t("auth.forget.buttons.prev") }}</n-button>
             <n-button
-              :loading="submitLoading"
               tertiary
               style="color: #fff"
-              @click="submitNewPassword"
-              class="flex-1 gradient-button">
+              class="gradient-button flex-1"
+              :loading="submitLoading"
+              @click="submitNewPassword">
               {{ t("auth.forget.buttons.submit") }}
             </n-button>
           </n-flex>
@@ -150,8 +150,8 @@
       </div>
 
       <!-- 第三步：完成 -->
-      <div v-if="currentStep === 3" class="w-full max-w-300px mx-auto mt-100px text-center">
-        <img class="size-98px" src="/party-popper.webp" alt="" />
+      <div v-if="currentStep === 3" class="max-w-300px mt-100px mx-auto w-full text-center">
+        <img src="/party-popper.webp" alt="" class="size-98px" />
         <div class="mt-16px text-18px">{{ t("auth.forget.success.title") }}</div>
         <div class="mt-16px text-14px text-#666">{{ t("auth.forget.success.desc") }}</div>
       </div>

@@ -1,28 +1,28 @@
 <template>
   <n-modal
-    :trap-focus="false"
-    v-model:show="visible"
-    :mask-closable="false"
+    transform-origin="center"
     class="rounded-8px"
-    transform-origin="center">
-    <div class="bg-[--bg-modal] min-w-320px h-fit box-border flex flex-col select-none cursor-default">
-      <n-flex :size="6" vertical>
+    v-model:show="visible"
+    :trap-focus="false"
+    :mask-closable="false">
+    <div class="min-w-320px box-border flex h-fit cursor-default flex-col bg-[--bg-modal] select-none">
+      <n-flex vertical :size="6">
         <div
           v-if="isMac()"
-          @click="visible = false"
-          class="mac-close size-13px shadow-inner bg-#ed6a5eff rounded-50% mt-6px select-none absolute left-6px">
-          <svg class="hidden size-7px color-#000 select-none absolute top-3px left-3px">
+          class="mac-close size-13px bg-#ed6a5eff rounded-50% mt-6px left-6px absolute shadow-inner select-none"
+          @click="visible = false">
+          <svg class="size-7px color-#000 top-3px left-3px absolute hidden select-none">
             <use href="#close"></use>
           </svg>
         </div>
 
-        <n-flex class="text-(14px [--text-color]) select-none pt-6px" justify="center">
+        <n-flex justify="center" class="text-(14px [--text-color]) pt-6px select-none">
           {{ t("components.fileUpload.title") }}
         </n-flex>
 
         <svg
           v-if="isWindows()"
-          class="size-14px cursor-pointer pt-6px select-none absolute right-6px"
+          class="size-14px pt-6px right-6px absolute cursor-pointer select-none"
           @click="visible = false">
           <use href="#close"></use>
         </svg>
@@ -32,25 +32,25 @@
       <!-- 内容 -->
       <div class="p-10px">
         <div class="max-h-400px overflow-y-auto">
-          <div v-for="(file, index) in fileList" :key="index" class="flex-y-center p-12px">
-            <div class="flex-shrink-0 pr-12px">
+          <div v-for="(file, index) in fileList" class="flex-y-center p-12px" :key="index">
+            <div class="pr-12px flex-shrink-0">
               <img
+                class="size-32px object-contain"
                 :src="`/file/${getFileExtension(file.name)}.svg`"
                 :alt="getFileExtension(file.name)"
-                @error="handleIconError"
-                class="size-32px object-contain" />
+                @error="handleIconError" />
             </div>
 
-            <div class="flex-1 min-w-0">
+            <div class="min-w-0 flex-1">
               <div
-                class="text-(14px [--text-color]) whitespace-nowrap overflow-hidden text-ellipsis pb-4px"
+                class="text-(14px [--text-color]) pb-4px overflow-hidden text-ellipsis whitespace-nowrap"
                 :title="file.name">
                 {{ file.name }}
               </div>
               <div class="text-(12px [--user-text-color])">{{ formatFileSize(file.size) }}</div>
             </div>
 
-            <div @click="removeFile(index)" class="flex-shrink-0 pl-20px cursor-pointer">
+            <div class="pl-20px flex-shrink-0 cursor-pointer" @click="removeFile(index)">
               <svg class="size-20px hover:color-#909090 transition-colors duration-200 ease-in-out">
                 <use href="#squareClose"></use>
               </svg>
@@ -58,9 +58,9 @@
           </div>
         </div>
 
-        <div class="flex justify-end gap-8px">
+        <div class="gap-8px flex justify-end">
           <n-button quaternary @click="handleCancel">{{ t("components.fileUpload.cancel") }}</n-button>
-          <n-button secondary type="primary" @click="handleConfirm" :disabled="fileList.length === 0">
+          <n-button secondary type="primary" :disabled="fileList.length === 0" @click="handleConfirm">
             {{ t("components.fileUpload.send", { count: fileList.length }) }}
           </n-button>
         </div>

@@ -2,7 +2,7 @@
   <div data-tauri-drag-region class="flex-col-center gap-30px size-full">
     <n-flex vertical justify="center" :size="20">
       <div class="logo-container">
-        <img src="/tauri.svg" class="logo-image" alt="YuanLive Logo" loading="eager" />
+        <img src="/tauri.svg" alt="YuanLive Logo" loading="eager" class="logo-image" />
       </div>
       <n-progress
         type="line"

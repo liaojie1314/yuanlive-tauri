@@ -1,23 +1,20 @@
 <template>
-  <div
-    v-if="show"
-    class="fixed inset-0 bg-black/60 z-1000 flex items-center justify-center backdrop-blur-sm"
-    @click="handleOverlayClick">
+  <div v-if="show" class="fixed inset-0 z-1000 flex-center bg-black/60 backdrop-blur-sm" @click="handleOverlayClick">
     <div
+      class="max-h-[90vh] max-w-[90%] overflow-hidden rounded-xl border border-[--line-color] bg-[--bg-popover] shadow-2xl"
       :style="{ width: props.width, height: props.height }"
-      class="bg-[--bg-popover] rounded-xl max-w-[90%] max-h-[90vh] overflow-hidden shadow-2xl border border-[--line-color]"
       @click.stop>
-      <div class="px-6 py-0 border-b border-[--line-color] relative h-16 flex items-center">
+      <div class="relative flex h-16 items-center border-b border-[--line-color] px-6 py-0">
         <slot name="header">
           <h3 class="text-lg font-semibold text-[--text-color]">{{ title }}</h3>
         </slot>
         <div
-          class="absolute top-1/2 -translate-y-1/2 right-4 cursor-pointer text-[--user-text-color] hover:text-[--text-color] hover:bg-[--bg-menu-hover] p-1.5 rounded-full transition-all"
+          class="absolute top-1/2 right-4 -translate-y-1/2 cursor-pointer rounded-full p-1.5 text-[--user-text-color] transition-all hover:bg-[--bg-menu-hover] hover:text-[--text-color]"
           @click="closeDialog">
-          <i-mdi-close class="w-5 h-5" />
+          <i-mdi-close class="h-5 w-5" />
         </div>
       </div>
-      <div class="px-6 pb-6 pt-4">
+      <div class="px-6 pt-4 pb-6">
         <slot></slot>
       </div>
     </div>

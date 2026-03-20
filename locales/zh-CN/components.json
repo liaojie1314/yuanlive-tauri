@@ -143,6 +143,8 @@
     "executeLocalToolDesc": "，可能涉及读取文件或执行命令。",
     "denyExecuteLocalTool": "拒绝执行",
     "allowExecuteLocalTool": "允许执行",
+    "expand": "展开",
+    "collapse": "收起",
     "label": {
       "edit": "修改",
       "copy": "复制文本",

@@ -1,69 +1,69 @@
 <template>
-  <n-config-provider :theme="naiveTheme" abstract>
+  <n-config-provider abstract :theme="naiveTheme">
     <div
-      class="h-full flex flex-col bg-[var(--tray-bg-color)] dark:bg-[var(--right-bg-color)] overflow-hidden text-[var(--text-color)]">
+      class="flex h-full flex-col overflow-hidden bg-[var(--tray-bg-color)] text-[var(--text-color)] dark:bg-[var(--right-bg-color)]">
       <action-bar />
       <div
         data-tauri-drag-region
-        class="h-10 flex shrink-0 items-center justify-between px-4 bg-[var(--right-bg-color)] dark:bg-[var(--bg-setting-item)] border-b border-[var(--line-color)]">
-        <div class="flex items-center gap-3">
-          <span class="font-bold text-sm text-[var(--text-color)] dark:text-[var(--left-text-color)]">
+        class="flex h-10 shrink-0 items-center justify-between border-b border-[var(--line-color)] bg-[var(--right-bg-color)] px-4 dark:bg-[var(--bg-setting-item)]">
+        <div class="flex-y-center gap-3">
+          <span class="text-sm font-bold text-[var(--text-color)] dark:text-[var(--left-text-color)]">
             {{ t("preview.code.title") }}
           </span>
 
           <n-select
+            size="small"
+            class="w-24"
             v-model:value="language"
             :options="languageOptions"
-            @update:value="runPreview"
-            size="small"
             :consistent-menu-width="false"
-            class="w-24" />
+            @update:value="runPreview" />
 
           <span class="text-xs text-[var(--left-text-color)]">{{ t("preview.code.save") }}</span>
         </div>
 
         <div class="flex gap-2">
           <div
-            class="cursor-pointer text-xs bg-[#13987f] hover:bg-[#52aea3] text-white px-3 py-1 rounded transition flex items-center gap-1"
+            class="flex cursor-pointer items-center gap-1 rounded bg-[#13987f] px-3 py-1 text-xs text-white transition hover:bg-[#52aea3]"
             @click="runPreview">
-            <span class="text-white flex-center">
-              <i-material-symbols-play-arrow-rounded class="w-5 h-5" />
+            <span class="flex-center text-white">
+              <i-material-symbols-play-arrow-rounded class="h-5 w-5" />
             </span>
             {{ t("preview.code.run") }}
           </div>
         </div>
       </div>
 
-      <div v-resize="onContainerResize" ref="containerRef" class="flex-1 flex w-full h-full overflow-hidden relative">
+      <div v-resize="onContainerResize" ref="containerRef" class="relative flex h-full w-full flex-1 overflow-hidden">
         <div
-          class="h-full flex flex-col border-r border-[var(--line-color)]"
+          class="flex h-full flex-col border-r border-[var(--line-color)]"
           :style="{ width: leftWidth + 'px', maxWidth: 'calc(100% - 200px)' }">
           <VueMonacoEditor
+            class="h-full w-full"
             v-model:value="code"
             :theme="monacoTheme"
             :language="monacoLang"
             :options="editorOptions"
-            class="h-full w-full"
             @mount="handleEditorMount" />
         </div>
 
         <div
-          class="w-[4px] h-full cursor-col-resize bg-[var(--right-bg-color)] dark:bg-[var(--bg-setting-item)] hover:bg-blue-600 active:bg-blue-600 transition-colors z-20 flex-shrink-0"
+          class="z-20 h-full w-[4px] flex-shrink-0 cursor-col-resize bg-[var(--right-bg-color)] transition-colors hover:bg-blue-600 active:bg-blue-600 dark:bg-[var(--bg-setting-item)]"
           @mousedown.prevent="startDrag"></div>
 
-        <div class="flex-1 h-full bg-[var(--right-bg-color)] relative min-w-0">
+        <div class="relative h-full min-w-0 flex-1 bg-[var(--right-bg-color)]">
           <div v-if="isDragging" class="absolute inset-0 z-50 bg-transparent"></div>
 
           <iframe
             v-if="previewUrl"
-            :src="previewUrl"
-            class="w-full h-full border-none block bg-white"
             sandbox="allow-scripts allow-forms allow-modals allow-downloads"
-            referrerpolicy="no-referrer"></iframe>
+            referrerpolicy="no-referrer"
+            class="block h-full w-full border-none bg-white"
+            :src="previewUrl"></iframe>
 
           <div
             v-if="!previewUrl"
-            class="absolute inset-0 flex items-center justify-center bg-[var(--right-bg-color)] text-[var(--left-text-color)] text-sm">
+            class="absolute inset-0 flex-center bg-[var(--right-bg-color)] text-sm text-[var(--left-text-color)]">
             {{ t("preview.code.hint") }}
           </div>
         </div>

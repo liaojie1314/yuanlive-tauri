@@ -1,5 +1,5 @@
 <template>
-  <n-flex data-tauri-drag-region vertical class="login-box size-full select-none !gap-0">
+  <n-flex data-tauri-drag-region vertical class="login-box size-full !gap-0 select-none">
     <div data-tauri-drag-region>
       <n-progress
         data-tauri-drag-region
@@ -13,20 +13,20 @@
       <n-carousel
         autoplay
         direction="vertical"
+        class="line-height-30px h-[30px] w-[90%] cursor-default overflow-hidden px-2 text-sm"
         :interval="3000"
-        :show-dots="false"
-        class="w-[90%] text-sm line-height-30px h-[30px] px-2 overflow-hidden cursor-default">
+        :show-dots="false">
         <n-carouselItem
           data-tauri-drag-region
           v-for="(text, i) in list"
+          class="text-(12px ellipsis) color-#909090 box-border max-w-full align-middle whitespace-nowrap"
           :key="i"
-          class="whitespace-nowrap align-middle text-(12px ellipsis) max-w-full box-border color-#909090"
           :title="text">
           {{ text }}
         </n-carouselItem>
       </n-carousel>
 
-      <p class="cursor-default color-#13987f text-center text-sm mt-4" data-tauri-drag-region>
+      <p data-tauri-drag-region class="color-#13987f mt-4 cursor-default text-center text-sm">
         {{ t("update.updating") }} {{ percentage }}%
       </p>
     </div>

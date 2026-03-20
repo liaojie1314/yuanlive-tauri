@@ -1,31 +1,31 @@
 <template>
-  <n-flex v-if="showTray" vertical :size="6" class="tray">
+  <n-flex v-if="showTray" vertical class="tray" :size="6">
     <n-flex vertical :size="6">
       <n-flex
-        @click="checkWinExist('home')"
         align="center"
+        v-once
+        class="rounded-4px cursor-pointer p-[8px_6px] hover:bg-[--tray-hover]"
         :size="10"
-        class="p-[8px_6px] rounded-4px hover:bg-[--tray-hover] cursor-pointer"
-        v-once>
+        @click="checkWinExist('home')">
         <svg class="color-[--action-bar-icon-color] size-16px ml-4px">
           <use href="#home"></use>
         </svg>
         <span>{{ t("components.tray.showMainPanel") }}</span>
       </n-flex>
-      <div class="h-1px bg-[--line-color] w-full"></div>
-      <n-flex align="center" :size="10" class="p-[8px_6px] rounded-4px hover:bg-[--tray-hover] cursor-pointer" v-once>
+      <div class="h-1px w-full bg-[--line-color]"></div>
+      <n-flex align="center" v-once class="rounded-4px cursor-pointer p-[8px_6px] hover:bg-[--tray-hover]" :size="10">
         <svg class="color-[--action-bar-icon-color] size-16px ml-4px">
           <use href="#settings"></use>
         </svg>
         <span>{{ t("components.tray.setting") }}</span>
       </n-flex>
-      <div class="h-1px bg-[--line-color] w-full"></div>
+      <div class="h-1px w-full bg-[--line-color]"></div>
       <n-flex
-        @click="exit(0)"
         align="center"
+        v-once
+        class="rounded-4px cursor-pointer p-[8px_6px] hover:bg-[--tray-hover-e]"
         :size="10"
-        class="p-[8px_6px] rounded-4px hover:bg-[--tray-hover-e] cursor-pointer"
-        v-once>
+        @click="exit(0)">
         <svg class="color-[--action-bar-icon-color] size-16px ml-4px">
           <use href="#logout"></use>
         </svg>
@@ -33,13 +33,13 @@
       </n-flex>
     </n-flex>
   </n-flex>
-  <n-flex v-else vertical :size="6" class="tray">
+  <n-flex v-else vertical class="tray" :size="6">
     <n-flex
-      @click="exit(0)"
       align="center"
+      v-once
+      class="rounded-4px cursor-pointer p-[8px_6px] hover:bg-[--tray-hover-e]"
       :size="10"
-      class="p-[8px_6px] rounded-4px hover:bg-[--tray-hover-e] cursor-pointer"
-      v-once>
+      @click="exit(0)">
       <svg class="color-[--action-bar-icon-color] size-16px ml-4px">
         <use href="#logout"></use>
       </svg>
@@ -79,6 +79,6 @@ onUnmounted(() => {
 
 <style scoped lang="scss">
 .tray {
-  @apply bg-[--tray-bg-color] size-full p-8px box-border select-none text-[--text-color] text-12px;
+  @apply p-8px text-12px box-border size-full bg-[--tray-bg-color] text-[--text-color] select-none;
 }
 </style>

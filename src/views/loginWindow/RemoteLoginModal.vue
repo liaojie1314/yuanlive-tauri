@@ -1,32 +1,31 @@
 <template>
-  <n-config-provider data-tauri-drag-region :theme="naiveTheme" class="remote-login-modal size-full select-none">
-    <div class="w-350px h-310px border-rd-8px" data-tauri-drag-region>
-      <div class="bg-[--bg-popover] size-full p-6px box-border flex flex-col" data-tauri-drag-region>
+  <n-config-provider data-tauri-drag-region class="remote-login-modal size-full select-none" :theme="naiveTheme">
+    <div data-tauri-drag-region class="w-350px h-310px border-rd-8px">
+      <div data-tauri-drag-region class="p-6px box-border flex size-full flex-col bg-[--bg-popover]">
         <svg
           v-if="!isMac()"
-          @click="handleConfirm"
-          class="w-14px h-14px ml-a cursor-pointer select-none text-[--text-color]">
+          class="w-14px h-14px ml-a cursor-pointer text-[--text-color] select-none"
+          @click="handleConfirm">
           <use href="#close"></use>
         </svg>
-        <div class="flex flex-col p-10px select-none">
+        <div class="p-10px flex flex-col select-none">
           <n-flex vertical align="center" :size="20">
             <span class="text-(14px [--text-color])">{{ t("auth.remoteLogin.notice") }}</span>
             <div class="relative">
-              <img class="rounded-full size-72px" src="/vite.svg" alt="" />
-              <div
-                class="absolute inset-0 bg-[--avatar-hover-bg] backdrop-blur-[2px] rounded-full flex items-center justify-center">
-                <svg class="size-34px text-white animate-pulse">
+              <img src="/vite.svg" alt="" class="size-72px rounded-full" />
+              <div class="absolute inset-0 flex-center rounded-full bg-[--avatar-hover-bg] backdrop-blur-[2px]">
+                <svg class="size-34px animate-pulse text-white">
                   <use href="#cloudError"></use>
                 </svg>
               </div>
             </div>
-            <div class="text-(13px [--text-color]) px-12px leading-loose text-center mb-10px">
+            <div class="text-(13px [--text-color]) px-12px mb-10px text-center leading-loose">
               <p>{{ t("auth.remoteLogin.otherDeviceLogin") }}</p>
               <span class="text-#13987f">{{ ip }}</span>
               <p>{{ t("auth.remoteLogin.needChangePassword") }}</p>
             </div>
           </n-flex>
-          <n-button class="w-full color-#fff" color="#13987f" @click="handleConfirm">
+          <n-button color="#13987f" class="color-#fff w-full" @click="handleConfirm">
             {{ t("auth.remoteLogin.confirm") }}
           </n-button>
         </div>

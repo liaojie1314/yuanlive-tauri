@@ -28,7 +28,7 @@
 
         <div v-if="!isRecording && audioBlob && !isProcessing" class="status-completed">
           <div class="playback-controls">
-            <button @click="togglePlayback" class="play-btn">
+            <button class="play-btn" @click="togglePlayback">
               <svg v-if="!isPlaying" viewBox="0 0 24 24">
                 <path fill="currentColor" d="M8,5.14V19.14L19,12.14L8,5.14Z" />
               </svg>
@@ -46,27 +46,27 @@
         <!-- 未录音状态 -->
         <div v-if="!isRecording && !audioBlob && !isProcessing" class="controls-idle">
           <div
+            class="record-btn"
             @mousedown="startRecording"
             @mouseup="stopRecording"
             @mouseleave="stopRecording"
             @touchstart="startRecording"
-            @touchend="stopRecording"
-            class="record-btn">
+            @touchend="stopRecording">
             <svg><use href="#voice"></use></svg>
           </div>
-          <div @click="handleCancel" class="cancel-btn">
+          <div class="cancel-btn" @click="handleCancel">
             <svg><use href="#close"></use></svg>
           </div>
         </div>
 
         <!-- 录音中状态 -->
         <div v-if="isRecording" class="controls-recording">
-          <div @click="stopRecording" class="stop-btn">
+          <div class="stop-btn" @click="stopRecording">
             <svg viewBox="0 0 24 24">
               <path fill="currentColor" d="M18,18H6V6H18V18Z" />
             </svg>
           </div>
-          <div @click="cancelRecording" class="cancel-record-btn">
+          <div class="cancel-record-btn" @click="cancelRecording">
             <svg><use href="#close"></use></svg>
           </div>
         </div>
@@ -76,14 +76,14 @@
 
         <!-- 录音完成状态 -->
         <div v-if="!isRecording && audioBlob && !isProcessing" class="controls-completed">
-          <div @click="reRecord" class="refresh-btn">
+          <div class="refresh-btn" @click="reRecord">
             <svg><use href="#refresh"></use></svg>
           </div>
-          <div @click="handleSend" class="send-btn" :disabled="sending">
+          <div class="send-btn" :disabled="sending" @click="handleSend">
             <svg v-if="!sending"><use href="#send"></use></svg>
             <div v-else class="loading-spinner"></div>
           </div>
-          <div @click="handleCancel" class="cancel-btn">
+          <div class="cancel-btn" @click="handleCancel">
             <svg><use href="#close"></use></svg>
           </div>
         </div>
@@ -271,11 +271,11 @@ onUnmounted(() => {
 }
 
 .voice-recorder-container {
-  @apply flex flex-col relative w-full h-89.5px bg-[--bg-color] rounded-8px;
+  @apply h-89.5px rounded-8px relative flex w-full flex-col bg-[--bg-color];
 }
 
 .voice-recorder-main {
-  @apply flex flex-col items-center justify-center h-full gap-22px;
+  @apply gap-22px flex h-full flex-col items-center justify-center;
 }
 
 .voice-status {
@@ -312,7 +312,7 @@ onUnmounted(() => {
       @apply flex-y-center gap-8px;
 
       .play-btn {
-        @apply flex-center size-30px bg-inherit border-none cursor-pointer text-#13987f;
+        @apply flex-center size-30px text-#13987f cursor-pointer border-none bg-inherit;
 
         svg {
           @apply size-16px;

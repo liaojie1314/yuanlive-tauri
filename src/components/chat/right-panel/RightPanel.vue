@@ -1,7 +1,7 @@
 <template>
-  <div class="w-full h-full flex flex-col bg-[--tray-bg-color] overflow-hidden relative">
+  <div class="relative flex h-full w-full flex-col overflow-hidden bg-[--tray-bg-color]">
     <n-scrollbar class="flex-1">
-      <div class="p-4 flex flex-col gap-8">
+      <div class="flex flex-col gap-8 p-4">
         <trending-prompts />
 
         <workspace-files />

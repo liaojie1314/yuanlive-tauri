@@ -1,44 +1,44 @@
 <template>
-  <div class="p-0 m-0 select-none h-full overflow-hidden flex flex-col text-[--text-color]">
+  <div class="m-0 flex h-full flex-col overflow-hidden p-0 text-[--text-color] select-none">
     <div class="px-4 pt-4">
       <user-info-card v-model:save-login-info="saveLoginInfo" />
     </div>
 
-    <div class="mx-4 mt-4 mb-2 bg-[--tray-bg-color] p-4 rounded-lg shadow-sm border border-[--line-color]">
+    <div class="mx-4 mt-4 mb-2 rounded-lg border border-[--line-color] bg-[--tray-bg-color] p-4 shadow-sm">
       <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
         <div
-          class="flex flex-col items-center justify-center p-3 rounded-lg hover:bg-[--tray-hover] cursor-pointer transition-colors"
+          class="flex cursor-pointer flex-col items-center justify-center rounded-lg p-3 transition-colors hover:bg-[--tray-hover]"
           @click="showUploadDialog = true">
           <!-- @click="createWebviewWindow('live2d', 'live2d', 100, 400)"> -->
-          <i-mdi-video-plus class="text-xl text-blue-500 mb-1"></i-mdi-video-plus>
+          <i-mdi-video-plus class="mb-1 text-xl text-blue-500"></i-mdi-video-plus>
           <span class="text-sm text-[--user-text-color]">{{ $t("home.user.publishVideo") }}</span>
         </div>
         <div
-          class="flex flex-col items-center justify-center p-3 rounded-lg hover:bg-[--tray-hover] cursor-pointer transition-colors"
+          class="flex cursor-pointer flex-col items-center justify-center rounded-lg p-3 transition-colors hover:bg-[--tray-hover]"
           @click="createWebviewWindow('视频管理', 'manageVideo', 1200, 720, '', true, 800, 500)">
-          <i-mdi-video class="text-xl text-green-500 mb-1"></i-mdi-video>
+          <i-mdi-video class="mb-1 text-xl text-green-500"></i-mdi-video>
           <span class="text-sm text-[--user-text-color]">{{ $t("home.user.manageVideo") }}</span>
         </div>
         <div
-          class="flex flex-col items-center justify-center p-3 rounded-lg hover:bg-[--tray-hover] cursor-pointer transition-colors"
+          class="flex cursor-pointer flex-col items-center justify-center rounded-lg p-3 transition-colors hover:bg-[--tray-hover]"
           @click="openRecordWindow">
-          <i-mdi-camcorder class="text-xl text-red-500 mb-1"></i-mdi-camcorder>
+          <i-mdi-camcorder class="mb-1 text-xl text-red-500"></i-mdi-camcorder>
           <span class="text-sm text-[--user-text-color]">{{ $t("home.user.openRecord") }}</span>
         </div>
         <div
-          class="flex flex-col items-center justify-center p-3 rounded-lg hover:bg-[--tray-hover] cursor-pointer transition-colors"
+          class="flex cursor-pointer flex-col items-center justify-center rounded-lg p-3 transition-colors hover:bg-[--tray-hover]"
           @click="createWebviewWindow('直播数据', 'manageLive', 1200, 720, '', true, 800, 500)">
-          <i-mdi-chart-line class="text-xl text-orange-500 mb-1"></i-mdi-chart-line>
+          <i-mdi-chart-line class="mb-1 text-xl text-orange-500"></i-mdi-chart-line>
           <span class="text-sm text-[--user-text-color]">{{ $t("home.user.liveData") }}</span>
         </div>
       </div>
     </div>
 
     <div
-      class="mx-4 mb-2 bg-[--tray-bg-color] rounded-lg border border-[--line-color] flex items-center justify-between px-2 shadow-sm">
+      class="mx-4 mb-2 flex-between-center rounded-lg border border-[--line-color] bg-[--tray-bg-color] px-2 shadow-sm">
       <n-tabs
-        v-model:value="activeTopTab"
         class="flex-1"
+        v-model:value="activeTopTab"
         :tab-active-color="'#ff0050'"
         :tab-font-size="14"
         :tab-font-weight="500">
@@ -53,7 +53,7 @@
       </n-tabs>
     </div>
 
-    <div v-if="activeTopTab === 'collection'" class="mx-4 flex flex-col flex-1 min-h-0">
+    <div v-if="activeTopTab === 'collection'" class="mx-4 flex min-h-0 flex-1 flex-col">
       <div class="mb-2 px-1">
         <n-tabs v-model:value="activeSubTab" :tab-active-color="'#ff0050'" :tab-font-size="14">
           <n-tab-pane name="folders" :tab="$t('home.user.tab.collectionFolder')" />
@@ -62,16 +62,16 @@
       </div>
 
       <template v-if="activeSubTab === 'folders'">
-        <div v-if="folders.length === 0" class="flex-1 flex flex-col items-center justify-center text-center pb-10">
+        <div v-if="folders.length === 0" class="flex flex-1 flex-col items-center justify-center pb-10 text-center">
           <div class="mb-4">
-            <i-mdi-folder-outline class="text-[--disabled-color] text-[100px]" />
+            <i-mdi-folder-outline class="text-[100px] text-[--disabled-color]" />
           </div>
-          <div class="text-lg font-semibold text-[--text-color] mb-2">{{ $t("home.user.noCollectionFolder") }}</div>
-          <div class="text-sm text-[--user-text-color] mb-4">{{ $t("home.user.createCollectionFolderTip") }}</div>
+          <div class="mb-2 text-lg font-semibold text-[--text-color]">{{ $t("home.user.noCollectionFolder") }}</div>
+          <div class="mb-4 text-sm text-[--user-text-color]">{{ $t("home.user.createCollectionFolderTip") }}</div>
           <n-button
             type="primary"
-            @click="showCreateDialog = true"
-            class="bg-[#ff0050] text-white border-none px-6 py-2.5 rounded-lg text-sm font-semibold hover:bg-[#ff3366] transition-colors">
+            class="rounded-lg border-none bg-[#ff0050] px-6 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#ff3366]"
+            @click="showCreateDialog = true">
             + {{ $t("home.user.createCollectionFolder") }}
           </n-button>
         </div>
@@ -80,27 +80,27 @@
       </template>
     </div>
 
-    <div v-if="activeTopTab === 'like'" class="mx-4 flex flex-col flex-1 min-h-0">
+    <div v-if="activeTopTab === 'like'" class="mx-4 flex min-h-0 flex-1 flex-col">
       <n-scrollbar class="flex-grow" @scroll="handleScroll">
-        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 pb-4">
+        <div class="grid grid-cols-2 gap-3 pb-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
           <video-card v-for="video in likedVideos" :key="video.id" :video="video" />
         </div>
 
-        <div v-if="isLoading" class="flex justify-center items-center py-4">
+        <div v-if="isLoading" class="flex-center py-4">
           <n-spin size="small" />
         </div>
 
         <div
           v-if="!isLoading && !hasMore && likedVideos.length > 0"
-          class="text-center text-[--user-text-color] py-4 text-sm">
+          class="py-4 text-center text-sm text-[--user-text-color]">
           {{ $t("home.user.noMore") }}
         </div>
 
         <div
           v-if="!isLoading && likedVideos.length === 0"
-          class="h-full flex flex-col items-center justify-center text-center py-10">
-          <i-mdi-heart-outline class="text-[--disabled-color] text-[80px] mb-4" />
-          <div class="text-lg font-semibold text-[--text-color] mb-2">{{ $t("home.user.noLikeVideo") }}</div>
+          class="flex h-full flex-col items-center justify-center py-10 text-center">
+          <i-mdi-heart-outline class="mb-4 text-[80px] text-[--disabled-color]" />
+          <div class="mb-2 text-lg font-semibold text-[--text-color]">{{ $t("home.user.noLikeVideo") }}</div>
           <div class="text-sm text-[--user-text-color]">{{ $t("home.user.noLikeVideoTip") }}</div>
         </div>
       </n-scrollbar>

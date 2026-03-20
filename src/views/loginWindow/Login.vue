@@ -1,51 +1,51 @@
 <template>
-  <n-config-provider :theme="naiveTheme" data-tauri-drag-region class="login-box size-full rounded-8px select-none">
+  <n-config-provider data-tauri-drag-region class="login-box rounded-8px size-full select-none" :theme="naiveTheme">
     <!--顶部操作栏-->
-    <action-bar :max-w="false" proxy />
+    <action-bar proxy :max-w="false" />
     <!--  手动登录  -->
     <n-flex v-if="uiState === 'manual'" vertical :size="25">
       <!-- 头像 -->
-      <n-flex justify="center" class="w-full pt-35px" data-tauri-drag-region>
+      <n-flex justify="center" data-tauri-drag-region class="pt-35px w-full">
         <n-avatar
-          class="welcome size-80px rounded-50% border-(2px solid #fff) dark:border-(2px solid #606060)"
-          :color="themes.content === ThemeEnum.DARK ? '#282828' : '#fff'"
           fallback-src="/vite.svg"
-          src="/vite.svg" />
+          src="/vite.svg"
+          class="welcome size-80px rounded-50% border-(2px solid #fff) dark:border-(2px solid #606060)"
+          :color="themes.content === ThemeEnum.DARK ? '#282828' : '#fff'" />
       </n-flex>
 
       <!-- 登录菜单 -->
-      <n-flex class="ma text-center h-full w-260px" vertical :size="16">
+      <n-flex vertical class="ma w-260px h-full text-center" :size="16">
         <n-input
-          v-model:value="userInfo.account"
           size="large"
           type="text"
-          :placeholder="accountPH"
-          :spellcheck="false"
           autocorrect="off"
           autocapitalize="off"
+          clearable
+          v-model:value="userInfo.account"
+          :placeholder="accountPH"
+          :spellcheck="false"
           @focus="accountPH = ''"
-          @blur="accountPH = t('auth.input.account.placeholder')"
-          clearable />
+          @blur="accountPH = t('auth.input.account.placeholder')" />
         <n-input
-          v-model:value="userInfo.password"
-          class="pl-16px"
           maxlength="16"
           minlength="6"
           size="large"
           show-password-on="click"
           type="password"
-          :placeholder="passwordPH"
-          :spellcheck="false"
           autocorrect="off"
           autocapitalize="off"
+          clearable
+          class="pl-16px"
+          v-model:value="userInfo.password"
+          :placeholder="passwordPH"
+          :spellcheck="false"
           @focus="passwordPH = ''"
-          @blur="passwordPH = t('auth.input.pass.placeholder')"
-          clearable />
+          @blur="passwordPH = t('auth.input.pass.placeholder')" />
 
         <!-- 协议 -->
         <n-flex align="center" justify="center" :size="6">
           <n-checkbox v-model:checked="protocol" />
-          <div class="text-12px color-#909090 cursor-default lh-14px agreement">
+          <div class="text-12px color-#909090 lh-14px agreement cursor-default">
             <span>{{ t("auth.agreement.text1") }}</span>
             <span class="color-#13987f cursor-pointer">
               {{ t("auth.agreement.text2") }}
@@ -57,29 +57,29 @@
           </div>
         </n-flex>
         <n-button
-          class="gradient-button w-full mt-8px mb-50px color-#fff"
+          tertiary
+          class="gradient-button mt-8px mb-50px color-#fff w-full"
           :loading="loading"
           :disabled="loginDisabled"
-          tertiary
           @click="normalLogin('desktop', false)">
           <span>{{ loginText }}</span>
         </n-button>
       </n-flex>
     </n-flex>
     <!-- 自动登录 -->
-    <n-flex v-else-if="uiState === 'auto'" vertical :size="29" data-tauri-drag-region>
+    <n-flex v-else-if="uiState === 'auto'" vertical data-tauri-drag-region :size="29">
       <n-flex justify="center" class="mt-15px">
-        <img src="/vite.svg" class="w-140px h-60px" alt="" />
+        <img src="/vite.svg" alt="" class="w-140px h-60px" />
       </n-flex>
-      <n-flex :size="30" vertical>
+      <n-flex vertical :size="30">
         <!-- 头像 -->
         <n-flex justify="center">
           <n-avatar
             round
-            :size="110"
-            :color="themes.content === ThemeEnum.DARK ? '#282828' : '#fff'"
             fallback-src="/vite.svg"
-            src="/vite.svg" />
+            src="/vite.svg"
+            :size="110"
+            :color="themes.content === ThemeEnum.DARK ? '#282828' : '#fff'" />
         </n-flex>
 
         <n-flex justify="center">
@@ -91,17 +91,17 @@
 
       <n-flex justify="center">
         <n-button
-          :loading="loading"
-          :disabled="loginDisabled"
           tertiary
           class="gradient-button w-200px mt-12px mb-40px color-#fff"
+          :loading="loading"
+          :disabled="loginDisabled"
           @click="normalLogin('desktop', true)">
           <span>{{ loginText }}</span>
         </n-button>
       </n-flex>
     </n-flex>
     <!-- 底部操作栏 -->
-    <div class="text-14px grid grid-cols-[1fr_auto_1fr] items-center gap-x-12px w-full">
+    <div class="text-14px gap-x-12px grid w-full grid-cols-[1fr_auto_1fr] items-center">
       <div
         class="color-#13987f cursor-pointer justify-self-end text-right"
         :title="qrCodeTitle"
@@ -119,29 +119,29 @@
       <div v-else class="justify-self-start text-left">
         <n-popover
           id="moreShow"
-          v-model:show="moreShow"
           trigger="click"
           class="bg-#fdfdfd98! dark:bg-#48484e98! backdrop-blur-sm"
+          v-model:show="moreShow"
           :show-arrow="false">
           <template #trigger>
             <div class="color-#13987f cursor-pointer" :title="moreTitle">{{ moreLabel }}</div>
           </template>
           <n-flex vertical :size="2">
             <div
-              class="register text-14px cursor-pointer hover:bg-#90909030 hover:rounded-6px p-8px"
+              class="register text-14px hover:bg-#90909030 hover:rounded-6px p-8px cursor-pointer"
               @click="createWebviewWindow('注册', 'register', 380, 520)">
               {{ t("auth.option.items.register") }}
             </div>
             <div
-              class="text-14px cursor-pointer hover:bg-#90909030 hover:rounded-6px p-8px"
+              class="text-14px hover:bg-#90909030 hover:rounded-6px p-8px cursor-pointer"
               @click="createWebviewWindow('忘记密码', 'forgetPassword', 600, 600)">
               {{ t("auth.option.items.forget") }}
             </div>
             <div
               v-if="!isCompatibility()"
-              @click="router.push('/network')"
+              class="text-14px hover:bg-#90909030 hover:rounded-6px p-8px cursor-pointer"
               :class="{ network: isMac() }"
-              class="text-14px cursor-pointer hover:bg-#90909030 hover:rounded-6px p-8px">
+              @click="router.push('/network')">
               {{ t("auth.option.items.networkSetting") }}
             </div>
           </n-flex>

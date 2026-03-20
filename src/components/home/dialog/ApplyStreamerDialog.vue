@@ -1,73 +1,73 @@
 <template>
-  <base-dialog v-model:show="dialogVisible" :title="t('dialog.applyStreamer.title')" width="500px">
+  <base-dialog width="500px" v-model:show="dialogVisible" :title="t('dialog.applyStreamer.title')">
     <div class="apply-streamer-content">
-      <div class="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg mb-6 flex items-start gap-3">
-        <i-mdi-information class="text-blue-500 text-xl shrink-0 mt-0.5" />
+      <div class="mb-6 flex items-start gap-3 rounded-lg bg-blue-50 p-3 dark:bg-blue-900/20">
+        <i-mdi-information class="mt-0.5 shrink-0 text-xl text-blue-500" />
         <div class="text-xs text-[--user-text-color]">
-          <p class="font-bold text-[--text-color] mb-1">{{ t("dialog.applyStreamer.applyDesc") }}</p>
+          <p class="mb-1 font-bold text-[--text-color]">{{ t("dialog.applyStreamer.applyDesc") }}</p>
           <p>{{ t("dialog.applyStreamer.applyDescInfo") }}</p>
         </div>
       </div>
       <n-form
         ref="formRef"
-        :model="formValue"
-        :rules="rules"
         label-placement="left"
         label-width="120"
-        require-mark-placement="right-hanging">
-        <n-form-item :label="t('dialog.applyStreamer.realName')" path="realName">
+        require-mark-placement="right-hanging"
+        :model="formValue"
+        :rules="rules">
+        <n-form-item path="realName" :label="t('dialog.applyStreamer.realName')">
           <n-input
-            v-model:value="formValue.realName"
             class="border-(1px solid #90909080)"
+            v-model:value="formValue.realName"
             :placeholder="t('dialog.applyStreamer.realNamePlaceholder')" />
         </n-form-item>
 
-        <n-form-item :label="t('dialog.applyStreamer.idCard')" path="idCard">
+        <n-form-item path="idCard" :label="t('dialog.applyStreamer.idCard')">
           <n-input
-            v-model:value="formValue.idCard"
+            maxlength="18"
             class="border-(1px solid #90909080)"
-            :placeholder="t('dialog.applyStreamer.idCardPlaceholder')"
-            maxlength="18" />
+            v-model:value="formValue.idCard"
+            :placeholder="t('dialog.applyStreamer.idCardPlaceholder')" />
         </n-form-item>
 
-        <n-form-item :label="t('dialog.applyStreamer.phone')" path="phone">
+        <n-form-item path="phone" :label="t('dialog.applyStreamer.phone')">
           <n-input
-            v-model:value="formValue.phone"
             class="border-(1px solid #90909080)"
+            v-model:value="formValue.phone"
             :placeholder="t('dialog.applyStreamer.phonePlaceholder')" />
         </n-form-item>
 
-        <n-form-item :label="t('dialog.applyStreamer.liveCategory')" path="category">
+        <n-form-item path="category" :label="t('dialog.applyStreamer.liveCategory')">
           <n-select
             v-model:value="formValue.category"
             :options="categoryOptions"
             :placeholder="t('dialog.applyStreamer.liveCategoryPlaceholder')" />
         </n-form-item>
 
-        <n-form-item :label="t('dialog.applyStreamer.reason')" path="reason">
+        <n-form-item path="reason" :label="t('dialog.applyStreamer.reason')">
           <n-input
-            v-model:value="formValue.reason"
             type="textarea"
-            :placeholder="t('dialog.applyStreamer.reasonPlaceholder')"
-            :autosize="{ minRows: 2, maxRows: 4 }"
             maxlength="100"
             show-count
-            class="border-(1px solid #90909080)" />
+            class="border-(1px solid #90909080)"
+            v-model:value="formValue.reason"
+            :placeholder="t('dialog.applyStreamer.reasonPlaceholder')"
+            :autosize="{ minRows: 2, maxRows: 4 }" />
         </n-form-item>
       </n-form>
 
-      <div class="flex items-center justify-center mb-6">
+      <div class="mb-6 flex-center">
         <n-checkbox v-model:checked="isAgreed">
           <span class="text-xs text-[--user-text-color]">
             {{ t("dialog.applyStreamer.agree") }}
-            <span class="text-blue-500 cursor-pointer">{{ t("dialog.applyStreamer.agreeLink") }}</span>
+            <span class="cursor-pointer text-blue-500">{{ t("dialog.applyStreamer.agreeLink") }}</span>
           </span>
         </n-checkbox>
       </div>
 
       <div class="flex justify-end gap-3">
         <n-button @click="closeDialog">{{ t("components.common.cancel") }}</n-button>
-        <n-button type="primary" :loading="loading" @click="handleSubmit" :disabled="!isAgreed">
+        <n-button type="primary" :loading="loading" :disabled="!isAgreed" @click="handleSubmit">
           {{ t("dialog.applyStreamer.submit") }}
         </n-button>
       </div>

@@ -2,43 +2,43 @@
   <base-dialog v-model:show="dialogVisible" :title="$t('dialog.editProfile.title')">
     <div class="space-y-6">
       <n-scrollbar style="max-height: 60vh" class="pr-4">
-        <div class="flex flex-col items-center gap-3 py-1">
-          <div class="relative cursor-pointer group size-24">
-            <n-avatar round :size="96" :src="userInfo?.avatar" class="border-2 border-[--line-color] shadow-sm" />
+        <div class="flex-col-x-center gap-3 py-1">
+          <div class="group relative size-24 cursor-pointer">
+            <n-avatar round class="border-2 border-[--line-color] shadow-sm" :size="96" :src="userInfo?.avatar" />
             <div
-              class="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 backdrop-blur-[2px]"
+              class="absolute inset-0 flex-center rounded-full bg-black/50 opacity-0 backdrop-blur-[2px] transition-all duration-300 group-hover:opacity-100"
               @click="openAvatarCropper">
               <i-mdi-camera class="size-7 text-white" />
             </div>
           </div>
-          <span class="text-xs text-[--user-text-color] hover:text-blue-500 transition-colors">
+          <span class="text-xs text-[--user-text-color] transition-colors hover:text-blue-500">
             {{ $t("dialog.editProfile.replaceAvatar") }}
           </span>
         </div>
 
         <div class="flex flex-col gap-2 py-1">
-          <label class="text-sm font-medium text-[--text-color] ml-1">{{ $t("dialog.editProfile.email") }}</label>
+          <label class="ml-1 text-sm font-medium text-[--text-color]">{{ $t("dialog.editProfile.email") }}</label>
           <n-input
             clearable
+            class="border-(1px solid #90909080)"
             v-model:value="form.email"
-            :placeholder="$t('dialog.editProfile.emailPlaceholder')"
-            class="border-(1px solid #90909080)" />
+            :placeholder="$t('dialog.editProfile.emailPlaceholder')" />
         </div>
 
         <div class="flex flex-col gap-2 py-1">
-          <label class="text-sm font-medium text-[--text-color] ml-1">{{ $t("dialog.editProfile.password") }}</label>
+          <label class="ml-1 text-sm font-medium text-[--text-color]">{{ $t("dialog.editProfile.password") }}</label>
           <n-input
-            v-model:value="form.password"
             type="password"
             show-password-on="click"
             clearable
-            :placeholder="$t('dialog.editProfile.passwordPlaceholder')"
-            class="border-(1px solid #90909080)" />
+            class="border-(1px solid #90909080)"
+            v-model:value="form.password"
+            :placeholder="$t('dialog.editProfile.passwordPlaceholder')" />
         </div>
 
         <div class="flex flex-col gap-2 py-1">
-          <label class="text-sm font-medium text-[--text-color] ml-1">{{ $t("dialog.editProfile.gender") }}</label>
-          <n-radio-group v-model:value="form.gender" name="gender">
+          <label class="ml-1 text-sm font-medium text-[--text-color]">{{ $t("dialog.editProfile.gender") }}</label>
+          <n-radio-group name="gender" v-model:value="form.gender">
             <n-space>
               <n-radio value="MALE">{{ $t("dialog.editProfile.male") }}</n-radio>
               <n-radio value="FEMALE">{{ $t("dialog.editProfile.female") }}</n-radio>
@@ -48,20 +48,20 @@
         </div>
 
         <div class="flex flex-col gap-2 py-1">
-          <label class="text-sm font-medium text-[--text-color] ml-1">{{ $t("dialog.editProfile.desc") }}</label>
+          <label class="ml-1 text-sm font-medium text-[--text-color]">{{ $t("dialog.editProfile.desc") }}</label>
           <n-input
+            type="textarea"
+            maxlength="100"
+            show-count
+            class="border-(1px solid #90909080)"
             v-model:value="form.description"
             :placeholder="$t('dialog.editProfile.descPlaceholder')"
-            type="textarea"
-            :autosize="{ minRows: 3, maxRows: 5 }"
-            maxlength="100"
-            class="border-(1px solid #90909080)"
-            show-count />
+            :autosize="{ minRows: 3, maxRows: 5 }" />
         </div>
 
-        <div class="flex justify-end gap-3 pt-4 border-t border-[--line-color]">
+        <div class="flex justify-end gap-3 border-t border-[--line-color] pt-4">
           <n-button ghost @click="closeDialog">{{ $t("components.common.cancel") }}</n-button>
-          <n-button type="primary" class="px-8" @click="saveProfile" :disabled="!form.username">
+          <n-button type="primary" class="px-8" :disabled="!form.username" @click="saveProfile">
             {{ $t("dialog.editProfile.save") }}
           </n-button>
         </div>

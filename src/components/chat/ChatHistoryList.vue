@@ -1,13 +1,13 @@
 <template>
-  <div class="flex flex-col h-full bg-[--tray-bg-color]">
-    <div class="p-3 flex items-center justify-between">
+  <div class="flex h-full flex-col bg-[--tray-bg-color]">
+    <div class="flex-between-center p-3">
       <n-button
         v-if="!isCollapsed"
         type="primary"
-        @click="handleNewChat"
-        class="bg-[--btn-secondary-bg] text-[--text-color] hover:bg-[--btn-secondary-hover] border border-[--line-color] flex-1 mr-2 transition-colors">
+        class="mr-2 flex-1 border border-[--line-color] bg-[--btn-secondary-bg] text-[--text-color] transition-colors hover:bg-[--btn-secondary-hover]"
+        @click="handleNewChat">
         <template #icon>
-          <i-mdi-plus class="w-4 h-4" />
+          <i-mdi-plus class="h-4 w-4" />
         </template>
         {{ t("components.chatHistoryList.newChat") }}
       </n-button>
@@ -15,24 +15,24 @@
       <n-button
         quaternary
         circle
+        class="flex-shrink-0 text-[--action-bar-icon-color] hover:bg-[--tray-hover] hover:text-[--text-color]"
         :bordered="false"
-        @click="emit('toggle-collapse')"
-        class="flex-shrink-0 text-[--action-bar-icon-color] hover:text-[--text-color] hover:bg-[--tray-hover]">
-        <i-mdi-chevron-right v-if="isCollapsed" class="w-4 h-4" />
-        <i-mdi-chevron-left v-else class="w-4 h-4" />
+        @click="emit('toggle-collapse')">
+        <i-mdi-chevron-right v-if="isCollapsed" class="h-4 w-4" />
+        <i-mdi-chevron-left v-else class="h-4 w-4" />
       </n-button>
     </div>
 
     <div
       v-if="!isCollapsed"
-      class="flex items-center justify-between px-3 py-2 border-y border-[--line-color] transition-colors"
+      class="flex-between-center border-y border-[--line-color] px-3 py-2 transition-colors"
       :class="{ 'bg-[--tray-hover]': isSelectionMode }">
       <template v-if="!isSelectionMode">
-        <div class="flex items-center gap-2 text-sm font-medium text-[--user-text-color]">
-          <i-mdi-history class="w-4 h-4" />
+        <div class="flex-y-center gap-2 text-sm font-medium text-[--user-text-color]">
+          <i-mdi-history class="h-4 w-4" />
           <span>{{ t("components.chatHistoryList.history") }}</span>
         </div>
-        <div class="flex items-center gap-1">
+        <div class="flex-y-center gap-1">
           <n-button
             quaternary
             circle
@@ -40,27 +40,27 @@
             class="text-[--action-bar-icon-color] hover:text-[--text-color]"
             :title="t('components.chatHistoryList.multiSelect')"
             @click="isSelectionMode = true">
-            <i-mdi-playlist-check class="w-4 h-4" />
+            <i-mdi-playlist-check class="h-4 w-4" />
           </n-button>
           <n-dropdown trigger="click" placement="bottom-end" :options="clearMenuOptions" @select="handleMenuSelect">
             <n-button
               quaternary
               circle
               size="small"
-              :bordered="false"
-              class="text-[--action-bar-icon-color] hover:text-[--text-color] hover:bg-[--tray-hover]">
-              <i-mdi-delete-outline class="w-4 h-4" />
+              class="text-[--action-bar-icon-color] hover:bg-[--tray-hover] hover:text-[--text-color]"
+              :bordered="false">
+              <i-mdi-delete-outline class="h-4 w-4" />
             </n-button>
           </n-dropdown>
         </div>
       </template>
 
       <template v-else>
-        <div class="flex items-center gap-2 text-sm font-medium text-[--user-text-color]">
-          <n-checkbox :checked="isAllSelected" @update:checked="handleSelectAll" size="small" />
+        <div class="flex-y-center gap-2 text-sm font-medium text-[--user-text-color]">
+          <n-checkbox size="small" :checked="isAllSelected" @update:checked="handleSelectAll" />
           <span class="text-xs">{{ t("components.chatHistoryList.selectedCount", { count: selectedIds.size }) }}</span>
         </div>
-        <div class="flex items-center gap-2">
+        <div class="flex-y-center gap-2">
           <n-button size="tiny" type="error" ghost :disabled="selectedIds.size === 0" @click="handleBatchDelete">
             {{ t("components.chatHistoryList.delete") }}
           </n-button>
@@ -72,8 +72,8 @@
     </div>
 
     <n-scrollbar v-if="!isCollapsed" class="flex-1">
-      <div v-for="(group, index) in displayGroups" :key="index" class="p-3">
-        <div class="text-xs text-[--user-text-color] mb-2 font-medium opacity-80">{{ group.date }}</div>
+      <div v-for="(group, index) in displayGroups" class="p-3" :key="index">
+        <div class="mb-2 text-xs font-medium text-[--user-text-color] opacity-80">{{ group.date }}</div>
 
         <div v-for="(item, itemIndex) in group.items" :key="itemIndex">
           <chat-history-item

@@ -1,43 +1,43 @@
 <template>
   <div
-    class="p-5 rounded-lg transition-colors duration-300 light:bg-gradient-to-br light:from-blue-50 light:to-blue-100 dark:bg-[--bg-setting-item] border border-transparent dark:border-[--line-color]">
-    <div class="flex items-center gap-5 justify-between">
-      <div class="shrink-0 relative group">
+    class="light:bg-gradient-to-br light:from-blue-50 light:to-blue-100 rounded-lg border border-transparent p-5 transition-colors duration-300 dark:border-[--line-color] dark:bg-[--bg-setting-item]">
+    <div class="flex-between-center gap-5">
+      <div class="group relative shrink-0">
         <div class="avatar-border-animation"></div>
         <img
+          loading="lazy"
+          class="relative z-10 h-24 w-24 cursor-pointer rounded-full border-4 border-transparent object-cover transition-transform group-hover:scale-105"
           :src="userInfo?.avatar"
           :alt="$t('components.userInfo.imgAlt', { username: userInfo?.username })"
-          class="relative w-24 h-24 rounded-full border-4 border-transparent object-cover cursor-pointer transition-transform z-10 group-hover:scale-105"
-          loading="lazy"
           @click="openEditDialog" />
       </div>
 
-      <div class="flex flex-col gap-2 flex-1">
-        <div class="flex items-center gap-2">
-          <span class="text-2xl font-semibold text-[--text-color] cursor-pointer hover:text-blue-500 transition-colors">
+      <div class="flex flex-1 flex-col gap-2">
+        <div class="flex-y-center gap-2">
+          <span class="cursor-pointer text-2xl font-semibold text-[--text-color] transition-colors hover:text-blue-500">
             {{ userInfo?.username }}
           </span>
-          <span class="text-blue-500 text-xl font-bold" title="认证用户">
+          <span title="认证用户" class="text-xl font-bold text-blue-500">
             <i-mdi-check-decagram />
           </span>
         </div>
 
-        <div class="flex items-center gap-2 text-sm text-[--user-text-color] whitespace-nowrap">
+        <div class="flex-y-center gap-2 text-sm whitespace-nowrap text-[--user-text-color]">
           <span
             class="special-style cursor-pointer transition-colors duration-200 hover:text-blue-500"
             @click="openFollowDialog('following')">
             {{ $t("components.userInfo.following") }}
-            <span class="text-[--text-color] font-medium">{{ animatedFollowingCount }}</span>
+            <span class="font-medium text-[--text-color]">{{ animatedFollowingCount }}</span>
           </span>
           <span
             class="special-style cursor-pointer transition-colors duration-200 hover:text-blue-500"
             @click="openFollowDialog('followers')">
             {{ $t("components.userInfo.followers") }}
-            <span class="text-[--text-color] font-medium">{{ animatedFollowerCount }}</span>
+            <span class="font-medium text-[--text-color]">{{ animatedFollowerCount }}</span>
           </span>
           <span class="special-style cursor-pointer transition-colors duration-200 hover:text-blue-500">
             {{ $t("components.userInfo.likes") }}
-            <span class="text-[--text-color] font-medium">{{ animatedLikesCount }}</span>
+            <span class="font-medium text-[--text-color]">{{ animatedLikesCount }}</span>
           </span>
         </div>
 
@@ -47,7 +47,7 @@
         </div>
       </div>
 
-      <div class="flex flex-col items-end gap-3 justify-center h-24">
+      <div class="flex h-24 flex-col items-end justify-center gap-3">
         <n-button
           v-if="true"
           type="primary"

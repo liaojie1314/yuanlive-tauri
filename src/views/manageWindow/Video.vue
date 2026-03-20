@@ -1,94 +1,94 @@
 <template>
-  <n-config-provider :theme="naiveTheme" abstract>
-    <div class="h-full flex flex-col bg-[var(--right-bg-color)] text-[var(--text-color)] overflow-hidden">
+  <n-config-provider abstract :theme="naiveTheme">
+    <div class="flex h-full flex-col overflow-hidden bg-[var(--right-bg-color)] text-[var(--text-color)]">
       <action-bar />
 
-      <n-scrollbar class="flex-1 p-4 pt-6 box-border">
+      <n-scrollbar class="box-border flex-1 p-4 pt-6">
         <div class="flex flex-col gap-4 py-4">
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <n-card class="stats-card relative overflow-visible" :bordered="false" content-style="padding: 16px;">
-              <div class="flex items-center justify-between">
+          <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <n-card content-style="padding: 16px;" class="stats-card relative overflow-visible" :bordered="false">
+              <div class="flex-between-center">
                 <div>
-                  <div class="text-sm text-gray-500 dark:text-gray-400 mb-1 font-medium">总播放量</div>
-                  <div class="text-2xl font-bold font-mono tracking-tight">120,392</div>
+                  <div class="mb-1 text-sm font-medium text-gray-500 dark:text-gray-400">总播放量</div>
+                  <div class="font-mono text-2xl font-bold tracking-tight">120,392</div>
                 </div>
-                <div class="p-3 rounded-xl bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center">
+                <div class="flex-center rounded-xl bg-blue-50 p-3 dark:bg-blue-900/20">
                   <i-mdi-play-circle class="text-2xl text-blue-500" />
                 </div>
               </div>
             </n-card>
 
-            <n-card class="stats-card relative overflow-visible" :bordered="false" content-style="padding: 16px;">
-              <div class="flex items-center justify-between">
+            <n-card content-style="padding: 16px;" class="stats-card relative overflow-visible" :bordered="false">
+              <div class="flex-between-center">
                 <div>
-                  <div class="text-sm text-gray-500 dark:text-gray-400 mb-1 font-medium">粉丝净增</div>
-                  <div class="text-2xl font-bold font-mono tracking-tight text-green-500">+2,304</div>
+                  <div class="mb-1 text-sm font-medium text-gray-500 dark:text-gray-400">粉丝净增</div>
+                  <div class="font-mono text-2xl font-bold tracking-tight text-green-500">+2,304</div>
                 </div>
-                <div class="p-3 rounded-xl bg-green-50 dark:bg-green-900/20 flex items-center justify-center">
+                <div class="flex-center rounded-xl bg-green-50 p-3 dark:bg-green-900/20">
                   <i-mdi-account-group class="text-2xl text-green-500" />
                 </div>
               </div>
             </n-card>
 
-            <n-card class="stats-card relative overflow-visible" :bordered="false" content-style="padding: 16px;">
-              <div class="flex items-center justify-between">
+            <n-card content-style="padding: 16px;" class="stats-card relative overflow-visible" :bordered="false">
+              <div class="flex-between-center">
                 <div>
-                  <div class="text-sm text-gray-500 dark:text-gray-400 mb-1 font-medium">本月收益 (元)</div>
-                  <div class="text-2xl font-bold font-mono tracking-tight text-red-500">5,680.5</div>
+                  <div class="mb-1 text-sm font-medium text-gray-500 dark:text-gray-400">本月收益 (元)</div>
+                  <div class="font-mono text-2xl font-bold tracking-tight text-red-500">5,680.5</div>
                 </div>
-                <div class="p-3 rounded-xl bg-red-50 dark:bg-red-900/20 flex items-center justify-center">
+                <div class="flex-center rounded-xl bg-red-50 p-3 dark:bg-red-900/20">
                   <i-mdi-currency-usd class="text-2xl text-red-500" />
                 </div>
               </div>
             </n-card>
 
-            <n-card class="stats-card relative overflow-visible" :bordered="false" content-style="padding: 16px;">
-              <div class="flex items-center justify-between">
+            <n-card content-style="padding: 16px;" class="stats-card relative overflow-visible" :bordered="false">
+              <div class="flex-between-center">
                 <div>
-                  <div class="text-sm text-gray-500 dark:text-gray-400 mb-1 font-medium">综合评分</div>
-                  <div class="text-2xl font-bold font-mono tracking-tight text-yellow-500">92.5</div>
+                  <div class="mb-1 text-sm font-medium text-gray-500 dark:text-gray-400">综合评分</div>
+                  <div class="font-mono text-2xl font-bold tracking-tight text-yellow-500">92.5</div>
                 </div>
-                <div class="p-3 rounded-xl bg-yellow-50 dark:bg-yellow-900/20 flex items-center justify-center">
+                <div class="flex-center rounded-xl bg-yellow-50 p-3 dark:bg-yellow-900/20">
                   <i-mdi-star class="text-2xl text-yellow-500" />
                 </div>
               </div>
             </n-card>
           </div>
 
-          <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <div class="grid grid-cols-1 gap-4 lg:grid-cols-3">
             <n-card
               title="互动数据分析"
-              :bordered="false"
-              class="chart-card lg:col-span-1"
               content-style="padding: 10px;"
-              header-style="padding: 16px 20px 0;">
-              <div ref="pieChartRef" class="w-full h-[320px]"></div>
+              header-style="padding: 16px 20px 0;"
+              class="chart-card lg:col-span-1"
+              :bordered="false">
+              <div ref="pieChartRef" class="h-[320px] w-full"></div>
             </n-card>
 
             <n-card
               title="近30天收益趋势"
-              :bordered="false"
-              class="chart-card lg:col-span-2"
               content-style="padding: 10px;"
-              header-style="padding: 16px 20px 0;">
-              <div ref="lineChartRef" class="w-full h-[320px]"></div>
+              header-style="padding: 16px 20px 0;"
+              class="chart-card lg:col-span-2"
+              :bordered="false">
+              <div ref="lineChartRef" class="h-[320px] w-full"></div>
             </n-card>
           </div>
 
           <n-card
             title="视频内容管理"
-            :bordered="false"
-            class="table-card flex-1"
             content-style="padding: 0;"
-            header-style="padding: 16px 20px;">
+            header-style="padding: 16px 20px;"
+            class="table-card flex-1"
+            :bordered="false">
             <template #header-extra>
               <div class="flex gap-3">
                 <n-input
                   placeholder="搜索视频标题"
                   size="small"
-                  v-model:value="searchText"
+                  clearable
                   class="w-48 !bg-[var(--bg-setting-item)]"
-                  clearable>
+                  v-model:value="searchText">
                   <template #prefix>
                     <i-mdi-magnify class="text-gray-400" />
                   </template>
@@ -101,13 +101,13 @@
             </template>
 
             <n-data-table
+              size="large"
               class="mb-2"
               :columns="columns"
               :data="filteredVideos"
               :pagination="{ pageSize: 5 }"
               :bordered="false"
-              :row-class-name="() => 'video-row'"
-              size="large" />
+              :row-class-name="() => 'video-row'" />
           </n-card>
         </div>
       </n-scrollbar>
@@ -188,16 +188,16 @@ const columns: DataTableColumns<VideoItem> = [
     minWidth: 120,
     render(row) {
       return h("div", { class: "flex flex-col gap-1 text-xs text-gray-500 dark:text-gray-400" }, [
-        h("div", { class: "flex items-center gap-1" }, [
+        h("div", { class: "flex-y-center gap-1" }, [
           h("i-mdi-play-circle-outline", { class: "text-sm" }),
           h("span", row.stats.views.toLocaleString())
         ]),
-        h("div", { class: "flex items-center gap-3" }, [
-          h("span", { class: "flex items-center gap-1" }, [
+        h("div", { class: "flex-y-center gap-3" }, [
+          h("span", { class: "flex-y-center gap-1" }, [
             h("i-mdi-thumb-up-outline", { class: "text-sm" }),
             h("span", row.stats.likes)
           ]),
-          h("span", { class: "flex items-center gap-1" }, [
+          h("span", { class: "flex-y-center gap-1" }, [
             h("i-mdi-comment-outline", { class: "text-sm" }),
             h("span", row.stats.comments)
           ])
@@ -221,7 +221,7 @@ const columns: DataTableColumns<VideoItem> = [
         { type: config.type, size: "small", bordered: false, round: true },
         {
           default: () =>
-            h("div", { class: "flex items-center gap-1" }, [
+            h("div", { class: "flex-y-center gap-1" }, [
               // h(config.icon), // 如果想加图标可以在这里加
               h("span", config.text)
             ])

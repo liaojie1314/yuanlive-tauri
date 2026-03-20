@@ -2,35 +2,35 @@
   <!--  user-select: none让元素不可以选中-->
   <div
     :data-tauri-drag-region="isDrag"
-    :class="isCompatibility() ? 'flex justify-end select-none' : 'h-24px select-none w-full'">
+    :class="isCompatibility() ? 'flex justify-end select-none' : 'h-24px w-full select-none'">
     <template v-if="isCompatibility()">
       <!--  登录窗口的代理按钮  -->
       <div
         v-if="proxy"
-        :class="{ network: isWindows() }"
         class="w-30px h-24px flex-center hover-box"
+        :class="{ network: isWindows() }"
         @click="router.push('/network')">
         <svg
-          :class="[iconColor !== '' ? `color-${iconColor}` : 'color-[--action-bar-icon-color]']"
-          class="size-16px cursor-pointer">
+          class="size-16px cursor-pointer"
+          :class="[iconColor !== '' ? `color-${iconColor}` : 'color-[--action-bar-icon-color]']">
           <use href="#settings"></use>
         </svg>
       </div>
       <slot></slot>
       <!--  固定在最顶层  -->
-      <div v-if="topWinLabel !== void 0" @click="handleAlwaysOnTop" class="hover-box">
+      <div v-if="topWinLabel !== void 0" class="hover-box" @click="handleAlwaysOnTop">
         <n-popover trigger="hover">
           <template #trigger>
             <svg
               v-if="alwaysOnTopStatus"
-              :class="[iconColor !== '' ? `color-${iconColor}` : 'color-[--action-bar-icon-color]']"
-              class="size-14px outline-none cursor-pointer">
+              class="size-14px cursor-pointer outline-none"
+              :class="[iconColor !== '' ? `color-${iconColor}` : 'color-[--action-bar-icon-color]']">
               <use href="#onTop"></use>
             </svg>
             <svg
               v-else
-              :class="[iconColor !== '' ? `color-${iconColor}` : 'color-[--action-bar-icon-color]']"
-              class="size-16px outline-none cursor-pointer">
+              class="size-16px cursor-pointer outline-none"
+              :class="[iconColor !== '' ? `color-${iconColor}` : 'color-[--action-bar-icon-color]']">
               <use href="#notOnTop"></use>
             </svg>
           </template>
@@ -39,71 +39,71 @@
         </n-popover>
       </div>
       <!-- 最小化 -->
-      <div v-if="minW" @click="appWindow.minimize()" class="hover-box">
+      <div v-if="minW" class="hover-box" @click="appWindow.minimize()">
         <svg
-          :class="[iconColor !== '' ? `color-${iconColor}` : 'color-[--action-bar-icon-color]']"
-          class="size-24px opacity-66 cursor-pointer">
+          class="size-24px cursor-pointer opacity-66"
+          :class="[iconColor !== '' ? `color-${iconColor}` : 'color-[--action-bar-icon-color]']">
           <use href="#maximize"></use>
         </svg>
       </div>
       <!-- 最大化 -->
-      <div v-if="maxW" @click="restoreWindow" class="hover-box">
+      <div v-if="maxW" class="hover-box" @click="restoreWindow">
         <svg
           v-show="!windowMaximized"
-          :class="[iconColor !== '' ? `color-${iconColor}` : 'color-[--action-bar-icon-color]']"
-          class="size-18px cursor-pointer">
+          class="size-18px cursor-pointer"
+          :class="[iconColor !== '' ? `color-${iconColor}` : 'color-[--action-bar-icon-color]']">
           <use href="#rectangle-small"></use>
         </svg>
         <svg
           v-show="windowMaximized"
-          :class="[iconColor !== '' ? `color-${iconColor}` : 'color-[--action-bar-icon-color]']"
-          class="size-16px cursor-pointer">
+          class="size-16px cursor-pointer"
+          :class="[iconColor !== '' ? `color-${iconColor}` : 'color-[--action-bar-icon-color]']">
           <use href="#internal-reduction"></use>
         </svg>
       </div>
       <!-- 关闭窗口 -->
-      <div v-if="closeW" @click="handleCloseWin" :class="{ windowMaximized: 'rounded-rt-8px' }" class="action-close">
+      <div v-if="closeW" class="action-close" :class="{ windowMaximized: 'rounded-rt-8px' }" @click="handleCloseWin">
         <svg
-          :class="[iconColor !== '' ? `color-${iconColor}` : 'color-[--action-bar-icon-color]']"
-          class="size-14px cursor-pointer">
+          class="size-14px cursor-pointer"
+          :class="[iconColor !== '' ? `color-${iconColor}` : 'color-[--action-bar-icon-color]']">
           <use href="#close"></use>
         </svg>
       </div>
     </template>
     <template v-else>
-      <div class="h-24px w-full flex items-center justify-end pr-8px select-none" data-tauri-drag-region>
-        <div class="drag-fill" data-tauri-drag-region></div>
-        <div class="flex items-center gap-10px">
+      <div data-tauri-drag-region class="h-24px pr-8px flex w-full items-center justify-end select-none">
+        <div data-tauri-drag-region class="drag-fill"></div>
+        <div class="gap-10px flex-y-center">
           <slot></slot>
         </div>
       </div>
     </template>
     <!-- 是否退到托盘提示框 -->
-    <n-modal v-if="!tips.notTips" v-model:show="tipsRef.show" class="rounded-8px">
-      <div class="bg-[--bg-popover] w-290px h-full p-6px box-border flex flex-col">
-        <svg @click="tipsRef.show = false" class="size-12px ml-a cursor-pointer select-none">
+    <n-modal v-if="!tips.notTips" class="rounded-8px" v-model:show="tipsRef.show">
+      <div class="w-290px p-6px box-border flex h-full flex-col bg-[--bg-popover]">
+        <svg class="size-12px ml-a cursor-pointer select-none" @click="tipsRef.show = false">
           <use href="#close"></use>
         </svg>
-        <n-flex vertical :size="20" class="p-[22px_10px_10px_22px] select-none">
+        <n-flex vertical class="p-[22px_10px_10px_22px] select-none" :size="20">
           <span class="text-(16px [--text-color])">{{ t("components.actionBar.closePrompt.title") }}</span>
-          <label class="text-(14px #707070) flex gap-6px lh-16px items-center">
+          <label class="text-(14px #707070) gap-6px lh-16px flex-y-center">
             <n-radio :checked="tipsRef.type === CloseBxEnum.HIDE" @change="tipsRef.type = CloseBxEnum.HIDE" />
             <span>{{ t("components.actionBar.closePrompt.hideToTray") }}</span>
           </label>
-          <label class="text-(14px #707070) flex gap-6px lh-16px items-center">
+          <label class="text-(14px #707070) gap-6px lh-16px flex-y-center">
             <n-radio :checked="tipsRef.type === CloseBxEnum.CLOSE" @change="tipsRef.type = CloseBxEnum.CLOSE" />
             <span>{{ t("components.actionBar.closePrompt.exitApp") }}</span>
           </label>
-          <label class="text-(12px #909090) flex gap-6px justify-end items-center">
+          <label class="text-(12px #909090) gap-6px flex-end-center">
             <n-checkbox size="small" v-model:checked="tipsRef.notTips" />
             <span>{{ t("components.actionBar.closePrompt.noPrompt") }}</span>
           </label>
 
           <n-flex justify="end">
-            <n-button @click="handleConfirm" class="w-78px" color="#13987f">
+            <n-button color="#13987f" class="w-78px" @click="handleConfirm">
               {{ t("components.common.confirm") }}
             </n-button>
-            <n-button @click="tipsRef.show = false" class="w-78px" secondary>
+            <n-button secondary class="w-78px" @click="tipsRef.show = false">
               {{ t("components.common.cancel") }}
             </n-button>
           </n-flex>
@@ -315,7 +315,7 @@ defineExpose({
 }
 
 .action-close {
-  @apply w-28px h-24px flex-center cursor-pointer hover:bg-#c22b1c svg:hover:color-[#fff];
+  @apply w-28px h-24px flex-center hover:bg-#c22b1c svg:hover:color-[#fff] cursor-pointer;
 }
 
 .n-modal {

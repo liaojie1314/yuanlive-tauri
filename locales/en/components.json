@@ -284,6 +284,8 @@
     "listenVideo": "listen video",
     "recommend": "recommend",
     "dislike": "dislike",
+    "expand": "expand",
+    "collapse": "collapse",
     "unfollow": "unfollow",
     "shortcuts": "shortcuts",
     "autoplay": "auto",

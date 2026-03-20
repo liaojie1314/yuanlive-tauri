@@ -1,26 +1,26 @@
 <template>
   <div
-    class="video-block-placeholder relative my-2 w-[260px] sm:w-[320px] max-w-full flex-shrink-0 aspect-video overflow-hidden rounded-lg border border-[--line-color] bg-black cursor-pointer group flex items-center justify-center shadow-sm"
+    class="video-block-placeholder group relative my-2 flex aspect-video w-[260px] max-w-full flex-shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-lg border border-[--line-color] bg-black shadow-sm sm:w-[320px]"
     @click="handlePlayClick">
     <img
       v-if="displayCover"
-      :src="displayCover"
       alt="Video Cover"
-      class="w-full h-full object-cover opacity-80 group-hover:opacity-60 transition-opacity duration-300" />
+      class="h-full w-full object-cover opacity-80 transition-opacity duration-300 group-hover:opacity-60"
+      :src="displayCover" />
 
     <div
       v-else
-      class="w-full h-full bg-gradient-to-br from-gray-800 to-gray-900 opacity-90 group-hover:opacity-70 transition-opacity duration-300"></div>
+      class="h-full w-full bg-gradient-to-br from-gray-800 to-gray-900 opacity-90 transition-opacity duration-300 group-hover:opacity-70"></div>
 
-    <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+    <div class="pointer-events-none absolute inset-0 flex-center">
       <div
-        class="w-12 h-12 flex items-center justify-center rounded-full bg-black/40 text-white backdrop-blur-sm group-hover:bg-[--message-render-color] group-hover:scale-110 transition-all duration-300 shadow-lg border border-white/20">
-        <i-material-symbols-play-arrow-rounded class="text-3xl ml-1" />
+        class="flex h-12 w-12 items-center justify-center rounded-full border border-white/20 bg-black/40 text-white shadow-lg backdrop-blur-sm transition-all duration-300 group-hover:scale-110 group-hover:bg-[--message-render-color]">
+        <i-material-symbols-play-arrow-rounded class="ml-1 text-3xl" />
       </div>
     </div>
 
     <div
-      class="absolute bottom-2 left-2 px-1.5 py-0.5 rounded bg-black/50 backdrop-blur-sm border border-white/10 flex items-center gap-1 text-[10px] text-white">
+      class="absolute bottom-2 left-2 flex-y-center gap-1 rounded border border-white/10 bg-black/50 px-1.5 py-0.5 text-[10px] text-white backdrop-blur-sm">
       <i-material-symbols-videocam-outline class="text-xs" />
       <span>{{ $t("components.videoBlock.video") }}</span>
     </div>

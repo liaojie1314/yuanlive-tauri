@@ -2,7 +2,7 @@
   <div class="emoji-picker-container">
     <n-scrollbar class="emoji-picker-content">
       <div class="emoji-items">
-        <div v-for="(emoji, index) in emojis" :key="index" class="emoji-item" @click="handleEmojiClick(emoji)">
+        <div v-for="(emoji, index) in emojis" class="emoji-item" :key="index" @click="handleEmojiClick(emoji)">
           {{ emoji }}
         </div>
       </div>

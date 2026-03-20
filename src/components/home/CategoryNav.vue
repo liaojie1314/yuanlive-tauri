@@ -1,26 +1,26 @@
 <template>
   <div class="category-nav-container">
     <n-tabs
-      v-model:value="localActiveCategory"
-      @update:value="handleParentChange"
       type="line"
       size="medium"
+      class="primary-tabs"
+      v-model:value="localActiveCategory"
       :bar-width="28"
-      class="primary-tabs">
+      @update:value="handleParentChange">
       <n-tab-pane v-for="category in categories" :key="category.value" :name="category.value" :tab="category.name" />
     </n-tabs>
 
     <div v-if="currentChildren.length > 0" class="secondary-wrapper">
       <n-scrollbar x-scrollable class="secondary-scroll">
         <n-tabs
-          v-model:value="localActiveChildCategory"
-          @update:value="handleChildChange"
           type="card"
           size="small"
-          class="secondary-tabs">
+          class="secondary-tabs"
+          v-model:value="localActiveChildCategory"
+          @update:value="handleChildChange">
           <n-tab-pane
-            class="mb-1"
             v-for="child in currentChildren"
+            class="mb-1"
             :key="child.value"
             :name="child.value"
             :tab="child.name" />

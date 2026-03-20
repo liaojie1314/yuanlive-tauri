@@ -1,7 +1,7 @@
 <template>
   <div v-resize="checkCompactMode" class="danmaku-input-container">
     <div class="input-wrapper" :class="{ 'compact-mode': isCompactMode }">
-      <div class="danmaku-controls-left" v-if="!isCompactMode">
+      <div v-if="!isCompactMode" class="danmaku-controls-left">
         <div class="danmaku-toggle-btn" :class="{ active: isDanmakuEnabled }" @click="toggleDanmaku">
           弹
           <i-material-symbols-check-circle-outline-rounded v-if="isDanmakuEnabled" class="iconify-icon toggle-icon" />
@@ -9,8 +9,8 @@
         </div>
         <div class="danmaku-settings-container">
           <div
-            class="danmaku-settings-panel"
             v-if="showDanmakuSettingsPanel"
+            class="danmaku-settings-panel"
             @mouseenter="handleSettingsPanelEnter"
             @mouseleave="handleSettingsPanelLeave">
             <div class="settings-header">
@@ -21,7 +21,7 @@
               </div>
             </div>
             <div class="settings-content">
-              <div class="settings-item" v-for="item in danmakuStore.sliderConfigs" :key="item.key">
+              <div v-for="item in danmakuStore.sliderConfigs" class="settings-item" :key="item.key">
                 <span class="settings-label">{{ item.label }}</span>
                 <n-slider
                   v-model:value="danmakuStore.settings[item.key]"
@@ -93,13 +93,13 @@
 
       <input
         v-if="!isCompactMode"
-        v-model="danmakuText"
         type="text"
-        :placeholder="t('components.danmakuInput.placeholder')"
         class="danmaku-input"
+        v-model="danmakuText"
+        :placeholder="t('components.danmakuInput.placeholder')"
         @keyup.enter="handleSend" />
 
-      <div class="emoji-btn-container" v-if="!isCompactMode">
+      <div v-if="!isCompactMode" class="emoji-btn-container">
         <div class="emoji-btn" @mouseenter="showEmojiPickerHover" @mouseleave="hideEmojiPickerHover">
           <i-ph-smiley class="iconify-icon" />
         </div>
@@ -126,7 +126,7 @@
       class="compact-settings-panel"
       @mouseenter="handleSettingsPanelEnter"
       @mouseleave="handleSettingsPanelLeave">
-      <div class="settings-header" v-if="!showEmojiSelector">
+      <div v-if="!showEmojiSelector" class="settings-header">
         <span class="settings-title">{{ t("components.danmakuInput.settings") }}</span>
         <div class="reset-btn" @click="danmakuStore.resetSettings">
           <i-ph-arrow-counter-clockwise class="reset-icon" />
@@ -140,13 +140,13 @@
           @mouseenter="handleEmojiSelectorEnter"
           @mouseleave="handleEmojiSelectorLeave">
           <div class="emoji-selector">
-            <div class="emoji-item" v-for="emoji in emojis" :key="emoji" @click="handleEmojiClick(emoji)">
+            <div v-for="emoji in emojis" class="emoji-item" :key="emoji" @click="handleEmojiClick(emoji)">
               {{ emoji }}
             </div>
           </div>
         </n-scrollbar>
         <template v-else>
-          <div class="settings-item" v-for="item in danmakuStore.sliderConfigs" :key="item.key">
+          <div v-for="item in danmakuStore.sliderConfigs" class="settings-item" :key="item.key">
             <span class="settings-label">{{ item.label }}</span>
             <n-slider
               v-model:value="danmakuStore.settings[item.key]"
@@ -219,10 +219,10 @@
               <i-ph-smiley class="iconify-icon emoji-icon" />
             </div>
             <input
-              v-model="danmakuText"
               type="text"
-              :placeholder="t('components.danmakuInput.placeholder')"
               class="danmaku-input-field"
+              v-model="danmakuText"
+              :placeholder="t('components.danmakuInput.placeholder')"
               @keyup.enter="handleSend" />
             <button class="send-btn" @click="handleSend">{{ t("components.danmakuInput.send") }}</button>
           </div>

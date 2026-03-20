@@ -1,28 +1,28 @@
 <template>
   <div
-    class="file-block my-2 flex items-center gap-3 p-2.5 rounded-lg border shadow-sm cursor-pointer hover:opacity-80 transition-opacity max-w-full"
-    :class="isSelf ? 'bg-black/10 border-transparent' : 'bg-[--input-area-bg] border-[--line-color]'"
+    class="file-block my-2 flex max-w-full cursor-pointer items-center gap-3 rounded-lg border p-2.5 shadow-sm transition-opacity hover:opacity-80"
+    :class="isSelf ? 'border-transparent bg-black/10' : 'border-[--line-color] bg-[--input-area-bg]'"
     @click="handleFileClick">
     <div
-      class="w-10 h-10 flex items-center justify-center rounded flex-shrink-0"
+      class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded"
       :class="isSelf ? 'bg-white/20' : 'bg-[--tray-bg-color]'">
       <img
+        class="h-6 w-6 object-contain"
         :src="`/file/${getFileSuffix(name || '')}.svg`"
-        :alt="getFileSuffix(name || '')"
-        class="w-6 h-6 object-contain" />
+        :alt="getFileSuffix(name || '')" />
     </div>
 
-    <div class="flex-1 min-w-0 flex flex-col justify-center">
+    <div class="flex min-w-0 flex-1 flex-col justify-center">
       <div
-        class="text-sm font-medium truncate w-full"
+        class="w-full truncate text-sm font-medium"
         :class="isSelf ? 'text-white' : 'text-[--text-color]'"
         :title="name">
         {{ fileName }}
       </div>
       <div
-        class="text-[10px] uppercase mt-0.5 font-bold flex items-center gap-1"
+        class="mt-0.5 flex-y-center gap-1 text-[10px] font-bold uppercase"
         :class="isSelf ? 'text-white/70' : 'text-[--user-text-color]'">
-        <span class="truncate max-w-[4rem]">{{ getFileSuffix(name) }}</span>
+        <span class="max-w-[4rem] truncate">{{ getFileSuffix(name) }}</span>
         <span>FILE</span>
       </div>
     </div>

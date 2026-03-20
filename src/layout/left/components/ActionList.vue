@@ -1,12 +1,12 @@
 <template>
-  <div class="flex-1 mt-10px flex flex-col justify-between w-full" data-tauri-drag-region>
+  <div data-tauri-drag-region class="mt-10px flex w-full flex-1 flex-col justify-between">
     <!-- 上部分操作栏 -->
-    <header class="flex flex-col gap-10px w-full color-[--left-text-color]">
+    <header class="gap-10px color-[--left-text-color] flex w-full flex-col">
       <div
         v-for="item in menu"
+        class="py-10px px-25px gap-10px hover:color-[--left-active-text-color] flex-start-center rounded-[8px] hover:bg-[--left-item-bg-color]"
         :key="item.url"
-        :class="{ 'bg-[--left-item-bg-color] color-[--left-active-text-color]': item.url === activeUrl }"
-        class="flex py-10px px-25px gap-10px hover:bg-[--left-item-bg-color] hover:color-[--left-active-text-color] rounded-[8px] items-center justify-start"
+        :class="{ 'color-[--left-active-text-color] bg-[--left-item-bg-color]': item.url === activeUrl }"
         @click="handleClick(item.url)">
         <svg class="size-20px">
           <use :href="`#${item.icon}`"></use>
@@ -15,12 +15,12 @@
       </div>
     </header>
     <!-- 下部分操作栏 -->
-    <footer class="flex-col-x-center mt-10px w-full color-[--left-text-color] select-none">
-      <div class="flex gap-12px">
-        <n-popover class="p-0 bg-transparent select-none" :show-arrow="false" trigger="hover">
+    <footer class="flex-col-x-center mt-10px color-[--left-text-color] w-full select-none">
+      <div class="gap-12px flex">
+        <n-popover trigger="hover" class="bg-transparent p-0 select-none" :show-arrow="false">
           <template #trigger>
             <svg
-              class="size-22px relative p-6px rounded-[12px] hover:bg-[--left-item-bg-color] hover:color-[--left-active-text-color]">
+              class="size-22px p-6px hover:color-[--left-active-text-color] relative rounded-[12px] hover:bg-[--left-item-bg-color]">
               <use href="#settings"></use>
             </svg>
           </template>
@@ -37,10 +37,10 @@
             </div>
           </div>
         </n-popover>
-        <n-popover class="p-0 bg-transparent select-none" :show-arrow="false" trigger="hover">
+        <n-popover trigger="hover" class="bg-transparent p-0 select-none" :show-arrow="false">
           <template #trigger>
             <svg
-              class="size-22px relative p-6px rounded-[12px] hover:bg-[--left-item-bg-color] hover:color-[--left-active-text-color]">
+              class="size-22px p-6px hover:color-[--left-active-text-color] relative rounded-[12px] hover:bg-[--left-item-bg-color]">
               <use href="#help"></use>
             </svg>
           </template>

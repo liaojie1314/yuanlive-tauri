@@ -1,49 +1,49 @@
 <template>
-  <n-config-provider :theme="naiveTheme" data-tauri-drag-region class="login-box size-full rounded-8px select-none">
-    <action-bar :max-w="false" proxy data-tauri-drag-region />
+  <n-config-provider data-tauri-drag-region class="login-box rounded-8px size-full select-none" :theme="naiveTheme">
+    <action-bar proxy data-tauri-drag-region :max-w="false" />
 
-    <n-flex vertical :size="12" align="center" class="pt-10px">
+    <n-flex vertical align="center" class="pt-10px" :size="12">
       <span class="text-(16px #70938c) textFont">{{ t("auth.network.title") }}</span>
 
       <n-tabs type="line" animated justify-content="center" @update:value="handleTab">
         <n-tab-pane name="api" :tab="t('auth.network.tabs.api')">
-          <n-flex vertical :size="10" align="center" class="pt-10px">
-            <n-flex vertical :size="8" justify="center">
+          <n-flex vertical align="center" class="pt-10px" :size="10">
+            <n-flex vertical justify="center" :size="8">
               <p class="text-12px">{{ t("auth.network.fields.type") }}</p>
               <n-select class="min-w-240px" v-model:value="savedProxy.apiType" :options="apiOptions" />
 
               <n-collapse-transition :show="savedProxy.apiType === 'http' || savedProxy.apiType === 'https'">
-                <n-flex vertical :size="10" justify="center">
+                <n-flex vertical justify="center" :size="10">
                   <p class="text-12px pt-6px">{{ t("auth.network.fields.host") }}</p>
                   <n-input
-                    class="rounded-6px text-12px"
-                    v-model:value="savedProxy.apiIp"
                     type="text"
                     spellCheck="false"
                     autoComplete="off"
                     autoCorrect="off"
                     autoCapitalize="off"
+                    class="rounded-6px text-12px"
+                    v-model:value="savedProxy.apiIp"
                     :placeholder="t('auth.network.placeholder.host')" />
 
                   <p class="text-12px pt-6px">{{ t("auth.network.fields.port") }}</p>
                   <n-input
-                    class="rounded-6px text-12px"
-                    v-model:value="savedProxy.apiPort"
                     type="text"
                     spellCheck="false"
                     autoComplete="off"
                     autoCorrect="off"
                     autoCapitalize="off"
+                    class="rounded-6px text-12px"
+                    v-model:value="savedProxy.apiPort"
                     :placeholder="t('auth.network.placeholder.port')" />
                   <p class="text-12px pt-6px">{{ t("auth.network.fields.suffix") }}</p>
                   <n-input
-                    class="rounded-6px text-12px"
-                    v-model:value="savedProxy.apiSuffix"
                     type="text"
                     spellCheck="false"
                     autoComplete="off"
                     autoCorrect="off"
                     autoCapitalize="off"
+                    class="rounded-6px text-12px"
+                    v-model:value="savedProxy.apiSuffix"
                     :placeholder="t('auth.network.placeholder.apiSuffix')" />
                 </n-flex>
               </n-collapse-transition>
@@ -51,43 +51,43 @@
           </n-flex>
         </n-tab-pane>
         <n-tab-pane name="ws" :tab="t('auth.network.tabs.ws')">
-          <n-flex vertical :size="10" align="center" class="pt-10px">
-            <n-flex vertical :size="8" justify="center">
+          <n-flex vertical align="center" class="pt-10px" :size="10">
+            <n-flex vertical justify="center" :size="8">
               <p class="text-12px">{{ t("auth.network.fields.type") }}</p>
               <n-select class="min-w-240px" v-model:value="savedProxy.wsType" :options="wsOptions" />
 
               <n-collapse-transition :show="savedProxy.wsType === 'ws' || savedProxy.wsType === 'wss'">
-                <n-flex vertical :size="10" justify="center">
+                <n-flex vertical justify="center" :size="10">
                   <p class="text-12px pt-6px">{{ t("auth.network.fields.host") }}</p>
                   <n-input
-                    class="rounded-6px text-12px"
-                    v-model:value="savedProxy.wsIp"
                     type="text"
                     spellCheck="false"
                     autoComplete="off"
                     autoCorrect="off"
                     autoCapitalize="off"
+                    class="rounded-6px text-12px"
+                    v-model:value="savedProxy.wsIp"
                     :placeholder="t('auth.network.placeholder.host')" />
 
                   <p class="text-12px pt-6px">{{ t("auth.network.fields.port") }}</p>
                   <n-input
-                    class="rounded-6px text-12px"
-                    v-model:value="savedProxy.wsPort"
                     type="text"
                     spellCheck="false"
                     autoComplete="off"
                     autoCorrect="off"
                     autoCapitalize="off"
+                    class="rounded-6px text-12px"
+                    v-model:value="savedProxy.wsPort"
                     :placeholder="t('auth.network.placeholder.port')" />
                   <p class="text-12px pt-6px">{{ t("auth.network.fields.suffix") }}</p>
                   <n-input
-                    class="rounded-6px text-12px"
-                    v-model:value="savedProxy.wsSuffix"
                     type="text"
                     spellCheck="false"
                     autoComplete="off"
                     autoCorrect="off"
                     autoCapitalize="off"
+                    class="rounded-6px text-12px"
+                    v-model:value="savedProxy.wsSuffix"
                     :placeholder="t('auth.network.placeholder.wsSuffix')" />
                 </n-flex>
               </n-collapse-transition>
@@ -96,9 +96,9 @@
         </n-tab-pane>
       </n-tabs>
 
-      <n-flex align="center" justify="center" :size="40" class="pt-10px">
-        <p @click="handleSave" class="text-(14px #13987f) cursor-pointer">{{ t("auth.network.actions.save") }}</p>
-        <p @click="router.push('/login')" class="text-(14px #707070) cursor-pointer">
+      <n-flex align="center" justify="center" class="pt-10px" :size="40">
+        <p class="text-(14px #13987f) cursor-pointer" @click="handleSave">{{ t("auth.network.actions.save") }}</p>
+        <p class="text-(14px #707070) cursor-pointer" @click="router.push('/login')">
           {{ t("auth.network.actions.back") }}
         </p>
       </n-flex>

@@ -1,10 +1,10 @@
 <template>
-  <main class="size-full select-none overflow-hidden relative bg-transparent">
+  <main class="relative size-full overflow-hidden bg-transparent select-none">
     <Transition name="fade">
       <div
         v-if="showBubble"
-        class="bubble absolute left-1/2 transform -translate-x-1/2 z-10"
         ref="containerRef"
+        class="bubble absolute left-1/2 z-10 -translate-x-1/2 transform"
         :class="{ 'is-long-text': isScrolling, 'is-typing': isTyping }">
         <span
           ref="textRef"

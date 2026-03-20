@@ -1,6 +1,6 @@
 <template>
   <div class="h-100vh w-100vw">
-    <naive-provider :message-max="3" :notify-max="3" class="h-full">
+    <naive-provider class="h-full" :message-max="3" :notify-max="3">
       <router-view></router-view>
     </naive-provider>
   </div>

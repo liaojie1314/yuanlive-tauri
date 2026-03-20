@@ -1,10 +1,10 @@
 <template>
-  <div class="search-result-container h-full flex flex-col">
-    <div class="mb-4 flex items-center justify-between">
+  <div class="search-result-container flex h-full flex-col">
+    <div class="mb-4 flex-between-center">
       <div class="text-lg">
         <span>{{ $t("components.searchResult.title") }}</span>
         <span class="font-bold text-red-500">"{{ query }}"</span>
-        <span class="text-sm text-gray-400 ml-2">{{ $t("components.searchResult.total", { total }) }}</span>
+        <span class="ml-2 text-sm text-gray-400">{{ $t("components.searchResult.total", { total }) }}</span>
       </div>
       <n-button size="small" secondary @click="handleBack">
         <template #icon>
@@ -14,11 +14,11 @@
       </n-button>
     </div>
 
-    <div v-if="loading" class="flex-1 flex justify-center items-center min-h-[300px]">
+    <div v-if="loading" class="flex min-h-[300px] flex-1 items-center justify-center">
       <n-spin size="large" :description="$t('components.searchResult.loading')" />
     </div>
 
-    <div v-else-if="list.length === 0" class="flex-1 flex justify-center items-center min-h-[300px]">
+    <div v-else-if="list.length === 0" class="flex min-h-[300px] flex-1 items-center justify-center">
       <n-empty :description="$t('components.searchResult.empty')">
         <template #extra>
           <n-button size="small" @click="handleBack">
@@ -39,7 +39,7 @@
         </div>
       </div>
 
-      <div class="flex justify-center mt-8 pb-4">
+      <div class="mt-8 flex-x-center pb-4">
         <n-pagination
           v-model:page="page"
           :page-count="pageCount"

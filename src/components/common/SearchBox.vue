@@ -1,81 +1,81 @@
 <template>
-  <div class="w-[400px] relative">
+  <div class="relative w-[400px]">
     <div
-      class="relative z-1 flex items-center bg-[--bg-popover] rounded-lg border border-[--line-color] overflow-hidden w-full max-w-3xl mx-auto transition-colors duration-300">
+      class="relative z-1 mx-auto flex w-full max-w-3xl items-center overflow-hidden rounded-lg border border-[--line-color] bg-[--bg-popover] transition-colors duration-300">
       <input
-        v-model="searchQuery"
         type="text"
+        class="py-1.7 h-full flex-1 rounded-l-md bg-transparent px-4 text-[--text-color] outline-none"
+        v-model="searchQuery"
         :placeholder="$t('components.searchBox.placeholder')"
-        class="flex-1 px-4 py-1.7 text-[--text-color] bg-transparent rounded-l-md outline-none h-full"
         @focus="showDropdown = true"
         @blur="handleBlur"
         @keydown.enter="handleSearch" />
 
       <div
         v-if="searchQuery"
-        class="w-4 h-4 absolute right-23 text-[--action-bar-icon-color] hover:text-[--text-color] transition-colors cursor-pointer flex items-center justify-center"
+        class="absolute right-23 flex h-4 w-4 cursor-pointer items-center justify-center text-[--action-bar-icon-color] transition-colors hover:text-[--text-color]"
         @click="clearInput"
         @mousedown.stop>
-        <i-mdi-close-circle-outline class="w-4 h-4" />
+        <i-mdi-close-circle-outline class="h-4 w-4" />
       </div>
 
       <div
-        class="bg-[--text-color] text-[--bg-popover] px-4 py-2.5 flex items-center gap-1 hover:opacity-90 transition-opacity h-full whitespace-nowrap border-l border-[--line-color]"
+        class="flex h-full items-center gap-1 border-l border-[--line-color] bg-[--text-color] px-4 py-2.5 whitespace-nowrap text-[--bg-popover] transition-opacity hover:opacity-90"
         @click="handleSearch">
-        <i-mdi-magnify class="w-5 h-5" />
+        <i-mdi-magnify class="h-5 w-5" />
         <span class="text-[14px] font-medium">{{ $t("components.searchBox.search") }}</span>
       </div>
     </div>
 
     <div
       v-if="showDropdown"
-      class="search-dropdown-container absolute top-full left-1/2 transform -translate-x-1/2 mt-1 z-10 w-full max-w-3xl shadow-lg rounded-lg overflow-hidden">
+      class="search-dropdown-container absolute top-full left-1/2 z-10 mt-1 w-full max-w-3xl -translate-x-1/2 transform overflow-hidden rounded-lg shadow-lg">
       <div
-        class="search-dropdown bg-[--bg-popover] p-4 border border-[--line-color]"
+        class="search-dropdown border border-[--line-color] bg-[--bg-popover] p-4"
         @mousedown="handleDropdownMousedown">
         <div v-if="searchHistory.length > 0" class="mb-4">
-          <div class="flex justify-between items-center mb-2">
-            <span class="text-[--text-color] font-medium text-sm">{{ $t("components.searchBox.history") }}</span>
+          <div class="mb-2 flex-between-center">
+            <span class="text-sm font-medium text-[--text-color]">{{ $t("components.searchBox.history") }}</span>
             <div
-              class="text-xs text-[--user-text-color] hover:text-[--text-color] flex items-center gap-1 transition-colors cursor-pointer"
+              class="flex cursor-pointer items-center gap-1 text-xs text-[--user-text-color] transition-colors hover:text-[--text-color]"
               @click="clearSearchHistory">
-              <i-mdi-close-circle-outline class="w-3 h-3" />
+              <i-mdi-close-circle-outline class="h-3 w-3" />
               {{ $t("components.searchBox.clear") }}
             </div>
           </div>
           <div class="flex flex-wrap gap-2">
             <div
               v-for="(item, index) in searchHistory"
-              :key="index"
-              class="relative group px-3 py-1 bg-[--tray-bg-color] text-[--text-color] rounded-full text-xs cursor-pointer hover:bg-[--tray-hover] transition-colors flex items-center border border-[--line-color]">
+              class="group relative flex cursor-pointer items-center rounded-full border border-[--line-color] bg-[--tray-bg-color] px-3 py-1 text-xs text-[--text-color] transition-colors hover:bg-[--tray-hover]"
+              :key="index">
               <span @click="handleHistoryClick(item)">{{ item }}</span>
               <div
-                class="ml-1 w-3 h-3 rounded-full hover:bg-[--line-color] text-[--user-text-color] hover:text-[--text-color] transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100"
+                class="ml-1 flex h-3 w-3 items-center justify-center rounded-full text-[--user-text-color] opacity-0 transition-colors group-hover:opacity-100 hover:bg-[--line-color] hover:text-[--text-color]"
                 @click.stop="deleteSearchHistory(index)"
                 @mousedown.stop>
-                <i-mdi-close class="w-2.5 h-2.5" />
+                <i-mdi-close class="h-2.5 w-2.5" />
               </div>
             </div>
           </div>
         </div>
 
         <div class="mb-4">
-          <div class="flex justify-between items-center mb-2">
-            <span class="text-[--text-color] font-medium text-sm">{{ $t("components.searchBox.guess") }}</span>
+          <div class="mb-2 flex-between-center">
+            <span class="text-sm font-medium text-[--text-color]">{{ $t("components.searchBox.guess") }}</span>
             <div
-              class="text-xs text-[--user-text-color] hover:text-[--text-color] flex items-center gap-1 transition-colors cursor-pointer"
+              class="flex cursor-pointer items-center gap-1 text-xs text-[--user-text-color] transition-colors hover:text-[--text-color]"
               @click="handleRefreshSuggestions">
-              <i-mdi-refresh class="w-3 h-3" :class="{ 'rotate-animation': isRefreshing }" />
+              <i-mdi-refresh class="h-3 w-3" :class="{ 'rotate-animation': isRefreshing }" />
               {{ $t("components.searchBox.refresh") }}
             </div>
           </div>
           <div class="grid grid-cols-2 gap-2">
             <div
               v-for="(item, index) in searchSuggestions"
+              class="cursor-pointer truncate rounded px-2 py-1.5 text-sm transition-colors hover:bg-[--tray-hover]"
               :key="index"
-              class="py-1.5 px-2 cursor-pointer hover:bg-[--tray-hover] rounded transition-colors text-sm truncate"
               @click="handleSuggestionClick(item.content)">
-              <span class="text-[--text-color]" :class="{ 'text-red-500 font-medium': index < 2 }">
+              <span class="text-[--text-color]" :class="{ 'font-medium text-red-500': index < 2 }">
                 {{ item.content }}
               </span>
             </div>
@@ -83,19 +83,19 @@
         </div>
 
         <div>
-          <div class="text-[--text-color] font-medium mb-2 text-sm">{{ $t("components.searchBox.trending") }}</div>
+          <div class="mb-2 text-sm font-medium text-[--text-color]">{{ $t("components.searchBox.trending") }}</div>
           <div class="space-y-1">
             <div
               v-for="(item, index) in hotSearches"
+              class="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 transition-colors hover:bg-[--tray-hover]"
               :key="index"
-              class="flex items-center gap-2 cursor-pointer hover:bg-[--tray-hover] px-2 py-1.5 rounded transition-colors"
               @click="handleTrendingClick(item.content)">
               <span
-                class="w-4 h-4 rounded text-[10px] flex items-center justify-center font-medium flex-shrink-0"
+                class="flex h-4 w-4 flex-shrink-0 items-center justify-center rounded text-[10px] font-medium"
                 :class="index < 3 ? 'bg-red-500 text-white' : 'bg-[--line-color] text-[--user-text-color]'">
                 {{ index + 1 }}
               </span>
-              <span class="text-[--text-color] text-sm truncate">{{ item.content }}</span>
+              <span class="truncate text-sm text-[--text-color]">{{ item.content }}</span>
             </div>
           </div>
         </div>

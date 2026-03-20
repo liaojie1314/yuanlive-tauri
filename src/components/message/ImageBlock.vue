@@ -1,15 +1,15 @@
 <template>
   <div class="image-block my-2">
     <div
-      class="relative group inline-block overflow-hidden rounded-lg border border-[--line-color] bg-[--input-area-bg]">
+      class="group relative inline-block overflow-hidden rounded-lg border border-[--line-color] bg-[--input-area-bg]">
       <img
-        :src="url"
-        class="max-w-full h-auto max-h-[400px] object-contain cursor-zoom-in transition-transform duration-300 group-hover:scale-105"
         loading="lazy"
+        class="h-auto max-h-[400px] max-w-full cursor-zoom-in object-contain transition-transform duration-300 group-hover:scale-105"
+        :src="url"
         @click="previewImage" />
 
       <div
-        class="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"></div>
+        class="pointer-events-none absolute inset-0 bg-black/5 opacity-0 transition-opacity group-hover:opacity-100"></div>
     </div>
   </div>
 </template>

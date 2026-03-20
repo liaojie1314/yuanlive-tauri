@@ -1,32 +1,32 @@
 <template>
   <div
-    class="size-full bg-#222 relative flex flex-col select-none"
+    class="bg-#222 relative flex size-full flex-col select-none"
     @mousemove="handleMouseMove"
     @mouseleave="handleMouseLeave">
     <action-bar class="bg-#000 z-9999" />
 
-    <div ref="viewportRef" class="flex-1 w-full h-full overflow-hidden relative bg-black">
+    <div ref="viewportRef" class="relative h-full w-full flex-1 overflow-hidden bg-black">
       <div
         ref="transformLayerRef"
-        class="absolute left-0 top-0 origin-center will-change-transform"
+        class="absolute top-0 left-0 origin-center will-change-transform"
         :style="transformStyle">
         <img
           ref="imageRef"
+          alt="preview"
+          class="pointer-events-auto block select-none"
           :src="currentImage"
           :style="{
             cursor: isDragging ? 'grabbing' : 'grab'
           }"
-          class="block select-none pointer-events-auto"
           @mousedown="startDrag"
           @load="onImageLoad"
-          @dragstart.prevent
-          alt="preview" />
+          @dragstart.prevent />
       </div>
 
       <Transition name="viewer-tip">
         <div
           v-if="showTip"
-          class="fixed z-10 left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-black/60 px-24px py-12px rounded-8px text-(white 14px) transition-all duration-300 backdrop-blur-sm select-none flex items-center gap-8px">
+          class="px-24px py-12px rounded-8px text-(white 14px) gap-8px fixed top-1/2 left-1/2 z-10 flex -translate-x-1/2 -translate-y-1/2 items-center bg-black/60 backdrop-blur-sm transition-all duration-300 select-none">
           <svg class="size-16px"><use href="#info"></use></svg>
           {{ tipText }}
         </div>
@@ -35,27 +35,27 @@
 
     <div
       v-show="imageList.length > 1 && showArrows.left"
+      class="left-20px size-40px flex-center fixed top-1/2 z-10 -translate-y-1/2 cursor-pointer rounded-full bg-black/30 opacity-0 transition-all duration-200 hover:bg-black/50"
+      :class="{ 'opacity-100': showArrows.left }"
       @click="prevImage"
       @mouseenter="handleArrowEnter('left')"
-      @mouseleave="handleArrowLeave('left')"
-      class="fixed left-20px top-1/2 -translate-y-1/2 size-40px rounded-full bg-black/30 flex-center cursor-pointer hover:bg-black/50 transition-all duration-200 opacity-0 z-10"
-      :class="{ 'opacity-100': showArrows.left }">
+      @mouseleave="handleArrowLeave('left')">
       <svg class="size-24px color-white rotate-180"><use href="#arrow-right"></use></svg>
     </div>
     <div
       v-show="imageList.length > 1 && showArrows.right"
+      class="right-20px size-40px flex-center fixed top-1/2 z-10 -translate-y-1/2 cursor-pointer rounded-full bg-black/30 opacity-0 transition-all duration-200 hover:bg-black/50"
+      :class="{ 'opacity-100': showArrows.right }"
       @click="nextImage"
       @mouseenter="handleArrowEnter('right')"
-      @mouseleave="handleArrowLeave('right')"
-      class="fixed right-20px top-1/2 -translate-y-1/2 size-40px rounded-full bg-black/30 flex-center cursor-pointer hover:bg-black/50 transition-all duration-200 opacity-0 z-10"
-      :class="{ 'opacity-100': showArrows.right }">
+      @mouseleave="handleArrowLeave('right')">
       <svg class="size-24px color-white"><use href="#arrow-right"></use></svg>
     </div>
 
-    <div data-tauri-drag-region class="z-9999 h-50px bg-#000 flex justify-center items-center gap-30px">
+    <div data-tauri-drag-region class="h-50px bg-#000 gap-30px z-9999 flex-center">
       <n-tooltip placement="top">
         <template #trigger>
-          <svg @click="zoomOut" class="size-24px cursor-pointer color-white"><use href="#zoom-out"></use></svg>
+          <svg class="size-24px color-white cursor-pointer" @click="zoomOut"><use href="#zoom-out"></use></svg>
         </template>
         {{ t("preview.image.zoomOut") }}
       </n-tooltip>
@@ -64,14 +64,14 @@
 
       <n-tooltip placement="top">
         <template #trigger>
-          <svg @click="zoomIn" class="size-24px cursor-pointer color-white"><use href="#zoom-in"></use></svg>
+          <svg class="size-24px color-white cursor-pointer" @click="zoomIn"><use href="#zoom-in"></use></svg>
         </template>
         {{ t("preview.image.zoomIn") }}
       </n-tooltip>
 
       <n-tooltip placement="top">
         <template #trigger>
-          <svg @click="rotateLeft" class="size-24px cursor-pointer scale-x--100 color-white">
+          <svg class="size-24px scale-x--100 color-white cursor-pointer" @click="rotateLeft">
             <use href="#RotateRight"></use>
           </svg>
         </template>
@@ -80,21 +80,21 @@
 
       <n-tooltip placement="top">
         <template #trigger>
-          <svg @click="rotateRight" class="size-24px cursor-pointer color-white"><use href="#RotateRight"></use></svg>
+          <svg class="size-24px color-white cursor-pointer" @click="rotateRight"><use href="#RotateRight"></use></svg>
         </template>
         {{ t("preview.image.rotateRight") }}
       </n-tooltip>
 
       <n-tooltip placement="top">
         <template #trigger>
-          <svg @click="resetImage()" class="size-24px cursor-pointer color-white"><use href="#refresh"></use></svg>
+          <svg class="size-24px color-white cursor-pointer" @click="resetImage()"><use href="#refresh"></use></svg>
         </template>
         {{ t("preview.image.reset") }}
       </n-tooltip>
 
       <n-tooltip placement="top">
         <template #trigger>
-          <svg @click="saveImage" class="size-24px cursor-pointer color-white"><use href="#Importing"></use></svg>
+          <svg class="size-24px color-white cursor-pointer" @click="saveImage"><use href="#Importing"></use></svg>
         </template>
         {{ t("preview.image.saveAs") }}
       </n-tooltip>

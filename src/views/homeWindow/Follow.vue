@@ -4,63 +4,63 @@
       :class="[
         'follow-container',
         isCollapsed ? 'w-[64px]' : 'w-[200px]',
-        'flex flex-col overflow-y-auto select-none overflow-hidden transition-all duration-300',
-        'bg-[--right-bg-color] border-r border-[--line-color]'
+        'flex flex-col overflow-hidden overflow-y-auto transition-all duration-300 select-none',
+        'border-r border-[--line-color] bg-[--right-bg-color]'
       ]">
-      <div :class="['flex items-center mb-3', isCollapsed ? 'justify-center' : 'justify-between']">
+      <div :class="['mb-3 flex-y-center', isCollapsed ? 'justify-center' : 'justify-between']">
         <div v-show="!isCollapsed" class="font-medium text-[--text-color]">
           {{ $t("home.follow.followers", { count: followList.length }) }}
         </div>
         <n-button text type="primary" @click="toggleCollapse">
           <i-mdi-chevron-left
             v-if="!isCollapsed"
-            class="w-5 h-5 p-2 text-[--action-bar-icon-color] hover:bg-[--action-bar-icon-hover] hover:rounded-100%" />
+            class="hover:rounded-100% h-5 w-5 p-2 text-[--action-bar-icon-color] hover:bg-[--action-bar-icon-hover]" />
           <i-mdi-chevron-right
             v-else
-            class="w-5 h-5 p-2 text-[--action-bar-icon-color] hover:bg-[--action-bar-icon-hover] hover:rounded-100%" />
+            class="hover:rounded-100% h-5 w-5 p-2 text-[--action-bar-icon-color] hover:bg-[--action-bar-icon-hover]" />
         </n-button>
       </div>
 
       <div class="flex-1 overflow-hidden">
         <n-scrollbar class="h-full">
-          <div class="flex flex-col gap-[1px] mr-3">
+          <div class="mr-3 flex flex-col gap-[1px]">
             <div
               v-for="follow in followList"
+              class="follow-item flex cursor-pointer items-center justify-between overflow-hidden rounded-lg py-2 transition-all duration-300 hover:bg-[--bg-left-menu-hover]"
               :key="follow.followUserId"
-              class="follow-item flex items-center justify-between py-2 rounded-lg cursor-pointer overflow-hidden transition-all duration-300 hover:bg-[--bg-left-menu-hover]"
               :class="{ 'bg-[--bg-left-menu-hover]': activeUserId === follow.followUserId }"
               @click="handleSelectUser(follow)">
-              <div class="flex items-center gap-3 flex-1 min-w-0 overflow-hidden">
-                <div class="ml-2 relative w-10 h-10 flex-shrink-0">
+              <div class="flex min-w-0 flex-1 items-center gap-3 overflow-hidden">
+                <div class="relative ml-2 h-10 w-10 flex-shrink-0">
                   <img
                     v-if="!isCollapsed"
+                    class="h-full w-full cursor-pointer rounded-full object-cover hover:bg-[--avatar-hover-bg]"
                     :src="follow.avatar"
-                    :alt="follow.username"
-                    class="w-full h-full rounded-full object-cover cursor-pointer hover:bg-[--avatar-hover-bg]" />
+                    :alt="follow.username" />
                   <n-popover
                     v-else
                     trigger="hover"
                     placement="right"
+                    style="padding: 0; background: transparent"
                     :show-arrow="false"
-                    :delay="200"
-                    style="padding: 0; background: transparent">
+                    :delay="200">
                     <template #trigger>
                       <img
+                        class="h-full w-full cursor-pointer rounded-full object-cover hover:bg-[--avatar-hover-bg]"
                         :src="follow.avatar"
-                        :alt="follow.username"
-                        class="w-full h-full rounded-full object-cover cursor-pointer hover:bg-[--avatar-hover-bg]" />
+                        :alt="follow.username" />
                     </template>
                     <div
-                      class="px-2 py-1 text-sm rounded max-w-[100px] whitespace-nowrap overflow-hidden text-ellipsis bg-[--bg-popover] text-[--text-color] shadow-sm">
+                      class="max-w-[100px] overflow-hidden rounded bg-[--bg-popover] px-2 py-1 text-sm text-ellipsis whitespace-nowrap text-[--text-color] shadow-sm">
                       {{ follow.username }}
                     </div>
                   </n-popover>
                 </div>
-                <div v-show="!isCollapsed" class="flex-1 min-w-0 overflow-hidden">
-                  <div class="text-sm font-medium truncate w-full text-[--text-color]">{{ follow.username }}</div>
+                <div v-show="!isCollapsed" class="min-w-0 flex-1 overflow-hidden">
+                  <div class="w-full truncate text-sm font-medium text-[--text-color]">{{ follow.username }}</div>
                   <div
                     v-show="follow.unseenCount > 0"
-                    class="w-fit text-[12px] px-1 py-[2px] rounded-sm truncate bg-[--left-item-bg-color] text-[--user-text-color]">
+                    class="w-fit truncate rounded-sm bg-[--left-item-bg-color] px-1 py-[2px] text-[12px] text-[--user-text-color]">
                     {{ $t("home.follow.unseenCount", { count: follow.unseenCount }) }}
                   </div>
                 </div>
@@ -71,12 +71,12 @@
       </div>
     </div>
 
-    <div class="flex-1 py-4 pl-4 pr-2 bg-[--home-bg-color] overflow-hidden">
+    <div class="flex-1 overflow-hidden bg-[--home-bg-color] py-4 pr-2 pl-4">
       <div
         ref="fullscreenWrapperRef"
-        class="fullscreen-wrapper w-full h-full flex flex-row relative rounded-lg overflow-hidden bg-black shadow-sm"
+        class="fullscreen-wrapper relative flex h-full w-full flex-row overflow-hidden rounded-lg bg-black shadow-sm"
         :class="{ 'is-fullscreen': isFullscreen }">
-        <div class="flex-1 relative h-full">
+        <div class="relative h-full flex-1">
           <video-player
             v-if="playlistStore.currentVideo"
             :controls="true"
@@ -85,15 +85,15 @@
             :is-panel-open="showSidePanel"
             @open-panel="handleOpenPanel"
             @toggle-fullscreen="handleToggleFullscreen" />
-          <div v-else class="w-full h-full flex items-center justify-center text-gray-500">
+          <div v-else class="flex h-full w-full items-center justify-center text-gray-500">
             {{ $t("home.follow.noVideo") }}
           </div>
         </div>
 
         <video-side-panel
+          class="side-panel-transition"
           v-model:show="showSidePanel"
           v-model:tab="activePanelTab"
-          class="side-panel-transition"
           :class="{ 'fullscreen-overlay': isFullscreen }" />
       </div>
     </div>

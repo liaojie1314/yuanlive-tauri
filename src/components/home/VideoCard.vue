@@ -1,39 +1,39 @@
 <template>
   <div
-    class="group relative w-full cursor-pointer transition-all duration-200 rounded-lg bg-[--tray-bg-color] border border-transparent hover:border-[--line-color] hover:shadow-[0_4px_12px_rgba(0,0,0,0.1)] dark:hover:shadow-[0_4px_12px_rgba(0,0,0,0.4)]"
+    class="group relative w-full cursor-pointer rounded-lg border border-transparent bg-[--tray-bg-color] transition-all duration-200 hover:border-[--line-color] hover:shadow-[0_4px_12px_rgba(0,0,0,0.1)] dark:hover:shadow-[0_4px_12px_rgba(0,0,0,0.4)]"
     @mouseenter="playVideo"
     @mouseleave="pauseVideo">
-    <div class="relative w-full aspect-video overflow-hidden rounded-t-lg bg-black">
+    <div class="relative aspect-video w-full overflow-hidden rounded-t-lg bg-black">
       <img
+        class="h-full w-full object-cover transition-opacity duration-300"
         :src="video.coverUrl"
         :alt="video.title"
-        class="w-full h-full object-cover transition-opacity duration-300"
         :class="{ 'opacity-0': isPlaying }" />
 
       <video
         ref="videoRef"
-        :src="video.videoUrl"
-        class="absolute inset-0 w-full h-full object-cover transition-opacity duration-300"
-        :class="{ 'opacity-100': isPlaying, 'opacity-0': !isPlaying }"
         muted
         playsinline
-        loop></video>
+        loop
+        class="absolute inset-0 h-full w-full object-cover transition-opacity duration-300"
+        :src="video.videoUrl"
+        :class="{ 'opacity-100': isPlaying, 'opacity-0': !isPlaying }"></video>
 
-      <div class="flex items-center absolute bottom-2 left-2 text-xs text-white drop-shadow-md">
-        <i-mdi-heart class="w-3.5 h-3.5 text-red-500 mr-1" />
+      <div class="absolute bottom-2 left-2 flex-y-center text-xs text-white drop-shadow-md">
+        <i-mdi-heart class="mr-1 h-3.5 w-3.5 text-red-500" />
         <span class="font-medium">{{ formatNumber(video.likes) }}</span>
       </div>
 
       <div
         v-if="video.duration"
-        class="absolute bottom-2 right-2 bg-black/70 backdrop-blur-[2px] text-white text-[10px] px-1.5 py-0.5 rounded">
+        class="absolute right-2 bottom-2 rounded bg-black/70 px-1.5 py-0.5 text-[10px] text-white backdrop-blur-[2px]">
         {{ formatSecondsToTimeStr(video.duration) }}
       </div>
     </div>
 
-    <div class="p-2 space-y-1 bg-[--tray-bg-color] rounded-b-lg">
+    <div class="space-y-1 rounded-b-lg bg-[--tray-bg-color] p-2">
       <h3
-        class="text-sm font-medium text-[--text-color] line-clamp-2 leading-snug group-hover:text-red-500 transition-colors">
+        class="line-clamp-2 text-sm leading-snug font-medium text-[--text-color] transition-colors group-hover:text-red-500">
         {{ video.title }}
       </h3>
     </div>

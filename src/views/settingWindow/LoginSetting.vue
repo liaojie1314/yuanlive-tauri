@@ -1,13 +1,13 @@
 <template>
   <!-- 登录设置 -->
-  <n-flex vertical :size="20" data-tauri-drag-region>
-    <n-flex :size="12" vertical class="item-box">
+  <n-flex vertical data-tauri-drag-region :size="20">
+    <n-flex vertical class="item-box" :size="12">
       <n-flex align="center" justify="space-between">
         <span>{{ t("setting.login.autoLoginStartup") }}</span>
         <n-switch size="small" v-model:value="autoLogin" />
       </n-flex>
 
-      <div class="bg-[--line-color] h-1px w-full"></div>
+      <div class="h-1px w-full bg-[--line-color]"></div>
 
       <n-flex align="center" justify="space-between">
         <span>{{ t("setting.login.launchStartup") }}</span>
@@ -48,6 +48,6 @@ onMounted(async () => {
 
 <style scoped lang="scss">
 .item-box {
-  @apply text-14px text-[--text-color] bg-[--bg-setting-item] rounded-8px p-10px border-(solid 1px [--line-color]) custom-shadow;
+  @apply text-14px rounded-8px p-10px border-(solid 1px [--line-color]) custom-shadow bg-[--bg-setting-item] text-[--text-color];
 }
 </style>

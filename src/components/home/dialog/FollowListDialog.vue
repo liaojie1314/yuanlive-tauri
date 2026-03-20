@@ -1,7 +1,7 @@
 <template>
   <base-dialog v-model:show="dialogVisible" :title="t('dialog.followList.title')">
     <template #header>
-      <n-tabs v-model:value="activeTab" type="line" class="h-12 leading-12 mb-[-1px] w-full">
+      <n-tabs type="line" class="mb-[-1px] h-12 w-full leading-12" v-model:value="activeTab">
         <n-tab-pane
           name="following"
           :tab="t('dialog.followList.following', { count: userInfo?.userStats.followingCount || 0 })" />
@@ -12,12 +12,12 @@
     </template>
 
     <div class="space-y-5">
-      <div class="flex items-center justify-between">
+      <div class="flex-between-center">
         <n-input
-          v-model:value="searchQuery"
-          :placeholder="t('dialog.followList.placeholder')"
           clearable
-          class="w-[360px] border-(1px solid #90909080)">
+          class="border-(1px solid #90909080) w-[360px]"
+          v-model:value="searchQuery"
+          :placeholder="t('dialog.followList.placeholder')">
           <template #prefix>
             <i-mdi-magnify class="text-[--disabled-color]" />
           </template>
@@ -33,16 +33,16 @@
         <div class="divide-y divide-[--line-color]">
           <div
             v-for="user in displayUsers"
-            :key="user.id"
-            class="flex items-center justify-between py-4 transition-colors hover:bg-[--bg-left-menu-hover] rounded-lg px-2">
-            <div class="flex items-center flex-1 min-w-0">
-              <img :src="user.avatar" class="w-12 h-12 rounded-full object-cover border border-[--line-color]" />
-              <div class="ml-3 flex-1 min-w-0">
-                <div class="flex items-center gap-1 mb-0.5">
+            class="flex-between-center rounded-lg px-2 py-4 transition-colors hover:bg-[--bg-left-menu-hover]"
+            :key="user.id">
+            <div class="flex min-w-0 flex-1 items-center">
+              <img class="h-12 w-12 rounded-full border border-[--line-color] object-cover" :src="user.avatar" />
+              <div class="ml-3 min-w-0 flex-1">
+                <div class="mb-0.5 flex-y-center gap-1">
                   <span class="font-medium text-[--text-color]">{{ user.name }}</span>
-                  <i-mdi-check-decagram v-if="user.verified" class="text-blue-500 text-sm" />
+                  <i-mdi-check-decagram v-if="user.verified" class="text-sm text-blue-500" />
                 </div>
-                <div class="text-xs text-[--user-text-color] truncate">{{ user.description }}</div>
+                <div class="truncate text-xs text-[--user-text-color]">{{ user.description }}</div>
               </div>
             </div>
             <div class="ml-4">
@@ -50,7 +50,7 @@
                 v-if="user.isFollowing"
                 round
                 size="small"
-                class="bg-[--left-item-bg-color] text-[--user-text-color] border-none">
+                class="border-none bg-[--left-item-bg-color] text-[--user-text-color]">
                 {{ t("dialog.followList.followed") }}
               </n-button>
               <n-button v-else round size="small" type="primary">{{ t("dialog.followList.follow") }}</n-button>

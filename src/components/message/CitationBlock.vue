@@ -1,57 +1,57 @@
 <template>
-  <div v-if="citations && citations.length > 0" class="mt-3 pt-2 border-t border-[--line-color] w-full">
-    <div class="flex items-center gap-1 text-[10px] text-[--user-text-color] mb-1.5 opacity-80 select-none">
-      <i-mdi-text-search class="w-3 h-3" />
+  <div v-if="citations && citations.length > 0" class="mt-3 w-full border-t border-[--line-color] pt-2">
+    <div class="mb-1.5 flex-y-center gap-1 text-[10px] text-[--user-text-color] opacity-80 select-none">
+      <i-mdi-text-search class="h-3 w-3" />
       <span>{{ $t("components.citationBlock.basedOnCitations", { count: citations.length }) }}</span>
     </div>
 
     <div class="flex flex-wrap gap-1.5">
       <n-popover
         v-for="cite in citations"
-        :key="cite.id"
         trigger="hover"
         placement="top"
-        :keep-alive-on-hover="true"
         style="
           max-width: 300px;
           padding: 8px 12px;
           background-color: var(--bg-popover);
           border: 1px solid var(--line-color);
-        ">
+        "
+        :key="cite.id"
+        :keep-alive-on-hover="true">
         <template #trigger>
           <div
-            class="flex items-center gap-1.5 px-2 py-1 rounded-md cursor-pointer transition-colors border border-[--line-color] bg-[--input-area-bg] hover:bg-[--tray-hover]">
-            <span class="text-[11px] font-mono font-bold text-[--message-render-color] flex-shrink-0">
+            class="flex cursor-pointer items-center gap-1.5 rounded-md border border-[--line-color] bg-[--input-area-bg] px-2 py-1 transition-colors hover:bg-[--tray-hover]">
+            <span class="flex-shrink-0 font-mono text-[11px] font-bold text-[--message-render-color]">
               {{ cite.id }}.
             </span>
 
             <i-mdi-file-document-outline
               v-if="cite.type === 'file'"
-              class="w-3.5 h-3.5 text-[--user-text-color] opacity-70" />
+              class="h-3.5 w-3.5 text-[--user-text-color] opacity-70" />
             <i-mdi-history
               v-else-if="cite.type === 'history'"
-              class="w-3.5 h-3.5 text-[--user-text-color] opacity-70" />
-            <i-mdi-web v-else class="w-3.5 h-3.5 text-[--user-text-color] opacity-70" />
+              class="h-3.5 w-3.5 text-[--user-text-color] opacity-70" />
+            <i-mdi-web v-else class="h-3.5 w-3.5 text-[--user-text-color] opacity-70" />
 
-            <span class="text-xs text-[--text-color] truncate max-w-[120px]">
+            <span class="max-w-[120px] truncate text-xs text-[--text-color]">
               {{ cite.title }}
             </span>
 
             <i-mdi-open-in-new
               v-if="cite.type === 'web'"
-              class="w-3.5 h-3.5 ml-0.5 text-blue-500 opacity-60 hover:opacity-100 transition-opacity"
+              class="ml-0.5 h-3.5 w-3.5 text-blue-500 opacity-60 transition-opacity hover:opacity-100"
               @click="handleCitationClick(cite)" />
           </div>
         </template>
 
         <div class="flex flex-col gap-1.5">
-          <div class="flex items-center justify-between border-b border-[--line-color] pb-1">
-            <span class="text-xs font-bold text-[--text-color] truncate pr-4">{{ cite.title }}</span>
-            <span v-if="cite.score" class="text-[10px] text-green-500 font-mono">
+          <div class="flex-between-center border-b border-[--line-color] pb-1">
+            <span class="truncate pr-4 text-xs font-bold text-[--text-color]">{{ cite.title }}</span>
+            <span v-if="cite.score" class="font-mono text-[10px] text-green-500">
               {{ (cite.score * 100).toFixed(1) }}% {{ $t("components.citationBlock.related") }}
             </span>
           </div>
-          <div class="text-xs text-[--user-text-color] leading-relaxed line-clamp-5 select-text">
+          <div class="line-clamp-5 text-xs leading-relaxed text-[--user-text-color] select-text">
             "{{ cite.snippet }}"
           </div>
         </div>

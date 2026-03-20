@@ -7,7 +7,7 @@
       </div>
       <n-scrollbar class="danmaku-scroll-container">
         <div class="danmaku-list">
-          <div v-for="(danmaku, index) in danmakuList" :key="index" class="danmaku-item">
+          <div v-for="(danmaku, index) in danmakuList" class="danmaku-item" :key="index">
             <div class="danmaku-time">{{ danmaku.time }}</div>
             <div class="danmaku-content">{{ danmaku.content }}</div>
             <div class="danmaku-actions">

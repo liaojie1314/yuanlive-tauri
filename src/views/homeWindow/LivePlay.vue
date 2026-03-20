@@ -1,131 +1,131 @@
 <template>
   <div
-    class="live-play-container relative w-full h-full bg-[--home-bg-color] flex select-none"
+    class="live-play-container relative flex h-full w-full bg-[--home-bg-color] select-none"
     :class="{ 'more-gifts-open': moreGiftsVisible }">
     <div
       :class="[
         'left-content',
         chatCollapsed ? 'w-full' : 'w-3/4',
-        'h-full flex flex-col overflow-hidden transition-all duration-300 ease-in-out'
+        'flex h-full flex-col overflow-hidden transition-all duration-300 ease-in-out'
       ]">
       <div
         data-tauri-drag-region
-        class="top-info-bar w-full h-12 bg-[--tray-bg-color] flex items-center justify-between px-2 z-999 border-b border-[--line-color]">
-        <div class="flex items-center gap-3">
+        class="top-info-bar z-999 flex h-12 w-full items-center justify-between border-b border-[--line-color] bg-[--tray-bg-color] px-2">
+        <div class="flex-y-center gap-3">
           <div
-            @click="handleBack"
-            class="w-10 h-10 rounded-full bg-[--bg-left-menu] flex items-center justify-center text-[--action-bar-icon-color] hover:bg-[--bg-left-menu-hover] transition-colors cursor-pointer"
-            aria-label="返回">
-            <i-mdi-arrow-left class="w-6 h-6" />
+            aria-label="返回"
+            class="flex h-10 w-10 cursor-pointer items-center justify-center rounded-full bg-[--bg-left-menu] text-[--action-bar-icon-color] transition-colors hover:bg-[--bg-left-menu-hover]"
+            @click="handleBack">
+            <i-mdi-arrow-left class="h-6 w-6" />
           </div>
 
-          <div class="host-info flex items-center gap-3 bg-[--bg-left-menu] backdrop-blur-sm px-2 py-1 rounded-full">
+          <div class="host-info flex-y-center gap-3 rounded-full bg-[--bg-left-menu] px-2 py-1 backdrop-blur-sm">
             <user-info-popover
               :user="{ name: '千年 (万年之主)', avatar: 'https://picsum.photos/id/1/100/100', level: 'Lv.99' }">
-              <div class="avatar w-8 h-8 rounded-full overflow-hidden border-2 border-red-500 cursor-pointer">
-                <img src="https://picsum.photos/id/1/100/100" alt="主播头像" class="w-full h-full object-cover" />
+              <div class="avatar h-8 w-8 cursor-pointer overflow-hidden rounded-full border-2 border-red-500">
+                <img src="https://picsum.photos/id/1/100/100" alt="主播头像" class="h-full w-full object-cover" />
               </div>
             </user-info-popover>
             <div class="host-info-text flex flex-col">
               <user-info-popover
                 :user="{ name: '千年 (万年之主)', avatar: 'https://picsum.photos/id/1/100/100', level: 'Lv.99' }">
                 <div
-                  class="host-name text-[--text-color] font-medium cursor-pointer hover:text-[#ff0050] transition-colors">
+                  class="host-name cursor-pointer font-medium text-[--text-color] transition-colors hover:text-[#ff0050]">
                   千年 (万年之主)
                 </div>
               </user-info-popover>
-              <div class="host-stats flex items-center gap-2 text-[--user-text-color] text-xs">
-                <i-mdi-heart-outline class="w-3 h-3" />
+              <div class="host-stats flex-y-center gap-2 text-xs text-[--user-text-color]">
+                <i-mdi-heart-outline class="h-3 w-3" />
                 <span>2.9万</span>
               </div>
             </div>
             <div
-              class="follow-btn bg-red-500 text-white text-xs px-3 py-1 rounded-full hover:bg-red-600 transition-colors cursor-pointer">
+              class="follow-btn cursor-pointer rounded-full bg-red-500 px-3 py-1 text-xs text-white transition-colors hover:bg-red-600">
               关注
             </div>
             <div
-              class="group-btn bg-green-500 text-white text-xs px-3 py-1 rounded-full hover:bg-green-600 transition-colors cursor-pointer">
+              class="group-btn cursor-pointer rounded-full bg-green-500 px-3 py-1 text-xs text-white transition-colors hover:bg-green-600">
               加粉丝团
             </div>
             <div
-              class="vip-btn bg-purple-500 text-white text-xs px-3 py-1 rounded-full hover:bg-purple-600 transition-colors cursor-pointer">
+              class="vip-btn cursor-pointer rounded-full bg-purple-500 px-3 py-1 text-xs text-white transition-colors hover:bg-purple-600">
               加会员
             </div>
             <n-popover
               trigger="hover"
               placement="bottom-end"
-              :show-arrow="false"
               style="
                 padding: 12px;
                 border-radius: 12px;
                 background-color: var(--bg-popover);
                 border: 1px solid var(--line-color);
-              ">
+              "
+              :show-arrow="false">
               <template #trigger>
                 <div
-                  class="more-btn w-8 h-8 rounded-full bg-[--left-item-bg-color] flex items-center justify-center text-[--action-bar-icon-color] hover:bg-[--action-bar-icon-hover] transition-colors cursor-pointer">
-                  <i-mdi-dots-horizontal class="w-5 h-5" />
+                  class="more-btn flex h-8 w-8 cursor-pointer items-center justify-center rounded-full bg-[--left-item-bg-color] text-[--action-bar-icon-color] transition-colors hover:bg-[--action-bar-icon-hover]">
+                  <i-mdi-dots-horizontal class="h-5 w-5" />
                 </div>
               </template>
 
-              <div class="flex items-center gap-2">
+              <div class="flex-y-center gap-2">
                 <div
-                  class="flex items-center justify-center gap-2 bg-[--bg-setting-item] hover:bg-[--bg-menu-hover] text-[--text-color] px-5 py-2 rounded-lg cursor-pointer transition-colors"
+                  class="flex cursor-pointer items-center justify-center gap-2 rounded-lg bg-[--bg-setting-item] px-5 py-2 text-[--text-color] transition-colors hover:bg-[--bg-menu-hover]"
                   @click="copyRoomLink">
-                  <i-mdi-link-variant class="w-4 h-4 opacity-80" />
+                  <i-mdi-link-variant class="h-4 w-4 opacity-80" />
                   <span class="text-sm font-medium">复制链接</span>
                 </div>
 
                 <div
-                  class="w-9 h-9 flex items-center justify-center bg-[--bg-setting-item] hover:bg-[--bg-menu-hover] text-[--text-color] rounded-lg cursor-pointer transition-colors">
-                  <i-material-symbols-qr-code class="w-5 h-5 opacity-80" />
+                  class="flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg bg-[--bg-setting-item] text-[--text-color] transition-colors hover:bg-[--bg-menu-hover]">
+                  <i-material-symbols-qr-code class="h-5 w-5 opacity-80" />
                 </div>
 
                 <div
-                  class="w-9 h-9 flex items-center justify-center bg-[--bg-setting-item] hover:bg-[--bg-menu-hover] text-[--text-color] rounded-lg cursor-pointer transition-colors"
+                  class="flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg bg-[--bg-setting-item] text-[--text-color] transition-colors hover:bg-[--bg-menu-hover]"
                   @click="openReportDialog">
-                  <i-mdi-alert-outline class="w-5 h-5 opacity-80" />
+                  <i-mdi-alert-outline class="h-5 w-5 opacity-80" />
                 </div>
               </div>
             </n-popover>
           </div>
         </div>
 
-        <div class="flex items-center gap-2 mr-5">
+        <div class="mr-5 flex-y-center gap-2">
           <div class="flex -space-x-2">
             <div
               v-for="(user, index) in audienceList.slice(0, 3)"
+              class="h-8 w-8 overflow-hidden rounded-full border-2 border-[--tray-bg-color]"
               :key="user.id"
-              class="w-8 h-8 rounded-full border-2 border-[--tray-bg-color] overflow-hidden"
               :style="{ zIndex: 3 - index }">
-              <img :src="user.avatar" :alt="user.name" class="w-full h-full object-cover" />
+              <img class="h-full w-full object-cover" :src="user.avatar" :alt="user.name" />
             </div>
           </div>
 
           <div
             v-if="chatCollapsed"
-            class="flex items-center gap-2 bg-[--bg-left-menu] backdrop-blur-sm px-3 py-1 rounded-full">
-            <span class="audience-count text-[--text-color] font-medium">{{ audienceCount }}</span>
+            class="flex-y-center gap-2 rounded-full bg-[--bg-left-menu] px-3 py-1 backdrop-blur-sm">
+            <span class="audience-count font-medium text-[--text-color]">{{ audienceCount }}</span>
           </div>
 
           <div
             v-if="chatCollapsed"
-            @click="toggleChat"
-            class="w-8 h-8 rounded-full bg-[--left-item-bg-color] flex items-center justify-center text-[--action-bar-icon-color] hover:bg-[--action-bar-icon-hover] transition-colors cursor-pointer">
-            <i-mdi-chevron-right class="w-5 h-5" />
+            class="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full bg-[--left-item-bg-color] text-[--action-bar-icon-color] transition-colors hover:bg-[--action-bar-icon-hover]"
+            @click="toggleChat">
+            <i-mdi-chevron-right class="h-5 w-5" />
           </div>
         </div>
       </div>
 
       <div
-        class="player-container relative w-full flex-grow overflow-hidden bg-black flex justify-center items-center"
+        class="player-container relative flex w-full flex-grow items-center justify-center overflow-hidden bg-black"
         @mouseenter="controlsVisible = true"
         @mouseleave="controlsVisible = false">
         <video
           ref="videoRef"
-          class="w-full h-full object-contain"
           autoplay
           playsinline
+          class="h-full w-full object-contain"
           :controls="false"
           @play="isPlaying = true"
           @pause="isPlaying = false"></video>
@@ -133,39 +133,39 @@
         <danmaku-player ref="danmakuPlayerRef" />
 
         <div
-          class="video-controls absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-3 z-30 transition-all duration-300 transform"
+          class="video-controls absolute right-0 bottom-0 left-0 z-30 transform bg-gradient-to-t from-black/80 to-transparent p-3 transition-all duration-300"
           :class="{
             'translate-y-full opacity-0': !shouldShowControls,
             'translate-y-0 opacity-100': shouldShowControls
           }">
-          <div class="controls-container flex items-center justify-between">
-            <div class="left-controls flex items-center gap-3">
+          <div class="controls-container flex-between-center">
+            <div class="left-controls flex-y-center gap-3">
               <div class="control-btn" @click="togglePlay">
-                <i-material-symbols-pause-rounded v-if="isPlaying" class="w-6 h-6 text-white" />
-                <i-material-symbols-play-arrow-rounded v-else class="w-6 h-6 text-white" />
+                <i-material-symbols-pause-rounded v-if="isPlaying" class="h-6 w-6 text-white" />
+                <i-material-symbols-play-arrow-rounded v-else class="h-6 w-6 text-white" />
               </div>
 
               <div class="control-btn" @click="refreshVideo">
-                <i-material-symbols-refresh-rounded class="w-5 h-5 text-white" />
+                <i-material-symbols-refresh-rounded class="h-5 w-5 text-white" />
               </div>
             </div>
 
-            <div class="right-controls flex items-center gap-3">
+            <div class="right-controls flex-y-center gap-3">
               <div class="control-item">
                 <n-dropdown :options="resolutionOptions" @select="switchResolution">
                   <div class="control-btn">
-                    <span class="text-white text-sm">{{ currentResolution }}</span>
+                    <span class="text-sm text-white">{{ currentResolution }}</span>
                   </div>
                 </n-dropdown>
               </div>
 
               <div class="control-btn" @click="toggleScreenRotation">
-                <i-mdi-rotate-3d class="w-5 h-5 text-white" />
+                <i-mdi-rotate-3d class="h-5 w-5 text-white" />
               </div>
 
               <div class="control-item relative" @mouseenter="showDanmakuSettings" @mouseleave="hideDanmakuSettings">
                 <div class="control-btn">
-                  <i-material-symbols-settings class="w-5 h-5 text-white" />
+                  <i-material-symbols-settings class="h-5 w-5 text-white" />
                 </div>
 
                 <div
@@ -182,7 +182,7 @@
                   </div>
 
                   <div class="settings-content">
-                    <div class="settings-item" v-for="item in danmakuStore.sliderConfigs" :key="item.key">
+                    <div v-for="item in danmakuStore.sliderConfigs" class="settings-item" :key="item.key">
                       <span class="settings-label">{{ item.label }}</span>
                       <n-slider
                         v-model:value="danmakuStore.settings[item.key]"
@@ -246,7 +246,7 @@
               </div>
 
               <div class="control-btn" @click="toggleGiftSettings">
-                <i-mdi-gift class="w-5 h-5 text-white" />
+                <i-mdi-gift class="h-5 w-5 text-white" />
               </div>
 
               <div
@@ -255,27 +255,27 @@
                 @mouseleave="showVolumeSlider = false"
                 @wheel.prevent="handleVolumeWheel"
                 @click="toggleMute">
-                <i-ph-speaker-high v-if="volume > 50" class="w-5 h-5 text-white" />
-                <i-ph-speaker-low v-else-if="volume > 0" class="w-5 h-5 text-white" />
-                <i-ph-speaker-slash v-else class="w-5 h-5 text-white" />
+                <i-ph-speaker-high v-if="volume > 50" class="h-5 w-5 text-white" />
+                <i-ph-speaker-low v-else-if="volume > 0" class="h-5 w-5 text-white" />
+                <i-ph-speaker-slash v-else class="h-5 w-5 text-white" />
 
                 <div
-                  class="volume-slider-container"
                   v-show="showVolumeSlider"
+                  class="volume-slider-container"
                   @mouseenter="showVolumeSlider = true"
                   @mouseleave="showVolumeSlider = false"
                   @click.stop>
-                  <n-slider v-model:value="volume" :min="0" :max="100" @update:value="setVolume" vertical />
+                  <n-slider vertical v-model:value="volume" :min="0" :max="100" @update:value="setVolume" />
                 </div>
               </div>
 
               <div class="control-btn" @click="toggleMiniWindow">
-                <i-mdi-dock-window class="w-5 h-5 text-white" />
+                <i-mdi-dock-window class="h-5 w-5 text-white" />
               </div>
 
               <div class="control-btn" @click="toggleFullscreen">
-                <i-material-symbols-fullscreen-exit v-if="isFullscreen" class="w-5 h-5 text-white" />
-                <i-material-symbols-fullscreen v-else class="w-5 h-5 text-white" />
+                <i-material-symbols-fullscreen-exit v-if="isFullscreen" class="h-5 w-5 text-white" />
+                <i-material-symbols-fullscreen v-else class="h-5 w-5 text-white" />
               </div>
             </div>
           </div>
@@ -283,49 +283,49 @@
       </div>
 
       <div
-        class="gift-area w-full h-20 bg-[--tray-bg-color] flex items-center p-2 z-999 border-t border-[--line-color]">
+        class="gift-area z-999 flex h-20 w-full items-center border-t border-[--line-color] bg-[--tray-bg-color] p-2">
         <div
           v-resize="calculateVisibleGiftCount"
-          class="gift-list bg-[--tray-bg-color] flex items-center flex-1 rounded-md">
-          <div class="gifts-container flex items-center overflow-hidden w-full">
+          class="gift-list flex flex-1 items-center rounded-md bg-[--tray-bg-color]">
+          <div class="gifts-container flex w-full items-center overflow-hidden">
             <n-popover
               v-for="gift in displayGifts"
-              :key="gift.id"
               trigger="hover"
               placement="top"
+              v-model:show="popoverVisible[gift.id]"
+              :key="gift.id"
               :show-arrow="false"
-              :raw="true"
-              v-model:show="popoverVisible[gift.id]">
+              :raw="true">
               <template #trigger>
                 <div
-                  class="gift-item-container flex flex-col items-center cursor-pointer flex-1 h-full relative overflow-visible transition-all duration-300">
+                  class="gift-item-container relative flex h-full flex-1 cursor-pointer flex-col items-center overflow-visible transition-all duration-300">
                   <div
-                    class="gift-item-content flex flex-col items-center justify-center h-full px-2 transition-all duration-300">
-                    <div class="gift-icon rounded-full flex items-center justify-center mb-1">
+                    class="gift-item-content flex h-full flex-col items-center justify-center px-2 transition-all duration-300">
+                    <div class="gift-icon mb-1 flex-center rounded-full">
                       <svg
-                        :xmlns="gift.icon"
-                        :width="24"
-                        :height="24"
                         viewBox="0 0 24 24"
                         fill="none"
                         stroke="currentColor"
                         stroke-width="2"
                         stroke-linecap="round"
                         stroke-linejoin="round"
-                        class="text-[--text-color]">
+                        class="text-[--text-color]"
+                        :xmlns="gift.icon"
+                        :width="24"
+                        :height="24">
                         <path :d="gift.path" />
                       </svg>
                     </div>
                     <div
-                      class="gift-name text-[--text-color] text-xs truncate max-w-full text-center transition-all duration-300">
+                      class="gift-name max-w-full truncate text-center text-xs text-[--text-color] transition-all duration-300">
                       {{ gift.name }}
                     </div>
-                    <div class="gift-cost text-[--user-text-color] text-xs">{{ gift.cost }}钻</div>
+                    <div class="gift-cost text-xs text-[--user-text-color]">{{ gift.cost }}钻</div>
                   </div>
                   <div
-                    class="gift-send-btn-container transition-all duration-300 opacity-0 transform translate-y-2 flex justify-center">
+                    class="gift-send-btn-container flex translate-y-2 transform justify-center opacity-0 transition-all duration-300">
                     <div
-                      class="gift-send-btn bg-red-500 text-white text-xs font-medium py-1 px-4 rounded-md cursor-pointer text-center"
+                      class="gift-send-btn cursor-pointer rounded-md bg-red-500 px-4 py-1 text-center text-xs font-medium text-white"
                       @click="sendGiftWithAmount(gift, 1)">
                       赠送
                     </div>
@@ -333,13 +333,13 @@
                 </div>
               </template>
               <div
-                class="gift-amount-popover bg-[--bg-popover] backdrop-blur-sm p-3 rounded-lg border border-[--line-color] shadow-lg">
+                class="gift-amount-popover rounded-lg border border-[--line-color] bg-[--bg-popover] p-3 shadow-lg backdrop-blur-sm">
                 <div class="gift-amount-grid grid grid-cols-4 gap-2">
                   <div
                     v-for="amount in amountOptions"
+                    class="amount-btn cursor-pointer rounded-full bg-[--bg-left-menu-hover] px-4 py-2 text-[--text-color] transition-all hover:bg-[--bg-menu-hover]"
                     :key="amount.value"
-                    @click="sendGiftWithAmount(gift, amount.value)"
-                    class="amount-btn cursor-pointer px-4 py-2 bg-[--bg-left-menu-hover] text-[--text-color] rounded-full transition-all hover:bg-[--bg-menu-hover]">
+                    @click="sendGiftWithAmount(gift, amount.value)">
                     {{ amount.label }}
                   </div>
                 </div>
@@ -348,21 +348,21 @@
 
             <div
               v-if="showMoreBtn"
-              class="gift-item-container gift-more-container flex flex-col items-center cursor-pointer flex-1 h-full relative"
+              class="gift-item-container gift-more-container relative flex h-full flex-1 cursor-pointer flex-col items-center"
               @click="toggleMoreGifts">
-              <div class="gift-item gift-more flex flex-col items-center justify-center h-full px-2">
-                <div class="gift-icon rounded-full flex items-center justify-center mb-1">
+              <div class="gift-item gift-more flex h-full flex-col items-center justify-center px-2">
+                <div class="gift-icon mb-1 flex-center rounded-full">
                   <i-mdi-plus class="h-6 w-6 text-[--text-color]" />
                 </div>
-                <div class="gift-name text-[--text-color] text-xs truncate text-center">更多</div>
+                <div class="gift-name truncate text-center text-xs text-[--text-color]">更多</div>
               </div>
             </div>
           </div>
         </div>
 
         <div
-          @click="handleRechargeClick"
-          class="cursor-pointer recharge-btn bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-sm px-3 h-full flex flex-col items-center justify-center rounded-md hover:opacity-90 transition-opacity ml-3 mr-5">
+          class="recharge-btn mr-5 ml-3 flex h-full cursor-pointer flex-col items-center justify-center rounded-md bg-gradient-to-r from-yellow-400 to-orange-500 px-3 text-sm text-white transition-opacity hover:opacity-90"
+          @click="handleRechargeClick">
           <svg
             xmlns="http://www.w3.org/2000/svg"
             width="16"
@@ -382,20 +382,20 @@
         </div>
       </div>
 
-      <div class="gift-animation-container absolute inset-0 pointer-events-none overflow-hidden z-20"></div>
+      <div class="gift-animation-container pointer-events-none absolute inset-0 z-20 overflow-hidden"></div>
 
       <div
         v-if="moreGiftsVisible"
+        style="width: 320px; max-height: 380px"
         :class="[
-          'more-gifts-popup absolute bottom-25 bg-[--bg-popover] backdrop-blur-sm rounded-lg border border-[--line-color] z-1000 shadow-xl',
+          `more-gifts-popup absolute bottom-25 z-1000 rounded-lg border border-[--line-color] bg-[--bg-popover] shadow-xl backdrop-blur-sm`,
           chatCollapsed ? 'right-0' : 'right-[25%]'
-        ]"
-        style="width: 320px; max-height: 380px">
-        <div class="more-gifts-header flex items-center justify-between px-4 py-3 border-b border-[--line-color]">
-          <h3 class="text-[--text-color] font-medium">更多礼物</h3>
+        ]">
+        <div class="more-gifts-header flex-between-center border-b border-[--line-color] px-4 py-3">
+          <h3 class="font-medium text-[--text-color]">更多礼物</h3>
           <i-mdi-close
-            @click="closeMoreGifts"
-            class="w-4 h-4 p-2 rounded-full bg-[--left-item-bg-color] flex items-center justify-center text-[--action-bar-icon-color] hover:bg-[--action-bar-icon-hover] transition-colors cursor-pointer" />
+            class="flex h-4 w-4 cursor-pointer items-center justify-center rounded-full bg-[--left-item-bg-color] p-2 text-[--action-bar-icon-color] transition-colors hover:bg-[--action-bar-icon-hover]"
+            @click="closeMoreGifts" />
         </div>
 
         <div class="more-gifts-content p-2">
@@ -403,18 +403,17 @@
             <div class="more-gifts-grid grid grid-cols-4 gap-2">
               <n-popover
                 v-for="gift in remainingGifts"
-                :key="gift.id"
                 trigger="hover"
                 placement="top"
+                v-model:show="popoverVisible[gift.id]"
+                :key="gift.id"
                 :show-arrow="false"
-                :raw="true"
-                v-model:show="popoverVisible[gift.id]">
+                :raw="true">
                 <template #trigger>
                   <div
-                    class="gift-item-container flex flex-col items-center cursor-pointer p-2 bg-[--bg-left-menu-hover] rounded-md hover:bg-[--bg-menu-hover]">
-                    <div class="gift-icon rounded-full flex items-center justify-center my-1">
+                    class="gift-item-container flex cursor-pointer flex-col items-center rounded-md bg-[--bg-left-menu-hover] p-2 hover:bg-[--bg-menu-hover]">
+                    <div class="gift-icon my-1 flex-center rounded-full">
                       <svg
-                        :xmlns="gift.icon"
                         width="24"
                         height="24"
                         viewBox="0 0 24 24"
@@ -423,17 +422,18 @@
                         stroke-width="2"
                         stroke-linecap="round"
                         stroke-linejoin="round"
-                        class="text-[--text-color]">
+                        class="text-[--text-color]"
+                        :xmlns="gift.icon">
                         <path :d="gift.path" />
                       </svg>
                     </div>
-                    <div class="gift-name text-[--text-color] text-xs truncate max-w-full text-center">
+                    <div class="gift-name max-w-full truncate text-center text-xs text-[--text-color]">
                       {{ gift.name }}
                     </div>
-                    <div class="gift-cost text-[--user-text-color] text-xs">{{ gift.cost }}钻</div>
+                    <div class="gift-cost text-xs text-[--user-text-color]">{{ gift.cost }}钻</div>
                     <div class="gift-send-btn-container mt-2">
                       <div
-                        class="gift-send-btn bg-red-500 text-white text-xs font-medium py-1 px-4 rounded-md w-full cursor-pointer hover:bg-red-600 transition-colors text-center"
+                        class="gift-send-btn w-full cursor-pointer rounded-md bg-red-500 px-4 py-1 text-center text-xs font-medium text-white transition-colors hover:bg-red-600"
                         @click="sendGiftWithAmount(gift, 1)">
                         赠送
                       </div>
@@ -441,13 +441,13 @@
                   </div>
                 </template>
                 <div
-                  class="gift-amount-popover bg-[--bg-popover] backdrop-blur-sm p-3 rounded-lg border border-[--line-color] shadow-lg">
+                  class="gift-amount-popover rounded-lg border border-[--line-color] bg-[--bg-popover] p-3 shadow-lg backdrop-blur-sm">
                   <div class="gift-amount-grid grid grid-cols-4 gap-2">
                     <div
                       v-for="amount in amountOptions"
+                      class="amount-btn cursor-pointer rounded-full bg-[--bg-left-menu-hover] px-4 py-2 text-[--text-color] transition-all hover:bg-[--bg-menu-hover]"
                       :key="amount.value"
-                      @click="sendGiftWithAmount(gift, amount.value)"
-                      class="amount-btn px-4 py-2 bg-[--bg-left-menu-hover] text-[--text-color] rounded-full transition-all cursor-pointer hover:bg-[--bg-menu-hover]">
+                      @click="sendGiftWithAmount(gift, amount.value)">
                       {{ amount.label }}
                     </div>
                   </div>
@@ -460,40 +460,39 @@
 
       <div
         v-if="rechargeVisible"
+        style="width: 500px; max-height: 340px"
         :class="[
-          'recharge-popup absolute bottom-25 bg-[--bg-modal] rounded-lg border border-[--line-color] z-1000 overflow-hidden shadow-xl',
+          `recharge-popup absolute bottom-25 z-1000 overflow-hidden rounded-lg border border-[--line-color] bg-[--bg-modal] shadow-xl`,
           chatCollapsed ? 'right-0' : 'right-[25%]'
-        ]"
-        style="width: 500px; max-height: 340px">
-        <div
-          class="recharge-header flex items-center justify-between px-4 py-3 bg-[--bg-popover] border-b border-[--line-color]">
+        ]">
+        <div class="recharge-header flex-between-center border-b border-[--line-color] bg-[--bg-popover] px-4 py-3">
           <h3 class="text-lg font-bold text-[--text-color]">钻石充值</h3>
-          <div class="flex items-center gap-4">
+          <div class="flex-y-center gap-4">
             <span class="text-sm text-[--text-color]">余额 {{ balance }} 钻石</span>
             <div
-              @click="closeRecharge"
-              class="w-8 h-8 rounded-full bg-[--left-item-bg-color] flex items-center justify-center text-[--action-bar-icon-color] hover:bg-red-500 hover:text-white transition-all cursor-pointer"
-              aria-label="关闭">
+              aria-label="关闭"
+              class="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full bg-[--left-item-bg-color] text-[--action-bar-icon-color] transition-all hover:bg-red-500 hover:text-white"
+              @click="closeRecharge">
               <i-mdi-close />
             </div>
           </div>
         </div>
 
-        <div class="recharge-amounts px-3 bg-[--bg-popover] pt-3 pb-3">
+        <div class="recharge-amounts bg-[--bg-popover] px-3 pt-3 pb-3">
           <div class="grid grid-cols-4 gap-3">
             <div
               v-for="(option, index) in rechargeOptions"
               :key="index"
-              @click="selectFixedAmount(option.diamonds)"
               :class="[
-                'recharge-option cursor-pointer rounded-md py-3 px-2 text-center transition-all duration-200 transform hover:scale-105 border-2',
+                `recharge-option transform cursor-pointer rounded-md border-2 px-2 py-3 text-center transition-all duration-200 hover:scale-105`,
                 selectedAmount === option.diamonds && !isCustomSelected
-                  ? 'bg-red-500 text-white font-bold shadow-lg border-red-500'
-                  : 'bg-[--bg-setting-item] text-[--text-color] border-transparent hover:bg-[--bg-menu-hover]'
-              ]">
+                  ? 'border-red-500 bg-red-500 font-bold text-white shadow-lg'
+                  : 'border-transparent bg-[--bg-setting-item] text-[--text-color] hover:bg-[--bg-menu-hover]'
+              ]"
+              @click="selectFixedAmount(option.diamonds)">
               <div class="text-sm">{{ (option.diamonds * 1).toLocaleString() }} 钻石</div>
               <div
-                class="text-xs mt-1 opacity-80"
+                class="mt-1 text-xs opacity-80"
                 :class="
                   selectedAmount === option.diamonds && !isCustomSelected ? 'text-white' : 'text-[--user-text-color]'
                 ">
@@ -503,47 +502,47 @@
 
             <div
               :class="[
-                'recharge-option cursor-pointer rounded-md text-center transition-all duration-200 transform hover:scale-105 border-2 flex flex-col items-center justify-center',
+                `recharge-option flex transform cursor-pointer flex-col items-center justify-center rounded-md border-2 text-center transition-all duration-200 hover:scale-105`,
                 isCustomSelected
-                  ? 'bg-pink-100 border-red-500 shadow-sm py-2 px-1'
-                  : 'bg-[--bg-setting-item] border-transparent hover:bg-[--bg-menu-hover] py-3 px-2'
+                  ? 'border-red-500 bg-pink-100 px-1 py-2 shadow-sm'
+                  : 'border-transparent bg-[--bg-setting-item] px-2 py-3 hover:bg-[--bg-menu-hover]'
               ]"
               @click="!confirmedCustomPrice ? openCustomInput() : (isCustomSelected = true)">
               <template v-if="confirmedCustomPrice > 0">
                 <div class="text-[13px] font-bold text-[--text-color]">
                   {{ (confirmedCustomPrice * 10).toLocaleString() }} 钻石
                 </div>
-                <div class="text-xs mt-1 text-[--user-text-color] font-medium flex items-center justify-center">
+                <div class="mt-1 flex-center text-xs font-medium text-[--user-text-color]">
                   ¥{{ confirmedCustomPrice }}
-                  <span class="text-red-500 ml-1" @click.stop="openCustomInput">修改</span>
+                  <span class="ml-1 text-red-500" @click.stop="openCustomInput">修改</span>
                 </div>
               </template>
 
               <template v-else>
                 <div class="text-sm text-[--text-color]">自定义金额</div>
-                <div class="text-xs mt-1 text-[--user-text-color] opacity-80">最高100万元</div>
+                <div class="mt-1 text-xs text-[--user-text-color] opacity-80">最高100万元</div>
               </template>
             </div>
           </div>
         </div>
 
-        <div class="recharge-payment py-2 px-3 bg-[--bg-popover] border-t border-[--line-color]">
-          <h4 class="text-md font-medium text-[--text-color] mb-1">扫码支付</h4>
-          <div class="payment-content flex flex-row gap-4 items-center">
-            <div class="qrcode-container bg-white rounded-sm shadow-lg">
-              <i-material-symbols-qr-code class="w-20! h-20! text-black" />
+        <div class="recharge-payment border-t border-[--line-color] bg-[--bg-popover] px-3 py-2">
+          <h4 class="text-md mb-1 font-medium text-[--text-color]">扫码支付</h4>
+          <div class="payment-content flex flex-row items-center gap-4">
+            <div class="qrcode-container rounded-sm bg-white shadow-lg">
+              <i-material-symbols-qr-code class="h-20! w-20! text-black" />
             </div>
 
-            <div class="payment-info flex flex-col gap-2 flex-1">
+            <div class="payment-info flex flex-1 flex-col gap-2">
               <div class="amount-info text-left">
                 <div class="text-sm text-[--text-color]">应付金额</div>
-                <div class="text-xl font-bold text-red-500 mt-1">¥{{ payPrice }}</div>
+                <div class="mt-1 text-xl font-bold text-red-500">¥{{ payPrice }}</div>
               </div>
 
-              <div class="payment-methods flex flex-col gap-2 w-full">
-                <div class="methods-icons flex items-center gap-3">
-                  <div class="w-8 h-8 rounded-full bg-[--left-item-bg-color] flex items-center justify-center">
-                    <i-material-symbols-live-tv class="text-blue-400" style="font-size: 20px" />
+              <div class="payment-methods flex w-full flex-col gap-2">
+                <div class="methods-icons flex-y-center gap-3">
+                  <div class="flex h-8 w-8 items-center justify-center rounded-full bg-[--left-item-bg-color]">
+                    <i-material-symbols-live-tv style="font-size: 20px" class="text-blue-400" />
                   </div>
                   <div class="text-xs text-[--user-text-color]">直播专属支付方式</div>
                 </div>
@@ -551,10 +550,10 @@
             </div>
           </div>
 
-          <div class="recharge-footer p-4 bg-[--bg-popover] border-t border-[--line-color] mt-4">
+          <div class="recharge-footer mt-4 border-t border-[--line-color] bg-[--bg-popover] p-4">
             <button
-              @click="handleRechargeSubmit"
-              class="w-full bg-gradient-to-r from-orange-500 to-red-500 text-white font-bold py-3 px-4 rounded-lg hover:from-orange-600 hover:to-red-600 transition-all duration-200 transform hover:scale-105 shadow-lg">
+              class="w-full transform rounded-lg bg-gradient-to-r from-orange-500 to-red-500 px-4 py-3 font-bold text-white shadow-lg transition-all duration-200 hover:scale-105 hover:from-orange-600 hover:to-red-600"
+              @click="handleRechargeSubmit">
               充值
             </button>
           </div>
@@ -564,34 +563,34 @@
 
     <div
       v-if="!chatCollapsed"
-      class="chat-container w-1/4 h-full bg-[--right-bg-color] border-l border-[--line-color] flex flex-col transition-all duration-300 ease-in-out">
-      <div class="chat-header flex items-center justify-between p-3 border-b border-[--line-color] overflow-hidden">
-        <div class="flex items-center gap-2 whitespace-nowrap overflow-hidden flex-1">
-          <i-mdi-account-group class="text-[--action-bar-icon-color] flex-shrink-0" />
-          <span class="text-[--text-color] font-medium whitespace-nowrap truncate">在线观众 · {{ audienceCount }}</span>
-          <i-mdi-information-outline class="text-[--user-text-color] text-xs flex-shrink-0" />
+      class="chat-container flex h-full w-1/4 flex-col border-l border-[--line-color] bg-[--right-bg-color] transition-all duration-300 ease-in-out">
+      <div class="chat-header flex-between-center overflow-hidden border-b border-[--line-color] p-3">
+        <div class="flex flex-1 items-center gap-2 overflow-hidden whitespace-nowrap">
+          <i-mdi-account-group class="flex-shrink-0 text-[--action-bar-icon-color]" />
+          <span class="truncate font-medium whitespace-nowrap text-[--text-color]">在线观众 · {{ audienceCount }}</span>
+          <i-mdi-information-outline class="flex-shrink-0 text-xs text-[--user-text-color]" />
         </div>
         <div
-          @click="toggleChat"
-          class="w-8 h-8 rounded-full bg-[--left-item-bg-color] flex items-center justify-center text-[--action-bar-icon-color] hover:bg-[--action-bar-icon-hover] transition-colors cursor-pointer flex-shrink-0">
-          <i-mdi-chevron-left class="w-5 h-5" />
+          class="flex h-8 w-8 flex-shrink-0 cursor-pointer items-center justify-center rounded-full bg-[--left-item-bg-color] text-[--action-bar-icon-color] transition-colors hover:bg-[--action-bar-icon-hover]"
+          @click="toggleChat">
+          <i-mdi-chevron-left class="h-5 w-5" />
         </div>
       </div>
 
       <chat-panel :audience-list="audienceList" :chat-messages="chatMessages" @send-message="handleSendMessage">
         <template #user-info-card>
           <div
-            class="user-info-content flex items-center justify-between p-2 bg-[--bg-popover] backdrop-blur-md border-b border-[--line-color]">
-            <div class="flex items-center gap-2">
-              <div class="w-8 h-8 rounded-full overflow-hidden">
-                <img src="https://picsum.photos/id/1027/100/100" alt="用户头像" class="w-full h-full object-cover" />
+            class="user-info-content flex-between-center border-b border-[--line-color] bg-[--bg-popover] p-2 backdrop-blur-md">
+            <div class="flex-y-center gap-2">
+              <div class="h-8 w-8 overflow-hidden rounded-full">
+                <img src="https://picsum.photos/id/1027/100/100" alt="用户头像" class="h-full w-full object-cover" />
               </div>
               <div>
-                <div class="text-[--text-color] text-sm font-medium">元渊</div>
-                <div class="text-[--user-text-color] text-xs">Lv.12</div>
+                <div class="text-sm font-medium text-[--text-color]">元渊</div>
+                <div class="text-xs text-[--user-text-color]">Lv.12</div>
               </div>
             </div>
-            <div class="text-[--user-text-color] text-xs">0</div>
+            <div class="text-xs text-[--user-text-color]">0</div>
           </div>
         </template>
       </chat-panel>
@@ -601,7 +600,7 @@
     v-model:show="customAmountInputVisible"
     :initial-value="confirmedCustomPrice"
     @confirm="handleCustomAmountConfirm" />
-  <live-report-dialog v-model:show="showReportDialog" room-id="1001" @submit-report="handleLiveReport" />
+  <live-report-dialog room-id="1001" v-model:show="showReportDialog" @submit-report="handleLiveReport" />
 </template>
 
 <script setup lang="ts">
@@ -1151,8 +1150,8 @@ const createGiftAnimation = (gift: any, amount: number) => {
   const animationEl = document.createElement("div");
   animationEl.className = "gift-animation-item absolute";
   animationEl.innerHTML = `
-    <div class="gift-animation-content flex items-center gap-2 bg-black/50 backdrop-blur-sm px-3 py-1 rounded-full">
-      <div class="gift-icon w-6 h-6 rounded-full bg-white/10 flex items-center justify-center">
+    <div class="gift-animation-content flex-y-center gap-2 bg-black/50 backdrop-blur-sm px-3 py-1 rounded-full">
+      <div class="gift-icon w-6 h-6 rounded-full bg-white/10 flex-center">
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-white">
           <path d="${gift.path}"/>
         </svg>

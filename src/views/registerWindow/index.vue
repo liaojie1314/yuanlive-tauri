@@ -1,43 +1,42 @@
 <template>
   <n-config-provider
-    :theme="naiveTheme"
     data-tauri-drag-region
-    class="login-box size-full rounded-8px select-none flex flex-col">
+    class="login-box rounded-8px flex size-full flex-col select-none"
+    :theme="naiveTheme">
     <!--顶部操作栏-->
     <action-bar :max-w="false" />
 
-    <n-flex vertical justify="center" :size="25" class="w-full mt--40px flex-1 pointer-events-none">
+    <n-flex vertical justify="center" class="mt--40px pointer-events-none w-full flex-1" :size="25">
       <!-- 注册菜单 -->
-      <n-flex class="ma text-center w-260px pointer-events-auto" vertical :size="16">
+      <n-flex vertical class="ma w-260px pointer-events-auto text-center" :size="16">
         <n-flex justify="center" align="center">
           <span class="text-(24px #70938c) textFont">{{ t("auth.register.title") }}</span>
-          <img class="w-100px h-40px" src="/vite.svg" alt="" />
+          <img src="/vite.svg" alt="" class="w-100px h-40px" />
         </n-flex>
-        <n-form :model="info" :rules="rules" ref="registerForm">
+        <n-form ref="registerForm" :model="info" :rules="rules">
           <!-- 注册信息 -->
           <div>
             <n-form-item path="name">
               <n-input
-                :class="[{ 'pr-20px': info.username }, { 'pr-16px': showNamePrefix && !info.username }]"
                 maxlength="8"
                 minlength="1"
                 size="large"
-                v-model:value="info.username"
                 type="text"
                 spellCheck="false"
                 autoComplete="off"
                 autoCorrect="off"
                 autoCapitalize="off"
+                clearable
+                v-model:value="info.username"
+                :class="[{ 'pr-20px': info.username }, { 'pr-16px': showNamePrefix && !info.username }]"
                 :allow-input="noSideSpace"
                 :placeholder="showNamePrefix ? '' : t('auth.register.placeholders.nickname')"
                 @focus="handleInputState($event, 'nickName')"
-                @blur="handleInputState($event, 'nickName')"
-                clearable />
+                @blur="handleInputState($event, 'nickName')" />
             </n-form-item>
 
             <n-form-item path="password">
               <n-input
-                :class="{ 'pl-16px': !showPasswordPrefix && !info.password }"
                 maxlength="16"
                 minlength="6"
                 size="large"
@@ -46,18 +45,18 @@
                 autoCorrect="off"
                 autoCapitalize="off"
                 show-password-on="click"
-                v-model:value="info.password"
                 type="password"
+                clearable
+                v-model:value="info.password"
+                :class="{ 'pl-16px': !showPasswordPrefix && !info.password }"
                 :allow-input="noSideSpace"
                 :placeholder="showPasswordPrefix ? '' : t('auth.register.placeholders.password')"
                 @focus="handleInputState($event, 'password')"
-                @blur="handleInputState($event, 'password')"
-                clearable />
+                @blur="handleInputState($event, 'password')" />
             </n-form-item>
 
             <n-form-item path="confirmPassword">
               <n-input
-                :class="{ 'pl-16px': !showConfirmPasswordPrefix && !confirmPassword }"
                 maxlength="16"
                 minlength="6"
                 size="large"
@@ -66,29 +65,30 @@
                 autoCorrect="off"
                 autoCapitalize="off"
                 show-password-on="click"
-                v-model:value="confirmPassword"
                 type="password"
+                clearable
+                v-model:value="confirmPassword"
+                :class="{ 'pl-16px': !showConfirmPasswordPrefix && !confirmPassword }"
                 :allow-input="noSideSpace"
                 :placeholder="showConfirmPasswordPrefix ? '' : t('auth.register.placeholders.confirmPassword')"
                 @focus="handleInputState($event, 'confirmPassword')"
-                @blur="handleInputState($event, 'confirmPassword')"
-                clearable />
+                @blur="handleInputState($event, 'confirmPassword')" />
             </n-form-item>
 
             <n-form-item path="email">
               <n-auto-complete
                 size="large"
-                v-model:value="info.email"
-                :placeholder="showEmailPrefix ? '' : t('auth.register.placeholders.email')"
-                :options="commonEmailDomains"
-                :get-show="getShow"
-                :append="true"
                 clearable
                 type="text"
                 spellCheck="false"
                 autoComplete="off"
                 autoCorrect="off"
                 autoCapitalize="off"
+                v-model:value="info.email"
+                :placeholder="showEmailPrefix ? '' : t('auth.register.placeholders.email')"
+                :options="commonEmailDomains"
+                :get-show="getShow"
+                :append="true"
                 @focus="handleInputState($event, 'email')"
                 @blur="handleInputState($event, 'email')" />
             </n-form-item>
@@ -112,9 +112,9 @@
             </n-flex>
 
             <!-- 协议 -->
-            <n-flex align="center" justify="center" :size="6" class="mt-10px">
+            <n-flex align="center" justify="center" class="mt-10px" :size="6">
               <n-checkbox v-model:checked="protocol" />
-              <div class="text-12px color-#909090 cursor-default lh-14px">
+              <div class="text-12px color-#909090 lh-14px cursor-default">
                 <span>{{ t("auth.agreement.text1") }}</span>
                 <span class="color-#13987f cursor-pointer">
                   {{ t("auth.agreement.text2") }}
@@ -129,11 +129,11 @@
         </n-form>
 
         <n-button
-          :loading="loading"
-          :disabled="btnDisabled"
           tertiary
           style="color: #fff"
-          class="w-full mt-8px gradient-button"
+          class="mt-8px gradient-button w-full"
+          :loading="loading"
+          :disabled="btnDisabled"
           @click="handleStepAction">
           {{ btnText }}
         </n-button>
@@ -145,36 +145,36 @@
 
     <!-- 底部栏 -->
     <n-flex
-      class="text-(12px #909090) w-full absolute bottom-20px left-1/2 transform -translate-x-1/2"
-      :size="8"
-      justify="center">
+      justify="center"
+      class="text-(12px #909090) bottom-20px absolute left-1/2 w-full -translate-x-1/2 transform"
+      :size="8">
       <span>Copyright {{ currentYear - 1 }}-{{ currentYear }} YuanLive All Rights Reserved.</span>
     </n-flex>
 
     <!-- 邮箱验证码输入弹窗 -->
-    <n-modal v-model:show="emailCodeModal" :mask-closable="false" class="rounded-8px" transform-origin="center">
-      <div class="bg-#f0f0f0 w-380px h-fit box-border flex flex-col">
-        <svg @click="emailCodeModal = false" class="w-12px h-12px ml-a mr-4px mt-4px cursor-pointer select-none">
+    <n-modal transform-origin="center" class="rounded-8px" v-model:show="emailCodeModal" :mask-closable="false">
+      <div class="bg-#f0f0f0 w-380px box-border flex h-fit flex-col">
+        <svg class="w-12px h-12px ml-a mr-4px mt-4px cursor-pointer select-none" @click="emailCodeModal = false">
           <use href="#close"></use>
         </svg>
-        <n-flex vertical class="w-full h-fit">
-          <n-flex vertical :size="10" class="p-24px">
+        <n-flex vertical class="h-fit w-full">
+          <n-flex vertical class="p-24px" :size="10">
             <p class="text-(16px #303030) mb-10px">{{ t("auth.register.emailModal.title") }}</p>
-            <p class="text-(12px #808080) leading-5 mb-10px">
+            <p class="text-(12px #808080) mb-10px leading-5">
               {{ t("auth.register.emailModal.desc", { email: info.email }) }}
             </p>
 
             <!-- PIN 输入框 -->
             <div class="mb-20px">
-              <pin-input v-model="emailCode" @complete="register" ref="pinInputRef" />
+              <pin-input ref="pinInputRef" v-model="emailCode" @complete="register" />
             </div>
 
             <n-button
-              :loading="registerLoading"
-              :disabled="!isEmailCodeComplete"
               tertiary
               style="color: #fff"
-              class="w-full gradient-button"
+              class="gradient-button w-full"
+              :loading="registerLoading"
+              :disabled="!isEmailCodeComplete"
               @click="register">
               {{ t("auth.register.actions.submit") }}
             </n-button>

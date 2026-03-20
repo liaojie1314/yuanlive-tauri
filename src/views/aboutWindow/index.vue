@@ -1,28 +1,28 @@
 <template>
   <main class="login-box size-full overflow-hidden select-none">
     <action-bar :max-w="false" />
-    <n-flex vertical align="center" :size="20" class="size-full pt-100px" data-tauri-drag-region>
-      <div @mousemove="handleMouseMove" @mouseleave="handleMouseLeave" class="box" data-tauri-drag-region>
-        <div id="computer" class="computer" v-once>
-          <img class="w-224px! h-158px! relative" src="@/assets/img/win.png" alt="" />
+    <n-flex vertical align="center" data-tauri-drag-region class="pt-100px size-full" :size="20">
+      <div data-tauri-drag-region class="box" @mousemove="handleMouseMove" @mouseleave="handleMouseLeave">
+        <div id="computer" v-once class="computer">
+          <img src="@/assets/img/win.png" alt="" class="w-224px! h-158px! relative" />
           <div
             style="background: rgba(111, 111, 111, 0.1)"
-            class="w-170px h-113px absolute top-9% left-51% transform -translate-x-51% -translate-y-9%"></div>
+            class="w-170px h-113px top-9% left-51% -translate-x-51% -translate-y-9% absolute transform"></div>
           <img
-            class="drop-shadow-md absolute top-30% left-1/2 transform -translate-x-1/2 -translate-y-30% w-140px h-60px"
             src="/vite.svg"
-            alt="" />
+            alt=""
+            class="top-30% -translate-y-30% w-140px h-60px absolute left-1/2 -translate-x-1/2 transform drop-shadow-md" />
         </div>
       </div>
 
-      <n-flex vertical align="center" :size="20" class="cursor-default" data-tauri-drag-region>
+      <n-flex vertical align="center" data-tauri-drag-region class="cursor-default" :size="20">
         <span class="text-(15px #707070)">
           {{ t("home.about.version", { version: _pkg.version, arch: osArch || "" }) }}
         </span>
         <span class="text-(15px #707070)">
           {{ t("home.about.device", { type: osType || "", version: osVersion || "" }) }}
         </span>
-        <n-flex vertical class="text-(12px #909090)" :size="8" align="center">
+        <n-flex vertical align="center" class="text-(12px #909090)" :size="8">
           <span>
             {{ t("home.about.copyright", { start: currentYear - 1, end: currentYear }) }}
           </span>

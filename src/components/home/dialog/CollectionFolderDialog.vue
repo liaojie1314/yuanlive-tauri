@@ -1,16 +1,16 @@
 <template>
-  <base-dialog v-model:show="dialogVisible" :title="$t('dialog.collectionFolder.title')" width="400px">
+  <base-dialog width="400px" v-model:show="dialogVisible" :title="$t('dialog.collectionFolder.title')">
     <div class="new-folder-dialog">
       <div class="dialog-content">
         <div class="input-group">
           <n-input
-            v-model:value="folderName"
             type="text"
-            :placeholder="$t('dialog.collectionFolder.placeholder', { count: maxNameLength })"
-            :maxlength="maxNameLength"
             show-count
             clearable
             class="border-(1px solid #90909080)"
+            v-model:value="folderName"
+            :placeholder="$t('dialog.collectionFolder.placeholder', { count: maxNameLength })"
+            :maxlength="maxNameLength"
             @input="handleInput" />
           <div v-if="folderName.length === 0" class="error-message">
             {{ $t("dialog.collectionFolder.inputMessage") }}
@@ -32,7 +32,7 @@
         <n-button strong secondary @click="handleCancel">
           {{ $t("components.common.cancel") }}
         </n-button>
-        <n-button type="primary" @click="handleConfirm" :disabled="!isFormValid" class="confirm-btn-style">
+        <n-button type="primary" class="confirm-btn-style" :disabled="!isFormValid" @click="handleConfirm">
           {{ $t("components.common.confirm") }}
         </n-button>
       </div>

@@ -1,28 +1,28 @@
 <template>
   <n-config-provider :theme="naiveTheme">
-    <main class="h-screen w-full flex flex-col overflow-hidden bg-[--right-bg-color] select-none">
-      <action-bar :max-w="false" class="shrink-0" />
-      <n-scrollbar class="flex-1" content-class="p-6">
+    <main class="flex h-screen w-full flex-col overflow-hidden bg-[--right-bg-color] select-none">
+      <action-bar class="shrink-0" :max-w="false" />
+      <n-scrollbar content-class="p-6" class="flex-1">
         <n-flex vertical :size="24">
           <div
-            class="text-(13px #666) leading-relaxed bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg border border-blue-100 dark:border-blue-800">
+            class="text-(13px #666) rounded-lg border border-blue-100 bg-blue-50 p-3 leading-relaxed dark:border-blue-800 dark:bg-blue-900/20">
             {{ t("feedback.intro") }}
           </div>
           <n-form
             ref="formRef"
-            :model="formModel"
-            :rules="rules"
             label-placement="top"
-            require-mark-placement="right-hanging">
-            <n-form-item :label="t('feedback.type.title')" path="type">
-              <n-radio-group v-model:value="formModel.type" name="feedbackType" class="w-full">
+            require-mark-placement="right-hanging"
+            :model="formModel"
+            :rules="rules">
+            <n-form-item path="type" :label="t('feedback.type.title')">
+              <n-radio-group name="feedbackType" class="w-full" v-model:value="formModel.type">
                 <n-grid :cols="4" :x-gap="10">
                   <n-grid-item v-for="item in ['bug', 'lag', 'suggestion', 'other']" :key="item">
                     <div
-                      class="bg-[var(--bg-setting-item)] cursor-pointer rounded-md text-center py-2 transition-all duration-200 text-12px select-none"
+                      class="text-12px cursor-pointer rounded-md bg-[var(--bg-setting-item)] py-2 text-center transition-all duration-200 select-none"
                       :class="[
                         formModel.type === item
-                          ? 'text-emerald-600 font-medium shadow-sm'
+                          ? 'font-medium text-emerald-600 shadow-sm'
                           : 'text-gray-500 hover:border-gray-300'
                       ]"
                       @click="formModel.type = item">
@@ -39,33 +39,33 @@
                 </n-grid>
               </n-radio-group>
             </n-form-item>
-            <n-form-item :label="t('feedback.content')" path="content">
+            <n-form-item path="content" :label="t('feedback.content')">
               <n-input
-                v-model:value="formModel.content"
                 type="textarea"
-                :placeholder="t('feedback.placeholder')"
-                :autosize="{ minRows: 4, maxRows: 6 }"
                 maxlength="500"
                 show-count
-                class="w-full border-(1px solid #90909080)" />
+                class="border-(1px solid #90909080) w-full"
+                v-model:value="formModel.content"
+                :placeholder="t('feedback.placeholder')"
+                :autosize="{ minRows: 4, maxRows: 6 }" />
             </n-form-item>
-            <n-form-item :label="t('feedback.images', { count: imageCounts })" path="images">
+            <n-form-item path="images" :label="t('feedback.images', { count: imageCounts })">
               <n-upload
-                v-model:file-list="fileList"
                 list-type="image-card"
-                :max="imageCounts"
                 accept=".jpg,.png,.jpeg,.log"
+                v-model:file-list="fileList"
+                :max="imageCounts"
                 :custom-request="customUpload"
                 @before-upload="beforeUpload" />
             </n-form-item>
-            <n-form-item :label="t('feedback.contact')" path="contact">
+            <n-form-item path="contact" :label="t('feedback.contact')">
               <n-input
+                class="border-(1px solid #90909080)"
                 v-model:value="formModel.contact"
-                :placeholder="t('feedback.contactPlaceholder')"
-                class="border-(1px solid #90909080)" />
+                :placeholder="t('feedback.contactPlaceholder')" />
             </n-form-item>
           </n-form>
-          <n-collapse arrow-placement="right" class="rounded-md" style="border: 1px solid var(--disabled-color)">
+          <n-collapse arrow-placement="right" style="border: 1px solid var(--disabled-color)" class="rounded-md">
             <n-collapse-item name="1" class="p-1">
               <template #header>
                 <span class="text-13px font-medium">{{ t("feedback.deviceInfo") }}</span>
@@ -73,20 +73,20 @@
               <template #header-extra>
                 <span class="text-(12px #999) mr-2">{{ t("feedback.deviceInfoDesc") }}</span>
               </template>
-              <div class="px-4 pb-4 grid gap-2 font-mono leading-tight">
+              <div class="grid gap-2 px-4 pb-4 font-mono leading-tight">
                 <div class="flex justify-between border-b pb-1">
                   <span class="text-[var(--text-color)]">App Version</span>
                   <span class="text-[var(--left-text-color)]">{{ deviceInfo.appVersion }}</span>
                 </div>
                 <div class="flex justify-between pb-1">
                   <span class="text-[var(--text-color)]">OS</span>
-                  <span class="text-[var(--left-text-color)] text-right">
+                  <span class="text-right text-[var(--left-text-color)]">
                     {{ deviceInfo.osType }} {{ deviceInfo.osVersion }}
                   </span>
                 </div>
-                <div class="flex flex-col gap-1 mt-1">
+                <div class="mt-1 flex flex-col gap-1">
                   <span class="text-[var(--text-color)]">Webview / UserAgent</span>
-                  <div class="text-[var(--left-text-color)] p-1 rounded text-[12px] break-all select-text">
+                  <div class="rounded p-1 text-[12px] break-all text-[var(--left-text-color)] select-text">
                     {{ deviceInfo.webviewVersion }}
                   </div>
                 </div>
@@ -96,11 +96,11 @@
         </n-flex>
       </n-scrollbar>
 
-      <footer class="shrink-0 px-6 py-4 border-t backdrop-blur flex justify-end gap-3 z-10">
-        <n-button @click="closeWindow" ghost>
+      <footer class="z-10 flex shrink-0 justify-end gap-3 border-t px-6 py-4 backdrop-blur">
+        <n-button ghost @click="closeWindow">
           {{ t("components.common.cancel") }}
         </n-button>
-        <n-button type="primary" :loading="loading" @click="submitFeedback" class="px-6">
+        <n-button type="primary" class="px-6" :loading="loading" @click="submitFeedback">
           {{ t("components.common.confirm") }}
         </n-button>
       </footer>

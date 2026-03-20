@@ -10,5 +10,7 @@
   "bracketSameLine": true,
   "endOfLine": "lf",
   "vueIndentScriptAndStyle": false,
-  "htmlWhitespaceSensitivity": "ignore"
+  "htmlWhitespaceSensitivity": "ignore",
+  "plugins": ["prettier-plugin-tailwindcss", "prettier-plugin-organize-attributes"],
+  "attributeGroups": ["$FOR", "$IF", "$DEFAULT", "$CLASS", "$STYLE", "^v-model", "^:", "^@", "$REF"]
 }

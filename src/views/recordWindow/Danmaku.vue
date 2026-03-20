@@ -1,6 +1,6 @@
 <template>
   <main
-    class="size-full select-none bg-[--right-bg-color] text-[--text-color] overflow-hidden flex flex-col transition-colors duration-300">
+    class="flex size-full flex-col overflow-hidden bg-[--right-bg-color] text-[--text-color] transition-colors duration-300 select-none">
     <action-bar />
     <chat-panel
       :audience-list="audienceList"

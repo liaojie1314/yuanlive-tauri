@@ -3,18 +3,18 @@
     <!-- 全局快捷键总开关 -->
     <n-flex vertical class="text-(14px [--text-color])" :size="16">
       <span class="pl-10px">{{ t("setting.shortcut.globalShortcutTitle") }}</span>
-      <n-flex class="item" align="center" justify="space-between">
+      <n-flex align="center" justify="space-between" class="item">
         <n-flex vertical :size="8">
           <span>{{ t("setting.shortcut.enableGlobalShortcuts") }}</span>
           <span class="text-(12px #909090)">{{ t("setting.shortcut.enableGlobalShortcutsHint") }}</span>
         </n-flex>
-        <n-switch v-model:value="globalShortcutEnabled" @update:value="handleGlobalShortcutToggle" size="small" />
+        <n-switch size="small" v-model:value="globalShortcutEnabled" @update:value="handleGlobalShortcutToggle" />
       </n-flex>
     </n-flex>
     <!-- 截图快捷键设置 -->
     <n-flex vertical class="text-(14px [--text-color])" :size="16">
       <span class="pl-10px">{{ t("setting.shortcut.functionTitle") }}</span>
-      <n-flex class="item" :size="12" vertical>
+      <n-flex vertical class="item" :size="12">
         <!-- 截图快捷键 -->
         <n-flex align="center" justify="space-between">
           <n-flex vertical :size="8">
@@ -22,16 +22,16 @@
             <span class="text-(12px #909090)">{{ t("setting.shortcut.screenshotHint") }}</span>
           </n-flex>
           <n-flex align="center" :size="12">
-            <n-tag v-if="shortcutRegistered !== null" :type="shortcutRegistered ? 'success' : 'error'" size="small">
+            <n-tag v-if="shortcutRegistered !== null" size="small" :type="shortcutRegistered ? 'success' : 'error'">
               {{ shortcutRegistered ? t("setting.shortcut.bound") : t("setting.shortcut.unbound") }}
             </n-tag>
             <n-input
-              :value="screenshotShortcutDisplay"
-              :placeholder="screenshotShortcutDisplay"
               style="width: 130px"
-              class="border-(1px solid #90909080)"
               readonly
               size="small"
+              class="border-(1px solid #90909080)"
+              :value="screenshotShortcutDisplay"
+              :placeholder="screenshotShortcutDisplay"
               :disabled="!globalShortcutEnabled"
               @keydown="handleShortcutInput"
               @focus="handleScreenshotFocus"
@@ -40,9 +40,9 @@
                 <n-tooltip trigger="hover">
                   <template #trigger>
                     <svg
-                      @click="resetScreenshotShortcut"
                       class="size-14px"
-                      :class="globalShortcutEnabled ? 'cursor-pointer' : 'cursor-not-allowed opacity-50'">
+                      :class="globalShortcutEnabled ? 'cursor-pointer' : 'cursor-not-allowed opacity-50'"
+                      @click="resetScreenshotShortcut">
                       <use href="#return"></use>
                     </svg>
                   </template>
@@ -52,7 +52,7 @@
             </n-input>
           </n-flex>
         </n-flex>
-        <span class="w-full h-1px bg-[--line-color]"></span>
+        <span class="h-1px w-full bg-[--line-color]"></span>
         <!-- 颜色选择器快捷键 -->
         <n-flex align="center" justify="space-between">
           <n-flex vertical :size="8">
@@ -62,8 +62,8 @@
           <n-flex align="center" :size="12">
             <n-tag
               v-if="shortcutConfigs.colorPicker.isRegistered.value !== null"
-              :type="shortcutConfigs.colorPicker.isRegistered.value ? 'success' : 'error'"
-              size="small">
+              size="small"
+              :type="shortcutConfigs.colorPicker.isRegistered.value ? 'success' : 'error'">
               {{
                 shortcutConfigs.colorPicker.isRegistered.value
                   ? t("setting.shortcut.bound")
@@ -71,12 +71,12 @@
               }}
             </n-tag>
             <n-input
-              :value="colorPickerShortcutDisplay"
-              :placeholder="colorPickerShortcutDisplay"
               style="width: 130px"
-              class="border-(1px solid #90909080)"
               readonly
               size="small"
+              class="border-(1px solid #90909080)"
+              :value="colorPickerShortcutDisplay"
+              :placeholder="colorPickerShortcutDisplay"
               :disabled="!globalShortcutEnabled"
               @keydown="handleColorPickerShortcutInput"
               @focus="handleColorPickerFocus"
@@ -85,9 +85,9 @@
                 <n-tooltip trigger="hover">
                   <template #trigger>
                     <svg
-                      @click="resetColorPickerShortcut"
                       class="size-14px"
-                      :class="globalShortcutEnabled ? 'cursor-pointer' : 'cursor-not-allowed opacity-50'">
+                      :class="globalShortcutEnabled ? 'cursor-pointer' : 'cursor-not-allowed opacity-50'"
+                      @click="resetColorPickerShortcut">
                       <use href="#return"></use>
                     </svg>
                   </template>
@@ -97,7 +97,7 @@
             </n-input>
           </n-flex>
         </n-flex>
-        <span class="w-full h-1px bg-[--line-color]"></span>
+        <span class="h-1px w-full bg-[--line-color]"></span>
         <!-- 打开主面板快捷键 -->
         <n-flex align="center" justify="space-between">
           <n-flex vertical :size="8">
@@ -107,17 +107,17 @@
           <n-flex align="center" :size="12">
             <n-tag
               v-if="openMainPanelShortcutRegistered !== null"
-              :type="openMainPanelShortcutRegistered ? 'success' : 'error'"
-              size="small">
+              size="small"
+              :type="openMainPanelShortcutRegistered ? 'success' : 'error'">
               {{ openMainPanelShortcutRegistered ? t("setting.shortcut.bound") : t("setting.shortcut.unbound") }}
             </n-tag>
             <n-input
-              :value="openMainPanelShortcutDisplay"
-              :placeholder="openMainPanelShortcutDisplay"
               style="width: 130px"
-              class="border-(1px solid #90909080)"
               readonly
               size="small"
+              class="border-(1px solid #90909080)"
+              :value="openMainPanelShortcutDisplay"
+              :placeholder="openMainPanelShortcutDisplay"
               :disabled="!globalShortcutEnabled"
               @keydown="handleOpenMainPanelShortcutInput"
               @focus="handleOpenMainPanelFocus"
@@ -126,9 +126,9 @@
                 <n-tooltip trigger="hover">
                   <template #trigger>
                     <svg
-                      @click="resetOpenMainPanelShortcut"
                       class="size-14px"
-                      :class="globalShortcutEnabled ? 'cursor-pointer' : 'cursor-not-allowed opacity-50'">
+                      :class="globalShortcutEnabled ? 'cursor-pointer' : 'cursor-not-allowed opacity-50'"
+                      @click="resetOpenMainPanelShortcut">
                       <use href="#return"></use>
                     </svg>
                   </template>
@@ -144,17 +144,17 @@
     <!-- 消息快捷键设置 -->
     <n-flex vertical class="text-(14px [--text-color])" :size="16">
       <span class="pl-10px">{{ t("setting.shortcut.messageTitle") }}</span>
-      <n-flex class="item" align="center" justify="space-between">
+      <n-flex align="center" justify="space-between" class="item">
         <n-flex vertical :size="8">
           <span>{{ t("setting.shortcut.sendMessageShortcut") }}</span>
           <span class="text-(12px #909090)">{{ t("setting.shortcut.sendMessageShortcutHint") }}</span>
         </n-flex>
         <n-flex align="center" :size="12">
           <n-select
-            v-model:value="sendMessageShortcut"
-            class="w-200px"
             size="small"
             label-field="label"
+            class="w-200px"
+            v-model:value="sendMessageShortcut"
             :options="sendOptions"
             @blur="handleSendMessageBlur" />
         </n-flex>
@@ -619,7 +619,7 @@ onMounted(async () => {
 
 <style scoped lang="scss">
 .item {
-  @apply bg-[--bg-setting-item] rounded-12px size-full p-12px box-border border-(solid 1px [--line-color]) custom-shadow;
+  @apply rounded-12px p-12px border-(solid 1px [--line-color]) custom-shadow box-border size-full bg-[--bg-setting-item];
 }
 
 :deep(.n-input.n-input--focus) {

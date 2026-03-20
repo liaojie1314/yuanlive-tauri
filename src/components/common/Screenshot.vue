@@ -7,7 +7,7 @@
       <canvas ref="magnifierCanvas"></canvas>
     </div>
     <!-- 选区拖动区域 -->
-    <div ref="selectionArea" class="selection-area" v-show="showButtonGroup" :style="selectionAreaStyle">
+    <div ref="selectionArea" v-show="showButtonGroup" class="selection-area" :style="selectionAreaStyle">
       <!-- 内部拖动区域 -->
       <div
         :class="['drag-area', currentDrawTool ? 'cannot-drag' : 'can-drag']"
@@ -56,12 +56,12 @@
       <!-- 圆角控制器 -->
       <div class="border-radius-controller" :style="borderRadiusControllerStyle" @click.stop>
         <label>{{ t("components.screenshot.borderRadius") }}:</label>
-        <input type="range" :value="borderRadius" @input="handleBorderRadiusChange" min="0" max="100" step="1" />
+        <input type="range" min="0" max="100" step="1" :value="borderRadius" @input="handleBorderRadiusChange" />
         <span>{{ borderRadius }}px</span>
       </div>
     </div>
 
-    <div ref="buttonGroup" class="button-group" v-show="showButtonGroup && !isDragging && !isResizing">
+    <div ref="buttonGroup" v-show="showButtonGroup && !isDragging && !isResizing" class="button-group">
       <span
         :class="{ active: currentDrawTool === 'rect' }"
         :title="t('components.screenshot.toolRect')"

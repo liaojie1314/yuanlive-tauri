@@ -1,7 +1,7 @@
 <template>
-  <main class="size-full flex select-none overflow-hidden">
+  <main class="flex size-full overflow-hidden select-none">
     <!-- 侧边栏选项 -->
-    <section class="left-bar" data-tauri-drag-region>
+    <section data-tauri-drag-region class="left-bar">
       <div class="menu-list relative">
         <div v-for="(item, index) in sideOptions" :key="index">
           <div class="menu-item" :class="{ active: activeItem === item.url }" @click="pageJumps(item.url)">
@@ -13,7 +13,7 @@
         </div>
       </div>
 
-      <div class="absolute bottom-20px left-60px select-none cursor-default flex items-center gap-10px">
+      <div class="bottom-20px left-60px gap-10px absolute flex cursor-default items-center select-none">
         <p class="text-(12px #666)">{{ t("setting.common.providerLabel") }}:</p>
         <a
           target="_blank"
@@ -26,22 +26,22 @@
     </section>
 
     <!-- 右边内容 -->
-    <section class="bg-[--right-bg-color] relative rounded-r-8px flex-1 border-l-(1px solid [--line-color])">
+    <section class="rounded-r-8px border-l-(1px solid [--line-color]) relative flex-1 bg-[--right-bg-color]">
       <action-bar :max-w="true" />
-      <header class="header" data-tauri-drag-region>
+      <header data-tauri-drag-region class="header">
         {{ title }}
       </header>
       <n-scrollbar
         style="max-height: calc(100vh - 70px)"
-        :class="{ 'shadow-inner': page.shadow }"
-        data-tauri-drag-region>
-        <n-flex vertical class="p-24px" :size="12" justify="center" v-if="skeleton">
-          <n-skeleton class="rounded-8px" height="26px" text style="width: 30%" />
-          <n-skeleton class="rounded-8px" height="26px" text :repeat="5" />
-          <n-skeleton class="rounded-8px" height="26px" text style="width: 60%" />
+        data-tauri-drag-region
+        :class="{ 'shadow-inner': page.shadow }">
+        <n-flex vertical justify="center" v-if="skeleton" class="p-24px" :size="12">
+          <n-skeleton height="26px" text style="width: 30%" class="rounded-8px" />
+          <n-skeleton height="26px" text class="rounded-8px" :repeat="5" />
+          <n-skeleton height="26px" text style="width: 60%" class="rounded-8px" />
         </n-flex>
         <template v-else>
-          <div class="flex-1 p-24px"><router-view /></div>
+          <div class="p-24px flex-1"><router-view /></div>
           <Foot />
         </template>
       </n-scrollbar>
@@ -137,7 +137,7 @@ onMounted(async () => {
 }
 
 .header {
-  @apply w-full h-42px flex items-center pl-40px select-none text-18px color-[--text-color] border-b-(1px solid [--line-color]);
+  @apply h-42px pl-40px text-18px color-[--text-color] border-b-(1px solid [--line-color]) flex w-full items-center select-none;
 }
 
 .v-enter-active,

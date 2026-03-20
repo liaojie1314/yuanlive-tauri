@@ -1,29 +1,29 @@
 <template>
-  <div class="size-full bg-#000 relative flex flex-col select-none">
+  <div class="bg-#000 relative flex size-full flex-col select-none">
     <!-- 顶部操作栏 -->
     <action-bar class="bg-#000 z-9999" />
 
     <!-- 主体内容区域 -->
     <div class="flex-1 overflow-auto">
       <!-- 视频展示区域 -->
-      <div style="min-height: calc(100vh - 124px)" class="flex-center w-full h-full">
+      <div style="min-height: calc(100vh - 124px)" class="flex-center h-full w-full">
         <video
           ref="videoRef"
-          :src="currentVideo"
           controls
+          alt="preview"
+          :src="currentVideo"
           :class="videoClass"
           :style="videoStyle"
           @loadeddata="onVideoLoaded"
           @ended="onVideoEnded"
           @pause="onVideoPaused"
-          @play="onVideoPlay"
-          alt="preview" />
+          @play="onVideoPlay" />
 
         <!-- 提示文本 -->
         <transition name="viewer-tip">
           <div
             v-if="showTip"
-            class="fixed z-10 left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-black/60 px-24px py-12px rounded-8px text-(white 14px) transition-all duration-300 backdrop-blur-sm select-none flex items-center gap-8px">
+            class="px-24px py-12px rounded-8px text-(white 14px) gap-8px fixed top-1/2 left-1/2 z-10 flex -translate-x-1/2 -translate-y-1/2 items-center bg-black/60 backdrop-blur-sm transition-all duration-300 select-none">
             <svg class="size-16px"><use href="#info"></use></svg>
             {{ tipText }}
           </div>
@@ -32,14 +32,14 @@
     </div>
 
     <!-- 底部工具栏 -->
-    <div data-tauri-drag-region class="z-9999 h-50px bg-#000 flex justify-center items-center gap-20px">
+    <div data-tauri-drag-region class="h-50px bg-#000 gap-20px z-9999 flex-center">
       <!-- 上一个视频 -->
       <n-tooltip placement="top">
         <template #trigger>
           <div
-            @click="previousVideo"
             class="bottom-operation"
-            :class="canGoPrevious ? 'cursor-pointer hover:bg-gray-600/50' : 'cursor-not-allowed'">
+            :class="canGoPrevious ? 'cursor-pointer hover:bg-gray-600/50' : 'cursor-not-allowed'"
+            @click="previousVideo">
             <svg
               class="size-20px rotate-180"
               :class="canGoPrevious ? 'color-white' : 'color-gray-500 cursor-not-allowed'">
@@ -52,7 +52,7 @@
 
       <n-tooltip placement="top">
         <template #trigger>
-          <div @click="playPause" class="bottom-operation">
+          <div class="bottom-operation" @click="playPause">
             <svg class="size-20px color-white">
               <use :href="isPlaying ? '#pause-one' : '#play'"></use>
             </svg>
@@ -63,7 +63,7 @@
 
       <n-tooltip placement="top">
         <template #trigger>
-          <div @click="muteUnmute" class="bottom-operation">
+          <div class="bottom-operation" @click="muteUnmute">
             <svg class="size-20px color-white">
               <use :href="isMuted ? '#volume-mute' : '#volume-notice'"></use>
             </svg>
@@ -75,7 +75,7 @@
       <!-- 下一个视频 -->
       <n-tooltip placement="top">
         <template #trigger>
-          <div @click="nextVideo" class="bottom-operation">
+          <div class="bottom-operation" @click="nextVideo">
             <svg class="size-20px" :class="canGoNext ? 'color-white' : 'color-gray-500 cursor-not-allowed'">
               <use href="#right"></use>
             </svg>
@@ -401,7 +401,7 @@ onMounted(async () => {
 
 <style scoped>
 .bottom-operation {
-  @apply flex-center px-8px py-7px rounded-8px cursor-pointer hover:bg-gray-600/50 transition-colors duration-300;
+  @apply flex-center px-8px py-7px rounded-8px cursor-pointer transition-colors duration-300 hover:bg-gray-600/50;
 }
 
 /* 自定义滚动条样式 */
