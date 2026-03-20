@@ -7,6 +7,11 @@
   "report": {
     "submit": "Submit",
     "placeholder": "Please describe the reason for the report in detail, so that the platform can judge the violation situation",
+    "provideEvidence": "Provide Evidence",
+    "optional": "optional",
+    "msg": {
+      "maxImages": "You can upload up to {count} images"
+    },
     "danmaku": {
       "title": "Danmaku Report"
     },
@@ -15,6 +20,9 @@
     },
     "live": {
       "title": "Live Report"
+    },
+    "user": {
+      "title": "User Report"
     }
   },
   "collectionFolder": {

@@ -1,5 +1,5 @@
 <template>
-  <base-dialog v-model:show="dialogVisible" :title="title" height="400px" width="420px">
+  <base-dialog v-model:show="dialogVisible" :title="title" :height="showImageUpload ? '520px' : '400px'" width="420px">
     <template #default>
       <div class="report-container max-w-[400px] mx-auto">
         <div class="report-types">
@@ -18,16 +18,48 @@
         <div class="report-description">
           <textarea
             v-model="reportDescription"
-            :placeholder="placeholder || $t('dialog.report.placeholder')"
+            :placeholder="placeholder || t('dialog.report.placeholder')"
             maxlength="140"
             class="description-input"
             rows="4"></textarea>
           <div class="description-counter">{{ reportDescription.length }}/140</div>
         </div>
 
+        <div v-if="showImageUpload" class="image-upload-section mb-5">
+          <div class="text-sm text-[--text-color] mb-2 font-medium">
+            {{ t("dialog.report.provideEvidence") }}
+            <span class="text-[--user-text-color] font-normal text-xs">
+              ({{ t("dialog.report.optional") }}, {{ selectedImages.length }}/{{ maxImages }})
+            </span>
+          </div>
+          <div class="flex flex-wrap gap-3">
+            <!-- 图片预览列表 -->
+            <div
+              v-for="(img, index) in selectedImages"
+              :key="index"
+              class="relative w-16 h-16 rounded-md overflow-hidden border border-[--line-color] group">
+              <img :src="convertFileSrc(img)" class="w-full h-full object-cover" />
+              <!-- 删除按钮 -->
+              <div
+                class="absolute top-0 right-0 bg-black/60 text-white w-5 h-5 flex items-center justify-center rounded-bl-md cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity hover:bg-[#ff0050]"
+                @click="removeImage(index)">
+                <i-mdi-close class="w-3 h-3" />
+              </div>
+            </div>
+
+            <!-- 上传触发按钮 -->
+            <div
+              v-if="selectedImages.length < maxImages"
+              class="w-16 h-16 rounded-md border border-dashed border-[--line-color] flex flex-col items-center justify-center cursor-pointer bg-[--bg-setting-item] hover:border-[#ff0050] hover:text-[#ff0050] text-[--user-text-color] transition-colors"
+              @click="handleSelectImage">
+              <i-mdi-plus class="w-6 h-6" />
+            </div>
+          </div>
+        </div>
+
         <div class="submit-container">
           <button class="submit-btn" :disabled="!selectedReportType" @click="handleSubmit">
-            {{ submitText || $t("dialog.report.submit") }}
+            {{ submitText || t("dialog.report.submit") }}
           </button>
         </div>
       </div>
@@ -36,6 +68,12 @@
 </template>
 
 <script setup lang="ts">
+import { useI18n } from "vue-i18n";
+import { open } from "@tauri-apps/plugin-dialog";
+import { convertFileSrc } from "@tauri-apps/api/core";
+
+const { t } = useI18n();
+
 interface ReportType {
   label: string;
   value: string;
@@ -47,32 +85,76 @@ interface Props {
   reportTypes: ReportType[];
   placeholder?: string;
   submitText?: string;
+  showImageUpload?: boolean; // 是否显示图片上传
+  maxImages?: number; // 最大上传数量
 }
 
-const props = defineProps<Props>();
+// 使用 withDefaults 为新增的可选属性赋予默认值
+const props = withDefaults(defineProps<Props>(), {
+  showImageUpload: false,
+  maxImages: 4
+});
+
 const emit = defineEmits<{
   "update:show": [value: boolean];
-  submit: [type: string, description: string];
+  submit: [type: string, description: string, images: string[]];
 }>();
 
-// 选中的举报类型
 const selectedReportType = ref("");
-// 举报描述
 const reportDescription = ref("");
+// 存储选中的图片本地物理路径
+const selectedImages = ref<string[]>([]);
 
-// 双向绑定
 const dialogVisible = computed({
   get: () => props.show,
   set: (value) => emit("update:show", value)
 });
 
+/** 调用 Tauri 2 API 选择图片 */
+const handleSelectImage = async () => {
+  try {
+    const selected = await open({
+      multiple: true, // 允许多选
+      directory: false,
+      filters: [{ name: "Images", extensions: ["png", "jpeg", "jpg", "webp"] }]
+    });
+
+    if (selected) {
+      // 兼容单选和多选的返回结果
+      const paths = Array.isArray(selected) ? selected : [selected];
+      const total = selectedImages.value.length + paths.length;
+
+      if (total > props.maxImages) {
+        window.$message?.warning(t("dialog.report.msg.maxImages", { count: props.maxImages }));
+        // 截取剩余允许的数量
+        const allowed = paths.slice(0, props.maxImages - selectedImages.value.length);
+        selectedImages.value.push(...allowed);
+      } else {
+        selectedImages.value.push(...paths);
+      }
+    }
+  } catch (error) {
+    console.error("文件选择失败:", error);
+  }
+};
+
+/**
+ * 移除图片
+ * @param index 图片在列表中的索引
+ */
+const removeImage = (index: number) => {
+  selectedImages.value.splice(index, 1);
+};
+
 /** 提交举报 */
 const handleSubmit = () => {
   if (selectedReportType.value) {
-    emit("submit", selectedReportType.value, reportDescription.value);
+    emit("submit", selectedReportType.value, reportDescription.value, selectedImages.value);
+
     // 重置表单
     selectedReportType.value = "";
     reportDescription.value = "";
+    selectedImages.value = [];
     // 关闭对话框
     dialogVisible.value = false;
   }

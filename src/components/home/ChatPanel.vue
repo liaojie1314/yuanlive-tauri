@@ -42,12 +42,17 @@
                 ]">
                 {{ index + 1 }}
               </div>
-              <div class="w-8 h-8 rounded-full overflow-hidden shrink-0">
-                <img :src="user.avatar" :alt="user.name" class="w-full h-full object-cover" />
-              </div>
+              <user-info-popover :user="{ name: user.name, avatar: user.avatar, level: user.level }">
+                <div
+                  class="w-8 h-8 rounded-full overflow-hidden shrink-0 cursor-pointer border border-transparent hover:border-[#ff0050] transition-colors">
+                  <img :src="user.avatar" :alt="user.name" class="w-full h-full object-cover" />
+                </div>
+              </user-info-popover>
               <div class="flex-1 min-w-0">
                 <div class="text-[--text-color] text-sm flex items-center gap-1 min-w-0">
-                  <span class="truncate">{{ user.name }}</span>
+                  <user-info-popover :user="{ name: user.name, avatar: user.avatar, level: user.level }">
+                    <span class="truncate cursor-pointer hover:text-[#ff0050] transition-colors">{{ user.name }}</span>
+                  </user-info-popover>
                   <span
                     v-if="user.medals && user.medals.length > 0"
                     class="text-xs text-[--disabled-color] flex-shrink-0">
@@ -77,12 +82,20 @@
 
             <div v-for="(message, index) in chatMessages" :key="index" class="message-item py-2">
               <div class="flex items-start gap-2">
-                <div class="w-6 h-6 rounded-full overflow-hidden flex-shrink-0">
-                  <img :src="message.avatar" :alt="message.user" class="w-full h-full object-cover" />
-                </div>
+                <user-info-popover :user="{ name: message.user, avatar: message.avatar, level: message.level }">
+                  <div
+                    class="w-6 h-6 rounded-full overflow-hidden flex-shrink-0 cursor-pointer border border-transparent hover:border-[#ff0050] transition-colors mt-0.5">
+                    <img :src="message.avatar" :alt="message.user" class="w-full h-full object-cover" />
+                  </div>
+                </user-info-popover>
                 <div class="flex-1 min-w-0">
                   <div class="flex items-center gap-1">
-                    <span class="text-[--text-color] text-xs font-medium truncate">{{ message.user }}</span>
+                    <user-info-popover :user="{ name: message.user, avatar: message.avatar, level: message.level }">
+                      <span
+                        class="text-[--text-color] text-xs font-medium truncate cursor-pointer hover:text-[#ff0050] transition-colors">
+                        {{ message.user }}
+                      </span>
+                    </user-info-popover>
                     <span v-if="message.level" class="text-[--disabled-color] text-xs flex-shrink-0">
                       {{ message.level }}
                     </span>

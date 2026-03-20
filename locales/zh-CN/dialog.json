@@ -7,6 +7,11 @@
   "report": {
     "submit": "提交",
     "placeholder": "请详细描述举报原因，便于平台判断违规情况",
+    "provideEvidence": "提供截图证据",
+    "optional": "选填",
+    "msg": {
+      "maxImages": "最多只能上传 {count} 张图片"
+    },
     "danmaku": {
       "title": "弹幕举报"
     },
@@ -15,6 +20,9 @@
     },
     "live": {
       "title": "直播间举报"
+    },
+    "user": {
+      "title": "用户举报"
     }
   },
   "collectionFolder": {

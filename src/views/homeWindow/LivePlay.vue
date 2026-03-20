@@ -20,11 +20,20 @@
           </div>
 
           <div class="host-info flex items-center gap-3 bg-[--bg-left-menu] backdrop-blur-sm px-2 py-1 rounded-full">
-            <div class="avatar w-8 h-8 rounded-full overflow-hidden border-2 border-red-500">
-              <img src="https://picsum.photos/id/1/100/100" alt="主播头像" class="w-full h-full object-cover" />
-            </div>
+            <user-info-popover
+              :user="{ name: '千年 (万年之主)', avatar: 'https://picsum.photos/id/1/100/100', level: 'Lv.99' }">
+              <div class="avatar w-8 h-8 rounded-full overflow-hidden border-2 border-red-500 cursor-pointer">
+                <img src="https://picsum.photos/id/1/100/100" alt="主播头像" class="w-full h-full object-cover" />
+              </div>
+            </user-info-popover>
             <div class="host-info-text flex flex-col">
-              <div class="host-name text-[--text-color] font-medium">千年 (万年之主)</div>
+              <user-info-popover
+                :user="{ name: '千年 (万年之主)', avatar: 'https://picsum.photos/id/1/100/100', level: 'Lv.99' }">
+                <div
+                  class="host-name text-[--text-color] font-medium cursor-pointer hover:text-[#ff0050] transition-colors">
+                  千年 (万年之主)
+                </div>
+              </user-info-popover>
               <div class="host-stats flex items-center gap-2 text-[--user-text-color] text-xs">
                 <i-mdi-heart-outline class="w-3 h-3" />
                 <span>2.9万</span>

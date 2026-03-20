@@ -1,35 +1,34 @@
 <template>
   <report-dialog
     v-model:show="dialogVisible"
-    :title="$t('dialog.report.video.title')"
+    :title="$t('dialog.report.user.title')"
     :report-types="reportTypes"
-    :show-image-upload="true"
     @submit="handleReportSubmit" />
 </template>
 
 <script setup lang="ts">
 interface Props {
   show: boolean;
-  videoId?: number | string;
+  userId?: number | string;
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  videoId: ""
+  userId: ""
 });
 
 const emit = defineEmits<{
   "update:show": [value: boolean];
-  "submit-report": [videoId: number | string, type: string, description: string, images: string[]];
+  "submit-report": [userId: number | string, type: string, description: string];
 }>();
 
-// 视频的举报类型
+// 用户的举报类型
 const reportTypes = [
   { label: "色情低俗", value: "pornographic" },
-  { label: "违法犯罪", value: "illegal" },
-  { label: "造谣传谣", value: "rumor" },
+  { label: "违法违规", value: "illegal" },
+  { label: "欺诈骗钱", value: "fraud" },
   { label: "垃圾广告", value: "spam" },
-  { label: "侵权盗版", value: "infringement" },
-  { label: "内容引人不适", value: "discomfort" }
+  { label: "恶意骚扰/谩骂", value: "harassment" },
+  { label: "头像/昵称违规", value: "profile_violation" }
 ];
 
 const dialogVisible = computed({
@@ -38,17 +37,15 @@ const dialogVisible = computed({
 });
 
 /**
- * 处理视频举报提交
+ * 处理用户举报提交
  * @param type 举报类型
  * @param description 举报描述
- * @param images 举报图片
  */
-const handleReportSubmit = (type: string, description: string, images: string[]) => {
-  // 获取label
+const handleReportSubmit = (type: string, description: string) => {
   const reportType = reportTypes.find((item) => item.value === type);
   if (!reportType) {
     return;
   }
-  emit("submit-report", props.videoId, reportType.label, description, images);
+  emit("submit-report", props.userId, reportType.label, description);
 };
 </script>

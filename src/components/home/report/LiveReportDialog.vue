@@ -3,6 +3,7 @@
     v-model:show="dialogVisible"
     :title="$t('dialog.report.live.title')"
     :report-types="reportTypes"
+    :show-image-upload="true"
     @submit="handleReportSubmit" />
 </template>
 
@@ -18,7 +19,7 @@ const props = withDefaults(defineProps<Props>(), {
 
 const emit = defineEmits<{
   "update:show": [value: boolean];
-  "submit-report": [roomId: number | string, type: string, description: string];
+  "submit-report": [roomId: number | string, type: string, description: string, images: string[]];
 }>();
 
 // 直播间的举报类型
@@ -40,13 +41,14 @@ const dialogVisible = computed({
  * 处理直播间举报提交
  * @param type 举报类型
  * @param description 举报描述
+ * @param images 上传的图片数组
  */
-const handleReportSubmit = (type: string, description: string) => {
-  // 获取label
+const handleReportSubmit = (type: string, description: string, images: string[]) => {
   const reportType = reportTypes.find((item) => item.value === type);
   if (!reportType) {
     return;
   }
-  emit("submit-report", props.roomId, reportType.label, description);
+
+  emit("submit-report", props.roomId, reportType.label, description, images);
 };
 </script>
