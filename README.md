@@ -4,7 +4,7 @@
 
 <p align="center">一款基于tauri2、Vite7、Vue3 和 TypeScript 构建的直播软件</p>
 
-## 支持平台
+## 🌐 支持平台
 
 | 平台    | 支持版本                             |
 | ------- | ------------------------------------ |
@@ -15,14 +15,83 @@
 | iOS     | ⚠️未测试                             |
 | Web     | ⚠️暂不支持(需要自定义移除对桌面功能) |
 
-## 技术栈
+## 📝 项目介绍
+
+YuanLive 是一款基于tauri2、Vite7、Vue3 和 TypeScript 构建的直播软件。它利用了 Tauri 的跨平台能力和 Vue 3 的响应式设计，结合了 TypeScript 的类型安全特性和 Vite 7 的快速构建，为用户提供了一个高效、安全和易用的直播解决方案。
+
+## 🛠️ 技术栈
 
 - **Tauri**: Tauri 是一个基于 Rust 的跨平台桌面应用容器，它允许开发者使用前端技术栈来构建跨平台的桌面应用。Tauri 的设计哲学是在保证安全性的前提下，尽可能减少资源占用。
 - **Vite 7**: Vite 是一个现代化的前端构建工具，它利用原生 ES 模块导入的能力来提供一个快速的开发服务器，与此同时，它也为生产环境打包提供了强大的支持。Vite 7 是其最新的版本，带来了更多的优化和特性。
 - **Vue 3**: Vue 3 是一个渐进式JavaScript框架，用于构建用户界面。它的组合式API、更好的TypeScript集成和对移动端的优化使得开发复杂的单页应用变得更加简单和高效。
 - **TypeScript**: TypeScript 是 JavaScript 的一个超集，它在 JavaScript 的基础上增加了类型系统。这让我们能够在开发过程中捕获更多的错误，并且提供更好的编辑器支持。
 
-## 启动项目
+## 🎯 开发进度
+
+### 🔐 用户认证系统
+
+| 功能 | 描述           | 状态                                                                                                  |
+| ---- | -------------- | ----------------------------------------------------------------------------------------------------- |
+| 🔑   | 账号密码登录   | ![完成](https://img.shields.io/badge/✅-完成-008080?style=flat&labelColor=e6f7f7&color=008080)        |
+| 📱   | 二维码扫码登录 | ![进行中](https://img.shields.io/badge/90%25-进行中-f0ad4e?style=flat&labelColor=faf3e6&color=f0ad4e) |
+| 💻   | 多设备登录管理 | ![进行中](https://img.shields.io/badge/10%25-进行中-f0ad4e?style=flat&labelColor=faf3e6&color=f0ad4e) |
+
+### 🤍 核心功能
+
+| 功能 | 描述     | 状态                                                                                                  |
+| ---- | -------- | ----------------------------------------------------------------------------------------------------- |
+| 📹   | 开播     | ![进行中](https://img.shields.io/badge/50%25-进行中-f0ad4e?style=flat&labelColor=faf3e6&color=f0ad4e) |
+| 🎬   | 直播互动 | ![进行中](https://img.shields.io/badge/20%25-进行中-f0ad4e?style=flat&labelColor=faf3e6&color=f0ad4e) |
+| 📺   | 刷视频   | ![进行中](https://img.shields.io/badge/80%25-进行中-f0ad4e?style=flat&labelColor=faf3e6&color=f0ad4e) |
+| 💣   | 弹幕系统 | ![进行中](https://img.shields.io/badge/60%25-进行中-f0ad4e?style=flat&labelColor=faf3e6&color=f0ad4e) |
+| 🎁   | 礼物系统 | ![进行中](https://img.shields.io/badge/10%25-进行中-f0ad4e?style=flat&labelColor=faf3e6&color=f0ad4e) |
+| 💬   | 评论系统 | ![进行中](https://img.shields.io/badge/40%25-进行中-f0ad4e?style=flat&labelColor=faf3e6&color=f0ad4e) |
+| 👛   | 支付功能 | ![进行中](https://img.shields.io/badge/10%25-进行中-f0ad4e?style=flat&labelColor=faf3e6&color=f0ad4e) |
+| 👀   | 关注     | ![进行中](https://img.shields.io/badge/95%25-进行中-f0ad4e?style=flat&labelColor=faf3e6&color=f0ad4e) |
+| 🔖   | 收藏     | ![进行中](https://img.shields.io/badge/70%25-进行中-f0ad4e?style=flat&labelColor=faf3e6&color=f0ad4e) |
+| 👨   | 个人中心 | ![进行中](https://img.shields.io/badge/55%25-进行中-f0ad4e?style=flat&labelColor=faf3e6&color=f0ad4e) |
+
+### 🎨 界面体验
+
+| 功能 | 描述           | 状态                                                                                                 |
+| ---- | -------------- | ---------------------------------------------------------------------------------------------------- |
+| 🖼️   | 现代化界面设计 | ![完成](https://img.shields.io/badge/✅-完成-008080?style=flat&labelColor=e6f7f7&color=008080)       |
+| 🌙   | 深色浅色主题   | ![完成](https://img.shields.io/badge/✅-完成-008080?style=flat&labelColor=e6f7f7&color=008080)       |
+| 🎭   | 皮肤主题切换   | ![进行中](https://img.shields.io/badge/0%25-进行中-f0ad4e?style=flat&labelColor=faf3e6&color=f0ad4e) |
+
+### 🛠️ 系统功能
+
+| 功能 | 描述                | 状态                                                                                                  |
+| ---- | ------------------- | ----------------------------------------------------------------------------------------------------- |
+| 🔔   | 系统托盘            | ![完成](https://img.shields.io/badge/✅-完成-008080?style=flat&labelColor=e6f7f7&color=008080)        |
+| ✂️   | 截图功能            | ![完成](https://img.shields.io/badge/✅-完成-008080?style=flat&labelColor=e6f7f7&color=008080)        |
+| 🎨   | 取色器功能          | ![完成](https://img.shields.io/badge/✅-完成-008080?style=flat&labelColor=e6f7f7&color=008080)        |
+| 📷   | 图片预览            | ![完成](https://img.shields.io/badge/✅-完成-008080?style=flat&labelColor=e6f7f7&color=008080)        |
+| 📺   | 独立媒体预览        | ![完成](https://img.shields.io/badge/✅-完成-008080?style=flat&labelColor=e6f7f7&color=008080)        |
+| 📄   | 文档预览            | ![完成](https://img.shields.io/badge/✅-完成-008080?style=flat&labelColor=e6f7f7&color=008080)        |
+| 🎙️   | 语音输入            | ![完成](https://img.shields.io/badge/✅-完成-008080?style=flat&labelColor=e6f7f7&color=008080)        |
+| ⌨️   | 全局快捷键管理      | ![完成](https://img.shields.io/badge/✅-完成-008080?style=flat&labelColor=e6f7f7&color=008080)        |
+| ⌨️   | 局部视频快捷键管理  | ![完成](https://img.shields.io/badge/✅-完成-008080?style=flat&labelColor=e6f7f7&color=008080)        |
+| 📁   | 文件分片上传(minio) | ![完成](https://img.shields.io/badge/✅-完成-008080?style=flat&labelColor=e6f7f7&color=008080)        |
+| 🔄   | 自动更新系统        | ![进行中](https://img.shields.io/badge/80%25-进行中-f0ad4e?style=flat&labelColor=faf3e6&color=f0ad4e) |
+| 🌍   | i18n 支持           | ![进行中](https://img.shields.io/badge/90%25-进行中-f0ad4e?style=flat&labelColor=faf3e6&color=f0ad4e) |
+
+### 🌐 跨平台支持
+
+| 功能 | 描述                | 状态                                                                                                  |
+| ---- | ------------------- | ----------------------------------------------------------------------------------------------------- |
+| 💻   | Windows/macOS/Linux | ![进行中](https://img.shields.io/badge/66%25-进行中-f0ad4e?style=flat&labelColor=faf3e6&color=f0ad4e) |
+| 📱   | iOS/Android 适配    | ![进行中](https://img.shields.io/badge/5%25-进行中-f0ad4e?style=flat&labelColor=faf3e6&color=f0ad4e)  |
+
+### 🤖 AI 集成
+
+| 功能 | 描述     | 状态                                                                                                  |
+| ---- | -------- | ----------------------------------------------------------------------------------------------------- |
+| 🧠   | AI 聊天  | ![进行中](https://img.shields.io/badge/50%25-进行中-f0ad4e?style=flat&labelColor=faf3e6&color=f0ad4e) |
+| 💻   | 代码预览 | ![完成](https://img.shields.io/badge/✅-完成-008080?style=flat&labelColor=e6f7f7&color=008080)        |
+| 🤖   | AI 助手  | ![进行中](https://img.shields.io/badge/20%25-进行中-f0ad4e?style=flat&labelColor=faf3e6&color=f0ad4e) |
+
+## 🚀 启动项目
 
 [前置要求](https://tauri.app/start/prerequisites)
 
@@ -66,7 +135,7 @@ pnpm tauri:dev # 启动桌面端
 pnpm tauri:android:dev # 启动android端 更多命令查看package.json
 ```
 
-## 代码提交
+## 🔄️ 代码提交
 
 ```shell
 pnpm commit # 暂存代码并commit
@@ -74,7 +143,7 @@ pnpm gitcz # 给当前暂存的代码commit
 pnpm addition-commit # commit后再次添加修改到上一次的commit
 ```
 
-## 发布更新
+## 🔄️ 发布更新
 
 ```shell
 # 设置tauri签名密钥
@@ -88,7 +157,7 @@ $env:TAURI_SIGNING_PRIVATE_KEY_PASSWORD=""
 pnpm tauri:build
 ```
 
-## 组件
+## 📄 组件
 
 ### 基础组件
 

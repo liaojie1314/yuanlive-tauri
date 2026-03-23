@@ -290,6 +290,10 @@ export const useWindow = () => {
    * @param L 窗口标签
    */
   const checkWinExist = async (L: string) => {
+    // 移动端不支持窗口管理
+    if (!isDesktop()) {
+      return Promise.resolve();
+    }
     const isExistsWinds = await WebviewWindow.getByLabel(L);
     if (isExistsWinds) {
       nextTick().then(async () => {

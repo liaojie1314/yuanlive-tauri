@@ -13,7 +13,12 @@
         <span>{{ t("components.tray.showMainPanel") }}</span>
       </n-flex>
       <div class="h-1px w-full bg-[--line-color]"></div>
-      <n-flex align="center" v-once class="rounded-4px cursor-pointer p-[8px_6px] hover:bg-[--tray-hover]" :size="10">
+      <n-flex
+        align="center"
+        v-once
+        class="rounded-4px cursor-pointer p-[8px_6px] hover:bg-[--tray-hover]"
+        :size="10"
+        @click="createWebviewWindow('设置', 'setting', 840, 840, '', true, 840, 600)">
         <svg class="color-[--action-bar-icon-color] size-16px ml-4px">
           <use href="#settings"></use>
         </svg>
@@ -57,7 +62,7 @@ import { useWindow } from "@/hooks/useWindow";
 import { useGlobalStore } from "@/stores/global";
 
 const { t } = useI18n();
-const { checkWinExist, resizeWindow } = useWindow();
+const { checkWinExist, resizeWindow, createWebviewWindow } = useWindow();
 const globalStore = useGlobalStore();
 const { showTray } = storeToRefs(globalStore);
 
