@@ -1,6 +1,26 @@
-<h1 align="center">YuanLive</h1>
+<p align="center">
+  <img width="350px" height="150px" src="public/yuanlive.png"/>
+</p>
 
-<p align="center">基于tauri2的YuanLive桌面端</p>
+<p align="center">一款基于tauri2、Vite7、Vue3 和 TypeScript 构建的直播软件</p>
+
+## 支持平台
+
+| 平台    | 支持版本                             |
+| ------- | ------------------------------------ |
+| Windows | Windows 11                           |
+| Linux   | Ubuntu 22.0+                         |
+| macOS   | ⚠️未测试                             |
+| Android | Android 12+ (SDK30+)                 |
+| iOS     | ⚠️未测试                             |
+| Web     | ⚠️暂不支持(需要自定义移除对桌面功能) |
+
+## 技术栈
+
+- **Tauri**: Tauri 是一个基于 Rust 的跨平台桌面应用容器，它允许开发者使用前端技术栈来构建跨平台的桌面应用。Tauri 的设计哲学是在保证安全性的前提下，尽可能减少资源占用。
+- **Vite 7**: Vite 是一个现代化的前端构建工具，它利用原生 ES 模块导入的能力来提供一个快速的开发服务器，与此同时，它也为生产环境打包提供了强大的支持。Vite 7 是其最新的版本，带来了更多的优化和特性。
+- **Vue 3**: Vue 3 是一个渐进式JavaScript框架，用于构建用户界面。它的组合式API、更好的TypeScript集成和对移动端的优化使得开发复杂的单页应用变得更加简单和高效。
+- **TypeScript**: TypeScript 是 JavaScript 的一个超集，它在 JavaScript 的基础上增加了类型系统。这让我们能够在开发过程中捕获更多的错误，并且提供更好的编辑器支持。
 
 ## 启动项目
 
@@ -40,8 +60,10 @@ mv .env.example .env
 ### 安装依赖并启动项目
 
 ```shell
-pnpm i
-pnpm tauri:dev # 启动桌面端 更多命令查看package.json
+npm i -g pnpm # 安装pnpm
+pnpm i # 安装依赖
+pnpm tauri:dev # 启动桌面端
+pnpm tauri:android:dev # 启动android端 更多命令查看package.json
 ```
 
 ## 代码提交
@@ -49,6 +71,7 @@ pnpm tauri:dev # 启动桌面端 更多命令查看package.json
 ```shell
 pnpm commit # 暂存代码并commit
 pnpm gitcz # 给当前暂存的代码commit
+pnpm addition-commit # commit后再次添加修改到上一次的commit
 ```
 
 ## 发布更新
