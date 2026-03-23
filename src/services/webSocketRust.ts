@@ -2,8 +2,8 @@ import { invoke } from "@tauri-apps/api/core";
 import { error, info, warn } from "@tauri-apps/plugin-log";
 import { listen, UnlistenFn } from "@tauri-apps/api/event";
 
-import { StorageKeyEnum, WsResponseMessageEnum } from "@/enums";
 import { useMitt } from "@/hooks/useMitt";
+import { StorageKeyEnum, TauriCommandEnum, WsResponseMessageEnum } from "@/enums";
 
 /// WebSocket 连接状态
 export enum ConnectionState {
@@ -80,7 +80,7 @@ class WebSocketRust {
         deviceId: deviceId || ""
       };
       info(`[RustWS] 初始化连接参数: ${JSON.stringify(params)}`);
-      await invoke("ws_init_connection", { params });
+      await invoke(TauriCommandEnum.WS_INIT_CONNECTION, { params });
       info("[RustWS] 连接初始化成功");
     } catch (e) {
       error(`[RustWS] 连接初始化错误: ${e}`);
@@ -93,7 +93,7 @@ class WebSocketRust {
    */
   async disconnect() {
     try {
-      await invoke("ws_disconnect");
+      await invoke(TauriCommandEnum.WS_DISCONNECT);
       info("[RustWS] 断开连接成功");
     } catch (e) {
       error(`[RustWS] 断开连接失败: ${e}`);
@@ -107,7 +107,7 @@ class WebSocketRust {
    */
   async sendMessage(data: any) {
     try {
-      await invoke("ws_send_message", { params: { data } });
+      await invoke(TauriCommandEnum.WS_SEND_MESSAGE, { params: { data } });
       info(`[RustWS] 发送消息: ${data}`);
     } catch (e) {
       error(`[RustWS] 发送消息错误: ${e}`);
@@ -132,7 +132,7 @@ class WebSocketRust {
    */
   async forceReconnect(): Promise<void> {
     try {
-      await invoke("ws_force_reconnect");
+      await invoke(TauriCommandEnum.WS_FORCE_RECONNECT);
       info("[RustWS] 强制重连成功");
     } catch (err) {
       error(`[RustWS] 强制重连失败: ${err}`);
@@ -145,7 +145,7 @@ class WebSocketRust {
    */
   async isConnected(): Promise<boolean> {
     try {
-      return await invoke<boolean>("ws_is_connected");
+      return await invoke<boolean>(TauriCommandEnum.WS_IS_CONNECTED);
     } catch (err) {
       error(`[RustWS] 检查连接状态失败: ${err}`);
       return false;

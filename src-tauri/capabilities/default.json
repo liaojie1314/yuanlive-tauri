@@ -88,11 +88,6 @@
     "clipboard-manager:allow-write-html",
     "clipboard-manager:allow-write-image",
     "clipboard-manager:allow-write-text",
-    "global-shortcut:allow-is-registered",
-    "global-shortcut:allow-register",
-    "global-shortcut:allow-register-all",
-    "global-shortcut:allow-unregister",
-    "global-shortcut:allow-unregister-all",
     "shell:default",
     "shell:allow-open",
     {
@@ -112,7 +107,6 @@
     "dialog:default",
     "dialog:allow-save",
     "mic-recorder:default",
-    "updater:default",
     "deep-link:default"
   ]
 }

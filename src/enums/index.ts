@@ -137,12 +137,26 @@ export enum TauriCommandEnum {
   UPDATE_TOKEN = "update_token",
   // 移除 token
   REMOVE_TOKEN = "remove_token",
+  // 更新设置
+  UPDATE_SETTINGS = "update_settings",
   // 获取文件元数据
   GET_FILES_META = "get_files_meta",
   // AI 消息流式发送
   AI_MESSAGE_SEND_STREAM = "ai_message_send_stream",
   // AI 取消流式消息
   AI_MESSAGE_CANCEL_STREAM = "ai_message_cancel_stream",
+  // 初始化 ws
+  WS_INIT_CONNECTION = "ws_init_connection",
+  // 断开 ws
+  WS_DISCONNECT = "ws_disconnect",
+  // 强制重连
+  WS_FORCE_RECONNECT = "ws_force_reconnect",
+  // ws 是否连接
+  WS_IS_CONNECTED = "ws_is_connected",
+  // 发送消息
+  WS_SEND_MESSAGE = "ws_send_message",
+  // 根据文本播放音频
+  FETCH_AUDIO_TTS = "fetch_audio_tts",
   /** desktop专属 */
   // 推送窗口数据
   PUSH_WINDOW_PAYLOAD = "push_window_payload",
@@ -170,7 +184,10 @@ export enum TauriCommandEnum {
   // 启动 MCP
   START_MCP = "start_mcp",
   // 向 MCP 发送指令
-  SEND_TO_MCP = "send_to_mcp"
+  SEND_TO_MCP = "send_to_mcp",
+  /** mobile 专属 */
+  // 关闭splash
+  HIDE_SPLASH_SCREEN = "hide_splash_screen"
 }
 
 /** pinia存储的名称 */

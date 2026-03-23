@@ -1,0 +1,63 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "yuanlive-tauri",
+  "version": "0.4.0",
+  "identifier": "blog.yuanyuan.yuanlive",
+  "build": {
+    "beforeDevCommand": "pnpm dev",
+    "devUrl": "http://localhost:5210",
+    "beforeBuildCommand": "rimraf dist && pnpm build",
+    "frontendDist": "../dist"
+  },
+  "bundle": {
+    "active": true,
+    "resources": ["configuration"],
+    "targets": "all",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico",
+      "icons/icon.png",
+      "icons/Square30x30Logo.png",
+      "icons/Square44x44Logo.png",
+      "icons/Square71x71Logo.png",
+      "icons/Square89x89Logo.png",
+      "icons/Square107x107Logo.png",
+      "icons/Square142x142Logo.png",
+      "icons/Square150x150Logo.png",
+      "icons/Square284x284Logo.png",
+      "icons/Square310x310Logo.png",
+      "icons/StoreLogo.png"
+    ],
+    "android": {
+      "minSdkVersion": 26
+    }
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "登录",
+        "label": "mobile-home",
+        "url": "/mobile/splashscreen",
+        "width": 800,
+        "height": 600,
+        "resizable": false,
+        "fullscreen": true
+      }
+    ],
+    "security": {
+      "csp": null
+    }
+  },
+  "plugins": {
+    "statusBar": {
+      "backgroundColor": "transparent",
+      "style": "light"
+    },
+    "safeAreaInsets": {
+      "enabled": true
+    }
+  }
+}

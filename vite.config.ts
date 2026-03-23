@@ -8,6 +8,7 @@ import { root, getSrcPath, createManualChunks, wrapperEnv } from "./build/utils"
 import { atStartup } from "./build/console";
 import { getPluginsList } from "./build/plugins";
 import { include, exclude } from "./build/optimize";
+import { fileURLToPath } from "node:url";
 
 // 读取 package.json 依赖
 const packageJson = JSON.parse(readFileSync(join(process.cwd(), "package.json"), "utf-8"));
@@ -35,6 +36,7 @@ export default defineConfig(({ mode }: ConfigEnv) => {
   const config = loadEnv(mode, process.cwd(), "");
   const currentPlatform = config.TAURI_ENV_PLATFORM;
   const isPC = currentPlatform === "windows" || currentPlatform === "darwin" || currentPlatform === "linux";
+  const serverPort = isPC ? 6130 : 5210;
   // 根据平台决定host地址
   const host = (() => {
     if (isPC) {
@@ -60,6 +62,7 @@ export default defineConfig(({ mode }: ConfigEnv) => {
       alias: {
         // 配置主路径别名@
         "@": getSrcPath(),
+        "#": fileURLToPath(new URL("./src/mobile", import.meta.url)),
         // 配置路径别名~(根路径)
         "~": root
       }
@@ -121,16 +124,17 @@ export default defineConfig(({ mode }: ConfigEnv) => {
     },
     clearScreen: false,
     server: {
+      hmr: {
+        protocol: "ws",
+        host: host,
+        port: serverPort
+      },
       cors: true, // 配置CORS
       host: "0.0.0.0",
-      port: 1420,
+      port: serverPort,
       strictPort: true,
       watch: {
         ignored: ["**/src-tauri/**"]
-      },
-      // 预热文件以提前转换和缓存结果，降低启动期间的初始页面加载时长并防止转换瀑布
-      warmup: {
-        clientFiles: ["./index.html", "./src/{views,components}/*"]
       }
     }
   };

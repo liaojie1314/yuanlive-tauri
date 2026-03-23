@@ -5,7 +5,7 @@
   "identifier": "blog.yuanyuan.yuanlive",
   "build": {
     "beforeDevCommand": "pnpm dev",
-    "devUrl": "http://localhost:1420",
+    "devUrl": "http://localhost:6130",
     "beforeBuildCommand": "rimraf dist && pnpm build",
     "frontendDist": "../dist"
   },

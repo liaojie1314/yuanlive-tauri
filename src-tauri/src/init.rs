@@ -1,5 +1,6 @@
 use tauri::plugin::TauriPlugin;
 use tauri::{Manager, Runtime, WindowEvent};
+#[cfg(desktop)]
 use tauri_plugin_autostart::MacosLauncher;
 use tauri_plugin_log::fern::colors::{Color, ColoredLevelConfig};
 use tauri_plugin_log::{Target, TargetKind};
@@ -26,7 +27,8 @@ impl<R: Runtime> CustomInit for tauri::Builder<R> {
     }
 
     fn init_window_event(self) -> Self {
-        self.on_window_event(|window, event| match event {
+        #[cfg(desktop)]
+        let builder = self.on_window_event(|window, event| match event {
             WindowEvent::Focused(flag) => {
                 // 自定义系统托盘-实现托盘菜单失去焦点时隐藏
                 #[cfg(not(target_os = "macos"))]
@@ -82,7 +84,11 @@ impl<R: Runtime> CustomInit for tauri::Builder<R> {
                 }
             }
             _ => (),
-        })
+        });
+        // 在 Android/iOS 环境下，直接返回 self，跳过这些事件绑定
+        #[cfg(mobile)]
+        let builder = self;
+        builder
     }
 }
 

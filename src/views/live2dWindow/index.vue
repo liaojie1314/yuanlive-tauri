@@ -27,6 +27,7 @@ import { Live2DModel } from "pixi-live2d-display";
 import { invoke } from "@tauri-apps/api/core";
 import { LogicalPosition } from "@tauri-apps/api/window";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
+
 import { TauriCommandEnum } from "@/enums";
 
 const appWindow = getCurrentWebviewWindow();
@@ -314,7 +315,7 @@ const speak = async (text: string) => {
   if (live2dModel.value) {
     try {
       // 如果后端没准备好，这里会报错，自动跳到 catch
-      const audioRes: number[] = await invoke("fetch_audio_tts", { text });
+      const audioRes: number[] = await invoke(TauriCommandEnum.FETCH_AUDIO_TTS, { text });
       if (!audioRes || audioRes.length === 0) throw new Error("Empty Audio");
       await playAudioWithLipSync(new Uint8Array(audioRes));
     } catch (e) {

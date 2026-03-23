@@ -1,6 +1,43 @@
-import { createRouter, createWebHistory, type Router, type RouteRecordRaw } from "vue-router";
+import { type } from "@tauri-apps/plugin-os";
+import { invoke } from "@tauri-apps/api/core";
+import {
+  createRouter,
+  createWebHistory,
+  type Router,
+  type NavigationGuardNext,
+  type RouteLocationNormalized,
+  type RouteRecordRaw
+} from "vue-router";
 
-const getCommonRoutes = (): Array<RouteRecordRaw> => [
+import Splashscreen from "#/views/Splashscreen.vue";
+import MobileLogin from "#/views/MobileLogin.vue";
+
+/**! 创建窗口后再跳转页面就会导致样式没有生效所以不能使用懒加载路由的方式，有些页面需要快速响应的就不需要懒加载 */
+const { BASE_URL } = import.meta.env;
+
+const isMobile = type() === "ios" || type() === "android";
+
+// 移动端路由配置 - 使用直接导入避免懒加载问题
+const getMobileRoutes = (): Array<RouteRecordRaw> => [
+  {
+    path: "/",
+    name: "mobileRoot",
+    redirect: "/mobile/login"
+  },
+  {
+    path: "/mobile/login",
+    name: "mobileLogin",
+    component: MobileLogin
+  },
+  {
+    path: "/mobile/splashscreen",
+    name: "splashscreen",
+    component: Splashscreen
+  }
+];
+
+// 桌面端路由配置
+const getDesktopRoutes = (): Array<RouteRecordRaw> => [
   {
     name: "login",
     path: "/login",
@@ -180,8 +217,47 @@ const getCommonRoutes = (): Array<RouteRecordRaw> => [
 
 // 创建路由
 const router: Router = createRouter({
-  history: createWebHistory(),
-  routes: getCommonRoutes()
+  history: createWebHistory(BASE_URL),
+  routes: isMobile ? getMobileRoutes() : getDesktopRoutes()
+});
+
+// 在创建路由后，添加全局前置守卫
+// 为解决 “已声明‘to’，但从未读取其值” 的问题，将 to 参数改为下划线开头表示该参数不会被使用
+router.beforeEach(async (to: RouteLocationNormalized, _from: RouteLocationNormalized, next: NavigationGuardNext) => {
+  // 桌面端直接放行
+  if (!isMobile) {
+    console.log("[守卫] 非移动端，直接放行");
+    return next();
+  }
+
+  try {
+    const isLoginPage = to.path === "/mobile/login";
+    const isSplashPage = to.path === "/mobile/splashscreen";
+
+    // 闪屏页白名单：不论登录状态都允许进入
+    if (isSplashPage) {
+      return next();
+    }
+
+    const tokens = await invoke<{ token: string | null; refreshToken: string | null }>("GET_USER_TOKENS");
+    const isLoggedIn = !!(tokens.token && tokens.refreshToken);
+
+    // 未登录且不是登录页 → 跳转登录
+    if (!isLoggedIn && !isLoginPage) {
+      console.warn("[守卫] 未登录，强制跳转到 /mobile/login");
+      return next("/mobile/login");
+    }
+
+    return next();
+  } catch (error) {
+    console.error("[守卫] 获取token错误:", error);
+    // 出错时也跳转登录页（避免死循环）
+    if (to.path !== "/mobile/login") {
+      console.warn("[守卫] 出错，强制跳转到 /mobile/login");
+      return next("/mobile/login");
+    }
+    return next();
+  }
 });
 
 export default router;

@@ -39,6 +39,63 @@ pub fn get_configuration(app_handle: &AppHandle) -> Result<BackendSettings, conf
 
         settings.try_deserialize::<BackendSettings>()
     }
+    #[cfg(target_os = "android")]
+    {
+        let _ = app_handle;
+        // 读取 base.yaml 内容
+        let base_content = std::str::from_utf8(include_bytes!("../configuration/base.yaml"))
+            .map_err(|e| config::ConfigError::Message(e.to_string()))?;
+
+        // 构建 base 配置对象
+        let base_config = config::Config::builder()
+            .add_source(config::File::from_str(
+                base_content,
+                config::FileFormat::Yaml,
+            ))
+            .build()?;
+
+        // 获取 active_config 字段
+        let active_config = base_config.get_string("active_config").map_err(|_| {
+            config::ConfigError::Message(
+                "Missing or invalid 'active_config' in base.yaml".to_string(),
+            )
+        })?;
+
+        // 校验 active_config 合法性
+        if active_config != "local" && active_config != "production" {
+            return Err(config::ConfigError::Message(
+                "Only \"local\" or \"production\" can be specified in active_config".to_string(),
+            ));
+        }
+
+        // 加载对应的配置文件内容
+        let config_file_bytes: &[u8] = match active_config.as_str() {
+            "local" => include_bytes!("../configuration/local.yaml").as_ref(),
+            "production" => include_bytes!("../configuration/production.yaml").as_ref(),
+            _ => return Err(config::ConfigError::Message("Invalid active_config".into())), // 这里可以支持更多的环境配置
+        };
+
+        let active_content = std::str::from_utf8(config_file_bytes)
+            .map_err(|e| config::ConfigError::Message(e.to_string()))?;
+
+        // 构建最终配置对象
+        config::Config::builder()
+            .add_source(config::File::from_str(
+                base_content,
+                config::FileFormat::Yaml,
+            ))
+            .add_source(config::File::from_str(
+                active_content,
+                config::FileFormat::Yaml,
+            ))
+            .add_source(
+                config::Environment::with_prefix("APP")
+                    .prefix_separator("_")
+                    .separator("__"),
+            )
+            .build()?
+            .try_deserialize::<BackendSettings>()
+    }
 }
 
 fn get_config_path_buf(
@@ -65,7 +122,15 @@ fn get_config_path_buf(
     let base_config = config::Config::builder()
         .add_source(config::File::from(base_path.clone()))
         .build()?;
+    #[cfg(target_os = "android")]
+    let base_config = {
+        let content = std::str::from_utf8(include_bytes!("../configuration/base.yaml"))
+            .map_err(|e| config::ConfigError::Message(e.to_string()))?;
 
+        config::Config::builder()
+            .add_source(config::File::from_str(content, config::FileFormat::Yaml))
+            .build()?
+    };
     let active_config = base_config.get_string("active_config")?;
     println!("active_config: {:?}", active_config);
     let active_config_path_buf = dir.clone().join(active_config);

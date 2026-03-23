@@ -1,14 +1,21 @@
 pub mod command;
 mod configuration;
+#[cfg(desktop)]
 pub mod desktop;
 mod error;
 mod init;
+#[cfg(mobile)]
+mod mobile;
 mod request_client;
+#[cfg(desktop)]
 mod tray;
 pub mod websocket;
+
 use crate::configuration::{get_configuration, BackendSettings};
 use crate::error::CommonError;
 use crate::init::CustomInit;
+#[cfg(mobile)]
+use mobile::splash;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -47,8 +54,22 @@ pub struct UserInfo {
     pub refresh_token: String,
 }
 
-#[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    #[cfg(desktop)]
+    {
+        if let Err(e) = setup_desktop() {
+            tracing::error!("Failed to setup desktop application: {}", e);
+            std::process::exit(1);
+        }
+    }
+    #[cfg(mobile)]
+    {
+        setup_mobile();
+    }
+}
+
+#[cfg(desktop)]
+fn setup_desktop() -> Result<(), CommonError> {
     tauri::Builder::default()
         .init_plugin()
         .init_window_event()
@@ -57,8 +78,48 @@ pub fn run() {
             Ok(())
         })
         .invoke_handler(get_invoke_handlers())
+        .build(tauri::generate_context!())
+        .map_err(|e| {
+            CommonError::RequestError(format!("Failed to build tauri application: {}", e))
+        })?
+        .run(|app_handle, event| {
+            #[cfg(target_os = "macos")]
+            app_event::handle_app_event(&app_handle, event);
+            #[cfg(not(target_os = "macos"))]
+            {
+                let _ = (app_handle, event);
+            }
+        });
+    Ok(())
+}
+
+#[cfg(mobile)]
+#[cfg_attr(mobile, tauri::mobile_entry_point)]
+fn setup_mobile() {
+    splash::show();
+
+    if let Err(e) = tauri::Builder::default()
+        .init_plugin()
+        .setup(move |app| {
+            let app_handle = app.handle().clone();
+            #[cfg(target_os = "ios")]
+            {
+                if let Some(webview_window) = app_handle.get_webview_window("mobile-home") {
+                    webview_helper::initialize_keyboard_adjustment(&webview_window);
+                } else {
+                    tracing::warn!("Mobile home webview window not found during setup");
+                }
+            }
+            common_setup(app_handle)?;
+            tracing::info!("Mobile application setup completed successfully");
+            Ok(())
+        })
+        .invoke_handler(get_invoke_handlers())
         .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+    {
+        tracing::log::error!("Failed to run mobile application: {}", e);
+        std::process::exit(1);
+    }
 }
 
 // 异步初始化应用数据
@@ -232,6 +293,8 @@ fn get_invoke_handlers() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Se
     };
     #[cfg(windows)]
     use crate::desktop::windows_mcp::{send_to_mcp, start_mcp};
+    #[cfg(mobile)]
+    use crate::mobile::splash::hide_splash_screen;
     use crate::websocket::commands::{
         ws_disconnect, ws_force_reconnect, ws_get_state, ws_init_connection, ws_is_connected,
         ws_send_message,
@@ -311,5 +374,7 @@ fn get_invoke_handlers() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Se
         speak_system,
         #[cfg(desktop)]
         extract_video_cover,
+        #[cfg(mobile)]
+        hide_splash_screen,
     ]
 }
