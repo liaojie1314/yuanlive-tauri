@@ -1,7 +1,7 @@
 <template>
   <div class="h-full overflow-hidden">
     <div class="h-60px flex-center gap-2">
-      <img src="/vite.svg" alt="" class="w-24px h-24px" />
+      <img src="/logo.webp" alt="" class="w-24px h-24px" />
       <p class="text-(20px [--text-color]) cursor-default select-none">YuanLive</p>
     </div>
     <main

@@ -7,8 +7,8 @@
       <!-- 头像 -->
       <n-flex justify="center" data-tauri-drag-region class="pt-35px w-full">
         <n-avatar
-          fallback-src="/vite.svg"
-          src="/vite.svg"
+          fallback-src="/logo.webp"
+          src="/logo.webp"
           class="welcome size-80px rounded-50% border-(2px solid #fff) dark:border-(2px solid #606060)"
           :color="themes.content === ThemeEnum.DARK ? '#282828' : '#fff'" />
       </n-flex>
@@ -69,15 +69,15 @@
     <!-- 自动登录 -->
     <n-flex v-else-if="uiState === 'auto'" vertical data-tauri-drag-region :size="29">
       <n-flex justify="center" class="mt-15px">
-        <img src="/vite.svg" alt="" class="w-140px h-60px" />
+        <img src="/logo.webp" alt="" class="w-140px h-60px" />
       </n-flex>
       <n-flex vertical :size="30">
         <!-- 头像 -->
         <n-flex justify="center">
           <n-avatar
             round
-            fallback-src="/vite.svg"
-            src="/vite.svg"
+            fallback-src="/logo.webp"
+            src="/logo.webp"
             :size="110"
             :color="themes.content === ThemeEnum.DARK ? '#282828' : '#fff'" />
         </n-flex>
@@ -157,20 +157,20 @@ import { darkTheme, lightTheme } from "naive-ui";
 import { useNetwork } from "@vueuse/core";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 
-import router from "@/router";
 import { ThemeEnum } from "@/enums";
 import { useUserStore } from "@/stores/user";
 import { useGuideStore } from "@/stores/guide";
 import { useGlobalStore } from "@/stores/global";
 import { useSettingStore } from "@/stores/setting";
-import { useWindow } from "@/hooks/useWindow";
 import { useLogin } from "@/hooks/useLogin";
+import { useWindow } from "@/hooks/useWindow";
 import { useCheckUpdate } from "@/hooks/useCheckUpdate";
 import { type DriverStepConfig, useDriver } from "@/hooks/useDriver";
 import { formatBottomText } from "@/utils/FormattingUtils";
 import { isCompatibility, isDesktop, isMac } from "@/utils/PlatformUtils";
 
 const { t } = useI18n();
+const router = useRouter();
 // 网络连接是否正常
 const { isOnline } = useNetwork();
 const { checkUpdate, CHECK_UPDATE_LOGIN_TIME } = useCheckUpdate();

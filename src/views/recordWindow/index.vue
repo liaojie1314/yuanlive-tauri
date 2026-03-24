@@ -34,7 +34,7 @@
             <span class="text-(12px [--left-text-color]) mt-2">请配置参数并开始推流</span>
           </div>
 
-          <Transition name="fade">
+          <transition name="fade">
             <div
               v-if="showStatusToast"
               class="text-(10px [--text-color]) pointer-events-none absolute right-4 bottom-4 rounded-full border border-[--line-color] bg-[--bg-popover] px-3 py-1 shadow-md backdrop-blur-md select-none">
@@ -46,7 +46,7 @@
                     : "IDLE"
               }}
             </div>
-          </Transition>
+          </transition>
         </div>
 
         <div

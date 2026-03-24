@@ -11,7 +11,7 @@
       <n-flex vertical class="ma w-260px pointer-events-auto text-center" :size="16">
         <n-flex justify="center" align="center">
           <span class="text-(24px #70938c) textFont">{{ t("auth.register.title") }}</span>
-          <img src="/vite.svg" alt="" class="w-100px h-40px" />
+          <img src="/logo.webp" alt="" class="w-100px h-40px" />
         </n-flex>
         <n-form ref="registerForm" :model="info" :rules="rules">
           <!-- 注册信息 -->

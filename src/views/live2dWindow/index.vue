@@ -1,6 +1,6 @@
 <template>
   <main class="relative size-full overflow-hidden bg-transparent select-none">
-    <Transition name="fade">
+    <transition name="fade">
       <div
         v-if="showBubble"
         ref="containerRef"
@@ -15,7 +15,7 @@
           {{ bubbleText }}
         </span>
       </div>
-    </Transition>
+    </transition>
 
     <canvas ref="canvasRef" class="block cursor-grab active:cursor-grabbing" @mousedown="startDrag"></canvas>
   </main>

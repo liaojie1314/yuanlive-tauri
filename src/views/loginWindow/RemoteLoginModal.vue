@@ -12,7 +12,7 @@
           <n-flex vertical align="center" :size="20">
             <span class="text-(14px [--text-color])">{{ t("auth.remoteLogin.notice") }}</span>
             <div class="relative">
-              <img src="/vite.svg" alt="" class="size-72px rounded-full" />
+              <img src="/logo.webp" alt="" class="size-72px rounded-full" />
               <div class="absolute inset-0 flex-center rounded-full bg-[--avatar-hover-bg] backdrop-blur-[2px]">
                 <svg class="size-34px animate-pulse text-white">
                   <use href="#cloudError"></use>

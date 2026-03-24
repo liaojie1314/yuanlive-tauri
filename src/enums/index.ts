@@ -237,6 +237,7 @@ export enum StorageKeyEnum {
 
 /** WebSocket 响应消息类型 */
 export enum WsResponseMessageEnum {
+  /** 远程登录 */
   REMOTE_LOGIN = "remoteLogin"
 }
 

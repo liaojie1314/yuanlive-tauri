@@ -9,7 +9,7 @@
             style="background: rgba(111, 111, 111, 0.1)"
             class="w-170px h-113px top-9% left-51% -translate-x-51% -translate-y-9% absolute transform"></div>
           <img
-            src="/vite.svg"
+            src="/logo.webp"
             alt=""
             class="top-30% -translate-y-30% w-140px h-60px absolute left-1/2 -translate-x-1/2 transform drop-shadow-md" />
         </div>

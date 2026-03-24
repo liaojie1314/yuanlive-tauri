@@ -23,14 +23,14 @@
           @dragstart.prevent />
       </div>
 
-      <Transition name="viewer-tip">
+      <transition name="viewer-tip">
         <div
           v-if="showTip"
           class="px-24px py-12px rounded-8px text-(white 14px) gap-8px fixed top-1/2 left-1/2 z-10 flex -translate-x-1/2 -translate-y-1/2 items-center bg-black/60 backdrop-blur-sm transition-all duration-300 select-none">
           <svg class="size-16px"><use href="#info"></use></svg>
           {{ tipText }}
         </div>
-      </Transition>
+      </transition>
     </div>
 
     <div

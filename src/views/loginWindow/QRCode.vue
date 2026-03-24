@@ -3,7 +3,7 @@
     <action-bar proxy data-tauri-drag-region :max-w="false" />
 
     <n-flex justify="center" data-tauri-drag-region class="mt-15px">
-      <img src="/vite.svg" alt="" data-tauri-drag-region class="w-140px h-60px drop-shadow-xl" />
+      <img src="/logo.webp" alt="" data-tauri-drag-region class="w-140px h-60px drop-shadow-xl" />
     </n-flex>
 
     <!-- 二维码 -->
@@ -101,7 +101,7 @@ const qrCodeResp = ref();
 const qrCodeColor = ref("#000000");
 const qrCodeBgColor = ref("#FFFFFF");
 const qrCodeType = ref("canvas" as const);
-const qrCodeIcon = ref("/vite.svg");
+const qrCodeIcon = ref("/logo.webp");
 const qrErrorCorrectionLevel = ref("H" as const);
 // 轮训相关
 const pollInterval = ref<NodeJS.Timeout | null>(null);
