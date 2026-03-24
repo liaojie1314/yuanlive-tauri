@@ -4,70 +4,83 @@
     :data-tauri-drag-region="isDrag"
     :class="isCompatibility() ? 'flex justify-end select-none' : 'h-24px w-full select-none'">
     <template v-if="isCompatibility()">
-      <!--  登录窗口的代理按钮  -->
-      <div
-        v-if="proxy"
-        class="w-30px h-24px flex-center hover-box"
-        :class="{ network: isWindows() }"
-        @click="router.push('/network')">
-        <svg
-          class="size-16px cursor-pointer"
-          :class="[iconColor !== '' ? `color-${iconColor}` : 'color-[--action-bar-icon-color]']">
-          <use href="#settings"></use>
-        </svg>
-      </div>
-      <slot></slot>
-      <!--  固定在最顶层  -->
-      <div v-if="topWinLabel !== void 0" class="hover-box" @click="handleAlwaysOnTop">
-        <n-popover trigger="hover">
-          <template #trigger>
+      <div data-tauri-drag-region class="w-full flex items-center justify-between">
+        <!-- 自定义图标：Windows/Linux 放在左侧 -->
+        <div class="h-24px flex items-center gap-10px pl-8px">
+          <slot></slot>
+        </div>
+
+        <div class="flex items-center">
+          <!--  登录窗口的代理按钮  -->
+          <div
+            v-if="proxy"
+            class="w-30px h-24px flex-center hover-box"
+            :class="{ network: isWindows() }"
+            @click="router.push('/network')">
             <svg
-              v-if="alwaysOnTopStatus"
-              class="size-14px cursor-pointer outline-none"
+              class="size-16px cursor-pointer"
               :class="[iconColor !== '' ? `color-${iconColor}` : 'color-[--action-bar-icon-color]']">
-              <use href="#onTop"></use>
+              <use href="#settings"></use>
+            </svg>
+          </div>
+          <slot></slot>
+          <!--  固定在最顶层  -->
+          <div v-if="topWinLabel !== void 0" class="hover-box" @click="handleAlwaysOnTop">
+            <n-popover trigger="hover">
+              <template #trigger>
+                <svg
+                  v-if="alwaysOnTopStatus"
+                  class="size-14px cursor-pointer outline-none"
+                  :class="[iconColor !== '' ? `color-${iconColor}` : 'color-[--action-bar-icon-color]']">
+                  <use href="#onTop"></use>
+                </svg>
+                <svg
+                  v-else
+                  class="size-16px cursor-pointer outline-none"
+                  :class="[iconColor !== '' ? `color-${iconColor}` : 'color-[--action-bar-icon-color]']">
+                  <use href="#notOnTop"></use>
+                </svg>
+              </template>
+              <span v-if="alwaysOnTopStatus">{{ $t("components.actionBar.alwaysOnTop.enabled") }}</span>
+              <span v-else>{{ $t("components.actionBar.alwaysOnTop.disabled") }}</span>
+            </n-popover>
+          </div>
+          <!-- 最小化 -->
+          <div v-if="minW" class="hover-box" @click="appWindow.minimize()">
+            <svg
+              class="size-24px cursor-pointer opacity-66"
+              :class="[iconColor !== '' ? `color-${iconColor}` : 'color-[--action-bar-icon-color]']">
+              <use href="#maximize"></use>
+            </svg>
+          </div>
+          <!-- 最大化 -->
+          <div v-if="maxW" class="hover-box" @click="restoreWindow">
+            <svg
+              v-show="!windowMaximized"
+              class="size-18px cursor-pointer"
+              :class="[iconColor !== '' ? `color-${iconColor}` : 'color-[--action-bar-icon-color]']">
+              <use href="#rectangle-small"></use>
             </svg>
             <svg
-              v-else
-              class="size-16px cursor-pointer outline-none"
+              v-show="windowMaximized"
+              class="size-16px cursor-pointer"
               :class="[iconColor !== '' ? `color-${iconColor}` : 'color-[--action-bar-icon-color]']">
-              <use href="#notOnTop"></use>
+              <use href="#internal-reduction"></use>
             </svg>
-          </template>
-          <span v-if="alwaysOnTopStatus">{{ $t("components.actionBar.alwaysOnTop.enabled") }}</span>
-          <span v-else>{{ $t("components.actionBar.alwaysOnTop.disabled") }}</span>
-        </n-popover>
-      </div>
-      <!-- 最小化 -->
-      <div v-if="minW" class="hover-box" @click="appWindow.minimize()">
-        <svg
-          class="size-24px cursor-pointer opacity-66"
-          :class="[iconColor !== '' ? `color-${iconColor}` : 'color-[--action-bar-icon-color]']">
-          <use href="#maximize"></use>
-        </svg>
-      </div>
-      <!-- 最大化 -->
-      <div v-if="maxW" class="hover-box" @click="restoreWindow">
-        <svg
-          v-show="!windowMaximized"
-          class="size-18px cursor-pointer"
-          :class="[iconColor !== '' ? `color-${iconColor}` : 'color-[--action-bar-icon-color]']">
-          <use href="#rectangle-small"></use>
-        </svg>
-        <svg
-          v-show="windowMaximized"
-          class="size-16px cursor-pointer"
-          :class="[iconColor !== '' ? `color-${iconColor}` : 'color-[--action-bar-icon-color]']">
-          <use href="#internal-reduction"></use>
-        </svg>
-      </div>
-      <!-- 关闭窗口 -->
-      <div v-if="closeW" class="action-close" :class="{ windowMaximized: 'rounded-rt-8px' }" @click="handleCloseWin">
-        <svg
-          class="size-14px cursor-pointer"
-          :class="[iconColor !== '' ? `color-${iconColor}` : 'color-[--action-bar-icon-color]']">
-          <use href="#close"></use>
-        </svg>
+          </div>
+          <!-- 关闭窗口 -->
+          <div
+            v-if="closeW"
+            class="action-close"
+            :class="{ windowMaximized: 'rounded-rt-8px' }"
+            @click="handleCloseWin">
+            <svg
+              class="size-14px cursor-pointer"
+              :class="[iconColor !== '' ? `color-${iconColor}` : 'color-[--action-bar-icon-color]']">
+              <use href="#close"></use>
+            </svg>
+          </div>
+        </div>
       </div>
     </template>
     <template v-else>

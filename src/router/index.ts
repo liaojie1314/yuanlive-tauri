@@ -9,6 +9,7 @@ import {
   type RouteRecordRaw
 } from "vue-router";
 
+import { TauriCommandEnum } from "@/enums";
 import Splashscreen from "#/views/Splashscreen.vue";
 import MobileLogin from "#/views/MobileLogin.vue";
 
@@ -239,7 +240,7 @@ router.beforeEach(async (to: RouteLocationNormalized, _from: RouteLocationNormal
       return next();
     }
 
-    const tokens = await invoke<{ token: string | null; refreshToken: string | null }>("GET_USER_TOKENS");
+    const tokens = await invoke<{ token: string | null; refreshToken: string | null }>(TauriCommandEnum.GET_TOKEN);
     const isLoggedIn = !!(tokens.token && tokens.refreshToken);
 
     // 未登录且不是登录页 → 跳转登录

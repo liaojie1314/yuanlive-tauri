@@ -11,6 +11,13 @@ pub struct UpdateUserTokenReq {
     refresh_token: String,
 }
 
+#[derive(Serialize, Deserialize, Debug, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct TokenResponse {
+    token: Option<String>,
+    refresh_token: Option<String>,
+}
+
 /// 移除当前用户的token信息
 #[tauri::command]
 pub async fn remove_token(state: State<'_, AppData>) -> Result<(), String> {
@@ -42,4 +49,20 @@ pub async fn update_token(
     }
     info!("Successfully updated user token info");
     Ok(())
+}
+
+/// 获取当前用户的token信息
+#[tauri::command]
+pub async fn get_token(state: State<'_, AppData>) -> Result<TokenResponse, String> {
+    info!("Getting user token info");
+
+    let user_info = state.user_info.lock().await;
+
+    let response = TokenResponse {
+        token: user_info.token.clone().into(),
+        refresh_token: user_info.refresh_token.clone().into(),
+    };
+
+    info!("Successfully retrieved user token info: {:?}", response);
+    Ok(response)
 }

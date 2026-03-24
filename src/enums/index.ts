@@ -137,6 +137,8 @@ export enum TauriCommandEnum {
   UPDATE_TOKEN = "update_token",
   // 移除 token
   REMOVE_TOKEN = "remove_token",
+  // 获取token
+  GET_TOKEN = "get_token",
   // 更新设置
   UPDATE_SETTINGS = "update_settings",
   // 获取文件元数据
@@ -219,7 +221,9 @@ export enum StoresEnum {
   // 视频查看器
   VIDEO_VIEWER = "videoViewer",
   // 快捷键
-  SHORTCUT = "shortcut"
+  SHORTCUT = "shortcut",
+  // 移动端
+  MOBILE = "mobile"
 }
 
 /** 本地存储的key */

@@ -286,7 +286,7 @@ fn get_invoke_handlers() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Se
     };
     use crate::command::request_command::{login_command, request_command};
     use crate::command::setting_command::{get_settings, update_settings};
-    use crate::command::token_command::remove_token;
+    use crate::command::token_command::{get_token, remove_token, update_token};
     use crate::command::upload_command::{
         check_uploaded_chunks_command, merge_chunks_command, upload_chunk_by_path_command,
         upload_chunk_bytes_command,
@@ -320,7 +320,9 @@ fn get_invoke_handlers() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Se
         is_app_state_ready,
         get_settings,
         update_settings,
+        get_token,
         remove_token,
+        update_token,
         ai_message_send_stream,
         ai_message_cancel_stream,
         login_command,

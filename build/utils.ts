@@ -55,7 +55,11 @@ const createManualChunks = (dependencies: string[]) => {
   };
 };
 
-/** 处理环境变量 */
+/**
+ * 处理环境变量
+ * @param envConf 环境变量配置
+ * @returns 处理后的环境变量配置
+ */
 const wrapperEnv = (envConf: Recordable): ViteEnv => {
   // 默认值
   const ret: ViteEnv = {

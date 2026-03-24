@@ -23,7 +23,7 @@ import { useMitt } from "@/hooks/useMitt";
 import { useWindow } from "@/hooks/useWindow";
 import { useTauriListener } from "@/hooks/useTauriListener";
 import { useGlobalShortcut } from "@/hooks/useGlobalShortcut";
-import { isDesktop, isMobile, isWindows10 } from "@/utils/PlatformUtils";
+import { isDesktop, isIOS, isMobile, isWindows10 } from "@/utils/PlatformUtils";
 import { EventEnum, MittEnum, ThemeEnum, WsResponseMessageEnum } from "@/enums";
 
 const { t } = useI18n();
@@ -85,6 +85,17 @@ const handleWebsocketEvent = async (event: any) => {
   });
   lastWsConnectionState = nextState || previousState;
   if (!shouldHandleReconnect) return;
+};
+
+/**
+ * iOS网络权限预请求
+ * 在应用启动时发起一个轻量级网络请求，触发iOS的网络权限弹窗
+ */
+const requestNetworkPermissionForIOS = async () => {
+  await fetch("https://www.apple.com/favicon.ico", {
+    method: "HEAD",
+    cache: "no-cache"
+  });
 };
 
 useMitt.on(WsResponseMessageEnum.REMOTE_LOGIN, async (data: { uid: string; ip: string; device: string }) => {
@@ -169,6 +180,11 @@ watch(
 );
 
 onMounted(async () => {
+  // iOS应用启动时预请求网络权限（必须在最开始执行）
+  if (isIOS()) {
+    requestNetworkPermissionForIOS();
+  }
+
   // 全局监听深度链接唤醒
   await onOpenUrl((urls) => {
     console.log("被外部链接唤醒，URLs:", urls);
@@ -185,6 +201,13 @@ onMounted(async () => {
       console.warn("禁用窗口阴影失败:", error);
     });
   }
+
+  // 判断是否是桌面端，桌面端需要调整样式
+  isDesktop() && import("@/styles/global/desktop.scss");
+
+  // 判断是否是移动端，移动端需要加载安全区域适配样式
+  isMobile() && import("@/styles/global/mobile.scss");
+
   if (!themes.value.content) {
     // 首次运行使用跟随系统，保持既有体验
     initTheme(ThemeEnum.OS);

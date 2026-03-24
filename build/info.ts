@@ -14,6 +14,10 @@ const boxenOptions: BoxenOptions = {
   borderStyle: "round"
 };
 
+/**
+ * 打包信息插件
+ * @returns 插件实例
+ */
 export function viteBuildInfo(): Plugin {
   let config: { command: string };
   let startTime: Dayjs;

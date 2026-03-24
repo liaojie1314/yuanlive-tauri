@@ -14,6 +14,7 @@ const settingStore = useSettingStore();
 const router = useRouter();
 const { normalLogin } = useLogin();
 
+/** 初始化加载页 */
 const init = async () => {
   if (settingStore.login.autoLogin) {
     normalLogin("mobile", true);

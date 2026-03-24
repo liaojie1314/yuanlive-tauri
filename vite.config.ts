@@ -88,7 +88,7 @@ export default defineConfig(({ mode }: ConfigEnv) => {
         ]
       }
     },
-    plugins: getPluginsList(VITE_CDN, VITE_COMPRESSION),
+    plugins: getPluginsList(VITE_CDN, VITE_COMPRESSION, currentPlatform),
     worker: {
       format: "es" as const
     },

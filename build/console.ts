@@ -8,6 +8,10 @@ try {
 
 const tauriCliVersion = pkg.devDependencies?.["@tauri-apps/cli"] ?? "unknown";
 
+/**
+ * 检测当前环境是否为中文
+ * @returns 是否为中文环境
+ */
 const detectIsChineseLocale = () => {
   const locale = process.env.LANG || process.env.LC_ALL || process.env.LC_MESSAGES || process.env.LANGUAGE || "";
   return /zh/i.test(locale);
@@ -25,6 +29,10 @@ const SERVER_URL_LABEL = isChineseLocale ? "服务端项目地址: " : "Server p
 const CLIENT_URL_LABEL = isChineseLocale ? "客户端项目地址: " : "Client project URL: ";
 const MANAGE_URL_LABEL = isChineseLocale ? "管理端项目地址: " : "Manage project URL: ";
 
+/**
+ * 获取当前运行时的包管理器
+ * @returns 当前运行时的包管理器
+ */
 const getRuntimePackageManager = () => {
   const ua = process.env.npm_config_user_agent ?? "";
   if (!ua) return "unknown";

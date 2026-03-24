@@ -9,14 +9,26 @@ import Icons from "unplugin-icons/vite"; // 图标本地化
 import IconsResolver from "unplugin-icons/resolver"; // 图标解析器
 import removeNoMatch from "vite-plugin-router-warn";
 import { visualizer } from "rollup-plugin-visualizer";
-import { NaiveUiResolver } from "unplugin-vue-components/resolvers";
+import { NaiveUiResolver, VantResolver } from "unplugin-vue-components/resolvers";
 import { codeInspectorPlugin } from "code-inspector-plugin";
 
 import { viteBuildInfo } from "./info";
 import { cdn } from "./cdn";
 import { configCompressPlugin } from "./compress";
+import { getComponentsDirs, getComponentsDtsPath } from "./components";
 
-export function getPluginsList(VITE_CDN: boolean, VITE_COMPRESSION: ViteCompression): PluginOption[] {
+/**
+ * 获取插件列表
+ * @param VITE_CDN 是否使用CDN
+ * @param VITE_COMPRESSION 压缩方式
+ * @param currentPlatform 当前平台
+ * @returns 插件列表
+ */
+export function getPluginsList(
+  VITE_CDN: boolean,
+  VITE_COMPRESSION: ViteCompression,
+  currentPlatform: string
+): PluginOption[] {
   const lifecycle = process.env.npm_lifecycle_event;
   return [
     vue(),
@@ -39,9 +51,9 @@ export function getPluginsList(VITE_CDN: boolean, VITE_COMPRESSION: ViteCompress
       dts: "src/typings/auto-imports.d.ts"
     }),
     Components({
-      dirs: ["src/components/**"],
-      resolvers: [NaiveUiResolver(), IconsResolver()],
-      dts: "src/typings/components.d.ts"
+      dirs: getComponentsDirs(currentPlatform),
+      resolvers: [NaiveUiResolver(), VantResolver(), IconsResolver()],
+      dts: getComponentsDtsPath(currentPlatform)
     }),
     /**
      * 在页面上按住组合键时，鼠标在页面移动即会在 DOM 上出现遮罩层并显示相关信息，点击一下将自动打开 IDE 并将光标定位到元素对应的代码位置

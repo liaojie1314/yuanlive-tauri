@@ -3,6 +3,11 @@ import compressPlugin from "vite-plugin-compression";
 
 const isArray = (value: any): value is any[] => Array.isArray(value);
 
+/**
+ * 配置压缩插件
+ * @param compress 压缩方式
+ * @returns 压缩插件实例
+ */
 export const configCompressPlugin = (compress: ViteCompression): Plugin | Plugin[] => {
   if (compress === "none") return null;
 

@@ -62,7 +62,7 @@
             trigger="click"
             placement="bottom-end"
             :options="contextMenuOptions"
-            @select="(key) => handleContextAction(key, index, item)">
+            @select="(key: string) => handleContextAction(key, index, item)">
             <div
               class="absolute top-[-6px] right-[-6px] z-10 flex h-5 w-5 cursor-pointer items-center justify-center rounded-full bg-[--action-bar-icon-color] text-[--tray-bg-color] opacity-0 shadow-sm transition-colors group-hover:opacity-100 hover:bg-gray-500"
               @click.stop>
