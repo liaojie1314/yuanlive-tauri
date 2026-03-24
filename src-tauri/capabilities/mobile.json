@@ -8,6 +8,7 @@
     "core:default",
     "core:webview:allow-internal-toggle-devtools",
     "core:event:default",
-    "log:default"
+    "log:default",
+    "core:app:allow-set-app-theme"
   ]
 }

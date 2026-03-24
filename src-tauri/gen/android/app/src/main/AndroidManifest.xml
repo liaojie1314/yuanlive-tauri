@@ -1,6 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- 网络权限 -->
     <uses-permission android:name="android.permission.INTERNET" />
+
+    <!-- 相机 / 麦克风 -->
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
+
+    <!-- 蓝牙 -->
+    <uses-permission android:name="android.permission.BLUETOOTH" />
+    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+
+    <!-- 存储 / 媒体访问 -->
+    <!-- Android 13+ 推荐使用新的媒体权限 -->
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+    <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
+    <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
+
+    <!-- 兼容旧版 Android（仅在低版本生效） -->
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
+        android:maxSdkVersion="32" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        android:maxSdkVersion="29" />
 
     <!-- AndroidTV support -->
     <uses-feature android:name="android.software.leanback" android:required="false" />
@@ -15,6 +38,9 @@
             android:launchMode="singleTask"
             android:label="@string/main_activity_title"
             android:name=".MainActivity"
+            android:resizeableActivity="true"
+            android:windowSoftInputMode="adjustResize"
+            android:theme="@style/Theme.yuanlive_tauri.Launcher"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -29,10 +55,6 @@
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="yuanlive" />
                 <data android:host="video" />
-                
-                
-                
-                
             </intent-filter>
             <!-- DEEP LINK PLUGIN. AUTO-GENERATED. DO NOT REMOVE. -->
         </activity>
