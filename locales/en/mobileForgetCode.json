@@ -1,0 +1,47 @@
+{
+  "title": "Forget password",
+  "steps": {
+    "verifyEmail": "Verify Email",
+    "setNewPassword": "Set Password",
+    "done": "Done"
+  },
+  "input": {
+    "label": {
+      "email": "Email",
+      "emailVerificationCode": "Verification code",
+      "newPassword": "New password",
+      "confirmPassword": "Confirm Password"
+    },
+    "email": "Email",
+    "emailCode": "Code",
+    "newPassword": "Please enter a new password ({len} characters)",
+    "confirmPassword": "Please enter the password again"
+  },
+  "validation": {
+    "minLength": "At least {len} characters",
+    "validCharacters": "Composed of English and numbers",
+    "mustSpecialChar": "There must be a special character",
+    "passwordsMatch": "Passwords match"
+  },
+  "button": {
+    "sendEmailCode": "Send code",
+    "next": "Next",
+    "goBackStep": "Back",
+    "submit": "Submit"
+  },
+  "passwordResetSuccess": "Password reset successfully",
+  "passwordResetSuccessDesc": "You can now log in with your new password",
+  "rules": {
+    "emailRequire": "Please enter your email address",
+    "emailInvalid": "Please enter a valid email address",
+    "emailCodeRequire": "Please enter the verification code sent to your email",
+    "codeLength": "Verification code must be {len} digits",
+    "newPasswordRequire": "Please enter a new password",
+    "newPasswordLength": "Password must be {len} characters",
+    "confirmPasswordRequire": "Please confirm your password",
+    "passwordsNotMatch": "Passwords do not match"
+  },
+  "tooManyRequests": "Too many requests. Please try again in {seconds} seconds",
+  "codeSentEmail": "Verification code has been sent to your email",
+  "emailResendIn": "Resend in {seconds}s"
+}

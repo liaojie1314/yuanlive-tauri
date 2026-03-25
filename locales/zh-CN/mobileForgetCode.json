@@ -1,0 +1,47 @@
+{
+  "title": "忘记密码",
+  "steps": {
+    "verifyEmail": "验证邮箱",
+    "setNewPassword": "设置密码",
+    "done": "完成"
+  },
+  "input": {
+    "label": {
+      "email": "邮箱",
+      "emailVerificationCode": "验证码",
+      "newPassword": "新密码",
+      "confirmPassword": "确认密码"
+    },
+    "email": "邮箱",
+    "emailCode": "验证码",
+    "newPassword": "请输入新密码（{len} 个字符）",
+    "confirmPassword": "请再次输入密码"
+  },
+  "validation": {
+    "minLength": "至少 {len} 个字符",
+    "validCharacters": "由英文字母和数字组成",
+    "mustSpecialChar": "必须包含特殊字符",
+    "passwordsMatch": "密码一致"
+  },
+  "button": {
+    "sendEmailCode": "发送验证码",
+    "next": "下一步",
+    "goBackStep": "返回",
+    "submit": "提交"
+  },
+  "passwordResetSuccess": "密码重置成功",
+  "passwordResetSuccessDesc": "您现在可以使用新密码登录",
+  "rules": {
+    "emailRequire": "请输入邮箱地址",
+    "emailInvalid": "请输入有效的邮箱地址",
+    "emailCodeRequire": "请输入发送到邮箱的验证码",
+    "codeLength": "验证码必须为 {len} 位",
+    "newPasswordRequire": "请输入新密码",
+    "newPasswordLength": "密码必须为 {len} 个字符",
+    "confirmPasswordRequire": "请确认密码",
+    "passwordsNotMatch": "两次输入的密码不一致"
+  },
+  "tooManyRequests": "请求过于频繁，请在 {seconds} 秒后再试",
+  "codeSentEmail": "验证码已发送至您的邮箱",
+  "emailResendIn": "{seconds}秒后重新获取"
+}
