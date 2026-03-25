@@ -10,8 +10,14 @@ import {
 } from "vue-router";
 
 import { TauriCommandEnum } from "@/enums";
-import Splashscreen from "#/views/Splashscreen.vue";
 import MobileLogin from "#/views/MobileLogin.vue";
+import MobileForgetPassword from "#/views/MobileForgetPassword.vue";
+import Splashscreen from "#/views/Splashscreen.vue";
+import MobileHome from "#/layout/index.vue";
+import MobileIndex from "#/views/index/index.vue";
+import MobileChat from "#/views/chat/index.vue";
+import MobileFollow from "#/views/follow/index.vue";
+import MobileMy from "#/views/my/index.vue";
 
 /**! 创建窗口后再跳转页面就会导致样式没有生效所以不能使用懒加载路由的方式，有些页面需要快速响应的就不需要懒加载 */
 const { BASE_URL } = import.meta.env;
@@ -31,9 +37,46 @@ const getMobileRoutes = (): Array<RouteRecordRaw> => [
     component: MobileLogin
   },
   {
+    path: "/mobile/forgetPassword",
+    name: "mobileForgetPassword",
+    component: MobileForgetPassword
+  },
+  {
     path: "/mobile/splashscreen",
     name: "splashscreen",
     component: Splashscreen
+  },
+  {
+    path: "/mobile/home",
+    name: "mobileHome",
+    component: MobileHome,
+    children: [
+      {
+        path: "",
+        name: "mobileHomeDefault",
+        redirect: "/mobile/index"
+      },
+      {
+        path: "/mobile/index",
+        name: "mobileIndex",
+        component: MobileIndex
+      },
+      {
+        path: "/mobile/chat",
+        name: "mobileChat",
+        component: MobileChat
+      },
+      {
+        path: "/mobile/follow",
+        name: "mobileFollow",
+        component: MobileFollow
+      },
+      {
+        path: "/mobile/my",
+        name: "mobileMy",
+        component: MobileMy
+      }
+    ]
   }
 ];
 
@@ -233,10 +276,11 @@ router.beforeEach(async (to: RouteLocationNormalized, _from: RouteLocationNormal
 
   try {
     const isLoginPage = to.path === "/mobile/login";
+    const isForgetPasswordPage = to.path === "/mobile/forgetPassword";
     const isSplashPage = to.path === "/mobile/splashscreen";
 
     // 闪屏页白名单：不论登录状态都允许进入
-    if (isSplashPage) {
+    if (isSplashPage || isForgetPasswordPage) {
       return next();
     }
 
