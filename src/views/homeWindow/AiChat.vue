@@ -293,6 +293,27 @@ const handleSendMessage = (payload: {
         type: "web",
         url: "https://www.baidu.com",
         snippet: "本地任务清单文档，记录了所有待办事项和开发进度..."
+      },
+      {
+        id: 3,
+        title: "b站",
+        type: "web",
+        url: "https://www.bilibili.com",
+        snippet: "本地任务清单文档，记录了所有待办事项和开发进度..."
+      },
+      {
+        id: 4,
+        title: "1.pdf",
+        type: "file",
+        snippet: "本地任务清单文档，记录了所有待办事项和开发进度...",
+        score: 0.85
+      },
+      {
+        id: 5,
+        title: "1.png",
+        type: "file",
+        snippet: "本地任务清单文档，记录了所有待办事项和开发进度...",
+        score: 0.65
       }
     ]
   };

@@ -34,3 +34,12 @@ src-tauri/binaries/ffmpeg-x86_64-pc-windows-msvc.exe
 yuanlive.key
 yuanlive.key.pub
 .env
+
+/coverage
+
+# Playwright
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+/playwright/.auth/

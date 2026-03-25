@@ -7,7 +7,7 @@
 
     <div class="flex flex-wrap gap-1.5">
       <n-popover
-        v-for="cite in citations"
+        v-for="cite in isExpanded ? citations : citations?.slice(0, 3)"
         trigger="hover"
         placement="top"
         style="
@@ -56,6 +56,13 @@
           </div>
         </div>
       </n-popover>
+      <div
+        v-if="citations && citations.length > 3"
+        class="flex cursor-pointer items-center justify-center rounded-md border border-[--line-color] bg-[--input-area-bg] px-2 py-1 text-[11px] font-bold text-[--user-text-color] transition-colors hover:bg-[--tray-hover]"
+        @click="isExpanded = !isExpanded">
+        <span v-if="!isExpanded">+{{ citations.length - 3 }}</span>
+        <i-mdi-chevron-up v-else class="h-3.5 w-3.5" />
+      </div>
     </div>
   </div>
 </template>
@@ -69,6 +76,8 @@ const { createExternalWebviewWindow } = useWindow();
 defineProps<{
   citations?: Citation[];
 }>();
+
+const isExpanded = ref(false);
 
 /**
  * 处理引用点击事件

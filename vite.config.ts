@@ -1,14 +1,15 @@
 import os from "os";
 import { join } from "node:path";
 import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 import { internalIpV4 } from "internal-ip";
 import postcsspxtorem from "postcss-pxtorem";
 import { ConfigEnv, defineConfig, loadEnv } from "vite";
-import { root, getSrcPath, createManualChunks, wrapperEnv } from "./build/utils";
+
 import { atStartup } from "./build/console";
 import { getPluginsList } from "./build/plugins";
 import { include, exclude } from "./build/optimize";
-import { fileURLToPath } from "node:url";
+import { root, getSrcPath, createManualChunks, wrapperEnv } from "./build/utils";
 
 // 读取 package.json 依赖
 const packageJson = JSON.parse(readFileSync(join(process.cwd(), "package.json"), "utf-8"));

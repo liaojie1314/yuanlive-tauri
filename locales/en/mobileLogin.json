@@ -1,0 +1,42 @@
+{
+  "welcome": "HI, Welcome",
+  "tabs": {
+    "login": "Login",
+    "register": "Register"
+  },
+  "forgetCode": "Forget",
+  "btn": {
+    "login": "Login"
+  },
+  "input": {
+    "accountPlaceholder": "Enter account",
+    "codePlaceholder": "Enter password"
+  },
+  "register": {
+    "input": {
+      "nickname": "Nickname",
+      "password": "Password",
+      "confirmPassword": "Confirm Password",
+      "email": "Email",
+      "emailVerificationCode": "Enter email verification code"
+    },
+    "btn": {
+      "register": "Register",
+      "next": "Next",
+      "sendEmailCode": "Send code",
+      "resendIn": "Resend in {seconds}s"
+    },
+    "passValidateInfo": {
+      "minLength": "At least {len} characters",
+      "validCharacters": "Composed of English and numbers",
+      "mustSpecialChar": "There must be a special character"
+    }
+  },
+  "emailInvalid": "Invalid email.",
+  "codeSentEmail": "Verification code sent. Please check your email.",
+  "codeSendFailedWithReason": "Failed to send verification code: {reason}",
+  "codeSendFailedRetry": "Failed to send verification code. Please try again later.",
+  "completeInfoBeforeRegister": "Please complete your information before registering.",
+  "registerSuccess": "Registration successful.",
+  "registerFail": "Registration failed."
+}

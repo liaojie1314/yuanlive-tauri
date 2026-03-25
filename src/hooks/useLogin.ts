@@ -15,6 +15,7 @@ import { useWindow } from "@/hooks/useWindow.ts";
 import { ensureAppStateReady } from "@/utils/AppStateReady.ts";
 import { invokeSilently } from "@/utils/TauriInvokeHandler.ts";
 import { getEnhancedFingerprint } from "@/services/fingerprint.ts";
+import { isDesktop } from "../utils/PlatformUtils";
 
 export function useLogin() {
   const userStore = useUserStore();
@@ -24,6 +25,18 @@ export function useLogin() {
   const { t } = useI18n();
   const { showTray } = storeToRefs(globalStore);
 
+  /**
+   * 在 composable 初始化时获取 router 实例
+   * 注意: useRouter() 必须在组件 setup 上下文中调用
+   * 不能在异步回调中调用 useRouter(),因为那时已经失去了 Vue 组件上下文
+   * 所以在这里提前获取并保存 router 实例,供后续异步操作使用
+   */
+  let router: ReturnType<typeof useRouter> | null = null;
+  try {
+    router = useRouter();
+  } catch (_e) {
+    void info("[useLogin] 无法获取 router 实例,可能不在组件上下文中");
+  }
   // 网络连接是否正常
   const { isOnline } = useNetwork();
   const loading = ref(false);
@@ -44,16 +57,21 @@ export function useLogin() {
    * 打开首页窗口
    */
   const openHomeWindow = async () => {
-    const registerWindow = await WebviewWindow.getByLabel("register");
-    if (registerWindow) {
-      await registerWindow.close().catch((error) => {
-        console.warn("关闭注册窗口失败:", error);
-      });
+    if (isDesktop()) {
+      const registerWindow = await WebviewWindow.getByLabel("register");
+      if (registerWindow) {
+        await registerWindow.close().catch((error) => {
+          console.warn("关闭注册窗口失败:", error);
+        });
+      }
+      await createWebviewWindow("YuanLive", "home", 1200, 720, "login", true, 900, 520, 1680, void 0, void 0, false);
+      // 只有在成功创建home窗口并且已登录的情况下才显示托盘菜单
+      showTray.value = true;
+      await resizeWindow("tray", 130, 138);
+    } else {
+      // 移动端使用路由跳转
+      router?.push("/mobile/home");
     }
-    await createWebviewWindow("YuanLive", "home", 1200, 720, "login", true, 900, 520, 1680, void 0, void 0, false);
-    // 只有在成功创建home窗口并且已登录的情况下才显示托盘菜单
-    showTray.value = true;
-    await resizeWindow("tray", 130, 138);
   };
 
   /**
@@ -115,7 +133,7 @@ export function useLogin() {
         loginDisabled.value = true;
         loading.value = false;
         loginText.value = t("auth.status.successRedirect");
-        userStore.getUserDetail();
+        await userStore.getUserDetail();
         await webSocketRust.initConnect();
         await openHomeWindow();
       })

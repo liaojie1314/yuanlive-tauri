@@ -3,7 +3,7 @@
     <action-bar proxy data-tauri-drag-region :max-w="false" />
 
     <n-flex justify="center" data-tauri-drag-region class="mt-15px">
-      <img src="/logo.webp" alt="" data-tauri-drag-region class="w-140px h-60px drop-shadow-xl" />
+      <img src="/logo.webp" alt="" data-tauri-drag-region class="w-60px h-60px drop-shadow-xl" />
     </n-flex>
 
     <!-- 二维码 -->

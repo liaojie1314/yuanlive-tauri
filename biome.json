@@ -12,7 +12,8 @@
       "!coverage",
       "!src/typings/*.d.ts",
       "!src-tauri/*",
-      "!src-tauri/gen/schemas"
+      "!src-tauri/gen/schemas",
+      "!.release-it.js"
     ]
   },
   "formatter": {

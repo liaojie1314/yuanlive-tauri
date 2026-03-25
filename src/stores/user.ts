@@ -11,15 +11,16 @@ export const useUserStore = defineStore(
     /**
      * 获取用户详情
      */
-    const getUserDetail = () => {
-      getUserInfoApi()
-        .then((res) => {
-          console.log(res);
-          userInfo.value = { ...userInfo.value, ...res };
-        })
-        .catch((e) => {
-          console.error("获取用户详情失败:", e);
-        });
+    const getUserDetail = async () => {
+      try {
+        const res = await getUserInfoApi();
+        console.log(res);
+        userInfo.value = { ...userInfo.value, ...res };
+        return res;
+      } catch (e) {
+        console.error("获取用户详情失败:", e);
+        throw e;
+      }
     };
 
     /**
