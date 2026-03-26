@@ -23,7 +23,7 @@ import { useMitt } from "@/hooks/useMitt";
 import { useWindow } from "@/hooks/useWindow";
 import { useTauriListener } from "@/hooks/useTauriListener";
 import { useGlobalShortcut } from "@/hooks/useGlobalShortcut";
-import { isDesktop, isIOS, isMobile, isWindows10 } from "@/utils/PlatformUtils";
+import { isDesktop, isIOS, isMobile, isWindows, isWindows10 } from "@/utils/PlatformUtils";
 import { EventEnum, MittEnum, ThemeEnum, WsResponseMessageEnum } from "@/enums";
 
 const { t } = useI18n();
@@ -172,8 +172,8 @@ watch(
 watch(
   () => aiStore.mcpConfig["windows-mcp"]?.enabled,
   (isEnabled) => {
-    // 如果开关被打开，且底层的 isReady 还是 false (没初始化过)
-    if (isEnabled && !isReady.value) {
+    // 如果开关被打开，且底层的 isReady 还是 false (没初始化过) 且是 Windows 系统
+    if (isEnabled && !isReady.value && isWindows()) {
       initMcp().catch((err) => console.error("动态唤醒 MCP 失败:", err));
     }
   }

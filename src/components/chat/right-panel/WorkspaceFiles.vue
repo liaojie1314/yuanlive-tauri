@@ -17,7 +17,10 @@
       </div>
 
       <div v-if="section.files.length > 0" class="mt-1 flex flex-wrap gap-2.5 select-none">
-        <div v-for="(item, index) in section.files" class="group relative flex-shrink-0 cursor-default" :key="index">
+        <div
+          v-for="(item, index) in expandedSections[section.id] ? section.files : section.files.slice(0, DISPLAY_LIMIT)"
+          class="group relative flex-shrink-0 cursor-default"
+          :key="index">
           <div
             v-if="['image', 'video'].includes(item.type)"
             class="relative h-14 w-14 cursor-pointer overflow-hidden rounded-lg border border-[--line-color] bg-[--input-area-bg] shadow-sm transition-opacity hover:opacity-90 sm:h-16 sm:w-16"
@@ -61,7 +64,7 @@
             v-if="section.id === 'context'"
             trigger="click"
             placement="bottom-end"
-            :options="contextMenuOptions"
+            :options="getContextMenuOptions(item)"
             @select="(key: string) => handleContextAction(key, index, item)">
             <div
               class="absolute top-[-6px] right-[-6px] z-10 flex h-5 w-5 cursor-pointer items-center justify-center rounded-full bg-[--action-bar-icon-color] text-[--tray-bg-color] opacity-0 shadow-sm transition-colors group-hover:opacity-100 hover:bg-gray-500"
@@ -69,6 +72,15 @@
               <i-mdi-dots-horizontal class="h-3 w-3" />
             </div>
           </n-dropdown>
+        </div>
+
+        <div
+          v-if="section.files.length > DISPLAY_LIMIT"
+          class="flex h-14 w-14 cursor-pointer flex-col items-center justify-center gap-1 rounded-lg border border-[--line-color] bg-[--input-area-bg] shadow-sm transition-shadow select-none hover:bg-[--tray-hover] sm:h-16 sm:w-16"
+          @click="toggleExpand(section.id)">
+          <span class="text-xs font-bold text-[--user-text-color] opacity-80">
+            {{ expandedSections[section.id] ? "收起" : `+${section.files.length - DISPLAY_LIMIT}` }}
+          </span>
         </div>
       </div>
 
@@ -92,24 +104,13 @@ import { getFileSuffix } from "@/utils/FormattingUtils";
 
 const { t } = useI18n();
 
-// 上下文文件的下拉菜单选项
-const contextMenuOptions = [
-  {
-    label: t("components.workspaceFiles.addToKB"),
-    key: "add_to_kb",
-    icon: () => h(NIcon, null, { default: () => h(IconDatabasePlus) })
-  },
-  { type: "divider", key: "d1" },
-  {
-    label: t("components.workspaceFiles.remove"),
-    key: "remove",
-    // 可以直接给 NIcon 传类名来控制颜色
-    icon: () => h(NIcon, { class: "text-red-500" }, { default: () => h(IconClose) })
-  }
-];
+const DISPLAY_LIMIT = 5; // 设置默认展示的数量
+// 允许加入知识库的文件后缀白名单
+const SUPPORTED_KB_EXTENSIONS = ["md", "pdf", "txt", "docx", "csv", "json"];
 
 const showKbModal = ref(false);
 const currentOperateFile = ref<any>(null);
+const expandedSections = ref<Record<string, boolean>>({});
 // 上下文
 const contextFiles = ref([
   { type: "image", name: "图片.png", path: "/mock/path/img.png", previewUrl: "https://picsum.photos/id/180/200/200" }, //
@@ -160,6 +161,41 @@ const sections = computed(() => [
     onAction: (_index: number, item: any) => downloadGeneratedFile(item)
   }
 ]);
+
+/**
+ * 根据文件类型动态生成右键/下拉菜单
+ * @param item 要操作的文件项
+ * @returns 右键/下拉菜单选项数组
+ */
+const getContextMenuOptions = (item: any) => {
+  const ext = getFileSuffix(item.name || "").toLowerCase();
+  const isSupported = SUPPORTED_KB_EXTENSIONS.includes(ext);
+  const options: any[] = [];
+  // 只有在白名单内的文件，才显示“添加到知识库”
+  if (isSupported) {
+    options.push({
+      label: t("components.workspaceFiles.addToKB"),
+      key: "add_to_kb",
+      icon: () => h(NIcon, null, { default: () => h(IconDatabasePlus) })
+    });
+    options.push({ type: "divider", key: "d1" });
+  }
+  // “移除”按钮对所有文件都可用
+  options.push({
+    label: t("components.workspaceFiles.remove"),
+    key: "remove",
+    icon: () => h(NIcon, { class: "text-red-500" }, { default: () => h(IconClose) })
+  });
+  return options;
+};
+
+/**
+ * 切换文件列表的展开状态
+ * @param sectionId 要切换的文件列表的 ID
+ */
+const toggleExpand = (sectionId: string) => {
+  expandedSections.value[sectionId] = !expandedSections.value[sectionId];
+};
 
 /**
  * 处理上下文文件的菜单操作

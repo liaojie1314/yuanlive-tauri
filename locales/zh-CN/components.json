@@ -202,13 +202,23 @@
   "agentSettings": {
     "title": "Agent 与扩展配置",
     "role": "角色设定",
-    "selectRolePlaceholder": "选择预设角色...",
-    "customPromptPlaceholder": "在这里输入自定义的 System Prompt，设定 AI 的行为方式...",
+    "selectRolePlaceholder": "选择预设角色",
+    "customPromptPlaceholder": "输入自定义的 System Prompt，设定 AI 的行为方式(Enter 保存/更新, Shift+Enter 换行)",
     "mcp": {
       "title": "本地 MCP 插件",
       "windows": "允许 AI 读取本地系统级信息与状态",
       "fs": "允许 AI 读写授权的本地项目目录",
       "shell": "允许 AI 执行安全的终端构建命令"
+    },
+    "dialog": {
+      "title": "保存自定义角色",
+      "roleNamePlaceholder": "请输入角色名称...",
+      "cancel": "取消",
+      "save": "保存"
+    },
+    "msg": {
+      "updateSuccess": "已更新角色 [{label}] 的预设词",
+      "saveSuccess": "已成功保存角色"
     }
   },
   "addToKnowledge": {
@@ -307,7 +317,8 @@
       "noVideoInfo": "无法获取当前视频信息",
       "videoLinkCopied": "视频链接已复制到剪贴板",
       "copyFailed": "复制失败，请重试",
-      "shortcutsSaveSuccess": "快捷键保存成功"
+      "shortcutsSaveSuccess": "快捷键保存成功",
+      "alreadyFirstVideo": "已经是第一个视频啦"
     },
     "resolution": {
       "2k": "超清2K",
@@ -318,6 +329,7 @@
     },
     "menu": {
       "playPause": "播放/暂停",
+      "watchLater": "稍后再看",
       "mute": "静音/取消静音",
       "pip": "画中画模式",
       "fullscreen": "全屏/退出全屏"

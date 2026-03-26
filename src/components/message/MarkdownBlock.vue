@@ -10,6 +10,7 @@
 <script setup lang="ts">
 import hljs from "highlight.js";
 import { marked } from "marked";
+import DOMPurify from "dompurify";
 import "highlight.js/styles/github.css";
 import { save } from "@tauri-apps/plugin-dialog";
 import { writeTextFile } from "@tauri-apps/plugin-fs";
@@ -27,6 +28,8 @@ const props = defineProps<{
   content: string;
   isSelf: boolean;
 }>();
+
+let renderTimer: any = null;
 
 const languageMap: Record<string, string> = {
   js: "javascript",
@@ -79,7 +82,58 @@ const languageMap: Record<string, string> = {
 // Markdown 解析逻辑
 const renderedHtml = computed(() => {
   if (!props.content) return "";
-  return marked.parse(props.content, { breaks: true, gfm: true }) as string;
+
+  let safeContent = props.content;
+
+  // 1. 解决流式输出时 MD 标签不全问题 (自动闭合代码块)
+  // 统计反引号 ``` 出现的次数，如果是奇数，说明大模型还在输出代码中，没有闭合
+  const codeBlockMatches = safeContent.match(/```/g);
+  if (codeBlockMatches && codeBlockMatches.length % 2 !== 0) {
+    safeContent += "\n```"; // 强制追加闭合符，防止排版错乱
+  }
+  // 2. 将 Markdown 转换为原始 HTML
+  const rawHtml = marked.parse(safeContent, { breaks: true, gfm: true }) as string;
+  // 3. 防御 XSS 攻击，清洗脏 HTML
+  // 注意：允许 class 属性，否则 Highlight.js 的高亮样式会丢失
+  const cleanHtml = DOMPurify.sanitize(rawHtml, {
+    ALLOWED_TAGS: [
+      "h1",
+      "h2",
+      "h3",
+      "h4",
+      "h5",
+      "h6",
+      "blockquote",
+      "p",
+      "a",
+      "ul",
+      "ol",
+      "nl",
+      "li",
+      "b",
+      "i",
+      "strong",
+      "em",
+      "strike",
+      "code",
+      "hr",
+      "br",
+      "div",
+      "table",
+      "thead",
+      "caption",
+      "tbody",
+      "tr",
+      "th",
+      "td",
+      "pre",
+      "span",
+      "img",
+      "del"
+    ],
+    ALLOWED_ATTR: ["href", "name", "target", "src", "class", "alt", "title"] // 必须允许 class
+  });
+  return cleanHtml;
 });
 
 /**
@@ -259,11 +313,20 @@ const handleClick = async (e: MouseEvent) => {
 };
 
 // 监听 content 变化重新增强 DOM
-watchEffect(() => {
-  if (props.content) {
-    nextTick(() => enhanceCodeBlocks());
-  }
-});
+watch(
+  () => props.content,
+  () => {
+    // 只要有新字吐出来，就打断之前的渲染倒计时
+    if (renderTimer) clearTimeout(renderTimer);
+    // 延迟 500ms 执行 DOM 增强和代码高亮
+    // 效果：大模型在快速吐字时，只输出原色文本，绝不执行耗时的高亮操作；
+    // 只有当模型输出彻底结束，或者网络卡顿停顿超过 0.5 秒时，才会进行一次完美的高亮渲染。
+    renderTimer = setTimeout(() => {
+      nextTick(() => enhanceCodeBlocks());
+    }, 500);
+  },
+  { immediate: true }
+);
 
 onMounted(() => document.addEventListener("click", handleClick));
 onUnmounted(() => document.removeEventListener("click", handleClick));

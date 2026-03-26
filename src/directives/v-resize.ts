@@ -1,27 +1,23 @@
 import type { Directive, DirectiveBinding } from "vue";
 
-const map = new WeakMap<Element, (size: { width: number; height: number }) => void>();
+const map = new WeakMap<Element, (size: { width: number; height: number }, el: HTMLElement) => void>();
 
 const ob = new ResizeObserver((entries) => {
-  for (const entry of entries) {
-    const handler = map.get(entry.target);
-    if (handler) {
-      // 更加安全的获取尺寸方式
-      const box = entry.borderBoxSize?.[0];
-      if (box) {
-        handler({
-          width: box.inlineSize,
-          height: box.blockSize
-        });
-      } else {
-        // 降级处理：某些旧浏览器可能只支持 contentRect
-        handler({
-          width: entry.contentRect.width,
-          height: entry.contentRect.height
-        });
+  // 使用 requestAnimationFrame 防止重绘时的 "ResizeObserver loop limit exceeded" 报错
+  window.requestAnimationFrame(() => {
+    for (const entry of entries) {
+      const handler = map.get(entry.target);
+      if (handler) {
+        const box = entry.borderBoxSize?.[0];
+        const el = entry.target as HTMLElement; // 拿到 DOM 元素
+        if (box) {
+          handler({ width: box.inlineSize, height: box.blockSize }, el); // 🌟 2. 传出 el
+        } else {
+          handler({ width: entry.contentRect.width, height: entry.contentRect.height }, el); // 🌟 2. 传出 el
+        }
       }
     }
-  }
+  });
 });
 
 export const vResize: Directive = {
@@ -30,6 +26,10 @@ export const vResize: Directive = {
     map.set(el, binding.value);
     // 开始监听
     ob.observe(el);
+  },
+  // 增加 updated 钩子，保证模板里写内联箭头函数时能拿到最新闭包
+  updated(el: HTMLElement, binding: DirectiveBinding) {
+    map.set(el, binding.value);
   },
   unmounted(el: HTMLElement) {
     // 取消监听并清理 map

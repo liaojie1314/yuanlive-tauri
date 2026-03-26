@@ -145,13 +145,23 @@
   "agentSettings": {
     "title": "Agent & Extensions Settings",
     "role": "Role Settings",
-    "selectRolePlaceholder": "Select a role...",
-    "customPromptPlaceholder": "Customize System Prompt...",
+    "selectRolePlaceholder": "Select a role",
+    "customPromptPlaceholder": "Customize System Prompt(Enter save/update, Shift+Enter line break)",
     "mcp": {
       "title": "Local MCP Plugins",
       "windows": "Allow AI to read local system-level information and status",
       "fs": "Allow AI to read and write authorized local project directories",
       "shell": "Allow AI to execute safe terminal build commands"
+    },
+    "dialog": {
+      "title": "Save Custom Role",
+      "roleNamePlaceholder": "Input role name...",
+      "cancel": "Cancel",
+      "save": "Save"
+    },
+    "msg": {
+      "updateSuccess": "Role updated: [{label}]",
+      "saveSuccess": "Role saved successfully"
     }
   },
   "messageItem": {
@@ -307,7 +317,8 @@
       "noVideoInfo": "Failed to get current video info",
       "videoLinkCopied": "Video link copied to clipboard",
       "copyFailed": "Copy failed, please try again",
-      "shortcutsSaveSuccess": "Shortcuts saved successfully"
+      "shortcutsSaveSuccess": "Shortcuts saved successfully",
+      "alreadyFirstVideo": "Already the first video"
     },
     "resolution": {
       "2k": "2K",
@@ -318,6 +329,7 @@
     },
     "menu": {
       "playPause": "play/pause",
+      "watchLater": "watch later",
       "mute": "mute/unmute",
       "pip": "picture-in-picture",
       "fullscreen": "fullscreen"
