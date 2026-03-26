@@ -449,21 +449,21 @@
 </template>
 
 <script setup lang="ts">
+import videojs from "video.js";
+import { useI18n } from "vue-i18n";
+import "video.js/dist/video-js.css";
 import { writeText } from "@tauri-apps/plugin-clipboard-manager";
 import { BaseDirectory } from "@tauri-apps/plugin-fs";
-import videojs from "video.js";
-import "video.js/dist/video-js.css";
-import { useI18n } from "vue-i18n";
 
-import { unfollowApi } from "@/api/follow";
-import { cancelLikeVideoApi, likeVideoApi, recommendVideoApi, unlikeVideoApi } from "@/api/video";
 import { useDownload } from "@/hooks/useDownload";
 import { useFullscreen } from "@/hooks/useFullscreen";
+import { useVideoStore } from "@/stores/video";
 import { useDanmakuStore } from "@/stores/danmaku";
 import { usePlaylistStore } from "@/stores/playlist";
 import { useShortcutStore, type ShortcutConfig } from "@/stores/shortcut";
-import { useVideoStore } from "@/stores/video";
 import { formatSecondsToTimeStr } from "@/utils/FormattingUtils";
+import { unfollowApi } from "@/api/follow";
+import { cancelLikeVideoApi, likeVideoApi, recommendVideoApi, unlikeVideoApi } from "@/api/video";
 
 const { t } = useI18n();
 const { isFullscreen } = useFullscreen();
@@ -511,6 +511,7 @@ interface Danmaku {
   type?: "scroll" | "top" | "bottom";
 }
 
+let unFollowing = false;
 const playbackRates = [0.5, 0.75, 1.0, 1.25, 1.5, 2.0];
 const playbackRateOptions = playbackRates.map((rate) => ({ label: `${rate}x`, key: rate }));
 const displayedDanmakuIds = new Set<string>();
@@ -606,6 +607,7 @@ const isLeftControlsCompact = ref(false);
 const showPauseOverlay = ref(false);
 const videoMenuOptions = computed(() => [
   { label: t("components.videoPlayer.menu.playPause"), action: "play-pause" },
+  { label: t("components.videoPlayer.menu.watchLater"), action: "watch-later" },
   { label: t("components.videoPlayer.menu.mute"), action: "mute" },
   { label: t("components.videoPlayer.menu.pip"), action: "pip" },
   { label: t("components.videoPlayer.menu.fullscreen"), action: "fullscreen" }
@@ -721,7 +723,22 @@ const handleShortcutKeyDown = (e: KeyboardEvent) => {
 
   // 将当前按键转为配置表中对应的格式
   let currentKey = e.key.toUpperCase();
-  if (e.code === "Space") currentKey = "Space";
+
+  if (e.code === "Space") {
+    currentKey = "Space";
+  }
+  // 1. 修复方向键：保持原生驼峰大小写，不转大写
+  else if (e.key.startsWith("Arrow")) {
+    currentKey = e.key;
+  }
+  // 2. 修复音量加：匹配纯 '+' 号，或者 Shift + '='
+  else if (e.key === "+" || (e.shiftKey && e.key === "=")) {
+    currentKey = "Shift+";
+  }
+  // 3. 修复音量减：匹配纯 '_' 号，或者 Shift + '-'
+  else if (e.key === "_" || (e.shiftKey && e.key === "-")) {
+    currentKey = "Shift-";
+  }
 
   const config = shortcutStore.shortcuts;
 
@@ -783,6 +800,52 @@ const handleShortcutKeyDown = (e: KeyboardEvent) => {
       e.preventDefault();
       togglePlay();
       break;
+    case config.watchLater:
+      e.preventDefault();
+      watchLater();
+      break;
+    case config.volumeUp:
+      e.preventDefault();
+      // 音量每次增加 5%，最大不超过 100%
+      setVolume(Math.min(100, videoStore.volume + 5));
+      // 如果之前是静音状态，调大音量时自动取消静音
+      if (videoStore.muted && videoStore.volume > 0) {
+        toggleMute();
+      }
+      break;
+    case config.volumeDown:
+      e.preventDefault();
+      // 音量每次减少 5%，最小不低于 0%
+      setVolume(Math.max(0, videoStore.volume - 5));
+      break;
+    case config.forward:
+      e.preventDefault();
+      if (playerRef.value) {
+        // 快进 5 秒，不超过视频总时长
+        seek(Math.min(duration.value, currentTime.value + 5));
+      }
+      break;
+    case config.backward:
+      e.preventDefault();
+      if (playerRef.value) {
+        // 后退 5 秒，不低于 0 秒
+        seek(Math.max(0, currentTime.value - 5));
+      }
+      break;
+    case config.pageDown:
+      // 播放下一个视频
+      playlistStore.playNext();
+      e.preventDefault();
+      break;
+    case config.pageUp:
+      e.preventDefault();
+      // 播放上一个视频 (检查是否已经是第一个)
+      if (playlistStore.currentVideoIndex > 0) {
+        playlistStore.currentVideoIndex--;
+      } else {
+        window.$message?.info(t("components.videoPlayer.msg.alreadyFirstVideo"));
+      }
+      break;
   }
 };
 
@@ -811,6 +874,9 @@ const handleMenuSelect = (item: any) => {
     case "play-pause":
       togglePlay();
       break;
+    case "watch-later":
+      watchLater();
+      break;
     case "mute":
       toggleMute();
       break;
@@ -821,6 +887,11 @@ const handleMenuSelect = (item: any) => {
       toggleFullscreen();
       break;
   }
+};
+
+/** 添加到稍后再看列表 */
+const watchLater = () => {
+  // TODO
 };
 
 /**
@@ -1123,18 +1194,24 @@ const dislikeVideo = () => {
 /** 切换关注状态 */
 const toggleFollow = async () => {
   showMoreTooltip.value = false;
-  window.$dialog.warning({
-    content: t("components.videoPlayer.dialog.confirmCancel"),
-    title: t("components.videoPlayer.dialog.unfollowConfirm"),
-    positiveText: t("components.common.confirm"),
-    negativeText: t("components.common.cancel"),
-    onPositiveClick: async () => {
-      if (isFollowed.value) {
-        isFollowed.value = (await unfollowApi(playlistStore.currentUserId as number)) ?? false;
-        return;
+  if (!unFollowing) {
+    unFollowing = true;
+    window.$dialog.warning({
+      content: t("components.videoPlayer.dialog.confirmCancel"),
+      title: t("components.videoPlayer.dialog.unfollowConfirm"),
+      positiveText: t("components.common.confirm"),
+      negativeText: t("components.common.cancel"),
+      onAfterLeave: () => {
+        unFollowing = false;
+      },
+      onPositiveClick: async () => {
+        if (isFollowed.value) {
+          isFollowed.value = (await unfollowApi(playlistStore.currentUserId as number)) ?? false;
+          return;
+        }
       }
-    }
-  });
+    });
+  }
 };
 
 /** 举报视频 */

@@ -24,7 +24,7 @@
       "@/*": ["./src/*"],
       "#/*": ["./src/mobile/*"]
     },
-    "types": ["node", "unplugin-icons/types/vue"],
+    "types": ["node", "unplugin-icons/types/vue", "vitest/globals", "@vue/test-utils"],
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true
   },

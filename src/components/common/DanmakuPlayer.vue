@@ -32,7 +32,16 @@
           fontSize: `${store.actualFontSize}px`,
           opacity: hoveredId === item.id ? 1 : store.settings.opacity / 100
         }">
-        <span class="danmaku-content flex-1 leading-relaxed">{{ item.text }}</span>
+        <span v-if="!item.gift" class="danmaku-content flex-1 leading-relaxed">{{ item.text }}</span>
+
+        <div v-else class="danmaku-gift text-[#ff6b9d] flex items-center gap-1.5 font-bold tracking-wide">
+          <img v-if="item.gift.icon" alt="gift-icon" class="h-5 w-5 object-contain" :src="item.gift.icon" />
+          <i-mdi-gift v-else class="text-lg" />
+          <span>{{ item.gift.userName }}</span>
+          <span class="font-normal">送出</span>
+          <span>{{ item.gift.giftName }}</span>
+          <span class="text-lg italic ml-0.5">x {{ item.gift.count }}</span>
+        </div>
 
         <span
           v-if="item.count > 1"
@@ -115,7 +124,8 @@ const addDanmaku = (
   isMe: boolean = false,
   id?: string | number,
   isLiked: boolean = false,
-  danmakuType?: "scroll" | "top" | "bottom"
+  danmakuType?: "scroll" | "top" | "bottom",
+  giftData?: { icon?: string; userName: string; giftName: string; count: number | string }
 ) => {
   if (!store.settings.enabled) return;
 
@@ -204,7 +214,8 @@ const addDanmaku = (
     isLiked,
     type,
     count: 1, // Combo 计数器
-    comboKey: now // 动画激活用 Key
+    comboKey: now, // 动画激活用 Key
+    gift: giftData // 礼物数据，可选
   });
 };
 

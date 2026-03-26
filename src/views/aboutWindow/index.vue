@@ -11,7 +11,7 @@
           <img
             src="/logo.webp"
             alt=""
-            class="top-30% -translate-y-30% w-140px h-60px absolute left-1/2 -translate-x-1/2 transform drop-shadow-md" />
+            class="top-30% -translate-y-30% w-60px h-60px absolute left-1/2 -translate-x-1/2 transform drop-shadow-md" />
         </div>
       </div>
 

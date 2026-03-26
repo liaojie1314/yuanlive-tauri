@@ -135,6 +135,26 @@ pnpm tauri:dev # 启动桌面端
 pnpm tauri:android:dev # 启动android端 更多命令查看package.json
 ```
 
+## 🧪 测试
+
+```sh
+# e2e测试
+# 1. 打包项目(windows -> 全部格式 -> 调试版本)
+pnpm tauri:build
+# 2. 运行测试
+pnpm test:e2e # E2E 测试 (Playwright) 基于CDP (Chrome DevTools Protocol)
+pnpm test:e2e:headed # E2E 测试 (可视化模式)
+pnpm test:e2e:ui # E2E 测试 (UI模式)
+pnpm test:e2e:report # E2E 测试报告
+
+# 单元测试
+pnpm test:unit
+# 使用 vitest UI
+pnpm test:ui
+# 测试覆盖率
+pnpm test:coverage
+```
+
 ## 🔄️ 代码提交
 
 ```shell

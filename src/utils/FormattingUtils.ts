@@ -1,5 +1,3 @@
-import { compact } from "es-toolkit";
-
 /** 文件图标映射关系表 */
 const fileSuffixMap: Record<string, string> = {
   cad: "cad",
@@ -84,6 +82,10 @@ export const formatBytes = (bytes: number): string => {
 
 /**
  * 非中文文本超过指定非空格字符数时截断并追加省略号
+ * @param text 要格式化的文本
+ * @param maxLength 最大非空格字符数
+ * @param omission 截断后追加的省略号
+ * @returns 格式化后的文本
  */
 export const formatBottomText = (text: string, maxLength = 6, omission = "...") => {
   const pureText = text.replace(/\s/g, "");
@@ -91,7 +93,11 @@ export const formatBottomText = (text: string, maxLength = 6, omission = "...") 
   if (hasChinese || pureText.length <= maxLength) {
     return text;
   }
-  const nonSpaceIndexes = compact(Array.from(text).map((char, idx) => (char.trim().length > 0 ? idx : undefined)));
+
+  const nonSpaceIndexes = Array.from(text)
+    .map((char, idx) => (char.trim().length > 0 ? idx : undefined))
+    .filter((idx) => idx !== undefined) as number[];
+
   const cutIndex = nonSpaceIndexes[maxLength - 1] ?? text.length - 1;
   return `${text.slice(0, cutIndex + 1).trimEnd()}${omission}`;
 };

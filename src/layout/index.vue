@@ -25,6 +25,7 @@ import { useAiStore } from "@/stores/ai";
 import { useGlobalStore } from "@/stores/global";
 import FileUtil from "@/utils/FileUtil";
 import { getFilesMeta } from "@/utils/PathUtils";
+import { isWindows } from "@/utils/PlatformUtils";
 import rustWebSocketClient from "@/services/webSocketRust";
 
 const { t } = useI18n();
@@ -204,7 +205,7 @@ onMounted(async () => {
     }
     await homeWindow.show();
   }
-  if (aiStore.mcpConfig["windows-mcp"]?.enabled && !isReady.value) {
+  if (aiStore.mcpConfig["windows-mcp"]?.enabled && !isReady.value && isWindows()) {
     // 不用 await 阻塞主 UI 的渲染，让它在后台慢慢跑
     initMcp().catch((err) => console.error("后台初始化 MCP 失败:", err));
   }

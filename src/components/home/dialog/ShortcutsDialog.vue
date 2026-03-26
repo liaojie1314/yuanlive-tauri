@@ -207,7 +207,7 @@ const formatKeyDisplay = (key: string) => {
  * @param key 要记录的按键
  */
 const startRecording = (key: ShortcutKey) => {
-  if (["volumeUp", "pageUp", "forward"].includes(key)) {
+  if (["volumeUp", "volumeDown", "pageUp", "pageDown", "forward", "backward"].includes(key)) {
     window.$message?.warning(t("dialog.shortcuts.msg.systemShortcut"));
     return;
   }
