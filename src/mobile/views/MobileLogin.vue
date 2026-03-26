@@ -554,7 +554,7 @@ timerWorker.onerror = () => {
 onMounted(async () => {
   window.addEventListener("click", closeMenu, true);
   if (isIOS()) {
-    invoke("set_webview_keyboard_adjustment", { enabled: false });
+    invoke(TauriCommandEnum.SET_WEBVIEW_KEYBOARD_ADJUSTMENT, { enabled: false });
   }
 
   // 进入登录页面时立即隐藏首屏，确保无论登录成功或失败都能看到登录界面
@@ -570,7 +570,7 @@ onUnmounted(() => {
   stopSendCodeCountdown();
   timerWorker.terminate();
   if (isIOS()) {
-    invoke("set_webview_keyboard_adjustment", { enabled: false });
+    invoke(TauriCommandEnum.SET_WEBVIEW_KEYBOARD_ADJUSTMENT, { enabled: false });
   }
 });
 </script>

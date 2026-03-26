@@ -157,8 +157,6 @@ export enum TauriCommandEnum {
   WS_IS_CONNECTED = "ws_is_connected",
   // 发送消息
   WS_SEND_MESSAGE = "ws_send_message",
-  // 根据文本播放音频
-  FETCH_AUDIO_TTS = "fetch_audio_tts",
   /** desktop专属 */
   // 推送窗口数据
   PUSH_WINDOW_PAYLOAD = "push_window_payload",
@@ -189,7 +187,9 @@ export enum TauriCommandEnum {
   SEND_TO_MCP = "send_to_mcp",
   /** mobile 专属 */
   // 关闭splash
-  HIDE_SPLASH_SCREEN = "hide_splash_screen"
+  HIDE_SPLASH_SCREEN = "hide_splash_screen",
+  /** ios 专属 */
+  SET_WEBVIEW_KEYBOARD_ADJUSTMENT = "set_webview_keyboard_adjustment"
 }
 
 /** pinia存储的名称 */
@@ -210,6 +210,8 @@ export enum StoresEnum {
   DANMAKU = "danmaku",
   // 视频
   VIDEO = "video",
+  // 礼物
+  GIFT = "gift",
   // 播放列表
   PLAYLIST = "playlist",
   // AI

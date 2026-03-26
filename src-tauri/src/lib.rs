@@ -10,6 +10,7 @@ mod request_client;
 #[cfg(desktop)]
 mod tray;
 pub mod websocket;
+mod webview_helper;
 
 use crate::configuration::{get_configuration, BackendSettings};
 use crate::error::CommonError;
@@ -293,6 +294,8 @@ fn get_invoke_handlers() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Se
     };
     #[cfg(windows)]
     use crate::desktop::windows_mcp::{send_to_mcp, start_mcp};
+    #[cfg(target_os = "ios")]
+    use crate::mobile::keyboard::set_webview_keyboard_adjustment;
     #[cfg(mobile)]
     use crate::mobile::splash::hide_splash_screen;
     use crate::websocket::commands::{
@@ -378,5 +381,7 @@ fn get_invoke_handlers() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Se
         extract_video_cover,
         #[cfg(mobile)]
         hide_splash_screen,
+        #[cfg(target_os = "ios")]
+        set_webview_keyboard_adjustment,
     ]
 }
