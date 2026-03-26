@@ -83,6 +83,12 @@
 
                 <div
                   class="flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg bg-[--bg-setting-item] text-[--text-color] transition-colors hover:bg-[--bg-menu-hover]"
+                  @click="likeLive">
+                  <i-mdi-heart-outline class="h-5 w-5 opacity-80" />
+                </div>
+
+                <div
+                  class="flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg bg-[--bg-setting-item] text-[--text-color] transition-colors hover:bg-[--bg-menu-hover]"
                   @click="openReportDialog">
                   <i-mdi-alert-outline class="h-5 w-5 opacity-80" />
                 </div>
@@ -245,8 +251,43 @@
                 </div>
               </div>
 
-              <div class="control-btn" @click="toggleGiftSettings">
-                <i-mdi-gift class="h-5 w-5 text-white" />
+              <div class="control-item relative" @mouseenter="showGiftSettings" @mouseleave="hideGiftSettings">
+                <div class="control-btn">
+                  <i-mdi-gift class="w-5 h-5 text-white" />
+                </div>
+
+                <div
+                  v-if="showGiftSettingsPanel"
+                  class="gift-settings-panel"
+                  @mouseenter="handleGiftSettingsPanelEnter"
+                  @mouseleave="handleGiftSettingsPanelLeave">
+                  <div class="settings-header">
+                    <span class="settings-title">礼物设置</span>
+                  </div>
+
+                  <div class="settings-content">
+                    <div class="settings-item">
+                      <span class="settings-label">送礼信息提示</span>
+                      <div class="settings-arrow">
+                        <n-switch class="control-switch" v-model:value="giftStore.settings.showGiftMessages" />
+                      </div>
+                    </div>
+
+                    <div class="settings-item">
+                      <span class="settings-label">屏蔽礼物特效</span>
+                      <div class="settings-arrow">
+                        <n-switch class="control-switch" v-model:value="giftStore.settings.hideEffects" />
+                      </div>
+                    </div>
+
+                    <div class="settings-item">
+                      <span class="settings-label">快捷键送礼</span>
+                      <div class="settings-arrow">
+                        <n-switch class="control-switch" v-model:value="giftStore.settings.enableShortcut" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
 
               <div
@@ -568,8 +609,57 @@
         <div class="flex flex-1 items-center gap-2 overflow-hidden whitespace-nowrap">
           <i-mdi-account-group class="flex-shrink-0 text-[--action-bar-icon-color]" />
           <span class="truncate font-medium whitespace-nowrap text-[--text-color]">在线观众 · {{ audienceCount }}</span>
-          <i-mdi-information-outline class="flex-shrink-0 text-xs text-[--user-text-color]" />
+
+          <n-popover
+            trigger="hover"
+            placement="bottom"
+            style="
+              padding: 16px;
+              border-radius: 12px;
+              background-color: var(--bg-popover);
+              border: 1px solid var(--line-color);
+              box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.2);
+            "
+            :show-arrow="false">
+            <template #trigger>
+              <i-mdi-information-outline
+                class="flex-shrink-0 cursor-help text-sm text-[--user-text-color] transition-colors hover:text-[--text-color]" />
+            </template>
+
+            <div class="flex w-72 flex-col gap-4 text-xs">
+              <div class="text-sm font-bold text-[--text-color]">点赞和送礼后排序更新</div>
+
+              <div>
+                <div class="mb-1 font-bold text-[--text-color]">排序规则</div>
+                <div class="leading-relaxed text-[--user-text-color]">
+                  在线观众列表会默认进行排序，观众点赞30次或送出1钻石礼物，均有机会获得1点榜单值；每10分钟，单个用户可通过点赞获得5点榜单值，超出后将不再继续获得（高峰时段可能会有计值延迟或不稳定现象，均属正常）。
+                </div>
+              </div>
+
+              <div>
+                <div class="mb-1 font-bold text-[--text-color]">特别提醒</div>
+                <div class="leading-relaxed text-[--user-text-color]">
+                  此列表仅展示当前在直播间内用户互动情况，若离开直播间或退出重进后，列表信息会发生变化，请点击打开在线观众列表了解当前排名。因未登录或未绑定抖音账号、内容安全、技术限制等原因，部分观众虽然在观看直播，但无法展现在在线观众榜内。
+                </div>
+              </div>
+
+              <div>
+                <div class="mb-1 font-bold text-[--text-color]">1000贡献用户</div>
+                <div class="leading-relaxed text-[--user-text-color]">
+                  用户在本场直播中榜单值>1000，即可展示头像。达成10000榜单值，即使退出直播间也能在页面展示。优先展示当前在直播间的用户，本场直播先达到1000榜单值展示越靠前。
+                </div>
+              </div>
+
+              <div>
+                <div class="mb-1 font-bold text-[--text-color]">高等级用户</div>
+                <div class="leading-relaxed text-[--user-text-color]">
+                  直播间内用户荣誉等级>=31级，且在线榜单值>0，即可进行展示。等级阶段越高，展示越靠前，同一等级阶段按在线榜单值直排序，值越大越靠前。
+                </div>
+              </div>
+            </div>
+          </n-popover>
         </div>
+
         <div
           class="flex h-8 w-8 flex-shrink-0 cursor-pointer items-center justify-center rounded-full bg-[--left-item-bg-color] text-[--action-bar-icon-color] transition-colors hover:bg-[--action-bar-icon-hover]"
           @click="toggleChat">
@@ -608,16 +698,19 @@ import mpegts from "mpegts.js";
 import { useI18n } from "vue-i18n";
 import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
 
+import { useGiftStore } from "@/stores/gift";
 import { useDanmakuStore } from "@/stores/danmaku";
 
 const { t } = useI18n();
 const router = useRouter();
+const giftStore = useGiftStore();
 const danmakuStore = useDanmakuStore();
 let unlistenResize: (() => void) | null = null;
 const appWindow = WebviewWindow.getCurrent();
 const videoRef = ref<HTMLVideoElement | null>(null);
 let flvPlayer: mpegts.Player | null = null;
 let danmakuSettingsHideTimer: number | null = null;
+let giftSettingsHideTimer: number | null = null;
 
 // 跟踪每个popover的显示状态
 const popoverVisible = ref<Record<number, boolean>>({});
@@ -645,6 +738,7 @@ const showVolumeSlider = ref(false);
 const controlsVisible = ref(false);
 const showDanmakuSettingsPanel = ref(false);
 const danmakuPlayerRef = ref<InstanceType<typeof DanmakuPlayer> | null>(null);
+const showGiftSettingsPanel = ref(false);
 
 // 3. 拦截用户发送聊天事件，顺便飘一条弹幕
 const handleSendMessage = (content: string) => {
@@ -674,6 +768,15 @@ const mockDanmakuData = [
   "又下饭了",
   "233333",
   "啊啊啊啊啊啊啊"
+];
+
+const mockGiftData = [
+  { userName: "奶茶波波冰", giftName: "粉丝团灯牌", count: 1 },
+  { userName: "心上雪止", giftName: "粉丝团灯牌", count: 1 },
+  { userName: "我叫裴之之", giftName: "粉丝团灯牌", count: 1 },
+  { userName: "小头OoO", giftName: "小心心", count: 1 },
+  { userName: "蒜泥头", giftName: "粉丝团灯牌", count: 1 },
+  { userName: "🌈畅意🌈⭐", giftName: "粉丝团灯牌", count: 1 }
 ];
 
 // 计算控制条是否应该显示
@@ -711,57 +814,51 @@ const audienceList = ref([
   {
     id: 1,
     name: "漂泊于旅途中的早川健",
-    level: "Lv.12",
+    level: "12",
     avatar: "https://picsum.photos/id/1001/100/100",
-    medals: ["⭐"]
+    isVip: true
   },
   {
     id: 2,
     name: "卡厄司岚那",
-    level: "Lv.7",
+    level: "7",
     avatar: "https://picsum.photos/id/1002/100/100"
   },
   {
     id: 3,
     name: "吾爱有三",
-    level: "Lv.34",
-    avatar: "https://picsum.photos/id/1003/100/100",
-    medals: ["🍐", "🍺", "🎯"]
+    level: "34",
+    avatar: "https://picsum.photos/id/1003/100/100"
   },
   {
     id: 4,
     name: "吾爱有三",
-    level: "Lv.34",
-    avatar: "https://picsum.photos/id/1003/100/100",
-    medals: ["🍐", "🍺", "🎯"]
+    level: "34",
+    avatar: "https://picsum.photos/id/1003/100/100"
   },
   {
     id: 5,
     name: "吾爱有三",
-    level: "Lv.34",
-    avatar: "https://picsum.photos/id/1003/100/100",
-    medals: ["🍐", "🍺", "🎯"]
+    level: "34",
+    avatar: "https://picsum.photos/id/1003/100/100"
   },
   {
     id: 6,
     name: "吾爱有三",
-    level: "Lv.34",
-    avatar: "https://picsum.photos/id/1003/100/100",
-    medals: ["🍐", "🍺", "🎯"]
+    level: "34",
+    avatar: "https://picsum.photos/id/1003/100/100"
   },
   {
     id: 7,
     name: "吾爱有三",
-    level: "Lv.34",
-    avatar: "https://picsum.photos/id/1003/100/100",
-    medals: ["🍐", "🍺", "🎯"]
+    level: "34",
+    avatar: "https://picsum.photos/id/1003/100/100"
   },
   {
     id: 8,
     name: "吾爱有三",
-    level: "Lv.34",
-    avatar: "https://picsum.photos/id/1003/100/100",
-    medals: ["🍐", "🍺", "🎯"]
+    level: "34",
+    avatar: "https://picsum.photos/id/1003/100/100"
   }
 ]);
 
@@ -769,9 +866,38 @@ const audienceList = ref([
 const chatMessages = ref([
   {
     user: "眼里有✨星星✨河",
-    level: "Lv.16",
+    level: "16",
     avatar: "https://picsum.photos/id/1004/100/100",
     content: "管理在吗"
+  },
+  {
+    type: "gift",
+    user: "冷漠傲世沅少",
+    giftIcon: "图片URL",
+    giftCount: 1,
+    avatar: "https://picsum.photos/id/1004/100/100"
+  },
+  {
+    type: "system",
+    user: "Yennie",
+    level: 19,
+    avatar: "https://picsum.photos/id/1004/100/100",
+    isVip: true,
+    content: "刚刚升级至Lv.19"
+  },
+  {
+    type: "system",
+    user: "大德",
+    level: 31,
+    avatar: "https://picsum.photos/id/1004/100/100",
+    content: "成为No.12本场1000贡献用户"
+  },
+  {
+    type: "gift",
+    user: "大德",
+    giftName: "小心心",
+    giftIcon: "https://picsum.photos/id/1008/10/10",
+    giftCount: 15
   },
   {
     user: "AAA废品回收章哥",
@@ -780,55 +906,55 @@ const chatMessages = ref([
   },
   {
     user: "无尽星空",
-    level: "Lv.9",
+    level: "9",
     avatar: "https://picsum.photos/id/1006/100/100",
     content: "乐子别介绍自己"
   },
   {
     user: "沐桑",
-    level: "Lv.5",
+    level: "5",
     avatar: "https://picsum.photos/id/1007/100/100",
     content: "多少分了"
   },
   {
     user: "干啥呢",
-    level: "Lv.7",
+    level: "7",
     avatar: "https://picsum.photos/id/1008/100/100",
     content: "你看这边是在自我介绍"
   },
   {
     user: "念旧",
-    level: "Lv.7",
+    level: "7",
     avatar: "https://picsum.photos/id/1009/100/100",
     content: "那不是对面菜吗"
   },
   {
     user: "干啥呢",
-    level: "Lv.7",
+    level: "7",
     avatar: "https://picsum.photos/id/1008/100/100",
     content: "信誉分不够，过来叫了"
   },
   {
     user: "蠢人偶",
-    level: "Lv.3",
+    level: "3",
     avatar: "https://picsum.photos/id/1010/100/100",
     content: "中单太乙，边路东皇，游戏里遇到十有八九都是坑"
   },
   {
     user: "1001",
-    level: "Lv.4",
+    level: "4",
     avatar: "https://picsum.photos/id/1011/100/100",
     content: "主播什么手机呀？"
   },
   {
     user: "JayChou",
-    level: "Lv.12",
+    level: "12",
     avatar: "https://picsum.photos/id/1012/100/100",
     content: "演员还叫起来了😂"
   },
   {
     user: "Te滾世ぇ哆清",
-    level: "Lv.14",
+    level: "14",
     avatar: "https://picsum.photos/id/1013/100/100",
     content: "来了"
   }
@@ -842,6 +968,11 @@ const remainingGifts = computed(() => {
 // 打开举报弹窗的方法
 const openReportDialog = () => {
   showReportDialog.value = true;
+};
+
+// 点赞直播间
+const likeLive = () => {
+  console.log("点赞直播间");
 };
 
 // 4. 处理举报提交的方法
@@ -1260,8 +1391,43 @@ const toggleScreenRotation = () => {
   }
 };
 
-const toggleGiftSettings = () => {
-  console.log("Toggle gift settings");
+/** 显示礼物设置面板 */
+const showGiftSettings = () => {
+  showGiftSettingsPanel.value = true;
+  if (giftSettingsHideTimer) {
+    clearTimeout(giftSettingsHideTimer);
+    giftSettingsHideTimer = null;
+  }
+};
+
+/** 隐藏礼物设置面板 */
+const hideGiftSettings = () => {
+  if (giftSettingsHideTimer) {
+    clearTimeout(giftSettingsHideTimer);
+  }
+  giftSettingsHideTimer = window.setTimeout(() => {
+    showGiftSettingsPanel.value = false;
+    giftSettingsHideTimer = null;
+  }, 100);
+};
+
+/** 处理礼物设置面板进入事件 */
+const handleGiftSettingsPanelEnter = () => {
+  if (giftSettingsHideTimer) {
+    clearTimeout(giftSettingsHideTimer);
+    giftSettingsHideTimer = null;
+  }
+};
+
+/** 处理礼物设置面板离开事件 */
+const handleGiftSettingsPanelLeave = () => {
+  if (giftSettingsHideTimer) {
+    clearTimeout(giftSettingsHideTimer);
+  }
+  giftSettingsHideTimer = window.setTimeout(() => {
+    showGiftSettingsPanel.value = false;
+    giftSettingsHideTimer = null;
+  }, 100);
 };
 
 const toggleMiniWindow = async () => {
@@ -1430,14 +1596,34 @@ onMounted(() => {
   // 开启模拟 WebSocket 接收弹幕 (每 600ms 随机飘一条)
   mockWsInterval = window.setInterval(() => {
     if (danmakuPlayerRef.value && isPlaying.value) {
-      const randomText = mockDanmakuData[Math.floor(Math.random() * mockDanmakuData.length)];
-      danmakuPlayerRef.value.addDanmaku(randomText);
+      // 设定 40% 的概率刷出礼物弹幕，60% 刷普通弹幕
+      const isGift = Math.random() < 0.4;
+
+      if (isGift) {
+        // 随机抽取一个礼物数据
+        const randomGift = mockGiftData[Math.floor(Math.random() * mockGiftData.length)];
+
+        // 触发礼物弹幕
+        danmakuPlayerRef.value.addDanmaku(
+          "", // 礼物弹幕的主文本留空
+          false, // isMe
+          Date.now() + Math.random(), // 随机ID
+          false, // isLiked
+          "scroll", // 位置类型
+          randomGift // 传入我们刚刚在子组件里新增的 giftData 结构
+        );
+      } else {
+        // 触发普通文本弹幕
+        const randomText = mockDanmakuData[Math.floor(Math.random() * mockDanmakuData.length)];
+        danmakuPlayerRef.value.addDanmaku(randomText);
+      }
     }
   }, 600);
 });
 
 onUnmounted(() => {
   if (danmakuSettingsHideTimer) clearTimeout(danmakuSettingsHideTimer);
+  if (giftSettingsHideTimer) clearTimeout(giftSettingsHideTimer);
   // 销毁播放器
   if (flvPlayer) {
     flvPlayer.destroy();
@@ -1470,7 +1656,7 @@ onUnmounted(() => {
 });
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 /* 控制按钮样式 */
 .video-controls {
   transition: all 0.3s ease;
@@ -1950,5 +2136,29 @@ onUnmounted(() => {
   background-color: #ff0050;
   border-color: #ff0050;
   color: #fff;
+}
+
+/* --- 弹幕设置与礼物设置面板通用样式 --- */
+.danmaku-settings-panel,
+.gift-settings-panel {
+  position: absolute;
+  /* 让面板悬浮在设置按钮正上方 */
+  bottom: calc(100% + 12px);
+  left: 50%;
+  transform: translateX(-50%);
+  width: 220px; /* 礼物面板没那么多文字，稍微窄一点点看起来更精致 */
+  background-color: var(--bg-popover, rgba(20, 20, 20, 0.95));
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--line-color, rgba(255, 255, 255, 0.1));
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+  z-index: 1000;
+  animation: slideUp 0.2s ease;
+  cursor: default; /* 防止内部点击出现手型 */
+}
+
+/* 覆盖宽度的特殊情况，如果是弹幕面板则保持原宽 */
+.danmaku-settings-panel {
+  width: 260px;
 }
 </style>
