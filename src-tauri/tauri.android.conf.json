@@ -38,8 +38,8 @@
   "app": {
     "windows": [
       {
-        "title": "登录",
-        "label": "mobile-home",
+        "title": "启动屏",
+        "label": "splashscreen",
         "url": "/mobile/splashscreen",
         "width": 800,
         "height": 600,

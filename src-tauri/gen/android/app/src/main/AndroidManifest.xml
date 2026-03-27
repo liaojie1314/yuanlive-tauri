@@ -55,6 +55,10 @@
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="yuanlive" />
                 <data android:host="video" />
+                
+                
+                
+                
             </intent-filter>
             <!-- DEEP LINK PLUGIN. AUTO-GENERATED. DO NOT REMOVE. -->
         </activity>

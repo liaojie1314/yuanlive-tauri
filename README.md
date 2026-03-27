@@ -166,13 +166,21 @@ pnpm addition-commit # commit后再次添加修改到上一次的commit
 ## 🔄️ 发布更新
 
 ```shell
-# 设置tauri签名密钥
+# 设置tauri签名密钥(桌面端)
 # linux或macos
-export TAURI_SIGNING_PRIVATE_KEY="./yuanlive.key"
+export TAURI_SIGNING_PRIVATE_KEY="./yuanlive.key" # 复制yuanlive.key文件的内容替换`./yuanlive.key`
 export TAURI_SIGNING_PRIVATE_KEY_PASSWORD=""
 # windows
-$env:TAURI_SIGNING_PRIVATE_KEY="./yuanlive.key"
+$env:TAURI_SIGNING_PRIVATE_KEY="./yuanlive.key" # 复制yuanlive.key文件的内容替换`./yuanlive.key`
 $env:TAURI_SIGNING_PRIVATE_KEY_PASSWORD=""
+
+pnpm tauri:build
+
+# 设置android签名密钥(android端)
+mv src-tauri/gen/android/keystore.properties.example src-tauri/gen/android/keystore.properties
+## 生成keystore文件
+keytool -genkey -v -keystore yuanlive.jks -keyalg RSA -keysize 2048 -validity 10000 -alias yuanlive
+## 完善keystore.properties文件
 
 pnpm tauri:build
 ```
