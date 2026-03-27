@@ -5,4 +5,5 @@ pub mod fs_command;
 pub mod request_command;
 pub mod setting_command;
 pub mod token_command;
+pub mod tts_command;
 pub mod upload_command;

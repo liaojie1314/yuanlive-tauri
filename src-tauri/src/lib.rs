@@ -21,6 +21,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
+use std::{thread, time::Duration};
 use tauri::async_runtime::Mutex;
 use tauri::{AppHandle, Emitter, Listener, Manager};
 use tauri_plugin_fs::FsExt;
@@ -71,11 +72,27 @@ pub fn run() {
 
 #[cfg(desktop)]
 fn setup_desktop() -> Result<(), CommonError> {
+    use device_query::{DeviceQuery, DeviceState};
     tauri::Builder::default()
         .init_plugin()
         .init_window_event()
         .setup(move |app| {
             common_setup(app.handle().clone())?;
+            let app_handle = app.handle().clone();
+            thread::spawn(move || {
+                let device_state = DeviceState::new();
+                let mut last_pos = (0, 0);
+                loop {
+                    let mouse = device_state.get_mouse();
+                    if mouse.coords != last_pos {
+                        last_pos = mouse.coords;
+                        // 发送坐标给前端。忽略报错，因为应用退出时 channel 会断开
+                        let _ = app_handle.emit("global-mouse-move", [last_pos.0, last_pos.1]);
+                    }
+                    // 约 60FPS 的刷新率
+                    thread::sleep(Duration::from_millis(16));
+                }
+            });
             Ok(())
         })
         .invoke_handler(get_invoke_handlers())
@@ -269,7 +286,6 @@ fn common_setup(app_handle: AppHandle) -> Result<(), Box<dyn std::error::Error>>
             return Err(format!("Failed to initialize app data: {}", e).into());
         }
     }
-
     #[cfg(desktop)]
     tray::create_tray(&app_handle)?;
     Ok(())
@@ -288,6 +304,9 @@ fn get_invoke_handlers() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Se
     use crate::command::request_command::{login_command, request_command};
     use crate::command::setting_command::{get_settings, update_settings};
     use crate::command::token_command::{get_token, remove_token, update_token};
+    use crate::command::tts_command::{
+        check_file_exists, download_model_file, generate_piper_speech, get_models_dir,
+    };
     use crate::command::upload_command::{
         check_uploaded_chunks_command, merge_chunks_command, upload_chunk_by_path_command,
         upload_chunk_bytes_command,
@@ -336,6 +355,11 @@ fn get_invoke_handlers() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Se
         upload_chunk_by_path_command,
         check_uploaded_chunks_command,
         merge_chunks_command,
+        // 模型相关
+        get_models_dir,
+        download_model_file,
+        check_file_exists,
+        generate_piper_speech,
         // websocket
         ws_init_connection,
         ws_disconnect,
