@@ -184,6 +184,11 @@ const getDesktopRoutes = (): Array<RouteRecordRaw> => [
         path: "/aiSetting",
         name: "aiSetting",
         component: () => import("@/views/settingWindow/AiSetting.vue")
+      },
+      {
+        path: "/live2dSetting",
+        name: "live2dSetting",
+        component: () => import("@/views/settingWindow/Live2dSetting.vue")
       }
     ]
   },

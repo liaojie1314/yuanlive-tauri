@@ -47,6 +47,11 @@ const useSideOptions = () => {
       url: "/aiSetting",
       label: t("setting.ai.title"),
       icon: "robot"
+    },
+    {
+      url: "/live2dSetting",
+      label: t("setting.live2d.title"),
+      icon: "api"
     }
   ]);
 };
