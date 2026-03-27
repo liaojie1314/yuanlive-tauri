@@ -143,6 +143,14 @@ export enum TauriCommandEnum {
   UPDATE_SETTINGS = "update_settings",
   // 获取文件元数据
   GET_FILES_META = "get_files_meta",
+  // 获取模型专属目录
+  GET_MODELS_DIR = "get_models_dir",
+  // 检查文件是否存在
+  CHECK_FILE_EXISTS = "check_file_exists",
+  // 边下载边推送进度
+  DOWNLOAD_MODEL_FILE = "download_model_file",
+  // 生成piper语音
+  GENERATE_PIPER_SPEECH = "generate_piper_speech",
   // AI 消息流式发送
   AI_MESSAGE_SEND_STREAM = "ai_message_send_stream",
   // AI 取消流式消息
@@ -216,6 +224,8 @@ export enum StoresEnum {
   PLAYLIST = "playlist",
   // AI
   AI = "ai",
+  // tts
+  TTS = "tts",
   // 文件下载
   FILE_DOWNLOAD = "fileDownload",
   // 图片查看器

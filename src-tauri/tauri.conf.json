@@ -23,7 +23,7 @@
     "macOSPrivateApi": true
   },
   "bundle": {
-    "resources": ["configuration"],
+    "resources": ["configuration", "bin/piper/**/*"],
     "active": true,
     "category": "Video",
     "copyright": "Copyright © 2026 YuanLive Team",

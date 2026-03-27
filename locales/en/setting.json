@@ -111,7 +111,29 @@
     "fsMcpDesc": "Allows AI to read, write, search, and modify files.",
     "windowsMcp": "Windows System Control (windows-mcp)",
     "windowsMcpDesc": "Allows AI to control Windows systems.",
-    "selectWhitelistDir": "Select allowed AI workspace directory"
+    "selectWhitelistDir": "Select allowed AI workspace directory",
+    "collapse": "collapse",
+    "expand": "expand"
+  },
+  "live2d": {
+    "title": "Live2D Settings",
+    "voiceModels": "Voice Models",
+    "voiceModelsDesc": "Download high-quality offline voice models from the cloud. Models will be saved to a dedicated directory.",
+    "voiceModelsCount": "({count} models)",
+    "quality": "quality",
+    "engine": "engine",
+    "speakerName": "speaker",
+    "size": "size",
+    "download": "download",
+    "downloading": "downloading...",
+    "downloaded": "downloaded",
+    "start": "start",
+    "close": "close",
+    "msg": {
+      "fetchModelListFailed": "Failed to fetch model list from cloud, please check your network connection",
+      "downloadSuccess": "download completed successfully",
+      "downloadFailed": "download failed"
+    }
   },
   "unknown": "Unknown",
   "footer": {

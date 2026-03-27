@@ -29,6 +29,7 @@ dist-ssr
 /public/selfie_segmentation
 
 src-tauri/binaries/ffmpeg-x86_64-pc-windows-msvc.exe
+src-tauri/bin/piper/
 
 # 秘钥
 yuanlive.key
@@ -43,3 +44,6 @@ yuanlive.key.pub
 /blob-report/
 /playwright/.cache/
 /playwright/.auth/
+
+*.jks
+keystore.properties

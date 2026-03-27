@@ -273,7 +273,7 @@ const handleAttachmentClick = async (item: Attachment) => {
     return;
   }
 
-  // 2. 视频预览 (新增逻辑)
+  // 2. 视频预览
   const ext = item.name.split(".").pop()?.toLowerCase();
   if (ext && VIDEO_EXTS.includes(ext)) {
     // 提取附件列表中的所有视频路径

@@ -111,7 +111,29 @@
     "fsMcpDesc": "允许 AI 在下方授权的目录内进行文件的读写、搜索与修改。",
     "windowsMcp": "Windows系统控制(windows-mcp)",
     "windowsMcpDesc": "允许 AI 控制 Windows 系统，如重启、关机、打开应用等。",
-    "selectWhitelistDir": "选择允许 AI 访问的工作区目录"
+    "selectWhitelistDir": "选择允许 AI 访问的工作区目录",
+    "collapse": "收起",
+    "expand": "展开"
+  },
+  "live2d": {
+    "title": "Live2D设置",
+    "voiceModels": "语音模型",
+    "voiceModelsDesc": "从云端下载高质量的离线语音模型。模型会自动保存到本地专属目录。",
+    "voiceModelsCount": "({count} 个模型)",
+    "quality": "音质",
+    "engine": "语音引擎",
+    "speakerName": "发音人",
+    "size": "大小",
+    "download": "下载",
+    "downloading": "下载中...",
+    "downloaded": "已下载",
+    "start": "启动",
+    "close": "关闭",
+    "msg": {
+      "fetchModelListFailed": "获取云端模型列表失败，请检查网络连接",
+      "downloadSuccess": "下载完成！",
+      "downloadFailed": "下载失败"
+    }
   },
   "unknown": "未知",
   "footer": {
