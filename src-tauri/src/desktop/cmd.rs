@@ -1,8 +1,12 @@
 #![allow(unexpected_cfgs)]
 use base64::{engine::general_purpose, Engine as _};
+use enigo::{Enigo, KeyboardControllable, MouseControllable};
 use screenshots::image::{DynamicImage, ImageOutputFormat};
 use screenshots::Screen;
 use std::io::Cursor;
+use tauri::{AppHandle, Emitter, State};
+
+use crate::{AudioState, AudioStreamWrapper};
 
 #[tauri::command]
 pub fn screenshot(x: f64, y: f64) -> Result<String, String> {
@@ -25,4 +29,85 @@ pub fn screenshot(x: f64, y: f64) -> Result<String, String> {
 
     let base64_str = general_purpose::STANDARD.encode(buffer);
     Ok(base64_str)
+}
+
+#[cfg(target_os = "windows")]
+#[tauri::command]
+pub fn toggle_system_audio_listen(
+    app: AppHandle,
+    state: State<'_, AudioState>,
+    enable: bool,
+) -> Result<(), String> {
+    use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
+
+    let mut stream_guard = state.0.lock().unwrap();
+    if !enable {
+        *stream_guard = None;
+        return Ok(());
+    }
+
+    let host = cpal::default_host();
+    let device = host.default_output_device().ok_or("找不到默认扬声器")?;
+    let config = device.default_output_config().map_err(|e| e.to_string())?;
+
+    let app_clone = app.clone();
+    let stream = match config.sample_format() {
+        cpal::SampleFormat::F32 => device.build_input_stream(
+            &config.into(),
+            move |data: &[f32], _: &_| {
+                let mut sum_squares = 0.0;
+                for &sample in data {
+                    sum_squares += sample * sample;
+                }
+                let rms = (sum_squares / data.len() as f32).sqrt();
+                let _ = app_clone.emit("system-audio-level", rms);
+            },
+            |err| eprintln!("音频流报错: {}", err),
+            None,
+        ),
+        _ => return Err("暂不支持系统的音频采样格式".to_string()),
+    }
+    .map_err(|e| format!("创建音频流失败: {}", e))?;
+
+    stream
+        .play()
+        .map_err(|e| format!("播放音频流失败: {}", e))?;
+    *stream_guard = Some(AudioStreamWrapper(stream));
+    Ok(())
+}
+
+#[cfg(not(target_os = "windows"))]
+#[tauri::command]
+pub fn toggle_system_audio_listen(
+    _app: AppHandle,
+    _state: State<'_, AudioState>,
+    _enable: bool,
+) -> Result<(), String> {
+    // 只要不是 Windows，一律抛出平台不支持的错误给前端
+    Err("当前操作系统暂不支持系统声音内录功能哦~".to_string())
+}
+
+/// 模拟鼠标移动并点击
+#[tauri::command]
+pub fn agent_mouse_action(x: i32, y: i32, click: bool) -> Result<(), String> {
+    let mut enigo = Enigo::new();
+
+    // 瞬间移动到指定物理坐标
+    enigo.mouse_move_to(x, y);
+
+    // 如果需要点击
+    if click {
+        enigo.mouse_click(enigo::MouseButton::Left);
+    }
+
+    Ok(())
+}
+
+/// 模拟键盘自动打字
+#[tauri::command]
+pub fn agent_type_text(text: String) -> Result<(), String> {
+    let mut enigo = Enigo::new();
+    // 像真人一样模拟按键依次敲下
+    enigo.key_sequence(&text);
+    Ok(())
 }

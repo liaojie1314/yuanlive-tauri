@@ -46,6 +46,19 @@ pub struct McpState {
     child: std::sync::Mutex<Option<CommandChild>>,
 }
 
+#[cfg(target_os = "windows")]
+pub struct AudioStreamWrapper(pub cpal::Stream);
+#[cfg(target_os = "windows")]
+unsafe impl Send for AudioStreamWrapper {}
+#[cfg(target_os = "windows")]
+unsafe impl Sync for AudioStreamWrapper {}
+
+#[cfg(target_os = "windows")]
+pub struct AudioState(pub std::sync::Mutex<Option<AudioStreamWrapper>>);
+
+#[cfg(not(target_os = "windows"))]
+pub struct AudioState(pub std::sync::Mutex<Option<()>>);
+
 pub(crate) static APP_STATE_READY: AtomicBool = AtomicBool::new(false);
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -276,6 +289,7 @@ fn common_setup(app_handle: AppHandle) -> Result<(), Box<dyn std::error::Error>>
             app_handle.manage(McpState {
                 child: std::sync::Mutex::new(None),
             });
+            app_handle.manage(AudioState(std::sync::Mutex::new(None)));
             APP_STATE_READY.store(true, Ordering::SeqCst);
             if let Err(e) = app_handle.emit("app-state-ready", ()) {
                 warn!("Failed to emit app-state-ready event: {}", e);
@@ -322,7 +336,9 @@ fn get_invoke_handlers() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Se
         ws_send_message,
     };
     #[cfg(desktop)]
-    use desktop::cmd::screenshot;
+    use desktop::cmd::{
+        agent_mouse_action, agent_type_text, screenshot, toggle_system_audio_listen,
+    };
     #[cfg(desktop)]
     use desktop::directory_scanner::{
         cancel_directory_scan, get_directory_usage_info_with_progress,
@@ -387,6 +403,12 @@ fn get_invoke_handlers() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Se
         get_window_payload,
         #[cfg(desktop)]
         screenshot,
+        #[cfg(desktop)]
+        toggle_system_audio_listen,
+        #[cfg(desktop)]
+        agent_mouse_action,
+        #[cfg(desktop)]
+        agent_type_text,
         #[cfg(windows)]
         check_ffmpeg_installed,
         #[cfg(windows)]
