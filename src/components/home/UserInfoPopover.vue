@@ -88,7 +88,13 @@
             style="width: calc(100% + 10px); transform: skewX(-15deg); transform-origin: top left; left: -10px"
             class="pointer-events-none absolute top-0 bottom-0 left-0 z-0 transition-colors group-hover:bg-black/5 dark:group-hover:bg-white/5"></div>
           <span class="z-10 text-[13px] font-medium text-[#eb7333]">
-            {{ user.fanClub?.isJoined ? `粉丝团 Lv.${user.fanClub.level}` : "加入粉丝团" }}
+            {{
+              user.isBroadcaster
+                ? `粉丝团 ${formatNumber(user.fanClubCount || 0)}人`
+                : user.fanClub?.isJoined
+                  ? `粉丝团 Lv.${user.fanClub.level}`
+                  : "加入粉丝团"
+            }}
           </span>
           <i-mdi-heart class="z-10 h-4 w-4 text-[#f99b43]" />
         </div>
@@ -100,8 +106,14 @@
             class="pointer-events-none absolute top-0 right-0 bottom-0 z-0 transition-colors group-hover:bg-black/5 dark:group-hover:bg-white/5"></div>
           <span
             class="z-10 text-[13px] font-medium"
-            :class="user.vip?.isVip ? 'text-yellow-600 dark:text-yellow-500' : 'text-[#8b929e]'">
-            {{ user.vip?.isVip ? "尊贵会员" : "会员未开通" }}
+            :class="user.isBroadcaster || user.vip?.isVip ? 'text-yellow-600 dark:text-yellow-500' : 'text-[#8b929e]'">
+            {{
+              user.isBroadcaster
+                ? `会员 ${formatNumber(user.vipCount || 0)}人`
+                : user.vip?.isVip
+                  ? "尊贵会员"
+                  : "会员未开通"
+            }}
           </span>
           <span
             class="z-10 pr-1 font-serif text-base italic"
@@ -128,6 +140,9 @@ export interface PopoverUser {
   following?: number;
   followers?: number;
   isFollowing?: boolean;
+  isBroadcaster?: boolean; // 是否是房主/主播
+  fanClubCount?: number; // 粉丝团总人数
+  vipCount?: number; // 会员总人数
   fanClub?: {
     isJoined: boolean;
     level?: number;

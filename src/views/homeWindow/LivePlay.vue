@@ -21,14 +21,26 @@
 
           <div class="host-info flex-y-center gap-3 rounded-full bg-[--bg-left-menu] px-2 py-1 backdrop-blur-sm">
             <user-info-popover
-              :user="{ name: '千年 (万年之主)', avatar: 'https://picsum.photos/id/1/100/100', level: 'Lv.99' }">
+              :user="{
+                name: '千年 (万年之主)',
+                avatar: 'https://picsum.photos/id/1/100/100',
+                isBroadcaster: true,
+                fanClubCount: 1000,
+                vipCount: 500
+              }">
               <div class="avatar h-8 w-8 cursor-pointer overflow-hidden rounded-full border-2 border-red-500">
                 <img src="https://picsum.photos/id/1/100/100" alt="主播头像" class="h-full w-full object-cover" />
               </div>
             </user-info-popover>
             <div class="host-info-text flex flex-col">
               <user-info-popover
-                :user="{ name: '千年 (万年之主)', avatar: 'https://picsum.photos/id/1/100/100', level: 'Lv.99' }">
+                :user="{
+                  name: '千年 (万年之主)',
+                  avatar: 'https://picsum.photos/id/1/100/100',
+                  isBroadcaster: true,
+                  fanClubCount: 1000,
+                  vipCount: 500
+                }">
                 <div
                   class="host-name cursor-pointer font-medium text-[--text-color] transition-colors hover:text-[#ff0050]">
                   千年 (万年之主)

@@ -16,7 +16,8 @@
         /* 底部增加 80px 安全高度，完美避开控制栏 */
         bottom: item.type === 'bottom' ? `${item.top + 80}px` : 'auto',
         animationDuration: `${item.duration}s`,
-        zIndex: item.id
+        /* 如果是礼物弹幕，直接给它加 50000 的初始层级，把它死死按在普通弹幕上方 */
+        zIndex: item.gift ? 50000 + Number(item.id || 0) : item.id
       }"
       @mouseenter="interactive ? (hoveredId = item.id) : null"
       @mouseleave="interactive ? (hoveredId = null) : null"
@@ -102,9 +103,9 @@ const hoveredId = ref<string | number | null>(null);
 
 // 隔离三种轨道的冷却时间，防止顶部/底部和滚动弹幕重叠
 const trackCooldowns = ref({
-  scroll: {} as Record<number, number>,
-  top: {} as Record<number, number>,
-  bottom: {} as Record<number, number>
+  scroll: {} as Record<number, { time: number; isGift: boolean }>,
+  top: {} as Record<number, { time: number; isGift: boolean }>,
+  bottom: {} as Record<number, { time: number; isGift: boolean }>
 });
 
 const isComboEnabled = computed(() => {
@@ -172,9 +173,25 @@ const addDanmaku = (
   const currentCooldowns = trackCooldowns.value[type];
   const availableTracks: number[] = [];
 
+  // 判断当前要发的是不是礼物
+  const isCurrentGift = !!giftData;
+
   for (let i = 0; i < maxTracks; i++) {
-    const cd = currentCooldowns[i] || 0;
-    if (now - cd > baseCooldown) {
+    // 读取轨道状态，如果未被使用过则默认 time 为 0
+    const trackState = currentCooldowns[i] || { time: 0, isGift: false };
+    let requiredCd = baseCooldown;
+
+    // 为礼物弹幕分配专享的超长冷却时间
+    if (type === "scroll") {
+      if (isCurrentGift) requiredCd = Math.max(requiredCd, 1500); // 礼物防追尾（等待前一条弹幕走远）
+      if (trackState.isGift) requiredCd = Math.max(requiredCd, 3000); // 防覆盖前方的礼物（等前面的礼物彻底走完）
+    } else {
+      // 顶部底部的固定弹幕，停留时间为 4s，所需冷却更长
+      if (isCurrentGift) requiredCd = Math.max(requiredCd, 2000);
+      if (trackState.isGift) requiredCd = Math.max(requiredCd, 3500);
+    }
+
+    if (now - trackState.time > requiredCd) {
       availableTracks.push(i);
     }
   }
@@ -182,25 +199,24 @@ const addDanmaku = (
   let selectedTrack = 0;
   if (availableTracks.length > 0) {
     if (type === "scroll") {
-      // 滚动弹幕继续使用随机轨道，均匀分布在屏幕上，避免扎堆
       selectedTrack = availableTracks[Math.floor(Math.random() * availableTracks.length)];
     } else {
-      // 顶部和底部弹幕绝对不能随机！必须从最边缘（第0轨、第1轨）紧凑地挨个排列
       selectedTrack = availableTracks[0];
     }
   } else {
-    // 没空闲轨道时找最老的（挤一挤总比不出来好）
+    // 没空闲轨道时，找冷却时间最久的最老轨道（优雅降级）
     let minCd = Infinity;
     for (let i = 0; i < maxTracks; i++) {
-      const cd = currentCooldowns[i] || 0;
-      if (cd < minCd) {
-        minCd = cd;
+      const trackState = currentCooldowns[i] || { time: 0, isGift: false };
+      if (trackState.time < minCd) {
+        minCd = trackState.time;
         selectedTrack = i;
       }
     }
   }
 
-  currentCooldowns[selectedTrack] = now;
+  // 记录轨道最后一次被使用的时间，并标记是否是礼物
+  currentCooldowns[selectedTrack] = { time: now, isGift: isCurrentGift };
 
   // 顶部/底部悬停弹幕默认停留 4 秒，滚动弹幕受速度滑块控制
   const duration = type === "scroll" ? (store.settings.speed === 1 ? 10 : store.settings.speed === 2 ? 7 : 4) : 4;
@@ -266,7 +282,7 @@ defineExpose({ addDanmaku, clear });
 .danmaku-track-item:hover,
 .is-paused .danmaku-track-item {
   animation-play-state: paused !important;
-  z-index: 1000 !important;
+  z-index: 100000 !important;
 }
 
 .danmaku-inner {

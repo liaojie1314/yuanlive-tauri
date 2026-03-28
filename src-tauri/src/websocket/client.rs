@@ -537,7 +537,7 @@ impl WebSocketClient {
         // 根据消息类型进行处理并发送对应的事件
         match message_type {
             // TODO:  处理消息类型
-            "remoteLogin" => {
+            "REMOTE_LOGIN" => {
                 warn!("Remote login");
                 let _ = app_handle.emit("ws-remote-login", data);
             }

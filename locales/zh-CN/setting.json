@@ -100,7 +100,7 @@
     "selectDirectoryError": "选择目录失败"
   },
   "ai": {
-    "title": "AI 设置",
+    "title": "AI",
     "mcpPlugins": "MCP 插件与工具控制",
     "fsMcpWhitelist": "fs-mcp 文件操作白名单 (工作区沙盒)",
     "fsMcpWhitelistHint": "只有添加到此处的目录，AI 才有权限进行文件读写，防范越权风险。",
@@ -116,7 +116,7 @@
     "expand": "展开"
   },
   "live2d": {
-    "title": "Live2D设置",
+    "title": "Live2D",
     "voiceModels": "语音模型",
     "voiceModelsDesc": "从云端下载高质量的离线语音模型。模型会自动保存到本地专属目录。",
     "voiceModelsCount": "({count} 个模型)",

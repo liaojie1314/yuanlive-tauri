@@ -142,3 +142,17 @@ export const formatNumber = (num: number): string => {
   }
   return num.toString();
 };
+
+/**
+ * 格式化时间戳显示 (yyyy-MM-dd HH:mm)
+ * @param timestamp 时间戳
+ * @returns 格式化后的时间字符串
+ */
+export const formatTime = (timestamp: number) => {
+  const date = new Date(timestamp);
+  const m = (date.getMonth() + 1).toString().padStart(2, "0");
+  const d = date.getDate().toString().padStart(2, "0");
+  const hh = date.getHours().toString().padStart(2, "0");
+  const mm = date.getMinutes().toString().padStart(2, "0");
+  return `${m}-${d} ${hh}:${mm}`;
+};

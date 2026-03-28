@@ -81,11 +81,11 @@ import { invoke } from "@tauri-apps/api/core";
 import { listen, UnlistenFn } from "@tauri-apps/api/event";
 
 import { TauriCommandEnum } from "@/enums";
-import { useTtsStore } from "@/stores/tts";
+import { useAgentStore } from "@/stores/agent";
 
 const { t } = useI18n();
-const ttsStore = useTtsStore();
-const { activeModels, downloadedModels } = storeToRefs(ttsStore);
+const agentStore = useAgentStore();
+const { activeModels, downloadedModels } = storeToRefs(agentStore);
 
 interface VoiceModel {
   id: string;
@@ -312,17 +312,17 @@ const handleModelAction = async (model: VoiceModel) => {
     // 1. 如果没下载，则走下载流程
     await startDownload(model);
     // 2. 下载完成后，单独检查这一个模型是否真的落地了
-    await ttsStore.checkModelDownloaded(model);
+    await agentStore.checkModelDownloaded(model);
   } else {
     // 3. 如果已下载，直接交给 Store 切换状态（Store 内部会自动处理互斥和取消激活）
-    ttsStore.toggleModel(model);
+    agentStore.toggleModel(model);
   }
 };
 
 onMounted(async () => {
   await fetchOfficialModels();
   // 拿到 allModels 后，批量遍历并生成 downloadedModels 状态字典
-  await ttsStore.checkAllLocalModels(allModels.value);
+  await agentStore.checkAllLocalModels(allModels.value);
 });
 
 onUnmounted(() => {

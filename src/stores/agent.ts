@@ -11,14 +11,36 @@ export interface VoiceModel {
   [key: string]: any;
 }
 
-export const useTtsStore = defineStore(
-  StoresEnum.TTS,
+interface Memo {
+  id: string;
+  content: string;
+  timestamp: number;
+}
+
+export const useAgentStore = defineStore(
+  StoresEnum.AGENT,
   () => {
+    const CACHE_KEY = "agent_memos";
+    // 模拟几个官方开源的 Live2D 静态模型链接
+    const mockLive2dModels = [
+      "https://cdn.jsdelivr.net/gh/Live2D/CubismWebSamples/Samples/Resources/Hiyori/Hiyori.model3.json", // 默认的华妍 (Hiyori)
+      "https://cdn.jsdelivr.net/gh/Live2D/CubismWebSamples/Samples/Resources/Haru/Haru.model3.json", // 春 (Haru)
+      "https://cdn.jsdelivr.net/gh/Live2D/CubismWebSamples/Samples/Resources/Mao/Mao.model3.json", // 猫 (Mao)
+      "https://cdn.jsdelivr.net/gh/Live2D/CubismWebSamples/Samples/Resources/Natori/Natori.model3.json" // 名取 (Natori)
+    ];
+
+    // 当前使用的模型索引
+    const currentLive2dIndex = ref(0);
     // 当前正在使用的模型字典，按语言存储
     // 例如：{ "zh": Piper模型对象, "en": Kokoro模型对象 }
     const activeModels = ref<Record<string, VoiceModel>>({});
     // 本地已下载的模型文件名列表
     const downloadedModels = ref<Record<string, boolean>>({});
+    // 初始化时从本地缓存读取记录
+    const memos = ref<Memo[]>(JSON.parse(localStorage.getItem(CACHE_KEY) || "[]"));
+
+    // 计算出当前应该加载的模型 URL
+    const currentLive2dUrl = computed(() => mockLive2dModels[currentLive2dIndex.value]);
 
     /**
      * 检查单个模型是否已下载完毕
@@ -90,12 +112,50 @@ export const useTtsStore = defineStore(
       }
     };
 
+    /** 随机或顺序切换到下一个 Live2D 模型 */
+    const nextLive2dModel = () => {
+      // 这里采用顺序循环切换，每次点击索引 +1，到底后回到 0
+      currentLive2dIndex.value = (currentLive2dIndex.value + 1) % mockLive2dModels.length;
+    };
+
+    /**
+     * 添加一条新备忘录
+     * @param content 备忘录内容
+     */
+    const addMemo = (content: string) => {
+      if (!content.trim()) return;
+
+      memos.value.unshift({
+        // 新灵感插在最前面
+        id: crypto.randomUUID(),
+        content,
+        timestamp: Date.now()
+      });
+
+      // 持久化保存到本地
+      localStorage.setItem(CACHE_KEY, JSON.stringify(memos.value));
+    };
+
+    /**
+     * 删除一条备忘录
+     * @param id 备忘录 ID
+     */
+    const deleteMemo = (id: string) => {
+      memos.value = memos.value.filter((m) => m.id !== id);
+      localStorage.setItem(CACHE_KEY, JSON.stringify(memos.value));
+    };
+
     return {
+      memos,
       activeModels,
       downloadedModels,
+      currentLive2dUrl,
+      addMemo,
+      deleteMemo,
+      toggleModel,
       checkModelDownloaded,
       checkAllLocalModels,
-      toggleModel
+      nextLive2dModel
     };
   },
   {

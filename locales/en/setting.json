@@ -100,7 +100,7 @@
     "selectDirectoryError": "Select directory failed"
   },
   "ai": {
-    "title": "AI Settings",
+    "title": "AI",
     "mcpPlugins": "MCP Plugins & Tools Control",
     "fsMcpWhitelist": "fs-mcp File Operation Whitelist (Workspace Sandbox)",
     "fsMcpWhitelistHint": "Only directories added here will be allowed for file read/write by AI.",
@@ -116,7 +116,7 @@
     "expand": "expand"
   },
   "live2d": {
-    "title": "Live2D Settings",
+    "title": "Live2D",
     "voiceModels": "Voice Models",
     "voiceModelsDesc": "Download high-quality offline voice models from the cloud. Models will be saved to a dedicated directory.",
     "voiceModelsCount": "({count} models)",
