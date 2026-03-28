@@ -180,6 +180,10 @@ export enum TauriCommandEnum {
   SPEAK_SYSTEM = "speak_system",
   // 提取视频封面
   EXTRACT_VIDEO_COVER = "extract_video_cover",
+  // 模拟鼠标移动并点击
+  AGENT_MOUSE_ACTION = "agent_mouse_action",
+  // 模拟键盘自动打字
+  AGENT_TYPE_TEXT = "agent_type_text",
   /** windows专属 */
   // 检查ffmpeg是否安装
   CHECK_FFMPEG_INSTALLED = "check_ffmpeg_installed",
@@ -193,6 +197,8 @@ export enum TauriCommandEnum {
   START_MCP = "start_mcp",
   // 向 MCP 发送指令
   SEND_TO_MCP = "send_to_mcp",
+  // 切换系统音内录
+  TOGGLE_SYSTEM_AUDIO_LISTEN = "toggle_system_audio_listen",
   /** mobile 专属 */
   // 关闭splash
   HIDE_SPLASH_SCREEN = "hide_splash_screen",
@@ -224,8 +230,8 @@ export enum StoresEnum {
   PLAYLIST = "playlist",
   // AI
   AI = "ai",
-  // tts
-  TTS = "tts",
+  // agent
+  AGENT = "agent",
   // 文件下载
   FILE_DOWNLOAD = "fileDownload",
   // 图片查看器
