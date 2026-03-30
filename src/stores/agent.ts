@@ -29,6 +29,8 @@ export const useAgentStore = defineStore(
       "https://cdn.jsdelivr.net/gh/Live2D/CubismWebSamples/Samples/Resources/Natori/Natori.model3.json" // 名取 (Natori)
     ];
 
+    const isOpenAgent = ref(false);
+    const isUserLoggedIn = ref(false);
     // 当前使用的模型索引
     const currentLive2dIndex = ref(0);
     // 当前正在使用的模型字典，按语言存储
@@ -146,6 +148,8 @@ export const useAgentStore = defineStore(
     };
 
     return {
+      isOpenAgent,
+      isUserLoggedIn,
       memos,
       activeModels,
       downloadedModels,

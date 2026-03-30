@@ -129,6 +129,12 @@
     "downloaded": "已下载",
     "start": "启动",
     "close": "关闭",
+    "agent": "桌面助理",
+    "agentDesc": "在桌面上唤出agent陪伴你",
+    "running": "运行中",
+    "sleeping": "已休眠",
+    "enabled": "已开启",
+    "disabled": "已关闭",
     "msg": {
       "fetchModelListFailed": "获取云端模型列表失败，请检查网络连接",
       "downloadSuccess": "下载完成！",

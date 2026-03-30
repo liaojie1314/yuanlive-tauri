@@ -47,8 +47,12 @@ impl<R: Runtime> CustomInit for tauri::Builder<R> {
                 let app_handle = window.app_handle();
                 let windows = app_handle.webview_windows();
                 let win_label = window.label();
-                let is_ignored_window =
-                    |name: &str| matches!(name, "checkUpdate" | "update" | "capture" | "tray");
+                let is_ignored_window = |name: &str| {
+                    matches!(
+                        name,
+                        "checkUpdate" | "update" | "capture" | "tray" | "live2d"
+                    )
+                };
 
                 if win_label.eq("update") {
                     let state: tauri::State<'_, crate::AppData> = window.state();

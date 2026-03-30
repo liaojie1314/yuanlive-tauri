@@ -9,7 +9,6 @@
         <div
           class="flex cursor-pointer flex-col items-center justify-center rounded-lg p-3 transition-colors hover:bg-[--tray-hover]"
           @click="showUploadDialog = true">
-          <!-- @click="createWebviewWindow('live2d', 'live2d', 100, 400)"> -->
           <i-mdi-video-plus class="mb-1 text-xl text-blue-500"></i-mdi-video-plus>
           <span class="text-sm text-[--user-text-color]">{{ $t("home.user.publishVideo") }}</span>
         </div>

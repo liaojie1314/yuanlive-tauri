@@ -1,5 +1,23 @@
 <template>
   <n-flex vertical class="pb-6" :size="24">
+    <n-flex align="center" justify="space-between" class="px-10px">
+      <div>
+        <n-flex align="center" :size="8">
+          <h2 class="text-18px font-bold m-0">{{ t("setting.live2d.agent") }}</h2>
+          <n-tag size="small" round :type="agentStore.isOpenAgent ? 'success' : 'default'">
+            {{ agentStore.isOpenAgent ? t("setting.live2d.running") : t("setting.live2d.sleeping") }}
+          </n-tag>
+        </n-flex>
+        <p class="text-(12px #909090) mt-1">{{ t("setting.live2d.agentDesc") }}</p>
+      </div>
+      <n-switch size="large" v-model:value="agentStore.isOpenAgent">
+        <template #checked>{{ t("setting.live2d.enabled") }}</template>
+        <template #unchecked>{{ t("setting.live2d.disabled") }}</template>
+      </n-switch>
+    </n-flex>
+
+    <n-divider class="m-0! bg-[--line-color]" />
+
     <div class="px-10px">
       <h2 class="text-18px font-bold m-0">{{ t("setting.live2d.voiceModels") }}</h2>
       <p class="text-(12px #909090) mt-1">{{ t("setting.live2d.voiceModelsDesc") }}</p>

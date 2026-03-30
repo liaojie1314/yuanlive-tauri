@@ -206,7 +206,7 @@ pub async fn handle_logout_windows(app_handle: &AppHandle) {
                 info!("[LOGOUT] Skipping window: {}", label);
             }
             // 这些窗口只隐藏，不销毁
-            "capture" | "checkUpdate" => {
+            "capture" | "checkUpdate" | "live2d" => {
                 info!("[LOGOUT] Marking window for preservation: {}", label);
                 windows_to_hide.push((label, window));
             }

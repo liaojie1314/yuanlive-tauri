@@ -18,54 +18,63 @@
         'flex w-[80%] min-w-0 flex-col transition-all duration-300 ease-in-out lg:w-[60%]',
         isHistoryCollapsed ? 'w-[calc(100%-55px)] lg:w-[calc(100%-55px)]' : ''
       ]">
-      <n-scrollbar ref="scrollbarRef" class="flex-1">
-        <div v-if="activeChatId" ref="scrollContentRef" class="flex w-full flex-col items-center">
-          <div class="w-full max-w-[1000px]">
-            <message-item
-              v-for="msg in messages"
-              :key="msg.id"
-              :message="msg"
-              :selection-mode="isMessageSelectionMode"
-              :selected="selectedMessageIds.has(msg.id)"
-              @enter-multi-select="handleEnterMessageMultiSelect"
-              @toggle-select="handleToggleMessageSelect"
-              @resend-message="handleResend"
-              @copy-message="handleCopy"
-              @refresh-message="handleRefresh"
-              @allow-tool="executeLocalTool(msg, $event, true)"
-              @deny-tool="executeLocalTool(msg, $event, false)" />
+      <div class="relative flex-1 min-h-0">
+        <n-scrollbar ref="scrollbarRef" class="h-full w-full" @scroll="handleScroll">
+          <div v-if="activeChatId" ref="scrollContentRef" class="flex w-full flex-col items-center">
+            <div class="w-full max-w-[1000px]">
+              <message-item
+                v-for="msg in messages"
+                :key="msg.id"
+                :message="msg"
+                :selection-mode="isMessageSelectionMode"
+                :selected="selectedMessageIds.has(msg.id)"
+                @enter-multi-select="handleEnterMessageMultiSelect"
+                @toggle-select="handleToggleMessageSelect"
+                @resend-message="handleResend"
+                @copy-message="handleCopy"
+                @refresh-message="handleRefresh"
+                @allow-tool="executeLocalTool(msg, $event, true)"
+                @deny-tool="executeLocalTool(msg, $event, false)" />
+            </div>
           </div>
-        </div>
 
-        <div v-else class="flex h-full min-h-[60vh] w-full flex-col items-center justify-center select-none">
-          <div
-            class="mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-500 text-white shadow-lg shadow-blue-500/20">
-            <i-mdi-robot-outline class="h-10 w-10" />
-          </div>
-          <h2 class="mb-4 text-2xl font-bold text-[--text-color]">{{ $t("home.aiChat.startChat") }}</h2>
-          <p class="mb-10 text-sm text-[--user-text-color] opacity-80">
-            {{ $t("home.aiChat.welcome") }}
-          </p>
+          <div v-else class="flex h-full min-h-[60vh] w-full flex-col items-center justify-center select-none">
+            <div
+              class="mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-500 text-white shadow-lg shadow-blue-500/20">
+              <i-mdi-robot-outline class="h-10 w-10" />
+            </div>
+            <h2 class="mb-4 text-2xl font-bold text-[--text-color]">{{ $t("home.aiChat.startChat") }}</h2>
+            <p class="mb-10 text-sm text-[--user-text-color] opacity-80">
+              {{ $t("home.aiChat.welcome") }}
+            </p>
 
-          <div class="flex max-w-[800px] flex-wrap justify-center gap-4">
-            <div
-              class="cursor-pointer rounded-full border border-[--line-color] bg-[--input-area-bg] px-5 py-2.5 text-sm text-[--text-color] opacity-80 transition-all hover:bg-[--tray-hover] hover:opacity-100 hover:shadow-sm"
-              @click="handleQuickAction('帮我写一段 Python 代码')">
-              帮我写一段 Python 代码
-            </div>
-            <div
-              class="cursor-pointer rounded-full border border-[--line-color] bg-[--input-area-bg] px-5 py-2.5 text-sm text-[--text-color] opacity-80 transition-all hover:bg-[--tray-hover] hover:opacity-100 hover:shadow-sm"
-              @click="handleQuickAction('解释什么是闭包')">
-              解释什么是闭包
-            </div>
-            <div
-              class="cursor-pointer rounded-full border border-[--line-color] bg-[--input-area-bg] px-5 py-2.5 text-sm text-[--text-color] opacity-80 transition-all hover:bg-[--tray-hover] hover:opacity-100 hover:shadow-sm"
-              @click="handleQuickAction('如何优化 SQL 查询')">
-              如何优化 SQL 查询
+            <div class="flex max-w-[800px] flex-wrap justify-center gap-4">
+              <div
+                class="cursor-pointer rounded-full border border-[--line-color] bg-[--input-area-bg] px-5 py-2.5 text-sm text-[--text-color] opacity-80 transition-all hover:bg-[--tray-hover] hover:opacity-100 hover:shadow-sm"
+                @click="handleQuickAction('帮我写一段 Python 代码')">
+                帮我写一段 Python 代码
+              </div>
+              <div
+                class="cursor-pointer rounded-full border border-[--line-color] bg-[--input-area-bg] px-5 py-2.5 text-sm text-[--text-color] opacity-80 transition-all hover:bg-[--tray-hover] hover:opacity-100 hover:shadow-sm"
+                @click="handleQuickAction('解释什么是闭包')">
+                解释什么是闭包
+              </div>
+              <div
+                class="cursor-pointer rounded-full border border-[--line-color] bg-[--input-area-bg] px-5 py-2.5 text-sm text-[--text-color] opacity-80 transition-all hover:bg-[--tray-hover] hover:opacity-100 hover:shadow-sm"
+                @click="handleQuickAction('如何优化 SQL 查询')">
+                如何优化 SQL 查询
+              </div>
             </div>
           </div>
+        </n-scrollbar>
+
+        <div
+          class="absolute bottom-4 right-6 z-10 flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border border-[--line-color] bg-[--tray-bg-color] shadow-md transition-all duration-300 hover:bg-[--tray-hover] hover:shadow-lg active:scale-95"
+          :class="showScrollToBottomBtn ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0 pointer-events-none'"
+          @click="scrollToBottom(true)">
+          <i-mdi-arrow-down class="h-5 w-5 text-[--user-text-color]" />
         </div>
-      </n-scrollbar>
+      </div>
 
       <div class="flex w-full justify-center bg-[--tray-bg-color] py-1">
         <message-input
@@ -125,6 +134,25 @@ const isMessageSelectionMode = ref(false);
 const selectedMessageIds = ref<Set<string | number>>(new Set());
 const messages = ref<MessageData[]>([]);
 const currentRequestId = ref<string | null>(null); // 记录当前请求 ID 用于取消
+const showScrollToBottomBtn = ref(false);
+// 判断用户是否停留在底部附近
+const isAtBottom = ref(true);
+
+/**
+ * 处理滚动事件，判断是否显示滚动到底部按钮
+ * @param e 滚动事件对象
+ */
+const handleScroll = (e: Event) => {
+  const target = e.target as HTMLElement;
+  // 计算距离底部的距离
+  const distanceToBottom = target.scrollHeight - target.scrollTop - target.clientHeight;
+
+  // 1. 控制“回到大底部”按钮的显示
+  showScrollToBottomBtn.value = distanceToBottom > 300;
+
+  // 2. 更新是否处于底部的状态
+  isAtBottom.value = distanceToBottom < 200;
+};
 
 /**
  * 触发多选模式，并默认选中当前右键的消息
@@ -178,14 +206,20 @@ const handleToggleCollapse = () => {
   isHistoryCollapsed.value = !isHistoryCollapsed.value;
 };
 
-/** 滚动到消息列表底部 */
-const scrollToBottom = () => {
+/**
+ * 滚动到消息列表底部
+ * @param force 是否强制滚动（用户自己发消息或点击回底按钮时传 true）
+ */
+const scrollToBottom = (force = false) => {
   nextTick(() => {
-    if (scrollbarRef.value && scrollContentRef.value) {
-      // scrollContentRef.value.scrollHeight 获取的是内部所有消息叠加的总高度
-      scrollbarRef.value.scrollTo({
-        top: scrollContentRef.value.scrollHeight
-      });
+    // 只有在强制滚动 或 用户本身就在底部时，才执行滚动
+    if (force || isAtBottom.value) {
+      if (scrollbarRef.value && scrollContentRef.value) {
+        scrollbarRef.value.scrollTo({
+          top: scrollContentRef.value.scrollHeight,
+          behavior: "smooth"
+        });
+      }
     }
   });
 };
@@ -264,7 +298,7 @@ const handleSendMessage = (payload: {
   };
 
   messages.value.push(userMsg);
-  scrollToBottom();
+  scrollToBottom(true);
 
   // 2. 初始化 AI 消息气泡
   chatStatus.value = "loading";

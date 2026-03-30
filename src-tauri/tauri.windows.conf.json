@@ -63,6 +63,19 @@
         "decorations": false
       },
       {
+        "label": "live2d",
+        "url": "/live2d",
+        "resizable": false,
+        "center": false,
+        "visible": false,
+        "width": 300,
+        "height": 480,
+        "alwaysOnTop": true,
+        "skipTaskbar": true,
+        "decorations": false,
+        "transparent": true
+      },
+      {
         "label": "tray",
         "url": "/tray",
         "resizable": false,

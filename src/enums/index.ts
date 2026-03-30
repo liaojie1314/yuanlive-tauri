@@ -116,6 +116,8 @@ export enum EventEnum {
   WIN_SHOW = "winShow",
   // 退出程序
   EXIT = "exit",
+  // 登录成功
+  LOGIN_SUCCESS = "loginSuccess",
   // 退出账号
   LOGOUT = "logout"
 }

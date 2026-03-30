@@ -129,6 +129,12 @@
     "downloaded": "downloaded",
     "start": "start",
     "close": "close",
+    "agent": "Agent",
+    "agentDesc": "Call out the agent on your desktop to get help.",
+    "running": "running",
+    "sleeping": "sleeping",
+    "enabled": "enabled",
+    "disabled": "disabled",
     "msg": {
       "fetchModelListFailed": "Failed to fetch model list from cloud, please check your network connection",
       "downloadSuccess": "download completed successfully",

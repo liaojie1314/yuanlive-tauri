@@ -15,12 +15,7 @@
         :src="resourceSrc"
         @rendered="onRendered"
         @error="handleRenderError" />
-      <VueOfficePdf
-        v-else-if="isShowPdf"
-        class="size-full"
-        :src="resourceSrc"
-        @rendered="onRendered"
-        @error="handleRenderError" />
+      <iframe v-else-if="isShowPdf" class="size-full border-none bg-[#525659]" :src="pdfSrcWithSearch" />
       <VueOfficeExcel
         v-else-if="isShowExcel"
         class="size-full"
@@ -34,17 +29,17 @@
         @rendered="onRendered"
         @error="handleRenderError" />
 
-      <n-scrollbar v-else-if="isShowMd" class="h-full w-full bg-white">
+      <n-scrollbar v-else-if="isShowMd" class="highlight-wrapper h-full w-full bg-white">
         <div v-html="mdHtml" class="markdown-body"></div>
       </n-scrollbar>
 
-      <n-scrollbar v-else-if="isShowText" class="h-full w-full bg-white">
+      <n-scrollbar v-else-if="isShowText" class="highlight-wrapper h-full w-full bg-white">
         <div class="p-6">
           <pre class="font-mono text-sm leading-relaxed whitespace-pre-wrap text-gray-800">{{ txtContent }}</pre>
         </div>
       </n-scrollbar>
 
-      <n-scrollbar v-else-if="isShowCode" class="h-full w-full bg-[#282c34]">
+      <n-scrollbar v-else-if="isShowCode" class="highlight-wrapper h-full w-full bg-[#282c34]">
         <div class="p-4">
           <pre><code class="hljs !bg-transparent !p-0 font-mono text-sm leading-relaxed" v-html="highlightedCode"></code></pre>
         </div>
@@ -67,6 +62,7 @@ import "@vue-office/excel/lib/v3/index.css";
 import "github-markdown-css/github-markdown.css";
 import "highlight.js/styles/atom-one-dark.css";
 
+import Mark from "mark.js";
 import hljs from "highlight.js";
 import MarkdownIt from "markdown-it";
 import { useI18n } from "vue-i18n";
@@ -92,10 +88,6 @@ const VueOfficeExcel = defineAsyncComponent({
   loader: () => import("@vue-office/excel/lib/v3/vue-office-excel.mjs"),
   loadingComponent
 });
-const VueOfficePdf = defineAsyncComponent({
-  loader: () => import("@vue-office/pdf/lib/v3/vue-office-pdf.mjs"),
-  loadingComponent
-});
 const VueOfficePptx = defineAsyncComponent({
   loader: () => import("@vue-office/pptx/lib/v3/vue-office-pptx.mjs"),
   loadingComponent
@@ -104,6 +96,7 @@ const VueOfficePptx = defineAsyncComponent({
 type PayloadData = {
   uid: string;
   conversationId: string;
+  snippet?: string;
   resourceFile: {
     fileName: string;
     absolutePath: string | undefined;
@@ -205,6 +198,27 @@ const isShowMd = computed(() => ["md", "markdown"].includes(fileExt.value));
 const isShowCode = computed(() => CODE_EXTS.includes(fileExt.value));
 const isShowText = computed(() => TEXT_EXTS.includes(fileExt.value));
 
+// 计算带有高亮搜索参数的 PDF 真实路径
+const pdfSrcWithSearch = computed(() => {
+  let baseSrc = "";
+  // 1. 如果是文件流 (本地读取)
+  if (uiData.fileBuffer) {
+    const blob = new Blob([uiData.fileBuffer], { type: "application/pdf" });
+    baseSrc = URL.createObjectURL(blob);
+  } else {
+    // 2. 如果是 URL
+    baseSrc = uiData.payload.resourceFile.url;
+  }
+
+  // 高亮参数：#search=关键字
+  const snippet = uiData.payload.snippet;
+  if (snippet) {
+    // encodeURIComponent 防止中文或特殊字符破坏 URL 结构
+    return `${baseSrc}#search=${encodeURIComponent(snippet)}`;
+  }
+  return baseSrc;
+});
+
 /** 获取文件预览错误信息 */
 const getErrorMessage = () => {
   if (fileExt.value === "doc") return t("preview.file.docTip");
@@ -263,6 +277,35 @@ const updateFile = async (absolutePath: string, exists: boolean) => {
     else if (isShowText.value && rawText) {
       txtContent.value = rawText;
     }
+
+    // 核心高亮逻辑
+    nextTick(() => {
+      // 1. 提取为局部常量，完美解决 TS 类型推导报错
+      const searchSnippet = uiData.payload.snippet;
+
+      if (searchSnippet && (isShowCode.value || isShowMd.value || isShowText.value)) {
+        const container = document.querySelector(".highlight-wrapper");
+        if (container) {
+          const markInstance = new Mark(container as HTMLElement);
+
+          markInstance.unmark({
+            done: () => {
+              markInstance.mark(searchSnippet, {
+                separateWordSearch: false,
+                acrossElements: true,
+                className: "bg-yellow-300 text-black px-1 rounded shadow-sm",
+                done: () => {
+                  const firstMark = container.querySelector("mark");
+                  if (firstMark) {
+                    firstMark.scrollIntoView({ behavior: "smooth", block: "center" });
+                  }
+                }
+              });
+            }
+          });
+        }
+      }
+    });
   } catch (error) {
     console.error("读取文件出错：", error);
     renderError.value = true;
@@ -309,7 +352,6 @@ onMounted(async () => {
 <style scoped>
 :deep(.vue-office-docx-main),
 :deep(.vue-office-excel-main),
-:deep(.vue-office-pdf-main),
 :deep(.vue-office-pptx-main) {
   margin: 0 !important;
   padding: 0 !important;

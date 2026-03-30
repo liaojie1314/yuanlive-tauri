@@ -21,7 +21,9 @@
       v-show="!isSleeping"
       class="absolute right-4 top-1/2 -translate-y-1/2 flex flex-col gap-2 z-20 items-center transition-opacity duration-500">
       <div title="语音连麦" class="action-btn group" @click="handleVoiceChat">
-        <i-mdi-microphone class="text-20px" />
+        <i-mdi-microphone
+          class="text-20px"
+          :class="{ 'text-red-400 animate-pulse drop-shadow-[0_0_8px_rgba(248,113,113,0.8)]': isVoiceChatting }" />
       </div>
       <div title="视觉捕获 (开关)" class="action-btn group" @click="captureScreen">
         <i-mdi-monitor-screenshot
@@ -55,7 +57,7 @@
       <div title="切换形象" class="action-btn group" @click="switchLive2dModel">
         <i-mdi-account-switch class="text-20px" />
       </div>
-      <div title="鼠标穿透 (防误触) [CommandOrControl+Shift+T]" class="action-btn group" @click="toggleClickThrough">
+      <div title="鼠标穿透 (防误触) [CommandOrControl+Shift+R]" class="action-btn group" @click="toggleClickThrough">
         <i-mdi-mouse-off class="text-20px" :class="{ 'text-red-400': isClickThrough }" />
       </div>
       <div title="去休息吧 (休眠)" class="action-btn group" @click="sleepMode">
@@ -66,7 +68,7 @@
     <transition name="fade">
       <div
         v-if="showMemoInput"
-        class="absolute top-1/3 left-1/2 -translate-x-1/2 z-30 w-[320px] p-4 bg-white/70 backdrop-blur-xl border border-white/50 rounded-2xl shadow-2xl flex flex-col gap-2">
+        class="absolute top-1/3 left-1/2 -translate-x-1/2 z-30 w-[260px] p-4 bg-white/70 backdrop-blur-xl border border-white/50 rounded-2xl shadow-2xl flex flex-col gap-2">
         <div class="flex items-center gap-2 text-[#13987f] font-bold text-14px px-1">
           <i-mdi-notebook-edit />
           <span>灵感捕捉</span>
@@ -103,7 +105,7 @@
       class="block cursor-grab active:cursor-grabbing transition-all duration-1000"
       :class="{ 'opacity-50 brightness-50': isSleeping }"
       @mousedown="startDrag"></canvas>
-    <n-drawer placement="right" v-model:show="showMemoList" :width="280">
+    <n-drawer placement="right" v-model:show="showMemoList" :width="250">
       <n-drawer-content title="💡 灵感碎片" closable>
         <n-empty v-if="agentStore.memos.length === 0" description="脑子里空空的~" class="mt-10" />
 
@@ -134,10 +136,10 @@ import { listen } from "@tauri-apps/api/event";
 import { Live2DModel } from "pixi-live2d-display";
 import { LogicalPosition } from "@tauri-apps/api/window";
 import { convertFileSrc, invoke } from "@tauri-apps/api/core";
-import { register, unregister } from "@tauri-apps/plugin-global-shortcut";
-import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
+import { isRegistered, register, unregister } from "@tauri-apps/plugin-global-shortcut";
+import { getAllWebviewWindows, getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 
-import { TauriCommandEnum } from "@/enums";
+import { EventEnum, TauriCommandEnum } from "@/enums";
 import { useAgentStore } from "@/stores/agent.ts";
 import { formatSecondsToTimeStr, formatTime } from "@/utils/FormattingUtils";
 
@@ -164,6 +166,13 @@ let pixiApp: PIXI.Application | null = null;
 let initPromise: Promise<void> | null = null;
 let unlistenAudio: any = null;
 let dragOffset = { x: 0, y: 0 };
+let mediaRecorder: MediaRecorder | null = null;
+let wsEventListener: any = null;
+// VAD 静音检测所需变量
+let vadAudioCtx: AudioContext | null = null;
+let vadAnalyser: AnalyserNode | null = null;
+let vadDataArray: Uint8Array | null = null;
+let lastSpeakTime = 0; // 最后一次大声说话的时间戳
 const ttsWorker = new Worker(new URL("@/workers/kokoro.worker.ts", import.meta.url), { type: "module" });
 
 const isPomodoroActive = ref(false);
@@ -190,6 +199,7 @@ const isClickThrough = ref(false);
 const isVisionActive = ref(false);
 const currentVisualContext = ref("");
 const isListeningMusic = ref(false);
+const isVoiceChatting = ref(false);
 
 // 音频与口型相关
 const audioContext = shallowRef<AudioContext | null>(null);
@@ -663,8 +673,89 @@ const speak = async (text: string) => {
 };
 
 // --- AI 能力 ---
-const handleVoiceChat = () => {
-  console.log("🚀 功能待实现: 开启双向语音通话流");
+const handleVoiceChat = async () => {
+  if (isSleeping.value) return;
+
+  // 1. 关闭连麦
+  if (isVoiceChatting.value) {
+    isVoiceChatting.value = false;
+    if (mediaRecorder && mediaRecorder.state !== "inactive") {
+      mediaRecorder.stop();
+    }
+    if (vadAudioCtx) {
+      vadAudioCtx.close();
+      vadAudioCtx = null;
+    }
+    if (wsEventListener) {
+      wsEventListener();
+      wsEventListener = null;
+    }
+    speak("连麦已断开，有需要随时叫我哦~");
+    return;
+  }
+
+  // 2. 开启连麦
+  try {
+    speak("麦克风已接通，你可以直接跟我说话啦~");
+    // === 🔽 下行：监听后端大模型发来的消息 ===
+    wsEventListener = await listen("websocket-event", (event: any) => {
+      const wsEvent = event.payload;
+      // 过滤出收到消息的事件
+      if (wsEvent.type === "messageReceived") {
+        const msg = wsEvent.message;
+        // 假设后端返回: { "type": "AI_REPLY", "text": "你好呀" }
+        if (msg.type === "AI_REPLY" && msg.text) {
+          speak(msg.text); // 直接调用你现成的 speak 函数播报！
+        }
+      }
+    });
+    // === 🔼 上行：获取麦克风流并做静音检测 (VAD) ===
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    // 接入 VAD 分析器
+    vadAudioCtx = new AudioContext();
+    const source = vadAudioCtx.createMediaStreamSource(stream);
+    vadAnalyser = vadAudioCtx.createAnalyser();
+    vadAnalyser.fftSize = 256;
+    source.connect(vadAnalyser);
+    vadDataArray = new Uint8Array(vadAnalyser.frequencyBinCount);
+    mediaRecorder = new MediaRecorder(stream);
+    // 每 500ms 触发一次切片发送
+    mediaRecorder.ondataavailable = async (e) => {
+      if (e.data.size > 0 && isVoiceChatting.value) {
+        // 计算当前这 0.5 秒内的平均音量能量
+        vadAnalyser!.getByteFrequencyData(vadDataArray as any);
+        const sum = vadDataArray!.reduce((a, b) => a + b, 0);
+        const avgVolume = sum / vadDataArray!.length;
+        const now = Date.now();
+        const SILENCE_THRESHOLD = 10; // 阈值：过滤风扇/底噪，人声通常大于 10
+        const TAIL_MARGIN_MS = 1500; // 拖尾：停止说话后继续发送 1.5 秒，防断句
+        if (avgVolume > SILENCE_THRESHOLD) {
+          lastSpeakTime = now;
+        }
+        // 如果在说话，或者在停顿拖尾期内，则发送！
+        if (now - lastSpeakTime < TAIL_MARGIN_MS) {
+          const buffer = await e.data.arrayBuffer();
+          // 转成 Base64
+          const base64Audio = btoa(String.fromCharCode(...new Uint8Array(buffer)));
+          // 调用 Rust 的 ws_send_message 接口发送
+          await invoke("ws_send_message", {
+            params: {
+              data: {
+                type: "USER_AUDIO",
+                audio: base64Audio
+              }
+            }
+          });
+        }
+      }
+    };
+    mediaRecorder.start(500); // 启动录制，每 500ms 吐一次切片
+    isVoiceChatting.value = true;
+  } catch (e) {
+    console.error("连麦初始化失败:", e);
+    speak("哎呀，麦克风没打开，或者网络不通哦...");
+    isVoiceChatting.value = false;
+  }
 };
 
 const captureScreen = async () => {
@@ -926,7 +1017,7 @@ const toggleClickThrough = async () => {
     if (pixiApp && pixiApp.view) {
       (pixiApp.view as HTMLCanvasElement).style.opacity = "0.7";
     }
-    speak("已开启防误触，现在你点不到我啦！按下 CommandOrControl+Shift+T 随时解除哦~");
+    speak("已开启防误触，现在你点不到我啦！按下 CommandOrControl+Shift+R 随时解除哦~");
   } else {
     // 恢复实体
     if (pixiApp && pixiApp.view) {
@@ -948,6 +1039,9 @@ const sleepMode = () => {
 onMounted(async () => {
   if (!canvasRef.value) return;
 
+  const windows = await getAllWebviewWindows();
+  const isLoginWindowAlive = windows.some((w) => w.label === "login");
+
   // 1. 窗口右下角定位
   const screenW = window.screen.availWidth;
   const screenH = window.screen.availHeight;
@@ -956,7 +1050,49 @@ onMounted(async () => {
   const x = screenW - winW; // 紧贴右边
   const y = screenH - winH; // 紧贴底边
   await appWindow.setPosition(new LogicalPosition(x - 10, y));
-  await appWindow.show();
+  if (agentStore.isOpenAgent && !isLoginWindowAlive) {
+    await appWindow.show();
+  } else {
+    await appWindow.hide();
+  }
+
+  // 监听用户登录成功事件
+  const unlistenLogin = await listen(EventEnum.LOGIN_SUCCESS, async () => {
+    if (agentStore.isOpenAgent) {
+      await appWindow.show();
+      speak("欢迎回来！我已经准备好陪你工作啦~");
+      if (live2dModel.value) live2dModel.value.motion("TapBody");
+    }
+  });
+
+  // 监听用户登出事件
+  const unlistenLogout = await listen(EventEnum.LOGOUT, async () => {
+    // 登出时，无论开关状态，必须强制隐藏桌宠
+    await appWindow.hide();
+  });
+
+  // 挂载到 window，方便在 onUnmounted 里销毁
+  (window as any).__unlistenLogin = unlistenLogin;
+  (window as any).__unlistenLogout = unlistenLogout;
+
+  watch(
+    () => agentStore.isOpenAgent,
+    async (newVal) => {
+      if (newVal) {
+        // 开关打开：显示窗口并打招呼
+        await appWindow.show();
+        speak("我回来啦！有什么需要帮忙的吗？");
+        if (live2dModel.value) live2dModel.value.motion("TapBody");
+      } else {
+        // 开关关闭：道别后隐藏窗口
+        speak("那我先去休息啦，有事在设置里叫我哦~");
+        // 延迟 3 秒，等她把话说完再隐身
+        setTimeout(async () => {
+          await appWindow.hide();
+        }, 3000);
+      }
+    }
+  );
 
   // 2. Pixi 初始化
   pixiApp = new PIXI.Application({
@@ -1015,15 +1151,25 @@ onMounted(async () => {
   // 记得将这个解绑函数存到一个外层变量里，方便在 onUnmounted 里调用
   (window as any).__unlistenMouse = unlistenMouse;
 
+  // 强制绑定全局快捷键逻辑 ---
   try {
-    await register("CommandOrControl+Shift+T", (event) => {
-      // 快捷键按下时触发 (防止长按触发多次)
+    const shortcutKey = "CommandOrControl+Shift+R";
+    // 1. 检查是否已经被注册（比如上次关闭窗口时没卸载干净）
+    const isReg = await isRegistered(shortcutKey);
+    if (isReg) {
+      console.log(`⚠️ 检测到快捷键 [${shortcutKey}] 被残留占用，正在强制释放...`);
+      // 2. 强制强拆旧的绑定
+      await unregister(shortcutKey);
+    }
+    // 3. 重新干净地绑定全新的事件
+    await register(shortcutKey, (event) => {
       if (event.state === "Pressed") {
         toggleClickThrough();
       }
     });
+    console.log(`✅ 快捷键 [${shortcutKey}] 强制绑定成功！`);
   } catch (e) {
-    console.error("全局快捷键注册失败，可能被其他软件占用了:", e);
+    console.error("全局快捷键强绑失败:", e);
   }
 });
 
@@ -1041,8 +1187,20 @@ onUnmounted(async () => {
   if ((window as any).__unlistenMouse) {
     (window as any).__unlistenMouse();
   }
+  if ((window as any).__unlistenLogin) (window as any).__unlistenLogin();
+  if ((window as any).__unlistenLogout) (window as any).__unlistenLogout();
+  // 清理连麦
+  if (mediaRecorder && mediaRecorder.state !== "inactive") {
+    mediaRecorder.stop();
+  }
+  if (vadAudioCtx) {
+    vadAudioCtx.close();
+  }
+  if (wsEventListener) {
+    wsEventListener();
+  }
   try {
-    await unregister("CommandOrControl+Shift+T");
+    await unregister("CommandOrControl+Shift+R");
   } catch (e) {
     console.warn("注销全局快捷键失败:", e);
   }
