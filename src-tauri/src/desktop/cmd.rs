@@ -1,12 +1,15 @@
 #![allow(unexpected_cfgs)]
+#[cfg(target_os = "windows")]
+use crate::AudioStreamWrapper;
 use base64::{engine::general_purpose, Engine as _};
 use enigo::{Enigo, KeyboardControllable, MouseControllable};
 use screenshots::image::{DynamicImage, ImageOutputFormat};
 use screenshots::Screen;
+use std::cmp;
 use std::io::Cursor;
-use tauri::{AppHandle, Emitter, State};
+use tauri::{AppHandle, Emitter, LogicalSize, Manager, State};
 
-use crate::{AudioState, AudioStreamWrapper};
+use crate::AudioState;
 
 #[tauri::command]
 pub fn screenshot(x: f64, y: f64) -> Result<String, String> {
@@ -29,6 +32,26 @@ pub fn screenshot(x: f64, y: f64) -> Result<String, String> {
 
     let base64_str = general_purpose::STANDARD.encode(buffer);
     Ok(base64_str)
+}
+
+#[tauri::command]
+pub fn set_height(height: u32, handle: AppHandle) -> Result<(), String> {
+    let home_window = handle
+        .get_webview_window("home")
+        .ok_or("未找到 home 窗口")?;
+    let sf = home_window
+        .scale_factor()
+        .map_err(|e| format!("获取窗口缩放因子失败: {}", e))?;
+    let out_size = home_window
+        .inner_size()
+        .map_err(|e| format!("获取窗口尺寸失败: {}", e))?;
+    home_window
+        .set_size(LogicalSize::new(
+            out_size.to_logical(sf).width,
+            cmp::max(out_size.to_logical(sf).height, height),
+        ))
+        .map_err(|e| format!("设置窗口高度失败: {}", e))?;
+    Ok(())
 }
 
 #[cfg(target_os = "windows")]

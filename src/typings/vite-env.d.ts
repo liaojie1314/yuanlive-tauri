@@ -3,8 +3,6 @@ interface ImportMetaEnv {
   readonly VITE_BASE_URL: string;
   readonly VITE_CDN: boolean;
   readonly VITE_COMPRESSION: ViteCompression;
-  readonly VITE_CRYPTO_SECRET_KEY: string;
-  readonly VITE_CRYPTO_SECRET_IV: string;
 }
 
 interface ImportMeta {

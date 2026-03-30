@@ -65,8 +65,6 @@ const wrapperEnv = (envConf: Recordable): ViteEnv => {
   const ret: ViteEnv = {
     VITE_CDN: false,
     VITE_COMPRESSION: "none",
-    VITE_CRYPTO_SECRET_KEY: "",
-    VITE_CRYPTO_SECRET_IV: "",
     VITE_APP_NAME: "",
     VITE_PC_URL: "",
     VITE_SERVICE_URL: "",

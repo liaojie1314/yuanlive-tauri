@@ -336,6 +336,8 @@ fn get_invoke_handlers() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Se
         ws_send_message,
     };
     #[cfg(desktop)]
+    use desktop::cmd::set_height;
+    #[cfg(desktop)]
     use desktop::cmd::{
         agent_mouse_action, agent_type_text, screenshot, toggle_system_audio_listen,
     };
@@ -403,6 +405,8 @@ fn get_invoke_handlers() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Se
         get_window_payload,
         #[cfg(desktop)]
         screenshot,
+        #[cfg(desktop)]
+        set_height,
         #[cfg(desktop)]
         toggle_system_audio_listen,
         #[cfg(desktop)]
