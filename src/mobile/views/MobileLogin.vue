@@ -2,14 +2,13 @@
   <mobile-layout>
     <mobile-scaffold background="/login-bg.png" :safe-area="false">
       <template #container>
-        <div class="h-full flex-col-center gap-40px">
-          <div class="flex-center absolute top-13vh left-36px">
+        <div class="min-h-full flex flex-col items-center pt-12vh pb-30px box-border">
+          <div class="flex items-center self-start ml-36px mb-4vh">
             <p class="text-(20px #333) dark:text-gray-400">{{ t("mobileLogin.welcome") }}</p>
-            <img src="@/assets/mobile/name.svg" alt="" class="w-80px h-20px" />
+            <img src="@/assets/mobile/name.svg" alt="" class="w-80px h-20px ml-10px" />
           </div>
 
-          <!-- 选项卡导航 -->
-          <div class="w-80% h-40px absolute top-20vh flex-center">
+          <div class="w-80% h-40px flex-center mb-4vh relative">
             <div class="flex w-200px relative">
               <div
                 :class="[
@@ -27,7 +26,6 @@
                 @click="activeTab = 'register'">
                 {{ t("mobileLogin.tabs.register") }}
               </div>
-              <!-- 选中条 -->
               <div
                 style="border-radius: 24px 42px 4px 24px"
                 :class="[
@@ -37,11 +35,11 @@
             </div>
           </div>
 
-          <!-- 头像 -->
-          <img v-if="activeTab === 'login'" alt="logo" class="size-86px rounded-full" :src="userInfo.avatar" />
+          <div class="h-60px mb-4vh flex-center shrink-0">
+            <img v-if="activeTab === 'login'" alt="logo" class="size-86px rounded-full" :src="userInfo.avatar" />
+          </div>
 
-          <!-- 登录表单 -->
-          <n-flex v-if="activeTab === 'login'" vertical class="text-center w-80%" :size="16">
+          <n-flex v-if="activeTab === 'login'" vertical class="text-center w-80% flex-1" :size="16">
             <n-input
               size="large"
               type="text"
@@ -79,15 +77,19 @@
             <n-button
               tertiary
               style="color: #fff"
-              class="w-full mt-8px mb-50px gradient-button"
+              class="w-full mt-8px gradient-button"
               :loading="loading"
               :disabled="loginDisabled"
               @click="normalLogin('mobile', false)">
               <span>{{ loginText }}</span>
             </n-button>
 
-            <!-- 协议 -->
-            <n-flex align="center" justify="center" class="absolute bottom-0 w-[80%]" :style="agreementStyle" :size="6">
+            <n-flex
+              align="center"
+              justify="center"
+              class="mt-auto w-full pt-40px pb-20px"
+              :style="agreementStyle"
+              :size="6">
               <n-checkbox v-model:checked="protocol" />
               <div class="text-12px color-#909090 cursor-default lh-14px">
                 <span>{{ t("auth.agreement.text1") }}</span>
@@ -102,8 +104,11 @@
             </n-flex>
           </n-flex>
 
-          <!-- 注册表单 - 第一步：昵称和密码 -->
-          <n-flex v-if="activeTab === 'register' && currentStep === 1" vertical class="text-center w-80%" :size="16">
+          <n-flex
+            v-if="activeTab === 'register' && currentStep === 1"
+            vertical
+            class="text-center w-80% flex-1"
+            :size="16">
             <n-input
               size="large"
               maxlength="8"
@@ -154,7 +159,6 @@
               @focus="confirmPasswordPH = ''"
               @blur="confirmPasswordPH = t('mobileLogin.register.input.confirmPassword')" />
 
-            <!-- 密码提示信息 -->
             <n-flex vertical v-if="registerInfo.password" class="mt-8px" :size="10">
               <Validation
                 :value="registerInfo.password"
@@ -170,8 +174,22 @@
                 :validator="validateSpecialChar" />
             </n-flex>
 
-            <!-- 协议 -->
-            <n-flex align="center" justify="center" class="mt-10px" :size="6">
+            <n-button
+              tertiary
+              style="color: #fff"
+              class="w-full mt-8px gradient-button"
+              :loading="registerLoading"
+              :disabled="!isStep1Valid"
+              @click="handleRegisterStep">
+              <span>{{ t("mobileLogin.register.btn.next") }}</span>
+            </n-button>
+
+            <n-flex
+              align="center"
+              justify="center"
+              class="mt-auto w-full pt-40px pb-20px"
+              :style="agreementStyle"
+              :size="6">
               <n-checkbox v-model:checked="registerProtocol" />
               <div class="text-12px color-#909090 cursor-default lh-14px">
                 <span>{{ t("auth.agreement.text1") }}</span>
@@ -184,20 +202,13 @@
                 </span>
               </div>
             </n-flex>
-
-            <n-button
-              tertiary
-              style="color: #fff"
-              class="w-full mt-8px mb-50px gradient-button"
-              :loading="registerLoading"
-              :disabled="!isStep1Valid"
-              @click="handleRegisterStep">
-              <span>{{ t("mobileLogin.register.btn.next") }}</span>
-            </n-button>
           </n-flex>
 
-          <!-- 注册表单 - 第二步：邮箱和图片验证码 -->
-          <n-flex v-if="activeTab === 'register' && currentStep === 2" vertical class="text-center w-80%" :size="16">
+          <n-flex
+            v-if="activeTab === 'register' && currentStep === 2"
+            vertical
+            class="text-center w-80% flex-1"
+            :size="16">
             <n-auto-complete
               size="large"
               clearable
@@ -209,7 +220,6 @@
               @focus="registerEmailPH = ''"
               @blur="registerEmailPH = t('mobileLogin.register.input.email')" />
 
-            <!-- 邮箱验证码 -->
             <div class="flex justify-between items-center gap-10px">
               <n-input
                 size="large"
@@ -240,7 +250,7 @@
             <n-button
               tertiary
               style="color: #fff"
-              class="w-full mt-8px mb-50px gradient-button"
+              class="w-full mt-8px gradient-button"
               :loading="registerLoading"
               :disabled="!isStep2Valid"
               @click="handleRegisterStep">

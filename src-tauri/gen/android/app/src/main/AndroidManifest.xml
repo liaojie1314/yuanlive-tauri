@@ -39,7 +39,7 @@
             android:label="@string/main_activity_title"
             android:name=".MainActivity"
             android:resizeableActivity="true"
-            android:windowSoftInputMode="adjustResize"
+            android:windowSoftInputMode="adjustPan"
             android:theme="@style/Theme.yuanlive_tauri.Launcher"
             android:exported="true">
             <intent-filter>

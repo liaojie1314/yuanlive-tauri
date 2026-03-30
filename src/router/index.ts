@@ -10,14 +10,6 @@ import {
 } from "vue-router";
 
 import { TauriCommandEnum } from "@/enums";
-import MobileLogin from "#/views/MobileLogin.vue";
-import MobileForgetPassword from "#/views/MobileForgetPassword.vue";
-import Splashscreen from "#/views/Splashscreen.vue";
-import MobileHome from "#/layout/index.vue";
-import MobileIndex from "#/views/index/index.vue";
-import MobileChat from "#/views/chat/index.vue";
-import MobileFollow from "#/views/follow/index.vue";
-import MobileMy from "#/views/my/index.vue";
 
 /**! 创建窗口后再跳转页面就会导致样式没有生效所以不能使用懒加载路由的方式，有些页面需要快速响应的就不需要懒加载 */
 const { BASE_URL } = import.meta.env;
@@ -34,22 +26,22 @@ const getMobileRoutes = (): Array<RouteRecordRaw> => [
   {
     path: "/mobile/login",
     name: "mobileLogin",
-    component: MobileLogin
+    component: () => import("@/mobile/views/MobileLogin.vue")
   },
   {
     path: "/mobile/forgetPassword",
     name: "mobileForgetPassword",
-    component: MobileForgetPassword
+    component: () => import("@/mobile/views/MobileForgetPassword.vue")
   },
   {
     path: "/mobile/splashscreen",
     name: "splashscreen",
-    component: Splashscreen
+    component: () => import("@/mobile/views/Splashscreen.vue")
   },
   {
     path: "/mobile/home",
     name: "mobileHome",
-    component: MobileHome,
+    component: () => import("@/mobile/layout/index.vue"),
     children: [
       {
         path: "",
@@ -59,22 +51,22 @@ const getMobileRoutes = (): Array<RouteRecordRaw> => [
       {
         path: "/mobile/index",
         name: "mobileIndex",
-        component: MobileIndex
+        component: () => import("@/mobile/views/index/index.vue")
       },
       {
         path: "/mobile/chat",
         name: "mobileChat",
-        component: MobileChat
+        component: () => import("@/mobile/views/chat/index.vue")
       },
       {
         path: "/mobile/follow",
         name: "mobileFollow",
-        component: MobileFollow
+        component: () => import("@/mobile/views/follow/index.vue")
       },
       {
         path: "/mobile/my",
         name: "mobileMy",
-        component: MobileMy
+        component: () => import("@/mobile/views/my/index.vue")
       }
     ]
   }

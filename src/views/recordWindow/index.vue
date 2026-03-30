@@ -88,18 +88,62 @@
         <div class="min-h-0 flex-1 bg-[--right-bg-color]">
           <n-scrollbar content-class="p-20px pt-0">
             <n-flex vertical class="mt-4" :size="16">
-              <div class="p-12px rounded-8px bg-[--left-item-bg-color]">
-                <span class="text-(12px [--left-text-color]) mb-1 block">推流房间号</span>
-                <n-input
-                  placeholder="room-001"
-                  class="!bg-transparent"
-                  v-model:value="roomId"
-                  :disabled="isStreaming || isPreviewing"
-                  :bordered="false" />
+              <div class="p-12px rounded-8px bg-[--left-item-bg-color] flex flex-col gap-3">
+                <div>
+                  <span class="text-(12px [--left-text-color]) mb-1 block">直播间名称</span>
+                  <n-input
+                    placeholder="给直播起个响亮的标题"
+                    size="small"
+                    v-model:value="liveRoomConfig.name"
+                    :disabled="isStreaming || isPreviewing" />
+                </div>
+
+                <div>
+                  <span class="text-(12px [--left-text-color]) mb-1 block">直播分类</span>
+                  <n-select
+                    size="small"
+                    v-model:value="liveRoomConfig.category"
+                    :options="categoryOptions"
+                    :disabled="isStreaming || isPreviewing" />
+                </div>
+
+                <div>
+                  <span class="text-(12px [--left-text-color]) mb-1 block">直播公告</span>
+                  <n-input
+                    type="textarea"
+                    placeholder="向观众介绍一下直播内容吧..."
+                    size="small"
+                    v-model:value="liveRoomConfig.announcement"
+                    :disabled="isStreaming || isPreviewing"
+                    :autosize="{ minRows: 2, maxRows: 3 }" />
+                </div>
+
+                <div>
+                  <span class="text-(12px [--left-text-color]) mb-1 block">直播封面</span>
+
+                  <div
+                    v-if="liveRoomConfig.coverUrl"
+                    class="mb-2 relative rounded-6px overflow-hidden border border-[--line-color] h-80px w-full">
+                    <img class="w-full h-full object-cover" :src="liveRoomConfig.coverUrl" />
+                  </div>
+
+                  <n-button
+                    size="small"
+                    block
+                    dashed
+                    :loading="isCoverUploading"
+                    :disabled="isStreaming || isPreviewing || isCoverUploading"
+                    @click="handleCoverUpload">
+                    {{
+                      isCoverUploading
+                        ? `上传中 ${(coverUploadProgress.progress * 100).toFixed(0)}%`
+                        : liveRoomConfig.coverUrl
+                          ? "更换封面"
+                          : "+ 上传封面"
+                    }}
+                  </n-button>
+                </div>
               </div>
-
-              <n-divider class="!my-0 bg-[--line-color]" />
-
               <n-flex vertical :size="12">
                 <div class="flex-between-center">
                   <span class="text-(14px [--text-color]) font-bold">画面合成 & 美颜</span>
@@ -132,9 +176,6 @@
                   <n-switch size="small" v-model:value="enableCamera" :disabled="isStreaming" />
                 </div>
               </n-flex>
-
-              <n-divider class="!my-2 bg-[--line-color]" />
-
               <div class="mb-2 flex-between-center">
                 <span class="text-(14px [--text-color]) font-bold">✨ 趣味滤镜</span>
               </div>
@@ -159,9 +200,6 @@
                 <span class="text-(12px [--left-text-color]) w-8 text-right">暗角</span>
                 <n-slider class="flex-1" v-model:value="effectConfig.vignette" :step="0.05" :min="0" :max="0.8" />
               </div>
-
-              <n-divider class="!my-2 bg-[--line-color]" />
-
               <div class="flex-between-center">
                 <span class="text-(12px [--text-color]) font-bold">🟢 绿幕抠图</span>
                 <n-switch size="small" v-model:value="beautyConfig.greenScreen" />
@@ -193,7 +231,6 @@
                 </div>
               </n-collapse-transition>
 
-              <n-divider class="!my-2 bg-[--line-color]" />
               <div class="flex-between-center">
                 <span class="text-(12px [--text-color]) font-bold">🤖 AI 虚拟背景</span>
                 <n-switch size="small" v-model:value="beautyConfig.virtualBg" />
@@ -252,8 +289,6 @@
                   </div>
                 </div>
               </n-collapse-transition>
-              <n-divider class="!my-2 bg-[--line-color]" />
-
               <div class="flex-between-center">
                 <span class="text-(12px [--text-color]) font-bold">🖼️ 品牌水印</span>
                 <n-switch size="small" v-model:value="watermarkConfig.enable" />
@@ -333,10 +368,18 @@ import { convertFileSrc, invoke } from "@tauri-apps/api/core";
 import { SelfieSegmentation } from "@mediapipe/selfie_segmentation";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 
-import { TauriCommandEnum } from "@/enums";
+import { TauriCommandEnum, UploadSceneEnum } from "@/enums";
 import { useWindow } from "@/hooks/useWindow";
+import { useUpload } from "@/hooks/useUpload";
 
 const { t } = useI18n();
+const {
+  uploadFile,
+  isUploading: isCoverUploading,
+  uploadProgress: coverUploadProgress,
+  onComplete: onUploadComplete,
+  onError: onUploadError
+} = useUpload();
 
 type SignalingProtocol = "srs-json" | "whip";
 const CANVAS_W = 1920;
@@ -352,7 +395,7 @@ const pipState = reactive({
   initialPipX: 0,
   initialPipY: 0
 });
-const roomId = ref("room1");
+const roomId = ref();
 const token = ref("123456");
 const isStreaming = ref(false);
 const isPreviewing = ref(false);
@@ -379,6 +422,17 @@ const watermarkConfig = reactive({
   x: 50, // X 坐标
   y: 50 // Y 坐标
 });
+const liveRoomConfig = reactive({
+  name: "",
+  category: "game", // 默认分类
+  announcement: "",
+  coverUrl: "" // 封面图 URL
+});
+const categoryOptions = [
+  { label: "🎮 游戏直播", value: "game" },
+  { label: "🎤 娱乐唱见", value: "entertainment" },
+  { label: "💻 编程学习", value: "coding" }
+];
 
 // 水印图片对象
 const logoImg = new Image();
@@ -486,6 +540,14 @@ const statusType = computed(() => {
   return "success";
 });
 
+const fetchRoomIdFromBackend = async () => {
+  return new Promise<string>((resolve) => {
+    setTimeout(() => {
+      resolve(`live_${Math.random().toString(36).substr(2, 6)}`); // 模拟后端返回随机 ID
+    }, 500);
+  });
+};
+
 // --- 核心逻辑：开关直播 ---
 const handleStreamToggle = async () => {
   if (isStreaming.value) {
@@ -497,10 +559,15 @@ const handleStreamToggle = async () => {
 };
 
 const startEverything = async () => {
-  if (!roomId.value) return window.$message.warning(t("record.roomIdRequired"));
+  if (!liveRoomConfig.name) return window.$message.warning("请输入直播间名称");
+  if (!liveRoomConfig.category) return window.$message.warning("请选择直播间分类");
+  if (!liveRoomConfig.coverUrl) return window.$message.warning("请上传封面");
   loading.value = true;
 
   try {
+    console.log("正在向后端申请直播间...", liveRoomConfig);
+    roomId.value = await fetchRoomIdFromBackend();
+    console.log("获取成功，分配的 RoomId:", roomId.value);
     // 1. 获取屏幕流
     screenStream = await navigator.mediaDevices.getDisplayMedia({
       video: { width: 1920, height: 1080, frameRate: 30 },
@@ -1230,6 +1297,45 @@ const handleMouseUp = (e: MouseEvent) => {
 const handleMouseLeave = () => {
   pipState.isDragging = false;
 };
+
+const handleCoverUpload = async () => {
+  try {
+    // 调起 Tauri 原生文件选择框
+    const selected = await open({
+      multiple: false,
+      filters: [{ name: "Image", extensions: ["png", "jpg", "jpeg", "webp"] }]
+    });
+
+    if (selected === null) return;
+    const filePath = selected as string;
+    const fileName = filePath.split(/[/\\]/).pop() || "cover.png"; // 提取文件名
+
+    // 【核心】Tauri2 的 open 拿到的是路径。为了兼容 useUpload 需要的 File 对象
+    // 我们先通过 convertFileSrc 拿到本地协议URL，再转成 Blob 构建 File
+    const assetUrl = convertFileSrc(filePath);
+    const response = await fetch(assetUrl);
+    const blob = await response.blob();
+
+    // 构建带有 path 属性的 ExtendedFile，完美触发你 hook 里设计的 Rust 读盘极速上传逻辑
+    const file = new File([blob], fileName, { type: blob.type }) as any;
+    file.path = filePath;
+
+    // 执行上传
+    await uploadFile(file, UploadSceneEnum.LIVE_COVER);
+  } catch (err: any) {
+    console.error("封面加载/上传报错:", err);
+    window.$message.error("封面处理失败");
+  }
+};
+
+onUploadComplete((result) => {
+  liveRoomConfig.coverUrl = result.url || ""; // 赋值后端返回的 URL
+  window.$message.success("封面上传成功！");
+});
+
+onUploadError((err) => {
+  window.$message.error(`封面上传失败: ${err.message}`);
+});
 
 onMounted(async () => {
   await getCurrentWebviewWindow().show();
