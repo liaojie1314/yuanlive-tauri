@@ -9,7 +9,7 @@ export default {
   "*.{js,jsx,ts,tsx,json}": [
     (filenames) => {
       const filteredFiles = filenames.filter(
-        (f) => !f.includes("src-tauri/") && !f.includes("public/") && !f.endsWith(".d.ts")
+        (f) => !f.includes("src-tauri/") && !f.includes("public/") && !f.endsWith(".d.ts") && !f.includes(".vscode/")
       );
       return filteredFiles.length > 0
         ? `biome check --write --unsafe ${filteredFiles.map((f) => path.relative(process.cwd(), f)).join(" ")}`

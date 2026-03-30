@@ -12,10 +12,10 @@ import { useUserStore } from "@/stores/user.ts";
 import { useGlobalStore } from "@/stores/global.ts";
 import { useSettingStore } from "@/stores/setting.ts";
 import { useWindow } from "@/hooks/useWindow.ts";
+import { isDesktop } from "@/utils/PlatformUtils";
 import { ensureAppStateReady } from "@/utils/AppStateReady.ts";
 import { invokeSilently } from "@/utils/TauriInvokeHandler.ts";
 import { getEnhancedFingerprint } from "@/services/fingerprint.ts";
-import { isDesktop } from "../utils/PlatformUtils";
 
 export function useLogin() {
   const userStore = useUserStore();
@@ -64,6 +64,7 @@ export function useLogin() {
           console.warn("关闭注册窗口失败:", error);
         });
       }
+      await emit(EventEnum.LOGIN_SUCCESS);
       await createWebviewWindow("YuanLive", "home", 1200, 720, "login", true, 900, 520, 1680, void 0, void 0, false);
       // 只有在成功创建home窗口并且已登录的情况下才显示托盘菜单
       showTray.value = true;

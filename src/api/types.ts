@@ -57,6 +57,8 @@ export type UserInfoType = {
   gender: string;
   //描述
   description?: string;
+  // 出生日期
+  birthday?: number | null;
   // 设备类型
   device: string;
   userStats: UserStats;

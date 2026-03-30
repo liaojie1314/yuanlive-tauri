@@ -17,6 +17,15 @@
         </div>
 
         <div class="flex flex-col gap-2 py-1">
+          <label class="ml-1 text-sm font-medium text-[--text-color]">{{ $t("dialog.editProfile.username") }}</label>
+          <n-input
+            clearable
+            class="border-(1px solid #90909080)"
+            v-model:value="form.username"
+            :placeholder="$t('dialog.editProfile.usernamePlaceholder')" />
+        </div>
+
+        <div class="flex flex-col gap-2 py-1">
           <label class="ml-1 text-sm font-medium text-[--text-color]">{{ $t("dialog.editProfile.email") }}</label>
           <n-input
             clearable
@@ -45,6 +54,16 @@
               <n-radio value="UNKNOWN">{{ $t("dialog.editProfile.unknown") }}</n-radio>
             </n-space>
           </n-radio-group>
+        </div>
+
+        <div class="flex flex-col gap-2 py-1">
+          <label class="ml-1 text-sm font-medium text-[--text-color]">{{ $t("dialog.editProfile.birthday") }}</label>
+          <n-date-picker
+            type="date"
+            clearable
+            class="border-(1px solid #90909080)"
+            v-model:value="form.birthday"
+            :placeholder="$t('dialog.editProfile.birthdayPlaceholder')" />
         </div>
 
         <div class="flex flex-col gap-2 py-1">
@@ -101,6 +120,7 @@ const emit = defineEmits<{
       email: string;
       password: string;
       gender?: string;
+      birthday?: number | null;
     }
   ];
 }>();
@@ -114,7 +134,8 @@ const form = reactive({
   avatar: userInfo?.avatar,
   email: userInfo?.email || "",
   password: "",
-  gender: userInfo?.gender || "UNKNOWN"
+  gender: userInfo?.gender || "UNKNOWN",
+  birthday: userInfo?.birthday || null
 });
 
 const {
@@ -163,7 +184,8 @@ const saveProfile = () => {
     avatar: form.avatar,
     email: form.email,
     password: form.password,
-    gender: form.gender
+    gender: form.gender,
+    birthday: form.birthday
   });
   closeDialog();
 };
