@@ -218,3 +218,9 @@ pnpm tauri:build
 | [cz-git](https://cz-git.qbb.sh)                        | 交互式方式写规范化的Git提交 |
 | [husky](https://typicode.github.io/husky)              | 管理Git钩子                 |
 | [commitizen](https://github.com/commitizen/cz-cli)     | 交互式提交工具              |
+
+## 🎉 感谢
+
+感谢下面的开源项目，为项目的发展做出了贡献：
+
+[![Readme Card](https://github-readme-stats-gamma-inky-z46paik2xv.vercel.app/api/pin/?username=HuLaSpark&repo=Hula)](https://github.com/HuLaSpark/HuLa)

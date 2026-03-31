@@ -174,6 +174,8 @@ export enum TauriCommandEnum {
   GET_WINDOW_PAYLOAD = "get_window_payload",
   // 截图
   SCREENSHOT = "screenshot",
+  // 设置窗口高度
+  SET_HEIGHT = "set_height",
   // 获取目录占用信息
   GET_DIRECTORY_USAGE_INFO_WITH_PROGRESS = "get_directory_usage_info_with_progress",
   // 取消目录扫描
@@ -242,8 +244,26 @@ export enum StoresEnum {
   VIDEO_VIEWER = "videoViewer",
   // 快捷键
   SHORTCUT = "shortcut",
+  // 插件
+  PLUGINS = "plugins",
   // 移动端
   MOBILE = "mobile"
+}
+
+/** 插件状态 */
+export enum PluginEnum {
+  /** 已内置 */
+  BUILTIN,
+  /** 已安装 */
+  INSTALLED,
+  /** 下载中 */
+  DOWNLOADING,
+  /** 未安装 */
+  NOT_INSTALLED,
+  /** 卸载中 */
+  UNINSTALLING,
+  /** 可更新 */
+  CAN_UPDATE
 }
 
 /** 本地存储的key */
