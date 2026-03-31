@@ -148,7 +148,8 @@ jobs:
             libasound2-dev \
             pkg-config \
             libgtk-3-dev \
-            libayatana-appindicator3-dev
+            libayatana-appindicator3-dev \
+            libxdo-dev
 
       # 添加环境变量配置
       - name: Set up environment variables

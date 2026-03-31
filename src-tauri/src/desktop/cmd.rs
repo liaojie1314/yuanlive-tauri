@@ -7,7 +7,9 @@ use screenshots::image::{DynamicImage, ImageOutputFormat};
 use screenshots::Screen;
 use std::cmp;
 use std::io::Cursor;
-use tauri::{AppHandle, Emitter, LogicalSize, Manager, State};
+#[cfg(target_os = "windows")]
+use tauri::Emitter;
+use tauri::{AppHandle, LogicalSize, Manager, State};
 
 use crate::AudioState;
 

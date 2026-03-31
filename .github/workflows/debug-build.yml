@@ -31,7 +31,8 @@ jobs:
             libasound2-dev \
             pkg-config \
             libgtk-3-dev \
-            libayatana-appindicator3-dev
+            libayatana-appindicator3-dev \
+            libxdo-dev
             
           # 验证安装的包
           dpkg -l | grep -E 'webkit|appindicator|rsvg|udev|asound|gtk'

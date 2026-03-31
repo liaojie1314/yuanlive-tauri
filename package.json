@@ -110,6 +110,7 @@
     "glfx": "^0.0.4",
     "highlight.js": "^11.11.1",
     "internal-ip": "^9.0.0",
+    "jsencrypt": "^3.5.4",
     "kokoro-js": "^1.2.1",
     "mark.js": "^8.11.1",
     "markdown-it": "^14.1.0",
