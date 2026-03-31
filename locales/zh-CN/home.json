@@ -60,7 +60,21 @@
     "home": "首页",
     "aiChat": "AI 聊天",
     "follow": "关注",
-    "user": "用户"
+    "user": "用户",
+    "plugin": "插件",
+    "pluginManage": "插件管理"
+  },
+  "plugins": {
+    "status": {
+      "builtin": "已内置",
+      "uninstalling": "卸载中"
+    },
+    "actions": {
+      "install": "安装",
+      "pin": "固定侧边栏",
+      "unpin": "取消固定",
+      "uninstall": "卸载"
+    }
   },
   "menu": {
     "setting": {

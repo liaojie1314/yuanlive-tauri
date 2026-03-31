@@ -95,7 +95,9 @@
     "gender": "Gender",
     "male": "male",
     "female": "female",
-    "unknown": "unknown"
+    "unknown": "unknown",
+    "birthday": "Birthday",
+    "birthdayPlaceholder": "Please select your birthday"
   },
   "applyStreamer": {
     "title": "Apply to be a Streamer",

@@ -95,7 +95,9 @@
     "gender": "性别",
     "male": "男",
     "female": "女",
-    "unknown": "未知"
+    "unknown": "未知",
+    "birthday": "出生日期",
+    "birthdayPlaceholder": "请选择您的出生日期"
   },
   "applyStreamer": {
     "title": "申请成为主播",

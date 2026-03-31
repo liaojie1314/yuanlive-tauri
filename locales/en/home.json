@@ -60,7 +60,21 @@
     "home": "Home",
     "aiChat": "AI Chat",
     "follow": "Follow",
-    "user": "User"
+    "user": "User",
+    "plugin": "Plugin",
+    "pluginManage": "Plugin Management"
+  },
+  "plugins": {
+    "status": {
+      "builtin": "Built-in",
+      "uninstalling": "Uninstalling"
+    },
+    "actions": {
+      "install": "Install",
+      "pin": "Pin to sidebar",
+      "unpin": "Unpin",
+      "uninstall": "Uninstall"
+    }
   },
   "menu": {
     "setting": {

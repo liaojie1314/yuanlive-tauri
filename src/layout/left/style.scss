@@ -9,3 +9,9 @@
   @include menu-item-style(absolute);
   @include menu-list();
 }
+
+.active {
+  background: var(--left-item-bg-color);
+  border-radius: 8px;
+  color: var(--left-active-text-color);
+}
