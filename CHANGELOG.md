@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.6.0 (2026-03-31)
+
+* docs: :memo: publish release ([19f8ef9](https://github.com/liaojie1314/yuanlive-tauri/commit/19f8ef9))
+* feat: :sparkles: ai modal and agent setting ([c1eb8c1](https://github.com/liaojie1314/yuanlive-tauri/commit/c1eb8c1))
+* feat(hook): :sparkles: left hook ([dd2601c](https://github.com/liaojie1314/yuanlive-tauri/commit/dd2601c))
+* feat(layout): :sparkles: define plugins comp ([b89edfb](https://github.com/liaojie1314/yuanlive-tauri/commit/b89edfb))
+
 ## 0.5.0 (2026-03-31)
 
 * build: :package: upgrade pkg ([e8c8ff3](https://github.com/liaojie1314/yuanlive-tauri/commit/e8c8ff3))
