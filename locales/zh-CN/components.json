@@ -200,10 +200,9 @@
     "remove": "移除"
   },
   "agentSettings": {
-    "title": "Agent 与扩展配置",
-    "role": "角色设定",
-    "selectRolePlaceholder": "选择预设角色",
-    "customPromptPlaceholder": "输入自定义的 System Prompt，设定 AI 的行为方式(Enter 保存/更新, Shift+Enter 换行)",
+    "title": "Agent与扩展配置",
+    "selectRolePlaceholder": "请选择Agent",
+    "emptyRole": "暂未选择Agent或设定为空",
     "mcp": {
       "title": "本地 MCP 插件",
       "windows": "允许 AI 读取本地系统级信息与状态",

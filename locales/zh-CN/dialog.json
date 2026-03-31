@@ -168,5 +168,105 @@
   "customAmount": {
     "placeholder": "请输入自定义金额",
     "msg": "请输入有效的充值金额（1-1000000）"
+  },
+  "addModal": {
+    "title": "新增模型",
+    "apiKey": "API密钥",
+    "apiKeyPlaceholder": "请选择API密钥",
+    "manage": "管理",
+    "platform": "平台",
+    "platformPlaceholder": "根据API密钥自动设置",
+    "type": "模型类型",
+    "name": "模型名称",
+    "namePlaceholder": "请输入模型名称，例如: GPT-4",
+    "identifier": "模型标志",
+    "identifierPlaceholder": "请先选择平台后再填写模型标志",
+    "status": "状态",
+    "sortValue": "排序值",
+    "temperature": "温度参数",
+    "maxTokens": "最大Token数",
+    "maxContext": "最大上下文数",
+    "isPublic": "是否公开",
+    "public": "公开",
+    "private": "私有",
+    "create": "创建",
+    "available": "可用",
+    "disabled": "停用",
+    "msg": {
+      "completeInfo": "请完善必填信息"
+    },
+    "rules": {
+      "apiKey": "请选择API密钥",
+      "name": "请输入模型名称",
+      "identifier": "请输入模型标志",
+      "status": "请选择状态"
+    }
+  },
+  "agentEdit": {
+    "add": "新增Agent",
+    "edit": "编辑Agent",
+    "name": "Agent名称",
+    "namePlaceholder": "请输入名称，例如: 通用AI助手",
+    "avatar": "Agent头像",
+    "uploadImage": "上传图片",
+    "randomAvatar": "随机头像",
+    "avatarDesc": "支持 JPG, PNG, GIF 格式，建议 256x256，大小 2MB 以内",
+    "type": "Agent类别",
+    "typePlaceholder": "请选择或输入类别",
+    "bindModel": "绑定模型",
+    "bindModelPlaceholder": "请选择默认调用的模型",
+    "sortValue": "排序值",
+    "status": "状态",
+    "isPublic": "是否公开",
+    "public": "公开",
+    "private": "私有",
+    "desc": "Agent描述",
+    "descPlaceholder": "简短描述，例如: 一个通用的 AI 助手，可以帮助你解决各种问题",
+    "setting": "Agent设定",
+    "settingPlaceholder": "请输入详细的 System Prompt 设定，例如: 你是一个友好、专业的 AI 助手...",
+    "create": "创建",
+    "save": "保存",
+    "rules": {
+      "name": "请输入Agent名称",
+      "type": "请选择或输入类别",
+      "prompt": "请输入Agent设定"
+    }
+  },
+  "apiKeyManage": {
+    "title": "API密钥管理",
+    "add": "新增密钥",
+    "noApiKey": "暂无API密钥",
+    "addFirstApiKey": "新增第一个密钥",
+    "platform": "平台",
+    "key": "密钥",
+    "queryBalance": "查询余额",
+    "edit": "编辑",
+    "delete": "删除",
+    "confirmDelete": "确定要删除密钥{key}吗？",
+    "deleteTip": "删除后将无法恢复！",
+    "msg": {
+      "deleteSuccess": "密钥已删除",
+      "addSuccess": "密钥添加成功",
+      "saveSuccess": "密钥保存成功"
+    }
+  },
+  "apiKeyEdit": {
+    "add": "新增密钥",
+    "edit": "编辑密钥",
+    "name": "密钥名称",
+    "namePlaceholder": "请输入密钥名称",
+    "key": "API密钥",
+    "keyPlaceholder": "请输入API密钥",
+    "platform": "平台",
+    "platformPlaceholder": "请选择平台",
+    "baseUrl": "API 地址",
+    "baseUrlPlaceholder": "可选，例如: https://api.openai.com/v1",
+    "status": "状态",
+    "save": "保存",
+    "rules": {
+      "name": "请输入密钥名称",
+      "key": "请输入API密钥",
+      "platform": "请选择平台"
+    }
   }
 }

@@ -168,5 +168,105 @@
   "customAmount": {
     "placeholder": "Please enter a custom amount",
     "msg": "Please enter a valid custom amount (1-1000000)"
+  },
+  "addModal": {
+    "title": "Add Model",
+    "apiKey": "API Key",
+    "apiKeyPlaceholder": "Please select your API key",
+    "manage": "manage",
+    "platform": "Platform",
+    "platformPlaceholder": "Set automatically based on API key",
+    "type": "Model Type",
+    "name": "Model Name",
+    "namePlaceholder": "Please enter the model name, e.g. GPT-4",
+    "identifier": "Model Identifier",
+    "identifierPlaceholder": "Please select a platform first to fill in the model identifier",
+    "status": "Status",
+    "sortValue": "Sort",
+    "temperature": "Temperature",
+    "maxTokens": "Max Tokens",
+    "maxContext": "Max Context",
+    "isPublic": "Is Public",
+    "public": "Public",
+    "private": "Private",
+    "create": "Create",
+    "available": "available",
+    "disabled": "disabled",
+    "msg": {
+      "completeInfo": "Please complete the required information"
+    },
+    "rules": {
+      "apiKey": "Please select your API key",
+      "name": "Please enter the model name",
+      "identifier": "Please enter the model identifier",
+      "status": "Please select a status"
+    }
+  },
+  "agentEdit": {
+    "add": "Add Agent",
+    "edit": "Edit Agent",
+    "name": "Name",
+    "namePlaceholder": "Please enter the agent name, e.g. General AI Assistant",
+    "avatar": "Avatar",
+    "uploadImage": "Upload Image",
+    "randomAvatar": "Random Avatar",
+    "avatarDesc": "Support JPG, PNG, GIF, recommend 256x256, size <= 2MB",
+    "type": "Agent Type",
+    "typePlaceholder": "Please select or input the agent type",
+    "bindModel": "Bind Model",
+    "bindModelPlaceholder": "Please select the default model to call",
+    "sortValue": "Sort",
+    "status": "Status",
+    "isPublic": "Is Public",
+    "public": "Public",
+    "private": "Private",
+    "desc": "Description",
+    "descPlaceholder": "Short description, e.g. General AI assistant, can help you solve various problems",
+    "setting": "Setting",
+    "settingPlaceholder": "Please enter detailed System Prompt setting, e.g. You are a friendly AI assistant...",
+    "create": "Create",
+    "save": "Save",
+    "rules": {
+      "name": "Please enter the agent name",
+      "type": "Please select or input the agent type",
+      "prompt": "Please enter the agent setting"
+    }
+  },
+  "apiKeyManage": {
+    "title": "API Key Management",
+    "add": "Add API Key",
+    "noApiKey": "No API Key",
+    "addFirstApiKey": "Add First API Key",
+    "platform": "Platform",
+    "key": "API Key",
+    "queryBalance": "Query Balance",
+    "edit": "Edit",
+    "delete": "Delete",
+    "confirmDelete": "Are you sure to want to delete API Key {key}?",
+    "deleteTip": "Delete API Key will be permanently deleted",
+    "msg": {
+      "deleteSuccess": "API Key deleted successfully",
+      "addSuccess": "API Key added successfully",
+      "saveSuccess": "API Key saved successfully"
+    }
+  },
+  "apiKeyEdit": {
+    "add": "Add API Key",
+    "edit": "Edit API Key",
+    "name": "Name",
+    "namePlaceholder": "Please enter the API Key name",
+    "key": "API Key",
+    "keyPlaceholder": "Please enter the API Key",
+    "platform": "Platform",
+    "platformPlaceholder": "Please select the platform",
+    "baseUrl": "Base URL",
+    "baseUrlPlaceholder": "Optional, e.g. https://api.openai.com/v1",
+    "status": "Status",
+    "save": "Save",
+    "rules": {
+      "name": "Please enter the API Key name",
+      "key": "Please enter the API Key",
+      "platform": "Please select the platform"
+    }
   }
 }

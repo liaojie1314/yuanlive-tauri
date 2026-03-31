@@ -272,7 +272,8 @@ export enum StorageKeyEnum {
   DEVICE_FINGERPRINT = "deviceFingerprint",
   PROXY_SETTINGS = "proxySettings",
   SETTING = "setting",
-  SEARCH_HISTORY = "searchHistory"
+  SEARCH_HISTORY = "searchHistory",
+  TARGET_SETTING_ROUTE = "targetSettingRoute"
 }
 
 /** WebSocket 响应消息类型 */

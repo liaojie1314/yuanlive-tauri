@@ -144,9 +144,8 @@
   },
   "agentSettings": {
     "title": "Agent & Extensions Settings",
-    "role": "Role Settings",
-    "selectRolePlaceholder": "Select a role",
-    "customPromptPlaceholder": "Customize System Prompt(Enter save/update, Shift+Enter line break)",
+    "selectRolePlaceholder": "Select Agent",
+    "emptyRole": "No Agent selected or role is empty",
     "mcp": {
       "title": "Local MCP Plugins",
       "windows": "Allow AI to read local system-level information and status",

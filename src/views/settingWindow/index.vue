@@ -50,17 +50,22 @@
 </template>
 <script setup lang="ts">
 import { useI18n } from "vue-i18n";
+import { listen, type UnlistenFn } from "@tauri-apps/api/event";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 
 import router from "@/router";
 import { useSideOptions } from "./config.ts";
 import Foot from "@/views/settingWindow/Foot.vue";
 import { useSettingStore } from "@/stores/setting.ts";
+import { StorageKeyEnum } from "~/src/enums/index.ts";
 
 const { t } = useI18n();
 const settingStore = useSettingStore();
 const { page } = storeToRefs(settingStore);
 const sideOptions = useSideOptions();
+
+// 保存取消监听的函数，防止内存泄漏
+let unlistenRouteChange: UnlistenFn | null = null;
 
 const skeleton = ref(true);
 /**当前选中的元素 默认选中itemsTop的第一项*/
@@ -96,7 +101,24 @@ onMounted(async () => {
   setTimeout(() => {
     skeleton.value = false;
   }, 300);
+  const targetRoute = localStorage.getItem(StorageKeyEnum.TARGET_SETTING_ROUTE);
+  if (targetRoute) {
+    activeItem.value = targetRoute;
+    localStorage.removeItem(StorageKeyEnum.TARGET_SETTING_ROUTE);
+  }
   pageJumps(activeItem.value);
+  unlistenRouteChange = await listen<string>("change-setting-route", (event) => {
+    const targetPath = event.payload;
+    if (targetPath) {
+      pageJumps(targetPath);
+    }
+  });
+});
+
+onUnmounted(() => {
+  if (unlistenRouteChange) {
+    unlistenRouteChange();
+  }
 });
 </script>
 

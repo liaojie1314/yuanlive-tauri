@@ -12,32 +12,31 @@
 
     <div class="overflow-hidden rounded-xl border border-[--line-color] bg-[--input-area-bg]">
       <n-collapse accordion class="setting-collapse" :default-expanded-names="['mcp']">
-        <n-collapse-item name="role" class="!border-[--line-color]">
-          <template #header>
-            <span class="text-sm font-medium text-[--text-color]">
-              {{ t("components.agentSettings.role") }}
-            </span>
-          </template>
-          <template #header-extra>
-            <i-mdi-account-tie-outline class="h-4 w-4 text-[--user-text-color] opacity-80" />
-          </template>
-
-          <div class="flex flex-col gap-3 px-1 pb-2">
+        <div class="flex flex-col gap-3 px-3 pb-3 w-full box-border">
+          <div class="flex items-center justify-between gap-2">
             <n-select
               size="small"
+              class="flex-1 w-0"
               v-model:value="selectedRole"
-              :options="roleOptions"
               :placeholder="t('components.agentSettings.selectRolePlaceholder')"
+              :options="agentOptions"
               @update:value="handleRoleChange" />
-            <n-input
-              type="textarea"
-              class="w-full text-xs"
-              v-model:value="systemPrompt"
-              :autosize="{ minRows: 3, maxRows: 6 }"
-              :placeholder="t('components.agentSettings.customPromptPlaceholder')"
-              @keydown.enter.exact.prevent="handlePromptEnter" />
+            <n-button size="small" quaternary type="primary" class="flex-shrink-0 !px-1.5" @click="goToSettings">
+              <template #icon><i-mdi-cog-outline class="text-base" /></template>
+            </n-button>
           </div>
-        </n-collapse-item>
+
+          <div class="w-90% rounded-md bg-[--tray-hover] p-3">
+            <n-scrollbar v-if="systemPrompt" style="max-height: 150px">
+              <div class="text-xs text-[--text-color] opacity-80 leading-relaxed whitespace-pre-wrap">
+                {{ systemPrompt }}
+              </div>
+            </n-scrollbar>
+            <div v-else class="text-xs text-[--user-text-color] opacity-50 italic text-center py-2">
+              {{ t("components.agentSettings.emptyRole") }}
+            </div>
+          </div>
+        </div>
 
         <n-collapse-item name="mcp">
           <template #header>
@@ -70,66 +69,27 @@
         </n-collapse-item>
       </n-collapse>
     </div>
-    <n-modal
-      preset="card"
-      size="small"
-      class="w-[300px]"
-      v-model:show="showSaveRoleModal"
-      :title="t('components.agentSettings.dialog.title')"
-      :bordered="false">
-      <n-input
-        autofocus
-        v-model:value="newRoleName"
-        :placeholder="t('components.agentSettings.dialog.roleNamePlaceholder')"
-        @keydown.enter.prevent="confirmSaveRole" />
-      <template #footer>
-        <div class="flex justify-end gap-2 mt-2">
-          <n-button size="small" @click="showSaveRoleModal = false">
-            {{ t("components.agentSettings.dialog.cancel") }}
-          </n-button>
-          <n-button size="small" type="primary" :disabled="!newRoleName.trim()" @click="confirmSaveRole">
-            {{ t("components.agentSettings.dialog.save") }}
-          </n-button>
-        </div>
-      </template>
-    </n-modal>
   </div>
 </template>
 
 <script setup lang="ts">
-import { useI18n } from "vue-i18n";
 import IconWindows from "~icons/mdi/microsoft-windows";
 import IconFolderSync from "~icons/mdi/folder-sync-outline";
+import { useI18n } from "vue-i18n";
+import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
 
+import { StorageKeyEnum } from "@/enums";
 import { useAiStore } from "@/stores/ai";
+import { useWindow } from "@/hooks/useWindow";
 import { isWindows } from "@/utils/PlatformUtils";
 
 const { t } = useI18n();
 const aiStore = useAiStore();
+const { createWebviewWindow } = useWindow();
 
 // 角色设定逻辑
 const selectedRole = ref("");
-const showSaveRoleModal = ref(false);
-const newRoleName = ref("");
-const roleOptions = ref([
-  {
-    label: "前端架构师",
-    value: "frontend_architect",
-    prompt: "你是一个资深的前端架构师，精通 Vue 3、Tauri 2 和现代工程化。请在回答时注重代码规范、性能优化以及可维护性。"
-  },
-  {
-    label: "Java 后端专家",
-    value: "java_backend",
-    prompt:
-      "你是一个拥有 10 年经验的 Java 后端专家，精通 Spring Cloud 和高并发架构。请尽量提供健壮、安全的工程化解决方案。"
-  },
-  {
-    label: "代码审查员 (Reviewer)",
-    value: "code_reviewer",
-    prompt: "你是一个严格的代码审查员。请找出我代码中的潜在 Bug、性能问题，并给出重构建议。"
-  },
-  { label: "自定义", value: "custom", prompt: "" }
-]);
+const systemPrompt = computed(() => aiStore.systemPrompt);
 // MCP 插件逻辑
 const mcpList = ref([
   {
@@ -174,61 +134,55 @@ const mcpList = ref([
     })
   }
 ]);
-const systemPrompt = computed({
-  get: () => aiStore.systemPrompt,
-  set: (value) => (aiStore.systemPrompt = value)
+const agentOptions = computed(() => {
+  return aiStore.agentList.map((agent) => ({
+    label: agent.name,
+    value: agent.id,
+    prompt: agent.prompt
+  }));
 });
-
-/** 监听文本框的回车事件 */
-const handlePromptEnter = () => {
-  const currentText = systemPrompt.value.trim();
-  if (!currentText) return; // 如果没有内容则不作处理
-  if (selectedRole.value === "custom" || !selectedRole.value) {
-    // 1. 如果当前选中的是“自定义”（或者没选），触发【新建并保存】逻辑
-    newRoleName.value = ""; // 清空上次的输入
-    showSaveRoleModal.value = true;
-  } else {
-    // 2. 如果当前选中的是已有角色，触发【修改并覆盖】逻辑
-    const targetRole = roleOptions.value.find((r) => r.value === selectedRole.value);
-    if (targetRole) {
-      targetRole.prompt = currentText; // 更新该角色的预设 prompt
-      window.$message?.success(t("components.agentSettings.msg.updateSuccess", { label: targetRole.label }));
-    }
-  }
-};
-
-/** 确认保存角色并添加到下拉列表 */
-const confirmSaveRole = () => {
-  const name = newRoleName.value.trim();
-  if (!name) return;
-
-  const newValue = `custom_${Date.now()}`;
-  const newRole = {
-    label: name,
-    value: newValue,
-    prompt: systemPrompt.value
-  };
-
-  // 将新角色插入到数组的倒数第一个位置（也就是插在"自定义"选项的前面），保持"自定义"永远在最底部
-  roleOptions.value.splice(roleOptions.value.length - 1, 0, newRole);
-
-  // 自动将下拉框切换到刚创建的角色
-  selectedRole.value = newValue;
-  showSaveRoleModal.value = false;
-  newRoleName.value = ""; // 清空上次的输入
-  window.$message?.success(t("components.agentSettings.msg.saveSuccess"));
-};
 
 /**
  * 处理角色选择变化
  * @param value 选中的角色值
  */
 const handleRoleChange = (value: string) => {
-  const role = roleOptions.value.find((r) => r.value === value);
-  if (role) {
-    systemPrompt.value = role.prompt;
+  const agent = aiStore.agentList.find((a) => a.id === value);
+  if (agent) {
+    aiStore.systemPrompt = agent.prompt;
+  } else {
+    aiStore.systemPrompt = "";
   }
 };
+
+/** 跳转到设置页面 */
+const goToSettings = async () => {
+  const settingWin = await WebviewWindow.getByLabel("setting");
+
+  if (settingWin) {
+    await settingWin.show();
+    await settingWin.setFocus();
+    await settingWin.emit("change-setting-route", "/aiSetting");
+  } else {
+    localStorage.setItem(StorageKeyEnum.TARGET_SETTING_ROUTE, "/aiSetting");
+    await createWebviewWindow("设置", "setting", 840, 840, "", true, 840, 600);
+  }
+};
+
+watch(
+  () => aiStore.systemPrompt,
+  (newVal) => {
+    const match = aiStore.agentList.find((a) => a.prompt === newVal);
+    selectedRole.value = match ? match.id : "";
+  }
+);
+
+onMounted(() => {
+  const match = aiStore.agentList.find((a) => a.prompt === aiStore.systemPrompt);
+  if (match) {
+    selectedRole.value = match.id;
+  }
+});
 </script>
 
 <style scoped>
