@@ -31,7 +31,7 @@ export const useCheckUpdate = () => {
     await check({
       timeout: 5000 /* 接口请求时长 5秒 */,
       headers: {
-        "X-AccessKey": import.meta.env.VITE_UPGRADE_LINK_ACCESS_KEY // UpgradeLink的AccessKey
+        "X-AccessKey": "igci4UjiRztozSmQ7fdhMQ" // UpgradeLink的AccessKey
       }
     })
       .then(async (e) => {

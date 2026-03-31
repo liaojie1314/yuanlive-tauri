@@ -69,7 +69,6 @@ const wrapperEnv = (envConf: Recordable): ViteEnv => {
     VITE_PC_URL: "",
     VITE_SERVICE_URL: "",
     VITE_ADMIN_URL: "",
-    VITE_UPGRADE_LINK_ACCESS_KEY: "",
     VITE_GITHUB_TOKEN: "",
     VITE_GITEE_TOKEN: ""
   };

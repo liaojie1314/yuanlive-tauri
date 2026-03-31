@@ -9,7 +9,6 @@ declare global {
     VITE_ADMIN_URL: string;
     VITE_CDN: boolean;
     VITE_COMPRESSION: ViteCompression;
-    VITE_UPGRADE_LINK_ACCESS_KEY: string;
     VITE_GITHUB_TOKEN: string;
     VITE_GITEE_TOKEN: string;
   }
