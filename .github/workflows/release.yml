@@ -227,44 +227,38 @@ jobs:
       contents: write
     runs-on: ubuntu-latest
     steps:
+      # 必须先 checkout 代码，才能读取到 CHANGELOG.md 文件
       - uses: actions/checkout@v4
 
       - name: Extract changelog for current version
         id: changelog
         run: |
           # 从 CHANGELOG.md 中提取最新版本的内容
-          # 匹配从第一个 ## [version] 到下一个 ## [version] 之间的内容
-          CHANGELOG_CONTENT=$(awk '/^## \[/{if(found) exit; found=1} found' CHANGELOG.md)
-
-          # 将内容写入文件以保留格式
+          CHANGELOG_CONTENT=$(awk '/^## \[?[0-9]/{if(found) exit; found=1} found' CHANGELOG.md)
+          # 将内容写入临时文件以保留格式
           echo "$CHANGELOG_CONTENT" > /tmp/release_notes.md
-
-          # 输出到 GITHUB_OUTPUT（使用 EOF 分隔符处理多行）
-          {
-            echo 'body<<EOF'
-            echo "$CHANGELOG_CONTENT"
-            echo 'EOF'
-          } >> "$GITHUB_OUTPUT"
 
       - name: Publish draft release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG_NAME: ${{ github.ref_name }}
         run: |
-          # 直接按 tag 获取 release，避免同 tag 多个草稿导致多个 ID
-          RELEASE=$(gh api repos/${{ github.repository }}/releases/tags/${{ github.ref_name }} 2>/dev/null || true)
-          if [ -n "$RELEASE" ] && [ "$(echo "$RELEASE" | jq -r '.draft')" = "true" ]; then
-            RELEASE_ID=$(echo "$RELEASE" | jq -r '.id')
-            echo "Publishing draft release with ID: $RELEASE_ID"
-
-            # 使用 changelog 内容更新 release body 并发布
-            gh api -X PATCH repos/${{ github.repository }}/releases/$RELEASE_ID \
-              -f draft=false \
-              -f body="$(cat /tmp/release_notes.md)"
-
-            echo "Release published successfully with changelog"
-          else
-            echo "No draft release found for tag ${{ github.ref_name }}, it may already be published"
+          echo "Finding draft release for tag: $TAG_NAME"
+          # 精准找出对应 tag 的 release ID（包含草稿）
+          RELEASE_ID=$(gh api repos/${{ github.repository }}/releases --jq ".[] | select(.tag_name == \"$TAG_NAME\") | .id")
+          
+          if [ -z "$RELEASE_ID" ]; then
+            echo "Error: Could not find release for tag $TAG_NAME"
+            exit 1
           fi
+          
+          echo "Found release ID: $RELEASE_ID. Updating body and publishing..."
+          
+          # 将草稿状态改为 false，并将刚才提取的更新日志覆盖写入
+          gh api -X PATCH repos/${{ github.repository }}/releases/$RELEASE_ID \
+            -f draft=false \
+            -f body="$(cat /tmp/release_notes.md)"
+          echo "Release $TAG_NAME published successfully with changelog!"
 
   upgradeLink-upload:
     needs: publish-release # 依赖于 publish-release 作业完成（确保 release 已正式发布）
