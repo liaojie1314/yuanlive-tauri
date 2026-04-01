@@ -280,7 +280,11 @@ const dismissUpdate = async () => {
 
 /** 检查更新 */
 const checkUpdate = async () => {
-  await check()
+  await check({
+    headers: {
+      "X-AccessKey": "igci4UjiRztozSmQ7fdhMQ"
+    }
+  })
     .then(async (e) => {
       if (!e?.available) {
         return;

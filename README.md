@@ -185,7 +185,7 @@ keytool -genkey -v -keystore yuanlive.jks -keyalg RSA -keysize 2048 -validity 10
 pnpm tauri:build
 
 # release-it 发布更新
-# 配置GITHUB_TOKEN环境变量
+# 配置GITHUB_TOKEN环境变量(只需要repo权限)
 ## linux或macos
 export GITHUB_TOKEN="ghp_xxxx"
 ##  windows

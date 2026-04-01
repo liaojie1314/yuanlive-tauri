@@ -134,7 +134,11 @@ const setupCommitList = async (version: string) => {
 const doUpdate = async () => {
   updating.value = true;
   try {
-    const e = await check();
+    const e = await check({
+      headers: {
+        "X-AccessKey": "igci4UjiRztozSmQ7fdhMQ"
+      }
+    });
     if (!e?.available) return;
     // 先获取日志显示在轮播图中
     await setupCommitList(e.version);
