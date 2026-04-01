@@ -146,7 +146,7 @@
 
       <!-- 第三步：完成 -->
       <div v-if="currentStep === 3" class="w-full max-w-300px mx-auto mt-100px text-center">
-        <img src="/party-popper.webp" alt="" class="size-98px" />
+        <img src="/emoji/party-popper.webp" alt="" class="size-98px" />
         <div class="mt-16px text-18px">{{ t("mobileForgetCode.passwordResetSuccess") }}</div>
         <div class="mt-16px text-14px text-#666">{{ t("mobileForgetCode.passwordResetSuccessDesc") }}</div>
       </div>

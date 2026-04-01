@@ -151,7 +151,7 @@
 
       <!-- 第三步：完成 -->
       <div v-if="currentStep === 3" class="max-w-300px mt-100px mx-auto w-full text-center">
-        <img src="/party-popper.webp" alt="" class="size-98px" />
+        <img src="/emoji/party-popper.webp" alt="" class="size-98px" />
         <div class="mt-16px text-18px">{{ t("auth.forget.success.title") }}</div>
         <div class="mt-16px text-14px text-#666">{{ t("auth.forget.success.desc") }}</div>
       </div>
