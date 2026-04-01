@@ -1,5 +1,9 @@
 # Changelog
 
+## <small>0.6.1 (2026-04-01)</small>
+
+* fix: :bug: update ([6aee333](https://github.com/liaojie1314/yuanlive-tauri/commit/6aee333))
+
 ## 0.6.0 (2026-03-31)
 
 * docs: :memo: publish release ([19f8ef9](https://github.com/liaojie1314/yuanlive-tauri/commit/19f8ef9))
