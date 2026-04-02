@@ -102,11 +102,11 @@
 
 <script setup lang="ts">
 import { useI18n } from "vue-i18n";
-import { pipeline } from "@huggingface/transformers";
 
 import { MittEnum } from "@/enums";
 import { useMitt } from "@/hooks/useMitt";
 import { useVoiceRecordRust } from "@/hooks/useVoiceRecordRust";
+import { remove } from "@tauri-apps/plugin-fs";
 
 const { t } = useI18n();
 
@@ -115,6 +115,8 @@ const emit = defineEmits<{
   cancel: [];
   send: [voiceData: any];
 }>();
+
+let whisperWorker: Worker | null = null;
 
 const isTranscribing = ref(false);
 // 录音状态
@@ -154,44 +156,60 @@ const {
   }
 });
 
+/** 初始化 Worker */
+const initWhisperWorker = () => {
+  if (!whisperWorker) {
+    whisperWorker = new Worker(new URL("@/workers/whisper.worker.ts", import.meta.url), {
+      type: "module"
+    });
+  }
+  return whisperWorker;
+};
+
 /** 处理语音转文字 */
 const handleTranscribe = async () => {
   if (!audioBlob.value) return;
 
   try {
     isTranscribing.value = true;
-    // 预处理音频：所有的 AI 语音模型都要求 16kHz 采样率的单声道 Float32Array 数据
-    // 我们利用浏览器原生的 AudioContext 进行重采样解码，速度极快
+
+    // 解码音频：这一步必须在主线程做，因为 Web Worker 里没有完整的 AudioContext API
     const arrayBuffer = await audioBlob.value.arrayBuffer();
     const audioContext = new window.AudioContext({ sampleRate: 16000 });
     const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
-    // 获取第一个通道的 Float32Array 音频波形数据
-    const audioData = audioBuffer.getChannelData(0);
-    // 加载轻量级 Whisper 模型 (Xenova/whisper-tiny 大约 40MB，首次加载会缓存在本地)
-    // 后续如果想换成云端 API，直接把这块替换成 fetch 请求即可
-    const transcriber = await pipeline("automatic-speech-recognition", "Xenova/whisper-tiny");
-    // 开始推理转录
-    const output = await transcriber(audioData, {
-      task: "transcribe",
-      chunk_length_s: 30, // 按 30 秒切片识别，防止长语音内存溢出
-      stride_length_s: 5
-    });
+    const audioData = audioBuffer.getChannelData(0); // 提取 Float32Array 数据
 
-    const text = (Array.isArray(output) ? output[0].text : output.text).trim();
+    // 初始化并调用 Worker
+    const worker = initWhisperWorker();
 
-    if (text) {
-      // 识别成功，通过你之前写好的 Mitt 事件总线，把文字填入外部文本框
-      useMitt.emit(MittEnum.FILL_MESSAGE_INPUT, text);
-      // 成功后关闭录音面板
-      handleCancel();
-      window.$message?.success(t("components.voiceRecorder.msg.transcribeSuccess"));
-    } else {
-      window.$message?.warning(t("components.voiceRecorder.msg.noClearSound"));
-    }
+    worker.onmessage = (e) => {
+      const { status, text, error } = e.data;
+
+      if (status === "loading") {
+        console.log("Whisper: 正在加载模型...");
+      } else if (status === "processing") {
+        console.log("Whisper: 模型加载完毕，正在转写音频...");
+      } else if (status === "success") {
+        // 转写成功，回填到输入框
+        if (text) {
+          useMitt.emit(MittEnum.FILL_MESSAGE_INPUT, text);
+          handleCancel(); // 关闭录音面板
+          window.$message?.success(t("components.voiceRecorder.msg.transcribeSuccess"));
+        } else {
+          window.$message?.warning(t("components.voiceRecorder.msg.noClearSound"));
+        }
+        isTranscribing.value = false;
+      } else if (status === "error") {
+        window.$message?.error("模型转写失败: " + error);
+        isTranscribing.value = false;
+      }
+    };
+
+    // 将解析好的浮点数组发给 Worker 进行繁重的张量计算
+    worker.postMessage({ type: "transcribe", audioData });
   } catch (error) {
-    console.error("语音转文字失败:", error);
+    console.error("音频解码失败:", error);
     window.$message?.error(t("components.voiceRecorder.msg.modelLoadOrTranscribeFailed"));
-  } finally {
     isTranscribing.value = false;
   }
 };
@@ -305,6 +323,13 @@ const handleCancel = () => {
     URL.revokeObjectURL(audioElement.value.src);
   }
 
+  if (localAudioPath.value) {
+    remove(localAudioPath.value).catch(() => {});
+  }
+
+  // 恢复出厂状态
+  resetRecordingState();
+
   emit("cancel");
 };
 
@@ -312,6 +337,10 @@ onUnmounted(() => {
   if (audioElement.value) {
     audioElement.value.pause();
     URL.revokeObjectURL(audioElement.value.src);
+  }
+  if (whisperWorker) {
+    whisperWorker.terminate();
+    whisperWorker = null;
   }
 });
 </script>

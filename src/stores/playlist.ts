@@ -52,7 +52,7 @@ export const usePlaylistStore = defineStore(StoresEnum.PLAYLIST, () => {
         videoList.value = [
           {
             id: Date.now(),
-            videoUrl: "http://vjs.zencdn.net/v/oceans.mp4",
+            videoUrl: "https://files.vidstack.io/sprite-fight/720p.mp4",
             coverUrl: `https://picsum.photos/150/200?random=${userId}1`,
             likeCount: 2070,
             commentCount: 120,
@@ -62,7 +62,7 @@ export const usePlaylistStore = defineStore(StoresEnum.PLAYLIST, () => {
           },
           {
             id: Date.now() + 1,
-            videoUrl: "http://vjs.zencdn.net/v/oceans.mp4",
+            videoUrl: "https://files.vidstack.io/sprite-fight/720p.mp4",
             coverUrl: `https://picsum.photos/150/200?random=${userId}2`,
             likeCount: 8033,
             commentCount: 10,
