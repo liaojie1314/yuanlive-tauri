@@ -79,6 +79,14 @@
           <div class="refresh-btn" @click="reRecord">
             <svg><use href="#refresh"></use></svg>
           </div>
+          <div
+            class="transcribe-btn"
+            :title="t('components.voiceRecorder.transcribe')"
+            :disabled="isTranscribing"
+            @click="handleTranscribe">
+            <i-mdi-format-text-variant-outline v-if="!isTranscribing" class="h-5 w-5" />
+            <div v-else class="loading-spinner"></div>
+          </div>
           <div class="send-btn" :disabled="sending" @click="handleSend">
             <svg v-if="!sending"><use href="#send"></use></svg>
             <div v-else class="loading-spinner"></div>
@@ -94,6 +102,10 @@
 
 <script setup lang="ts">
 import { useI18n } from "vue-i18n";
+import { pipeline } from "@huggingface/transformers";
+
+import { MittEnum } from "@/enums";
+import { useMitt } from "@/hooks/useMitt";
 import { useVoiceRecordRust } from "@/hooks/useVoiceRecordRust";
 
 const { t } = useI18n();
@@ -104,6 +116,7 @@ const emit = defineEmits<{
   send: [voiceData: any];
 }>();
 
+const isTranscribing = ref(false);
 // 录音状态
 const audioBlob = ref<Blob | null>(null);
 const recordingDuration = ref(0);
@@ -140,6 +153,48 @@ const {
     isProcessing.value = false;
   }
 });
+
+/** 处理语音转文字 */
+const handleTranscribe = async () => {
+  if (!audioBlob.value) return;
+
+  try {
+    isTranscribing.value = true;
+    // 预处理音频：所有的 AI 语音模型都要求 16kHz 采样率的单声道 Float32Array 数据
+    // 我们利用浏览器原生的 AudioContext 进行重采样解码，速度极快
+    const arrayBuffer = await audioBlob.value.arrayBuffer();
+    const audioContext = new window.AudioContext({ sampleRate: 16000 });
+    const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+    // 获取第一个通道的 Float32Array 音频波形数据
+    const audioData = audioBuffer.getChannelData(0);
+    // 加载轻量级 Whisper 模型 (Xenova/whisper-tiny 大约 40MB，首次加载会缓存在本地)
+    // 后续如果想换成云端 API，直接把这块替换成 fetch 请求即可
+    const transcriber = await pipeline("automatic-speech-recognition", "Xenova/whisper-tiny");
+    // 开始推理转录
+    const output = await transcriber(audioData, {
+      task: "transcribe",
+      chunk_length_s: 30, // 按 30 秒切片识别，防止长语音内存溢出
+      stride_length_s: 5
+    });
+
+    const text = (Array.isArray(output) ? output[0].text : output.text).trim();
+
+    if (text) {
+      // 识别成功，通过你之前写好的 Mitt 事件总线，把文字填入外部文本框
+      useMitt.emit(MittEnum.FILL_MESSAGE_INPUT, text);
+      // 成功后关闭录音面板
+      handleCancel();
+      window.$message?.success(t("components.voiceRecorder.msg.transcribeSuccess"));
+    } else {
+      window.$message?.warning(t("components.voiceRecorder.msg.noClearSound"));
+    }
+  } catch (error) {
+    console.error("语音转文字失败:", error);
+    window.$message?.error(t("components.voiceRecorder.msg.modelLoadOrTranscribeFailed"));
+  } finally {
+    isTranscribing.value = false;
+  }
+};
 
 /** 开始录音 */
 const startRecording = async () => {
@@ -347,6 +402,17 @@ onUnmounted(() => {
 
   .record-btn {
     @include base-control-button(#13987f80, #13987f);
+  }
+
+  .transcribe-btn {
+    @include base-control-button(#2980b980, #3498db);
+
+    .loading-spinner {
+      @apply size-16px rounded-full;
+      border: 2px solid transparent;
+      border-top: 2px solid currentColor;
+      animation: spin 1s linear infinite;
+    }
   }
 
   .stop-btn {

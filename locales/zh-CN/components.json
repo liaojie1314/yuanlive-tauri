@@ -45,7 +45,13 @@
     "tapSuffix": "说话",
     "recording": "正在录音",
     "processing": "正在处理音频",
-    "error": "录音失败"
+    "error": "录音失败",
+    "transcribe": "转文字到输入框",
+    "msg": {
+      "transcribeSuccess": "转写成功",
+      "noClearSound": "未识别到清晰的声音",
+      "modelLoadOrTranscribeFailed": "模型加载或转写失败，请检查网络（初次运行需下载模型）"
+    }
   },
   "fileUpload": {
     "title": "发送文件",
@@ -173,6 +179,7 @@
     "search": "搜索",
     "voiceMessage": "语音消息",
     "goSetting": "前往设置添加模型",
+    "shortcut": "快捷指令",
     "modelType": {
       "auto": "自动",
       "text": "文字",

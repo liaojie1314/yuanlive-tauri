@@ -38,7 +38,33 @@
       </div>
     </div>
 
-    <div v-resize="handleResize" class="input-container m-1 flex flex-col rounded-lg bg-[--input-area-bg] p-2">
+    <div v-resize="handleResize" class="input-container relative m-1 flex flex-col rounded-lg bg-[--input-area-bg] p-2">
+      <transition name="fade-slide">
+        <div
+          v-if="showSlashMenu"
+          class="absolute bottom-full left-0 mb-2 w-72 rounded-xl border border-[--line-color] bg-[--bg-popover] p-1.5 shadow-lg z-50 flex flex-col gap-1">
+          <div class="px-2 py-1 text-xs text-[--user-text-color] select-none">
+            {{ t("components.messageInput.shortcut") }}
+          </div>
+          <div
+            v-for="cmd in slashCommands"
+            class="flex cursor-pointer items-center gap-3 rounded-lg px-2 py-2 transition-colors hover:bg-[--tray-hover]"
+            :key="cmd.label"
+            @click="applySlashCommand(cmd.prompt)">
+            <div
+              class="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-[--btn-secondary-bg] text-[--text-color]">
+              <i-mdi-translate v-if="cmd.icon === 'translate'" class="h-4 w-4" />
+              <i-mdi-code-tags v-else-if="cmd.icon === 'code'" class="h-4 w-4" />
+              <i-mdi-file-document-edit-outline v-else-if="cmd.icon === 'summarize'" class="h-4 w-4" />
+              <i-mdi-lightning-bolt-outline v-else class="h-4 w-4" />
+            </div>
+            <div class="flex flex-col min-w-0 overflow-hidden">
+              <span class="text-sm font-medium text-[--text-color]">{{ cmd.label }}</span>
+              <span class="truncate text-xs text-[--user-text-color]">{{ cmd.prompt }}</span>
+            </div>
+          </div>
+        </div>
+      </transition>
       <n-input
         v-if="!isVoiceMode"
         type="textarea"
@@ -50,7 +76,8 @@
         :autosize="{ minRows: 1, maxRows: 5 }"
         :bordered="false"
         :show-count="false"
-        @keydown.enter="handleEnterKey" />
+        @keydown.enter="handleEnterKey"
+        @paste="handlePaste" />
 
       <div v-if="!isVoiceMode" class="mt-3 flex-between-center border-t border-[--line-color] pt-2">
         <div class="flex-y-center gap-3">
@@ -212,8 +239,16 @@ interface Attachment {
   name: string; // 文件名
 }
 
+const DRAFT_KEY = "chat_input_draft";
 const maxAttachments = 6;
 const VIDEO_EXTS = ["mp4", "avi", "mov", "mkv", "wmv", "flv", "webm", "m4v"];
+// 快捷指令数据列表
+const slashCommands = [
+  { icon: "translate", label: "翻译", prompt: "请将以下内容翻译成中文，要求信达雅：" },
+  { icon: "code", label: "代码解释", prompt: "请帮我逐行解释下面这段代码的原理：" },
+  { icon: "summarize", label: "长文总结", prompt: "请帮我提取以下内容的重点，分点进行总结：" },
+  { icon: "prompt", label: "润色优化", prompt: "请帮我重新润色以下文案，使其更加专业、正式：" }
+];
 
 const messageText = ref("");
 const attachments = ref<Attachment[]>([]);
@@ -225,6 +260,9 @@ const selectedModel = ref("auto");
 const showCameraModal = ref(false);
 const isVoiceMode = ref(false);
 
+const showSlashMenu = computed(() => {
+  return messageText.value === "/";
+});
 const isBtnDisabled = computed(() => {
   if (props.status === "loading") return true;
   if (props.status === "streaming") return false;
@@ -258,6 +296,21 @@ const modelOptions = computed(() => [
   },
   { label: t("components.messageInput.goSetting"), value: "settings" }
 ]);
+
+/**
+ * 应用快捷指令
+ * @param promptText 快捷指令的提示文本
+ */
+const applySlashCommand = (promptText: string) => {
+  messageText.value = promptText + "\n";
+  // 选完后自动聚焦回输入框，方便用户继续输入
+  nextTick(() => {
+    const inputEl = document.querySelector(".input-container textarea") as HTMLTextAreaElement;
+    if (inputEl) {
+      inputEl.focus();
+    }
+  });
+};
 
 /**
  * 统一处理附件点击 (预览)
@@ -528,6 +581,8 @@ const sendMessage = () => {
 
   messageText.value = "";
   attachments.value = [];
+  // 清除草稿
+  localStorage.removeItem(DRAFT_KEY);
 };
 
 /**
@@ -582,6 +637,34 @@ const handleEnterKey = (e: KeyboardEvent) => {
   if ((sendKey === "Enter" && !e.shiftKey) || (sendKey === "Shift+Enter" && e.shiftKey)) {
     e.preventDefault();
     sendMessage();
+  }
+};
+
+/**
+ * 处理剪贴板粘贴事件
+ * @param e 剪贴板事件对象
+ */
+const handlePaste = (e: ClipboardEvent) => {
+  if (!e.clipboardData || !e.clipboardData.items) return;
+
+  const items = e.clipboardData.items;
+  const filesToUpload: File[] = [];
+
+  // 遍历剪贴板内容，找出所有文件（比如截图、复制的本地文件）
+  for (let i = 0; i < items.length; i++) {
+    if (items[i].kind === "file") {
+      const file = items[i].getAsFile();
+      if (file) {
+        filesToUpload.push(file);
+      }
+    }
+  }
+
+  // 如果剪贴板里确实有文件，则阻止默认的粘贴行为（防止某些特殊情况下把图片当成 base64 字符串粘贴进文本框）
+  if (filesToUpload.length > 0) {
+    e.preventDefault();
+    // 完美复用你之前写好的拖拽处理逻辑
+    handleGlobalFilesDrop(filesToUpload as any);
   }
 };
 
@@ -645,6 +728,14 @@ const handleFillInput = (text: string) => {
   });
 };
 
+watch(messageText, (newVal) => {
+  if (newVal.trim()) {
+    localStorage.setItem(DRAFT_KEY, newVal);
+  } else {
+    localStorage.removeItem(DRAFT_KEY);
+  }
+});
+
 useMitt.on(MittEnum.FILL_MESSAGE_INPUT, handleFillInput);
 
 onMounted(() => {
@@ -670,6 +761,11 @@ onMounted(() => {
       console.error("处理截图失败:", error);
     }
   });
+  // 读取草稿并恢复
+  const savedDraft = localStorage.getItem(DRAFT_KEY);
+  if (savedDraft) {
+    messageText.value = savedDraft;
+  }
 });
 
 onUnmounted(() => {
@@ -687,5 +783,17 @@ onUnmounted(() => {
 .input-container:focus-within {
   /* 聚焦时的颜色 */
   border-color: #3b82f6;
+}
+
+.fade-slide-enter-active,
+.fade-slide-leave-active {
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease;
+}
+.fade-slide-enter-from,
+.fade-slide-leave-to {
+  opacity: 0;
+  transform: translateY(10px);
 }
 </style>

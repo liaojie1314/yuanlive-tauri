@@ -434,7 +434,7 @@ const simulatePhase2 = (aiMsg: MessageData) => {
   const toolResult = aiMsg.toolCalls![0].status;
   const contentText =
     toolResult === "success"
-      ? "我已经成功读取了本地文件！根据文件内容，你当前有以下待办事项：\n\n1. **M4-01**: 数据库设计\n2. **M4-02**: 后端 API 对接\n\n请问需要我帮忙写代码吗？"
+      ? "我已经成功读取了本地文件！根据文件内容，你当前有以下待办事项：\n\n1. **M4-01**: 数据库设计\n2. **M4-02**: 后端 API 对接\n\n请问需要我帮忙写代码吗？\n```python\nprint('hello world')\n```"
       : "好的，我已经取消了本地文件读取操作。如果你需要查询任务，请随时授权。";
 
   let cIndex = 0;

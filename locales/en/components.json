@@ -45,7 +45,13 @@
     "tapSuffix": "to speak",
     "recording": "Recording",
     "processing": "Processing audio",
-    "error": "Recording failed"
+    "error": "Recording failed",
+    "transcribe": "Transcribe to input",
+    "msg": {
+      "transcribeSuccess": "Transcription success",
+      "noClearSound": "No clear sound detected",
+      "modelLoadOrTranscribeFailed": "Model load or transcription failed, please check network (first run need to download model)"
+    }
   },
   "fileUpload": {
     "title": "Send files",
@@ -201,6 +207,7 @@
     "search": "Search",
     "voiceMessage": "Voice message",
     "goSetting": "Go to setting to add model",
+    "shortcut": "Shortcut",
     "modelType": {
       "auto": "Auto",
       "text": "Text",
