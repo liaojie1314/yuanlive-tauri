@@ -5,7 +5,7 @@
     :ignore-teleport="isFullscreen"
     @select="handleMenuSelect">
     <div class="video-player-container" :class="{ paused: !isPlaying }" @click="handleContainerClick">
-      <div ref="videoContainerRef" class="video-container"></div>
+      <div ref="videoContainerRef" class="video-container" :class="{ 'listening-mode': isListeningMode }"></div>
       <div v-if="isFullscreen" class="exit-fullscreen-btn" @click.stop="toggleFullscreen">
         <i-mdi-chevron-left class="iconify-icon" />
         <span>{{ t("components.videoPlayer.exitFullscreen") }}</span>
@@ -19,6 +19,22 @@
         :enable-combo="false"
         @like="toggleDanmakuLike"
         @report="openDanmakuReportDialog" />
+
+      <div
+        v-if="liveTranscriptionEnabled"
+        class="pointer-events-none absolute bottom-16 left-1/2 z-[90] w-full -translate-x-1/2 px-12 text-center transition-all duration-300">
+        <div
+          v-if="currentTranscriptionText"
+          class="inline-block max-w-[90%] whitespace-nowrap overflow-hidden text-clip rounded-lg bg-[rgba(0,0,0,0.6)] px-5 py-2 text-[20px] font-medium tracking-wide text-white shadow-md backdrop-blur-sm">
+          {{ currentTranscriptionText }}
+        </div>
+        <div
+          v-else-if="isTranscribing"
+          class="inline-block rounded-lg bg-[rgba(0,0,0,0.4)] px-3 py-1 text-[13px] text-white/80 backdrop-blur-sm">
+          <i-mdi-loading class="mr-1 inline-block animate-spin" />
+          {{ t("components.videoPlayer.aiTranscription") }}
+        </div>
+      </div>
 
       <!-- Right Side Interaction Panel -->
       <div v-if="!videoStore.clearScreen" class="interaction-panel" @click.stop>
@@ -139,8 +155,8 @@
 
         <n-tooltip placement="left" trigger="hover" :raw="true">
           <template #trigger>
-            <div class="interaction-item listen-item" @click="toggleShare">
-              <div class="interaction-icon listen-icon">
+            <div class="interaction-item listen-item" @click="toggleListenMode">
+              <div class="interaction-icon listen-icon" :class="{ 'text-[#ff0050]': isListeningMode }">
                 <i-material-symbols-headphones class="iconify-icon" />
               </div>
               <div class="interaction-count">{{ t("components.videoPlayer.listenVideo") }}</div>
@@ -194,6 +210,24 @@
             </button>
           </div>
         </n-tooltip>
+      </div>
+
+      <div
+        v-if="isListeningMode"
+        class="absolute inset-0 z-[70] flex flex-col items-center justify-center bg-[#000000e6]"
+        @click.stop="togglePlay">
+        <i-material-symbols-headphones
+          class="text-[80px] text-[#ff0050] drop-shadow-[0_0_20px_rgba(255,0,80,0.5)] transition-all"
+          :class="{ 'animate-pulse': isPlaying }" />
+        <span class="mt-4 text-[16px] tracking-widest text-white">{{ t("components.videoPlayer.audioPlaying") }}</span>
+        <n-button secondary size="small" class="mt-8 !rounded-full text-white/80" @click.stop="toggleListenMode">
+          {{ t("components.videoPlayer.exitListenMode") }}
+        </n-button>
+      </div>
+      <div v-if="showPauseOverlay" class="pause-overlay" @click.stop="togglePlay">
+        <div class="pause-icon-container">
+          <i-material-symbols-play-arrow-rounded class="pause-icon" />
+        </div>
       </div>
 
       <!-- Center Pause Icon -->
@@ -338,7 +372,6 @@
           </template>
         </n-slider>
       </div>
-
       <!-- Custom Controls -->
       <div class="custom-controls" @click.stop>
         <!-- Left Controls: Play Button and Progress -->
@@ -516,7 +549,18 @@ const playbackRates = [0.5, 0.75, 1.0, 1.25, 1.5, 2.0];
 const playbackRateOptions = playbackRates.map((rate) => ({ label: `${rate}x`, key: rate }));
 const displayedDanmakuIds = new Set<string>();
 const eventListeners = new Map<string, (event: Event) => void>();
+const CHUNK_SIZE = 10; // 每次切片 10 秒（时间太短会导致 Whisper 缺乏上下文，10秒最佳）
+const MAX_CHARS_PER_LINE = 20; // 限制单行最大字数（超出的文字会等到当前文字消失后紧接着显示）
+let currentTranscribingWindow = -1; // 当前正在转写的时间窗口起始点
+let whisperWorker: Worker | null = null;
 
+const isListeningMode = ref(false);
+const liveTranscriptionEnabled = ref(false);
+const isTranscribing = ref(false);
+const fullAudioData = ref<Float32Array | null>(null);
+// 存储所有已转写的切片
+const transcripts = ref<Array<{ start: number; end: number; text: string }>>([]);
+const transcribedWindows = new Set<number>(); // 记录已转写的窗口，防重复
 const isFollowed = ref(true);
 const videoContainerRef = ref<HTMLDivElement | null>(null);
 const playerRef = ref<any>(null);
@@ -608,6 +652,12 @@ const showPauseOverlay = ref(false);
 const videoMenuOptions = computed(() => [
   { label: t("components.videoPlayer.menu.playPause"), action: "play-pause" },
   { label: t("components.videoPlayer.menu.watchLater"), action: "watch-later" },
+  {
+    label: liveTranscriptionEnabled.value
+      ? t("components.videoPlayer.menu.closeAiSubtitle")
+      : t("components.videoPlayer.menu.openAiSubtitle"),
+    action: "toggle-ai-subtitle"
+  },
   { label: t("components.videoPlayer.menu.mute"), action: "mute" },
   { label: t("components.videoPlayer.menu.pip"), action: "pip" },
   { label: t("components.videoPlayer.menu.fullscreen"), action: "fullscreen" }
@@ -619,6 +669,11 @@ const resolutionOptions = computed(() => [
   { label: t("components.videoPlayer.resolution.540p"), key: "540p" },
   { label: t("components.videoPlayer.resolution.auto"), key: "auto" }
 ]);
+// 计算当前播放时间对应的字幕文本
+const currentTranscriptionText = computed(() => {
+  const t = transcripts.value.find((item) => currentTime.value >= item.start && currentTime.value < item.end);
+  return t ? t.text : "";
+});
 // 动态计算每个章节的占比和结束时间
 const computedChapters = computed(() => {
   // 如果没有章节数据，就生成一个占满全长的默认章节
@@ -656,6 +711,128 @@ const nextChapter = computed(() => {
   if (currentChapterIndex.value === -1 || currentChapterIndex.value >= computedChapters.value.length - 1) return null;
   return computedChapters.value[currentChapterIndex.value + 1];
 });
+
+/** 切换听视频模式 */
+const toggleListenMode = () => {
+  isListeningMode.value = !isListeningMode.value;
+  // 如果开启听视频时视频是暂停的，自动帮用户恢复播放
+  if (isListeningMode.value && playerRef.value && !isPlaying.value) {
+    playerRef.value.play();
+  }
+};
+
+/**
+ * 提取完整视频的音频缓冲数据
+ * @param url 视频 URL
+ */
+const extractFullAudioData = async (url: string) => {
+  const response = await fetch(url);
+  const arrayBuffer = await response.arrayBuffer();
+  const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+  const ctx = new AudioContextClass({ sampleRate: 16000 });
+  const audioBuffer = await ctx.decodeAudioData(arrayBuffer);
+  fullAudioData.value = audioBuffer.getChannelData(0);
+};
+
+/** 初始化 Worker */
+const initWhisperWorker = () => {
+  if (whisperWorker) return;
+  whisperWorker = new Worker(new URL("@/workers/whisper.worker.ts", import.meta.url), { type: "module" });
+  whisperWorker.onmessage = (e) => {
+    const { status, text, error } = e.data;
+
+    if (status === "success") {
+      transcribedWindows.add(currentTranscribingWindow); // 标记当前 10s 窗口已完成
+
+      if (text && text.trim()) {
+        const cleanText = text.trim();
+        const segments: string[] = [];
+
+        // 使用正则匹配：中文字符算作一个单位，连续的英文字母/数字算作一个单位，空格忽略但在组装时补齐
+        const words = cleanText.match(/[\u4e00-\u9fa5]|[a-zA-Z0-9]+|[^\u4e00-\u9fa5a-zA-Z0-9]/g) || [];
+
+        let currentSegment = "";
+        for (const word of words) {
+          // 跳过纯粹开头的空格
+          if (!currentSegment && word.trim() === "") continue;
+
+          // 如果加上新单词还没超过最大限制，就塞进去
+          if (currentSegment.length + word.length <= MAX_CHARS_PER_LINE) {
+            currentSegment += word;
+          } else {
+            // 如果塞不下了，先把当前段存起来，新单词开启下一段
+            if (currentSegment) segments.push(currentSegment.trim());
+            // 特殊情况：如果一个单词本身就超过了 MAX_CHARS_PER_LINE（比如超级长的化学单词），只能硬切
+            currentSegment = word.length > MAX_CHARS_PER_LINE ? word.slice(0, MAX_CHARS_PER_LINE) : word;
+          }
+        }
+        if (currentSegment) {
+          segments.push(currentSegment.trim());
+        }
+
+        // 将这 10 秒的时间平分给切出来的这几句话（前一句消失后，马上显示下一句）
+        const durationPerSeg = CHUNK_SIZE / Math.max(segments.length, 1);
+        segments.forEach((seg, index) => {
+          transcripts.value.push({
+            start: currentTranscribingWindow + index * durationPerSeg,
+            end: currentTranscribingWindow + (index + 1) * durationPerSeg,
+            text: seg
+          });
+        });
+      }
+      isTranscribing.value = false;
+    } else if (status === "error") {
+      console.error("转写失败:", error);
+      isTranscribing.value = false;
+    }
+  };
+};
+
+/**
+ * 切换实时字幕功能
+ * @param val 是否启用实时字幕
+ */
+const toggleLiveTranscription = async (val: boolean) => {
+  if (val) {
+    initWhisperWorker();
+    if (!fullAudioData.value && playlistStore.currentVideo?.videoUrl) {
+      try {
+        window.$message?.info(t("components.videoPlayer.msg.initAudioStream"));
+        await extractFullAudioData(playlistStore.currentVideo.videoUrl);
+        window.$message?.success(t("components.videoPlayer.msg.aiSubtitleEnabled"));
+      } catch (e) {
+        window.$message?.error(t("components.videoPlayer.msg.parseVideoAudioFailed"));
+        liveTranscriptionEnabled.value = false;
+      }
+    }
+  } else {
+    transcripts.value = [];
+    transcribedWindows.clear();
+  }
+};
+
+/**
+ * 检查并根据当前播放时间需要转写当前片段
+ * 如果当前窗口还没转写过，并且 Worker 处于空闲状态，则开始切片转写
+ */
+const checkAndTranscribeChunk = () => {
+  if (!liveTranscriptionEnabled.value || !fullAudioData.value) return;
+
+  // 向下取整，找到当前所处的 10秒 窗口区间
+  const windowStart = Math.floor(currentTime.value / CHUNK_SIZE) * CHUNK_SIZE;
+
+  // 如果这个窗口还没转录过，且当前空闲，则开始切片喂给 Worker
+  if (!transcribedWindows.has(windowStart) && !isTranscribing.value && currentTranscribingWindow !== windowStart) {
+    isTranscribing.value = true;
+    currentTranscribingWindow = windowStart;
+
+    const startIndex = windowStart * 16000;
+    const endIndex = Math.min((windowStart + CHUNK_SIZE) * 16000, fullAudioData.value.length);
+    const audioSlice = fullAudioData.value.slice(startIndex, endIndex);
+
+    whisperWorker?.postMessage({ type: "transcribe", audioData: audioSlice, language: "en" }, [audioSlice.buffer]);
+  }
+};
 
 /**
  * 在章节列表中选择某个章节
@@ -876,6 +1053,10 @@ const handleMenuSelect = (item: any) => {
       break;
     case "watch-later":
       watchLater();
+      break;
+    case "toggle-ai-subtitle":
+      liveTranscriptionEnabled.value = !liveTranscriptionEnabled.value;
+      toggleLiveTranscription(liveTranscriptionEnabled.value);
       break;
     case "mute":
       toggleMute();
@@ -1408,6 +1589,8 @@ watch(
       favoriteCount.value = newVideo.collectCount || 0;
       shareCount.value = newVideo.shareCount || 0;
 
+      isListeningMode.value = false;
+
       // 通知 video.js 切换播放源并播放
       if (playerRef.value && newVideo.videoUrl) {
         playerRef.value.src({
@@ -1420,6 +1603,14 @@ watch(
         setTimeout(() => {
           playerRef.value.play();
         }, 100);
+      }
+      fullAudioData.value = null;
+      transcripts.value = [];
+      transcribedWindows.clear();
+      isTranscribing.value = false;
+      currentTranscribingWindow = -1;
+      if (liveTranscriptionEnabled.value) {
+        toggleLiveTranscription(true);
       }
     }
   },
@@ -1505,6 +1696,8 @@ onMounted(() => {
         idsToKeep.forEach((id) => displayedDanmakuIds.add(id));
       }
       updateActiveDanmakus();
+      // 每次时间更新时，检查是否需要转写当前片段
+      checkAndTranscribeChunk();
     };
     player.on("timeupdate", timeupdateHandler);
     eventListeners.set("timeupdate", timeupdateHandler);
@@ -2667,6 +2860,19 @@ defineExpose({
 // 修改全局样式
 :deep(.square-checkbox.n-checkbox .n-checkbox-box) {
   border-radius: 2px;
+}
+
+.listening-mode {
+  :deep(.vjs-tech) {
+    opacity: 0 !important;
+    visibility: hidden !important;
+  }
+
+  // 如果有封面图，也一并隐藏
+  :deep(.vjs-poster) {
+    opacity: 0 !important;
+    visibility: hidden !important;
+  }
 }
 </style>
 

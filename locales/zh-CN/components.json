@@ -310,6 +310,9 @@
     "videoChapters": "视频章节",
     "nextChapter": "下一节",
     "jumpToNextChapter": "跳转至下一章",
+    "aiTranscription": "AI识别中...",
+    "audioPlaying": "音频播放中",
+    "exitListenMode": "退出听视频",
     "dialog": {
       "confirmCancel": "确认取消",
       "unfollowConfirm": "是否确认取消关注?",
@@ -324,7 +327,10 @@
       "videoLinkCopied": "视频链接已复制到剪贴板",
       "copyFailed": "复制失败，请重试",
       "shortcutsSaveSuccess": "快捷键保存成功",
-      "alreadyFirstVideo": "已经是第一个视频啦"
+      "alreadyFirstVideo": "已经是第一个视频啦",
+      "initAudioStream": "正在初始化音频流，请稍候...",
+      "aiSubtitleEnabled": "AI字幕已开启，将随播放生成",
+      "parseVideoAudioFailed": "解析视频音频失败，请重试。"
     },
     "resolution": {
       "2k": "超清2K",
@@ -338,7 +344,9 @@
       "watchLater": "稍后再看",
       "mute": "静音/取消静音",
       "pip": "画中画模式",
-      "fullscreen": "全屏/退出全屏"
+      "fullscreen": "全屏/退出全屏",
+      "openAiSubtitle": "开启AI字幕",
+      "closeAiSubtitle": "关闭AI字幕"
     }
   }
 }

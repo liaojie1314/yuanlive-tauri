@@ -310,6 +310,9 @@
     "viewAllChapters": "view all chapters",
     "nextChapter": "next",
     "jumpToNextChapter": "jump to next chapter",
+    "aiTranscription": "AI transcript...",
+    "audioPlaying": "Audio playing",
+    "exitListenMode": "Exit listen mode",
     "dialog": {
       "confirmCancel": "Confirm cancel",
       "unfollowConfirm": "Are you sure you want to unfollow this user?",
@@ -324,7 +327,10 @@
       "videoLinkCopied": "Video link copied to clipboard",
       "copyFailed": "Copy failed, please try again",
       "shortcutsSaveSuccess": "Shortcuts saved successfully",
-      "alreadyFirstVideo": "Already the first video"
+      "alreadyFirstVideo": "Already the first video",
+      "initAudioStream": "Initializing audio stream, please wait...",
+      "aiSubtitleEnabled": "AI CC enabled, will generate CC while playing",
+      "parseVideoAudioFailed": "Failed to parse video audio failed, please try again."
     },
     "resolution": {
       "2k": "2K",
@@ -338,7 +344,9 @@
       "watchLater": "watch later",
       "mute": "mute/unmute",
       "pip": "picture-in-picture",
-      "fullscreen": "fullscreen"
+      "fullscreen": "fullscreen",
+      "openAiSubtitle": "open AI CC",
+      "closeAiSubtitle": "close AI CC"
     }
   }
 }
