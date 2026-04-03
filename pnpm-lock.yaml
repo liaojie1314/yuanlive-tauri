@@ -20,6 +20,12 @@ importers:
       '@huggingface/transformers':
         specifier: ^3.8.1
         version: 3.8.1
+      '@mediapipe/camera_utils':
+        specifier: ^0.3.1675466862
+        version: 0.3.1675466862
+      '@mediapipe/face_mesh':
+        specifier: ^0.4.1633559619
+        version: 0.4.1633559619
       '@mediapipe/selfie_segmentation':
         specifier: ^0.1.1675465747
         version: 0.1.1675465747
@@ -1397,6 +1403,12 @@ packages:
 
   '@juggle/resize-observer@3.4.0':
     resolution: {integrity: sha512-dfLbk+PwWvFzSxwk3n5ySL0hfBog779o8h68wK/7/APo/7cgyWp5jcXockbxdk5kFRkbeXWm4Fbi9FrdN381sA==}
+
+  '@mediapipe/camera_utils@0.3.1675466862':
+    resolution: {integrity: sha512-siuXBoUxWo9WL0MeAxIxvxY04bvbtdNl7uCxoJxiAiRtNnCYrurr7Vl5VYQ94P7Sq0gVq6PxIDhWWeZ/pLnSzw==}
+
+  '@mediapipe/face_mesh@0.4.1633559619':
+    resolution: {integrity: sha512-Vc8cdjxS5+O2gnjWH9KncYpUCVXT0h714KlWAsyqJvJbIgUJBqpppbIx8yWcAzBDxm/5cYSuBI5p5ySIPxzcEg==}
 
   '@mediapipe/selfie_segmentation@0.1.1675465747':
     resolution: {integrity: sha512-IxYxNhwE5VwOm52L1yoFWYLP7q9Pd+NJjzOC5tlepfvEGaY3o9hslhUrx9BgseqdfZtKSDtd/4NfCSMjNzQalA==}
@@ -5455,8 +5467,8 @@ packages:
   webpack-virtual-modules@0.6.2:
     resolution: {integrity: sha512-66/V2i5hQanC51vBQKPH4aI8NMAcBW59FVBs+rC7eGHupMyfn34q7rZIE+ETlJ+XTevqfUhVVBgSUNSW2flEUQ==}
 
-  webworkify-webpack@https://codeload.github.com/xqq/webworkify-webpack/tar.gz/24d1e719b4a6cac37a518b2bb10fe124527ef4ef:
-    resolution: {tarball: https://codeload.github.com/xqq/webworkify-webpack/tar.gz/24d1e719b4a6cac37a518b2bb10fe124527ef4ef}
+  webworkify-webpack@git+https://git@github.com:xqq/webworkify-webpack.git#24d1e719b4a6cac37a518b2bb10fe124527ef4ef:
+    resolution: {commit: 24d1e719b4a6cac37a518b2bb10fe124527ef4ef, repo: git@github.com:xqq/webworkify-webpack.git, type: git}
     version: 2.1.5
 
   whatwg-encoding@3.1.1:
@@ -6562,6 +6574,10 @@ snapshots:
       '@jridgewell/sourcemap-codec': 1.5.5
 
   '@juggle/resize-observer@3.4.0': {}
+
+  '@mediapipe/camera_utils@0.3.1675466862': {}
+
+  '@mediapipe/face_mesh@0.4.1633559619': {}
 
   '@mediapipe/selfie_segmentation@0.1.1675465747': {}
 
@@ -9338,7 +9354,7 @@ snapshots:
   mpegts.js@1.8.0:
     dependencies:
       es6-promise: 4.2.8
-      webworkify-webpack: https://codeload.github.com/xqq/webworkify-webpack/tar.gz/24d1e719b4a6cac37a518b2bb10fe124527ef4ef
+      webworkify-webpack: git+https://git@github.com:xqq/webworkify-webpack.git#24d1e719b4a6cac37a518b2bb10fe124527ef4ef
 
   mrmime@2.0.1: {}
 
@@ -10663,7 +10679,7 @@ snapshots:
 
   webpack-virtual-modules@0.6.2: {}
 
-  webworkify-webpack@https://codeload.github.com/xqq/webworkify-webpack/tar.gz/24d1e719b4a6cac37a518b2bb10fe124527ef4ef: {}
+  webworkify-webpack@git+https://git@github.com:xqq/webworkify-webpack.git#24d1e719b4a6cac37a518b2bb10fe124527ef4ef: {}
 
   whatwg-encoding@3.1.1:
     dependencies:

@@ -76,6 +76,8 @@
     "@fingerprintjs/fingerprintjs": "^5.0.1",
     "@guolao/vue-monaco-editor": "^1.6.0",
     "@huggingface/transformers": "^3.8.1",
+    "@mediapipe/camera_utils": "^0.3.1675466862",
+    "@mediapipe/face_mesh": "^0.4.1633559619",
     "@mediapipe/selfie_segmentation": "^0.1.1675465747",
     "@ricky0123/vad-web": "^0.0.30",
     "@tauri-apps/api": "^2",

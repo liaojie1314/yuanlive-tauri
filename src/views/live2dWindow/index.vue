@@ -19,7 +19,7 @@
 
     <div
       v-show="!isSleeping"
-      class="absolute right-4 top-1/2 -translate-y-1/2 flex flex-col gap-2 z-20 items-center transition-opacity duration-500">
+      class="toolbar-container absolute right-4 top-1/2 -translate-y-1/2 flex flex-col gap-2 z-20 items-center transition-opacity duration-500 max-h-[100%] overflow-y-auto py-2">
       <div title="语音连麦" class="action-btn group" @click="handleVoiceChat">
         <i-mdi-microphone
           class="text-20px"
@@ -32,6 +32,12 @@
       </div>
       <div title="键鼠接管 (Agent)" class="action-btn group" @click="operateKeyboard">
         <i-mdi-robot-outline class="text-20px" />
+      </div>
+
+      <div title="面部捕捉 (皮套模式)" class="action-btn group" @click="toggleFaceTracking">
+        <i-mdi-face-recognition
+          class="text-20px"
+          :class="{ 'text-[#13987f] drop-shadow-[0_0_8px_rgba(19,152,127,0.8)]': isFaceTracking }" />
       </div>
 
       <div class="w-20px h-2px bg-white/40 rounded-full my-1"></div>
@@ -128,10 +134,13 @@
       </n-drawer-content>
     </n-drawer>
   </main>
+  <video ref="videoRef" autoplay playsinline class="hidden"></video>
 </template>
 
 <script setup lang="ts">
 import * as PIXI from "pixi.js";
+import { FaceMesh } from "@mediapipe/face_mesh";
+import { Camera } from "@mediapipe/camera_utils";
 import { listen } from "@tauri-apps/api/event";
 import { Live2DModel } from "pixi-live2d-display";
 import { LogicalPosition } from "@tauri-apps/api/window";
@@ -173,8 +182,15 @@ let vadAudioCtx: AudioContext | null = null;
 let vadAnalyser: AnalyserNode | null = null;
 let vadDataArray: Uint8Array | null = null;
 let lastSpeakTime = 0; // 最后一次大声说话的时间戳
+let camera: Camera | null = null;
+let faceMesh: FaceMesh | null = null;
+const faceTarget = { x: 0, y: 0, z: 0, eyeL: 1, eyeR: 1, mouth: 0, hasFace: false };
+const smoothedHead = { x: 0, y: 0, z: 0, eyeL: 1, eyeR: 1, mouth: 0 };
 const ttsWorker = new Worker(new URL("@/workers/kokoro.worker.ts", import.meta.url), { type: "module" });
 
+// 面部捕捉 (VTuber 模式)
+const isFaceTracking = ref(false);
+const videoRef = ref<HTMLVideoElement | null>(null);
 const isPomodoroActive = ref(false);
 const pomodoroTimeLeft = ref(25 * 60); // 25分钟 (1500秒)
 // 是否处于休眠状态
@@ -204,6 +220,148 @@ const isVoiceChatting = ref(false);
 // 音频与口型相关
 const audioContext = shallowRef<AudioContext | null>(null);
 const audioSource = shallowRef<AudioBufferSourceNode | null>(null);
+
+/**
+ * 平滑插值函数 (Lerp)，防止模型头部抖动得像帕金森
+ * @param start 起始值
+ * @param end 结束值
+ * @param amt 插值比例
+ * @returns 平滑后的值
+ */
+const lerp = (start: number, end: number, amt: number) => (1 - amt) * start + amt * end;
+
+/**
+ * 计算两点之间真实 2D 物理距离的辅助函数
+ * @param p1 点1
+ * @param p2 点2
+ * @returns 两点之间的距离
+ */
+const calcDistance = (p1: any, p2: any) => Math.hypot(p1.x - p2.x, p1.y - p2.y);
+
+/** 切换面部捕捉 (VTuber 模式) */
+const toggleFaceTracking = async () => {
+  if (isSleeping.value) return;
+
+  isFaceTracking.value = !isFaceTracking.value;
+
+  if (isFaceTracking.value) {
+    speak("正在建立神经链接，初次加载 AI 模型需要几十秒，请稍等哦...");
+
+    if (live2dModel.value) live2dModel.value.focus(0, 0);
+
+    faceMesh = new FaceMesh({
+      locateFile: (file) => `https://fastly.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`
+    });
+
+    faceMesh.setOptions({
+      maxNumFaces: 1,
+      refineLandmarks: true,
+      minDetectionConfidence: 0.5,
+      minTrackingConfidence: 0.5
+    });
+
+    let isModelReallyReady = false;
+
+    faceMesh.onResults((results) => {
+      if (!isFaceTracking.value) return;
+
+      if (!isModelReallyReady) {
+        isModelReallyReady = true;
+        console.log("✅ MediaPipe 引擎已真实启动并跑通第一帧！");
+        speak("神经链接完成！动动脑袋和嘴巴试试看？");
+      }
+
+      if (results.multiFaceLandmarks && results.multiFaceLandmarks.length > 0) {
+        faceTarget.hasFace = true;
+        const landmarks = results.multiFaceLandmarks[0];
+
+        const nose = landmarks[1];
+        const leftEye = landmarks[33];
+        const rightEye = landmarks[263];
+        const chin = landmarks[152];
+        const topHead = landmarks[10];
+
+        // --- 1. 转头、点头、歪头 ---
+        const eyeCenterX = (leftEye.x + rightEye.x) / 2;
+        const eyeDistX = calcDistance(leftEye, rightEye);
+        const targetX = ((nose.x - eyeCenterX) / eyeDistX) * -150;
+
+        const verticalCenter = (chin.y + topHead.y) / 2;
+        const faceHeight = chin.y - topHead.y;
+        const targetY = ((nose.y - verticalCenter) / faceHeight) * -200;
+
+        const rollAngle = Math.atan2(rightEye.y - leftEye.y, rightEye.x - leftEye.x);
+        const targetZ = rollAngle * (180 / Math.PI);
+
+        faceTarget.x = Math.max(-30, Math.min(30, targetX));
+        faceTarget.y = Math.max(-30, Math.min(30, targetY));
+        faceTarget.z = Math.max(-30, Math.min(30, targetZ));
+
+        // --- 2. 眨眼 EAR 算法 ---
+        const leftEyeWidth = calcDistance(landmarks[33], landmarks[133]);
+        const leftEyeHeight = calcDistance(landmarks[145], landmarks[159]);
+        const leftEAR = leftEyeHeight / leftEyeWidth;
+
+        const rightEyeWidth = calcDistance(landmarks[362], landmarks[263]);
+        const rightEyeHeight = calcDistance(landmarks[374], landmarks[386]);
+        const rightEAR = rightEyeHeight / rightEyeWidth;
+
+        faceTarget.eyeL = leftEAR > 0.16 ? 1 : 0;
+        faceTarget.eyeR = rightEAR > 0.16 ? 1 : 0;
+
+        // --- 3. 嘴部张合算法 ---
+        // 提取上下嘴唇内侧中点的坐标
+        const upperLip = landmarks[13];
+        const lowerLip = landmarks[14];
+        const mouthOpenDist = calcDistance(upperLip, lowerLip);
+
+        // 用脸部高度做归一化，防止你离屏幕近时嘴巴自动张大
+        // 0.015 是闭嘴的误差阈值，乘以 15 是放大倍数（可根据需要微调）
+        const targetMouth = (mouthOpenDist / faceHeight - 0.015) * 15;
+        faceTarget.mouth = Math.max(0, Math.min(1, targetMouth));
+      } else {
+        faceTarget.hasFace = false;
+        faceTarget.x = 0;
+        faceTarget.y = 0;
+        faceTarget.z = 0;
+        faceTarget.eyeL = 1;
+        faceTarget.eyeR = 1;
+        faceTarget.mouth = 0; // 找不到人脸时闭嘴
+      }
+    });
+
+    try {
+      await faceMesh.initialize();
+      if (videoRef.value) {
+        camera = new Camera(videoRef.value, {
+          onFrame: async () => {
+            if (faceMesh && isFaceTracking.value) {
+              await faceMesh.send({ image: videoRef.value! });
+            }
+          },
+          width: 480,
+          height: 360
+        });
+        camera.start();
+      }
+    } catch (e) {
+      console.error("面部模型加载失败:", e);
+      speak("哎呀，AI 模型加载失败了，请检查一下网络哦。");
+      isFaceTracking.value = false;
+    }
+  } else {
+    speak("面部追踪已断开~");
+    if (camera) {
+      camera.stop();
+      camera = null;
+    }
+    if (faceMesh) {
+      faceMesh.close();
+      faceMesh = null;
+    }
+    if (live2dModel.value) live2dModel.value.focus(0, 0);
+  }
+};
 
 /** 初始化双引擎模型 */
 const initKokoroTTS = async () => {
@@ -495,41 +653,65 @@ const loadLive2dModel = async (modelUrl: string) => {
   if (!pixiApp) return;
 
   try {
-    // 1. 如果舞台上已经有旧模型，先销毁它释放内存，防止重叠
     if (live2dModel.value) {
       pixiApp.stage.removeChild(live2dModel.value);
       live2dModel.value.destroy();
       live2dModel.value = null;
     }
 
-    // 2. 加载新模型
     const model = await Live2DModel.from(modelUrl);
-    // 劫持底层 focus 方法，彻底切断所有视线追踪（包括插件自带的）
+
+    // 1. 劫持常规的鼠标焦点 (保留)
     const originalFocus = model.focus.bind(model);
     model.focus = (x: number, y: number, ...args: any[]) => {
       if (isSleeping.value) {
-        // 如果在睡觉，不管是谁发来的转头指令，一律强制坐标归零，锁死正前方
         originalFocus(0, 0, ...args);
       } else {
-        // 醒着的时候，正常放行
         originalFocus(x, y, ...args);
       }
     };
+
+    const coreModel = model.internalModel.coreModel as any;
+    // 备份原本的顶点渲染逻辑
+    const originalCoreUpdate = coreModel.update.bind(coreModel);
+
+    coreModel.update = (...args: any[]) => {
+      if (isFaceTracking.value) {
+        // 这能极大地掩盖 AI 掉帧带来的跳跃感，让动作看起来像水一样丝滑
+        smoothedHead.x = lerp(smoothedHead.x, faceTarget.x, 0.08);
+        smoothedHead.y = lerp(smoothedHead.y, faceTarget.y, 0.08);
+        smoothedHead.z = lerp(smoothedHead.z, faceTarget.z, 0.08);
+
+        smoothedHead.eyeL = lerp(smoothedHead.eyeL, faceTarget.eyeL, 0.3);
+        smoothedHead.eyeR = lerp(smoothedHead.eyeR, faceTarget.eyeR, 0.3);
+
+        // 嘴部插值 (嘴巴需要反应快点，系数用 0.3)
+        smoothedHead.mouth = lerp(smoothedHead.mouth, faceTarget.mouth, 0.3);
+
+        coreModel.setParameterValueById("ParamAngleX", smoothedHead.x);
+        coreModel.setParameterValueById("ParamAngleY", smoothedHead.y);
+        coreModel.setParameterValueById("ParamAngleZ", smoothedHead.z);
+        coreModel.setParameterValueById("ParamBodyAngleX", smoothedHead.x * 0.5);
+        coreModel.setParameterValueById("ParamEyeLOpen", smoothedHead.eyeL);
+        coreModel.setParameterValueById("ParamEyeROpen", smoothedHead.eyeR);
+        coreModel.setParameterValueById("ParamMouthOpenY", smoothedHead.mouth);
+      }
+
+      originalCoreUpdate(...args);
+    };
+
     live2dModel.value = model;
     pixiApp.stage.addChild(model);
 
-    // 3. 布局与自适应适配
     const updateLayout = () => {
       const screenW = pixiApp!.renderer.screen.width;
       const screenH = pixiApp!.renderer.screen.height;
-
-      model.anchor.set(0, 0); // 锚点左上角
+      model.anchor.set(0, 0);
       const rawWidth = model.internalModel.originalWidth || model.width;
       const rawHeight = model.internalModel.originalHeight || model.height;
       const scaleX = screenW / rawWidth;
       const scaleY = (screenH * 0.9) / rawHeight;
       const scale = Math.min(scaleX, scaleY);
-
       model.scale.set(scale);
       model.x = (screenW - model.width) / 2;
       model.y = screenH - model.height;
@@ -538,22 +720,17 @@ const loadLive2dModel = async (modelUrl: string) => {
     updateLayout();
     pixiApp.renderer.on("resize", updateLayout);
 
-    // 4. 重新绑定点击互动事件
     model.on("hit", (hitAreas) => {
-      // 如果正在睡觉，点击任何地方都会唤醒她
       if (isSleeping.value) {
         isSleeping.value = false;
         speak("唔...主人你叫我呀，我醒啦！");
-        return; // 唤醒后直接结束，不触发日常对话
+        return;
       }
-      // 如果正在专注番茄钟，点击会触发简短提醒，而不是日常闲聊
       if (isPomodoroActive.value) {
-        // 随机抽一句简短的鼓励/提醒，防止 TTS 声音太长打断思路
         const focusQuotes = ["嘘，专心工作哦~", "我在看着你呢，别摸鱼啦！", "快写代码，写完再陪你玩~"];
         speak(focusQuotes[Math.floor(Math.random() * focusQuotes.length)]);
         return;
       }
-      // 日常点击身体的互动
       if (hitAreas.includes("Body")) {
         model.motion("TapBody");
         speak("有什么我可以帮你的吗？");
@@ -1119,8 +1296,8 @@ onMounted(async () => {
   // 开启全局鼠标视线追踪
   const unlistenMouse = await listen<[number, number]>("global-mouse-move", async (event) => {
     if (!live2dModel.value) return;
-
     if (isSleeping.value) return;
+    if (isFaceTracking.value) return;
 
     const [globalPhysicalX, globalPhysicalY] = event.payload;
 
@@ -1204,6 +1381,9 @@ onUnmounted(async () => {
   } catch (e) {
     console.warn("注销全局快捷键失败:", e);
   }
+  // 清理面部追踪
+  if (camera) camera.stop();
+  if (faceMesh) faceMesh.close();
 });
 </script>
 
@@ -1304,6 +1484,17 @@ onUnmounted(async () => {
     // 微沉，光晕变淡，模拟点击压力感
     transform: translateY(1px) scale(1);
     filter: drop-shadow(0 0 2px rgba(19, 152, 127, 0.2));
+  }
+}
+
+.toolbar-container {
+  /* 隐藏 Firefox 和 IE 的滚动条 */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+
+  /* 隐藏 Chrome, Safari 和 Opera 的滚动条 */
+  &::-webkit-scrollbar {
+    display: none;
   }
 }
 </style>
