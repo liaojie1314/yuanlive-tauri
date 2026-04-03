@@ -1,8 +1,41 @@
 {
+  "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "desktop-capability",
+  "description": "Desktop specific capabilities (Window management, Updater,  Shell, Shortcut, Autostart)",
   "platforms": ["macOS", "windows", "linux"],
   "windows": ["*"],
   "permissions": [
+    "core:window:allow-center",
+    "core:window:allow-maximize",
+    "core:window:allow-unmaximize",
+    "core:window:allow-minimize",
+    "core:window:allow-unminimize",
+    "core:window:allow-set-size",
+    "core:window:allow-set-position",
+    "core:window:allow-set-resizable",
+    "core:window:allow-start-dragging",
+    "core:window:allow-set-ignore-cursor-events",
+    "core:webview:allow-create-webview-window",
+    "process:default",
+    "shell:default",
+    "shell:allow-open",
+    {
+      "identifier": "shell:allow-execute",
+      "allow": [
+        {
+          "name": "ffmpeg",
+          "cmd": "binaries/ffmpeg",
+          "args": true
+        },
+        { 
+          "name": "binaries/windows-mcp", 
+          "sidecar": true 
+        }
+      ]
+    },
+    "autostart:allow-enable",
+    "autostart:allow-disable",
+    "autostart:allow-is-enabled",
     "updater:default",
     "updater:allow-check",
     "updater:allow-download",

@@ -43,8 +43,8 @@ const bgUrl = computed(() => {
 
 /** 检查当前组件是否被嵌套在另一个 MobileScaffold 内部 */
 const useNestedSelfCheck = () => {
-  const selfIsParent = inject("removeSafeArea");
-  return selfIsParent !== void 0;
+  const selfIsParent = inject<(() => void) | undefined>("removeSafeArea", undefined);
+  return selfIsParent !== undefined;
 };
 
 const nestedSelf = useNestedSelfCheck();

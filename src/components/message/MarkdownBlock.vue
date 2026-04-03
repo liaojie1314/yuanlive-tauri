@@ -8,10 +8,24 @@
 </template>
 
 <script setup lang="ts">
-import hljs from "highlight.js";
-import { marked } from "marked";
-import DOMPurify from "dompurify";
 import "highlight.js/styles/github.css";
+import "katex/dist/katex.min.css";
+
+import hljs from "highlight.js";
+import MarkdownIt from "markdown-it";
+import DOMPurify from "dompurify";
+import mdAbbr from "markdown-it-abbr";
+import mdAnchor from "markdown-it-anchor";
+import mdDeflist from "markdown-it-deflist";
+import { full as mdEmoji } from "markdown-it-emoji";
+import mdFootnote from "markdown-it-footnote";
+import mdIns from "markdown-it-ins";
+import mdMark from "markdown-it-mark";
+import mdSub from "markdown-it-sub";
+import mdSup from "markdown-it-sup";
+import mdTaskLists from "markdown-it-task-lists";
+import mdToc from "markdown-it-toc-done-right";
+import { katex } from "@mdit/plugin-katex";
 import { save } from "@tauri-apps/plugin-dialog";
 import { writeTextFile } from "@tauri-apps/plugin-fs";
 import { writeText } from "@tauri-apps/plugin-clipboard-manager";
@@ -79,61 +93,145 @@ const languageMap: Record<string, string> = {
   markdown: "markdown"
 };
 
+const md = new MarkdownIt({
+  html: true,
+  linkify: true,
+  breaks: true
+})
+  .use(mdAbbr)
+  .use(mdAnchor)
+  .use(mdDeflist)
+  .use(mdEmoji)
+  .use(mdFootnote)
+  .use(mdIns)
+  .use(mdMark)
+  .use(mdSub)
+  .use(mdSup)
+  .use(mdTaskLists)
+  .use(mdToc)
+  .use(katex, { throwOnError: false, errorColor: " #cc0000" });
+
+md.renderer.rules.fence = (tokens, idx) => {
+  const token = tokens[idx];
+  const info = token.info ? String(token.info).trim() : "";
+  const langName = info.split(/\s+/g)[0];
+  const originalLang = langName || "plaintext";
+  const validLang = getValidLanguage(originalLang);
+  let highlightedCode = "";
+
+  try {
+    // 高亮核心代码文本
+    highlightedCode = hljs.highlight(token.content, { language: validLang, ignoreIllegals: true }).value;
+  } catch (e) {
+    highlightedCode = md.utils.escapeHtml(token.content);
+  }
+
+  const canRun = ["html", "vue", "react"].includes(originalLang.toLowerCase());
+
+  // 返回完整的 HTML 结构（最外层不再会被强行套上 <pre><code>）
+  return `
+    <div class="code-block-container">
+      <div class="code-header">
+        <span class="code-lang" data-lang="${originalLang}">${originalLang}</span>
+        <div class="code-actions">
+          <button class="code-btn" data-act="copy">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+            复制
+          </button>
+          <button class="code-btn" data-act="download">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+            下载
+          </button>
+          ${
+            canRun
+              ? `
+          <button class="code-btn" data-act="run">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+            运行
+          </button>`
+              : ""
+          }
+        </div>
+      </div>
+      <pre class="hljs-scroll"><code class="language-${validLang}">${highlightedCode}</code></pre>
+    </div>
+  `;
+};
+
 // Markdown 解析逻辑
 const renderedHtml = computed(() => {
   if (!props.content) return "";
-
   let safeContent = props.content;
-
-  // 1. 解决流式输出时 MD 标签不全问题 (自动闭合代码块)
-  // 统计反引号 ``` 出现的次数，如果是奇数，说明大模型还在输出代码中，没有闭合
   const codeBlockMatches = safeContent.match(/```/g);
   if (codeBlockMatches && codeBlockMatches.length % 2 !== 0) {
     safeContent += "\n```"; // 强制追加闭合符，防止排版错乱
   }
-  // 2. 将 Markdown 转换为原始 HTML
-  const rawHtml = marked.parse(safeContent, { breaks: true, gfm: true }) as string;
-  // 3. 防御 XSS 攻击，清洗脏 HTML
-  // 注意：允许 class 属性，否则 Highlight.js 的高亮样式会丢失
-  const cleanHtml = DOMPurify.sanitize(rawHtml, {
-    ALLOWED_TAGS: [
-      "h1",
-      "h2",
-      "h3",
-      "h4",
-      "h5",
-      "h6",
-      "blockquote",
-      "p",
-      "a",
-      "ul",
-      "ol",
-      "nl",
-      "li",
-      "b",
-      "i",
-      "strong",
-      "em",
+  const rawHtml = md.render(safeContent);
+  return DOMPurify.sanitize(rawHtml, {
+    ADD_TAGS: [
+      // MathML 标签
+      "math",
+      "semantics",
+      "mrow",
+      "mi",
+      "mo",
+      "mn",
+      "ms",
+      "mspace",
+      "msqrt",
+      "mroot",
+      "mfrac",
+      "msup",
+      "msub",
+      "msubsup",
+      "mmultiscripts",
+      "munderover",
+      "mover",
+      "munder",
+      "mtable",
+      "mtr",
+      "mtd",
+      "maligngroup",
+      "malignmark",
+      "annotation",
+      "annotation-xml",
+      // 基础排版
+      "mark",
+      "ins",
+      "sup",
+      "sub",
+      "del",
       "strike",
-      "code",
-      "hr",
-      "br",
-      "div",
-      "table",
-      "thead",
-      "caption",
-      "tbody",
-      "tr",
-      "th",
-      "td",
-      "pre",
-      "span",
-      "img",
-      "del"
+      "svg",
+      "path",
+      "line",
+      "rect",
+      "circle",
+      "ellipse",
+      "polygon",
+      "polyline"
     ],
-    ALLOWED_ATTR: ["href", "name", "target", "src", "class", "alt", "title"] // 必须允许 class
+    ADD_ATTR: [
+      "xmlns",
+      "display",
+      "mathvariant",
+      "encoding",
+      "class",
+      "style",
+      "id",
+      "d",
+      "x",
+      "y",
+      "x1",
+      "y1",
+      "x2",
+      "y2",
+      "width",
+      "height",
+      "viewBox",
+      "preserveAspectRatio"
+    ]
   });
-  return cleanHtml;
 });
 
 /**
@@ -239,7 +337,7 @@ const handleClick = async (e: MouseEvent) => {
 
   // 提取原始语言 (用于运行和下载扩展名)
   const langSpan = container.querySelector(".code-lang");
-  const lang = langSpan?.getAttribute("data-lang") || langSpan?.textContent?.trim().toLowerCase() || "txt";
+  const lang = langSpan?.getAttribute("data-lang") || "txt";
 
   if (action === "copy") {
     try {
@@ -545,5 +643,178 @@ html[data-theme="dark"] {
 }
 .code-block-container:first-child {
   margin-top: 0 !important;
+}
+
+.markdown-block .prose b,
+.markdown-block .prose strong {
+  font-weight: 700;
+}
+
+.markdown-block .prose i,
+.markdown-block .prose em {
+  font-style: italic;
+}
+
+.markdown-block .prose s,
+.markdown-block .prose del,
+.markdown-block .prose strike {
+  text-decoration: line-through;
+}
+
+.markdown-block .prose mark {
+  background-color: #ffe066;
+  color: #24292f;
+  padding: 0.1em 0.2em;
+  border-radius: 4px;
+  font-weight: 600;
+}
+
+/* 恢复表格样式 */
+.markdown-block .prose table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1em 0;
+}
+
+.markdown-block .prose th,
+.markdown-block .prose td {
+  border: 1px solid var(--code-border);
+  padding: 8px 12px;
+}
+
+.markdown-block .prose th {
+  background-color: rgba(128, 128, 128, 0.1);
+  font-weight: 600;
+}
+
+/* 恢复引用块样式 */
+.markdown-block .prose blockquote {
+  border-left: 4px solid var(--hl-function);
+  padding-left: 1em;
+  margin: 1em 0;
+  color: var(--hl-comment);
+  background-color: rgba(128, 128, 128, 0.05);
+  padding-top: 0.5em;
+  padding-bottom: 0.5em;
+  border-radius: 0 4px 4px 0;
+}
+
+/* 无序/有序列表 */
+.markdown-block .prose ul {
+  list-style-type: disc;
+  padding-left: 1.5em;
+  margin: 0.8em 0;
+}
+.markdown-block .prose ol {
+  list-style-type: decimal;
+  padding-left: 1.5em;
+  margin: 0.8em 0;
+}
+.markdown-block .prose li > p {
+  margin: 0.2em 0;
+}
+
+/* 任务列表 (Task List) */
+.markdown-block .prose ul.contains-task-list {
+  list-style-type: none;
+  padding-left: 0.5em;
+}
+.markdown-block .prose .task-list-item {
+  display: flex;
+  align-items: flex-start; /* 顶部对齐，防止多行文本时复选框居中 */
+  gap: 0.5em;
+  margin-bottom: 0.4em;
+}
+.markdown-block .prose .task-list-item input[type="checkbox"] {
+  margin-top: 0.3em; /* 微调复选框位置，使其与第一行文字对齐 */
+  cursor: pointer;
+  accent-color: var(--hl-function);
+}
+
+/* 定义列表 (Deflist) */
+.markdown-block .prose dl {
+  margin: 1em 0;
+}
+.markdown-block .prose dt {
+  font-weight: 700;
+  margin-top: 0.8em;
+  color: var(--code-text);
+}
+.markdown-block .prose dd {
+  margin-left: 1.5em;
+  margin-bottom: 0.5em;
+  color: var(--hl-comment);
+}
+.markdown-block .prose dd > p {
+  margin: 0.2em 0;
+}
+
+/* 脚注 (Footnotes) */
+.markdown-block .prose hr + .footnotes-sep {
+  display: none;
+}
+.markdown-block .prose .footnotes-sep {
+  margin-top: 2em;
+  margin-bottom: 1em;
+  border: 0;
+  border-top: 1px dashed var(--code-border); /* 用虚线作为脚注分割线，更具学术高级感 */
+}
+.markdown-block .prose .footnotes {
+  font-size: 0.85em;
+  opacity: 0.85;
+}
+.markdown-block .prose .footnotes-list {
+  padding-left: 1.5em;
+}
+.markdown-block .prose .footnote-item p {
+  margin: 0.2em 0; /* 让脚注文字排版更紧凑 */
+}
+.markdown-block .prose .footnote-backref {
+  text-decoration: none;
+  margin-left: 0.5em;
+  font-family: monospace;
+}
+
+.markdown-block .prose sub {
+  font-size: 0.75em;
+  line-height: 0;
+  vertical-align: sub;
+}
+
+.markdown-block .prose sup {
+  font-size: 0.75em;
+  line-height: 0;
+  vertical-align: super;
+}
+
+.markdown-block .prose .katex * {
+  box-sizing: content-box !important;
+  line-height: normal !important;
+  border-color: currentColor !important;
+}
+
+/* 确保 SVG 符号（如根号、帽子）的颜色与正文完全一致 */
+.markdown-block .prose .katex svg {
+  fill: currentColor !important;
+  stroke: currentColor !important;
+}
+
+/* 强制使用数学专用字体 */
+.markdown-block .prose .katex {
+  font-family: KaTeX_Main, "Times New Roman", serif !important;
+  font-size: 1.1em;
+}
+
+/* 块级公式居中与外边距 */
+.markdown-block .prose .katex-display {
+  margin: 1.2em 0;
+  padding: 0.5em 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.markdown-block .prose .katex-display > .katex {
+  display: inline-block;
+  text-align: center;
 }
 </style>

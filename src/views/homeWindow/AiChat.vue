@@ -432,6 +432,60 @@ const simulatePhase2 = (aiMsg: MessageData) => {
   chatStatus.value = "streaming";
 
   const toolResult = aiMsg.toolCalls![0].status;
+  // 测试数据
+  //   `我已经成功读取了本地文件！为了全面测试最新的渲染引擎，我整理了以下**全类型富文本报告** :rocket:：
+
+  // ### 1. 扩展排版语法
+  // 这是一段包含**加粗**、*斜体*、~~删除线~~，以及特定的 ==高亮显示 (Mark)== 的文本。
+  // 利用上下标插件，我们可以写出化学式 H~2~O 和方程式 $X^2$（或纯文本的 2^10^）。
+  // 名词缩写测试：把鼠标悬停在下方的 HTML 上试试看。
+  // *[HTML]: Hyper Text Markup Language (超文本标记语言)
+
+  // ### 2. 定义列表 (Deflist)
+  // 前端工程化
+  // : 构建现代 Web 系统的规范与实践。
+  // : 包含 TypeScript, Vite, Vue 等技术栈。
+
+  // ### 3. GFM 任务列表与表格
+  // - [x] 迁移到 \`markdown-it\` 解析引擎
+  // - [x] 修复 DOMPurify 清洗 MathML 的问题
+  // - [ ] 测试所有插件的边界兼容性
+
+  // | 模块名称 | 语言 | 状态 | 耗时评估 |
+  // | :--- | :---: | :---: | ---: |
+  // | 核心解析器 | TypeScript | 🟢 稳定 | ~20ms |
+  // | 样式与动画 | CSS/Sass | 🟡 调优中 | ~15ms |
+
+  // ### 4. 高阶数学公式 (KaTeX)
+  // 物理学中最著名的质能方程是 $E = mc^2$。下面是更复杂的**薛定谔方程**块级渲染：
+  // $$
+  // i\\hbar\\frac{\\partial}{\\partial t}\\Psi(\\mathbf{r},t) = \\hat{H}\\Psi(\\mathbf{r},t)
+  // $$
+
+  // ### 5. 跨语言代码高亮测试
+  // 这是带有你自定义 Header 和操作按钮的 Vue 组件代码：
+  // \`\`\`vue
+  // <template>
+  //   <div class="hello">{{ msg }}</div>
+  // </template>
+  // <script setup lang="ts">
+  // import { ref } from 'vue';
+  // const msg = ref('Hello Tauri & Vue!');
+  // <\/script>
+  // \`\`\`
+
+  // 以及系统底层的 Rust 代码块：
+  // \`\`\`rust
+  // fn main() {
+  //     let target = "World";
+  //     println!("Hello, {}! 🦀", target);
+  // }
+  // \`\`\`
+
+  // > **💡 智能提示**：您可以直接点击上方代码块的**运行**按钮来进行预览，或者使用**复制/下载**功能。相关参考信息见文末脚注[^1]。
+
+  // ---
+  // [^1]: 这是一个 Footnote (脚注) 测试。通常用于引用文献或补充详细的长文本解释。`
   const contentText =
     toolResult === "success"
       ? "我已经成功读取了本地文件！根据文件内容，你当前有以下待办事项：\n\n1. **M4-01**: 数据库设计\n2. **M4-02**: 后端 API 对接\n\n请问需要我帮忙写代码吗？\n```python\nprint('hello world')\n```"
