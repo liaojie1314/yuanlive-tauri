@@ -50,7 +50,8 @@
     "msg": {
       "transcribeSuccess": "Transcription success",
       "noClearSound": "No clear sound detected",
-      "modelLoadOrTranscribeFailed": "Model load or transcription failed, please check network (first run need to download model)"
+      "modelLoadOrTranscribeFailed": "Model load or transcription failed, please check network (first run need to download model)",
+      "transcribeFailed": "Transcription failed"
     }
   },
   "fileUpload": {
@@ -208,6 +209,10 @@
     "voiceMessage": "Voice message",
     "goSetting": "Go to setting to add model",
     "shortcut": "Shortcut",
+    "referenceContext": "Context",
+    "noRelatedFiles": "No related files found",
+    "selectConfirm": "↑↓ Select, Enter Confirm",
+    "clipboard": "System Clipboard",
     "modelType": {
       "auto": "Auto",
       "text": "Text",
@@ -219,7 +224,8 @@
       "previewFailed": "Failed to preview file",
       "maxAttachments": "Max {count} attachments",
       "remainingAttachments": "Max {count} remaining attachments",
-      "fileCountExceeded": "File count exceeded max limit"
+      "fileCountExceeded": "File count exceeded max limit",
+      "clipboardReadFailed": "Failed to read clipboard content"
     }
   },
   "trendingPrompts": {

@@ -50,7 +50,8 @@
     "msg": {
       "transcribeSuccess": "转写成功",
       "noClearSound": "未识别到清晰的声音",
-      "modelLoadOrTranscribeFailed": "模型加载或转写失败，请检查网络（初次运行需下载模型）"
+      "modelLoadOrTranscribeFailed": "模型加载或转写失败，请检查网络（初次运行需下载模型）",
+      "transcribeFailed": "模型转写失败"
     }
   },
   "fileUpload": {
@@ -180,6 +181,10 @@
     "voiceMessage": "语音消息",
     "goSetting": "前往设置添加模型",
     "shortcut": "快捷指令",
+    "referenceContext": "引用上下文",
+    "noRelatedFiles": "未找到相关文件",
+    "selectConfirm": "↑↓ 选择, Enter 确认",
+    "clipboard": "系统剪贴板",
     "modelType": {
       "auto": "自动",
       "text": "文字",
@@ -191,7 +196,8 @@
       "previewFailed": "无法预览该文件",
       "maxAttachments": "最多只能上传{count}个文件",
       "remainingAttachments": "最多只能再上传{count}个文件",
-      "fileCountExceeded": "文件数量已达上限"
+      "fileCountExceeded": "文件数量已达上限",
+      "clipboardReadFailed": "无法读取剪贴板内容"
     }
   },
   "trendingPrompts": {

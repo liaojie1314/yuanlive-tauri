@@ -41,28 +41,74 @@
     <div v-resize="handleResize" class="input-container relative m-1 flex flex-col rounded-lg bg-[--input-area-bg] p-2">
       <transition name="fade-slide">
         <div
-          v-if="showSlashMenu"
-          class="absolute bottom-full left-0 mb-2 w-72 rounded-xl border border-[--line-color] bg-[--bg-popover] p-1.5 shadow-lg z-50 flex flex-col gap-1">
-          <div class="px-2 py-1 text-xs text-[--user-text-color] select-none">
-            {{ t("components.messageInput.shortcut") }}
+          v-if="showMentionMenu"
+          class="absolute bottom-full left-0 mb-2 w-64 rounded-xl border border-[--line-color] bg-[--bg-popover] py-1.5 shadow-lg z-50 flex flex-col gap-1">
+          <div class="px-3 py-1 text-xs text-[--user-text-color] select-none flex justify-between">
+            <span>{{ t("components.messageInput.referenceContext") }}</span>
+            <span class="opacity-50">{{ t("components.messageInput.selectConfirm") }}</span>
           </div>
-          <div
-            v-for="cmd in slashCommands"
-            class="flex cursor-pointer items-center gap-3 rounded-lg px-2 py-2 transition-colors hover:bg-[--tray-hover]"
-            :key="cmd.label"
-            @click="applySlashCommand(cmd.prompt)">
+
+          <div v-if="filteredMentions.length === 0" class="px-2 py-3 text-center text-xs text-[--user-text-color]">
+            {{ t("components.messageInput.noRelatedFiles") }}
+          </div>
+
+          <n-scrollbar style="max-height: 200px" class="px-1.5 w-full box-border">
             <div
-              class="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-[--btn-secondary-bg] text-[--text-color]">
-              <i-mdi-translate v-if="cmd.icon === 'translate'" class="h-4 w-4" />
-              <i-mdi-code-tags v-else-if="cmd.icon === 'code'" class="h-4 w-4" />
-              <i-mdi-file-document-edit-outline v-else-if="cmd.icon === 'summarize'" class="h-4 w-4" />
-              <i-mdi-lightning-bolt-outline v-else class="h-4 w-4" />
+              v-for="(item, index) in filteredMentions"
+              class="flex w-full min-w-0 cursor-pointer items-center gap-3 rounded-lg px-2 py-2 transition-colors box-border"
+              :id="`menu-item-${index}`"
+              :key="item.name"
+              :class="selectedMenuIndex === index ? 'bg-[--tray-hover]' : 'hover:bg-[--tray-hover]'"
+              @click="selectMention(item)">
+              <div
+                class="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-[--btn-secondary-bg] text-[--text-color]">
+                <i-mdi-clipboard-text-outline v-if="item.type === 'clipboard'" class="h-4 w-4" />
+
+                <img
+                  v-else
+                  class="h-4 w-4 object-contain"
+                  :src="`/file/${getFileSuffix(item.name || '')}.svg`"
+                  @error="(e) => ((e.target as HTMLImageElement).src = '/file/unknown.svg')" />
+              </div>
+              <div class="flex flex-1 flex-col min-w-0 overflow-hidden">
+                <span class="truncate text-sm font-medium text-[--text-color]">{{ item.name }}</span>
+                <span class="truncate text-[10px] text-[--user-text-color]">{{ item.path }}</span>
+              </div>
             </div>
-            <div class="flex flex-col min-w-0 overflow-hidden">
-              <span class="text-sm font-medium text-[--text-color]">{{ cmd.label }}</span>
-              <span class="truncate text-xs text-[--user-text-color]">{{ cmd.prompt }}</span>
-            </div>
+          </n-scrollbar>
+        </div>
+      </transition>
+
+      <transition name="fade-slide">
+        <div
+          v-if="showSlashMenu"
+          class="absolute bottom-full left-0 mb-2 w-72 rounded-xl border border-[--line-color] bg-[--bg-popover] py-1.5 shadow-lg z-50 flex flex-col gap-1">
+          <div class="px-3 py-1 text-xs text-[--user-text-color] select-none flex justify-between">
+            <span>{{ t("components.messageInput.shortcut") }}</span>
+            <span class="opacity-50">{{ t("components.messageInput.selectConfirm") }}</span>
           </div>
+
+          <n-scrollbar style="max-height: 240px" class="px-1.5 w-full box-border">
+            <div
+              v-for="(cmd, index) in slashCommands"
+              class="flex w-full min-w-0 cursor-pointer items-center gap-3 rounded-lg px-2 py-2 transition-colors box-border"
+              :id="`menu-item-${index}`"
+              :key="cmd.label"
+              :class="selectedMenuIndex === index ? 'bg-[--tray-hover]' : 'hover:bg-[--tray-hover]'"
+              @click="applySlashCommand(cmd.prompt)">
+              <div
+                class="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-[--btn-secondary-bg] text-[--text-color]">
+                <i-mdi-translate v-if="cmd.icon === 'translate'" class="h-4 w-4" />
+                <i-mdi-code-tags v-else-if="cmd.icon === 'code'" class="h-4 w-4" />
+                <i-mdi-file-document-edit-outline v-else-if="cmd.icon === 'summarize'" class="h-4 w-4" />
+                <i-mdi-lightning-bolt-outline v-else class="h-4 w-4" />
+              </div>
+              <div class="flex flex-1 flex-col min-w-0 overflow-hidden">
+                <span class="truncate text-sm font-medium text-[--text-color]">{{ cmd.label }}</span>
+                <span class="truncate text-xs text-[--user-text-color]">{{ cmd.prompt }}</span>
+              </div>
+            </div>
+          </n-scrollbar>
         </div>
       </transition>
       <n-input
@@ -76,7 +122,7 @@
         :autosize="{ minRows: 1, maxRows: 5 }"
         :bordered="false"
         :show-count="false"
-        @keydown.enter="handleEnterKey"
+        @keydown="handleKeydown"
         @paste="handlePaste" />
 
       <div v-if="!isVoiceMode" class="mt-3 flex-between-center border-t border-[--line-color] pt-2">
@@ -249,6 +295,19 @@ const slashCommands = [
   { icon: "summarize", label: "长文总结", prompt: "请帮我提取以下内容的重点，分点进行总结：" },
   { icon: "prompt", label: "润色优化", prompt: "请帮我重新润色以下文案，使其更加专业、正式：" }
 ];
+// 模拟本地工作区文件列表
+const availableContexts = [
+  { name: "main.ts", path: "src/main.ts", icon: "i-mdi-language-typescript", type: "file" },
+  { name: "App.vue", path: "src/App.vue", icon: "i-mdi-vuejs", type: "file" },
+  { name: "package.json", path: "package.json", icon: "i-mdi-code-json", type: "file" },
+  { name: "api.ts", path: "src/utils/api.ts", icon: "i-mdi-api", type: "file" },
+  {
+    name: t("components.messageInput.clipboard"),
+    path: "clipboard",
+    icon: "i-mdi-clipboard-text-outline",
+    type: "clipboard"
+  }
+];
 
 const messageText = ref("");
 const attachments = ref<Attachment[]>([]);
@@ -259,7 +318,21 @@ const showButtonText = ref(true);
 const selectedModel = ref("auto");
 const showCameraModal = ref(false);
 const isVoiceMode = ref(false);
+// @ 引用菜单状态
+const showMentionMenu = ref(false);
+const mentionKeyword = ref("");
+// 记录当前上下键选中的菜单项索引
+const selectedMenuIndex = ref(0);
+// 记录最近发送的文本消息（最多存 20 条）
+const sentHistory = ref<string[]>([]);
+// 当前在历史记录中回溯的索引 (-1 表示没在回溯)
+const historyIndex = ref(-1);
 
+// 根据用户 @ 后面输入的关键词进行实时过滤
+const filteredMentions = computed(() => {
+  if (!mentionKeyword.value) return availableContexts;
+  return availableContexts.filter((item) => item.name.toLowerCase().includes(mentionKeyword.value.toLowerCase()));
+});
 const showSlashMenu = computed(() => {
   return messageText.value === "/";
 });
@@ -296,6 +369,149 @@ const modelOptions = computed(() => [
   },
   { label: t("components.messageInput.goSetting"), value: "settings" }
 ]);
+
+/** 滚动到当前选中的元素（保证键盘下推时元素不会跑出视野） */
+const scrollToSelected = () => {
+  nextTick(() => {
+    const el = document.getElementById(`menu-item-${selectedMenuIndex.value}`);
+    if (el) {
+      // block: 'nearest' 保证滚动条用最小的移动距离让元素可见
+      el.scrollIntoView({ block: "nearest" });
+    }
+  });
+};
+
+/**
+ * 接管输入框的全局键盘事件
+ * @param e 键盘事件
+ */
+const handleKeydown = (e: KeyboardEvent) => {
+  // 输入法防误触！如果是处于拼音输入法组合状态，直接放行，绝不拦截回车
+  if (e.isComposing) return;
+  const isMenuVisible = showMentionMenu.value || showSlashMenu.value;
+
+  // 如果菜单正在显示，优先接管 上下、回车、ESC 键
+  if (isMenuVisible) {
+    // 获取当前显示列表的长度，用于计算上下切换的索引
+    const listLength = showMentionMenu.value ? filteredMentions.value.length : slashCommands.length;
+
+    if (e.key === "ArrowDown") {
+      e.preventDefault(); // 阻止输入框内光标移动
+      selectedMenuIndex.value = (selectedMenuIndex.value + 1) % listLength;
+      scrollToSelected();
+      return;
+    }
+
+    if (e.key === "ArrowUp") {
+      e.preventDefault();
+      selectedMenuIndex.value = (selectedMenuIndex.value - 1 + listLength) % listLength;
+      scrollToSelected();
+      return;
+    }
+
+    if (e.key === "Enter") {
+      e.preventDefault(); // 阻止回车发送消息或换行
+      if (showMentionMenu.value) {
+        const selectedItem = filteredMentions.value[selectedMenuIndex.value];
+        if (selectedItem) selectMention(selectedItem);
+      } else if (showSlashMenu.value) {
+        const selectedItem = slashCommands[selectedMenuIndex.value];
+        if (selectedItem) applySlashCommand(selectedItem.prompt);
+      }
+      return;
+    }
+
+    if (e.key === "Escape") {
+      e.preventDefault();
+      showMentionMenu.value = false;
+      if (showSlashMenu.value) {
+        messageText.value = ""; // 因为 slash 菜单是由文本 "/" 触发的，清空即关闭
+      }
+      return;
+    }
+    return; // 菜单显示时，直接 return 阻断后续的历史回溯
+  }
+
+  // 智能退格键！当没有文字时，按退格键删掉最后一个附件
+  if (e.key === "Backspace" && messageText.value === "" && attachments.value.length > 0) {
+    e.preventDefault();
+    attachments.value.pop(); // 弹出最后一个附件
+    return;
+  }
+
+  // 历史记录回溯 (ArrowUp)
+  // 触发条件：没有显示菜单 + (输入框为空 或者 正在回溯中)
+  if (e.key === "ArrowUp" && (messageText.value === "" || historyIndex.value !== -1)) {
+    e.preventDefault();
+    if (historyIndex.value < sentHistory.value.length - 1) {
+      historyIndex.value++;
+      messageText.value = sentHistory.value[historyIndex.value];
+    }
+    return;
+  }
+
+  // 历史记录前进 (ArrowDown)
+  if (e.key === "ArrowDown" && historyIndex.value !== -1) {
+    e.preventDefault();
+    if (historyIndex.value > 0) {
+      historyIndex.value--;
+      messageText.value = sentHistory.value[historyIndex.value];
+    } else {
+      // 退回最底部了，清空输入框
+      historyIndex.value = -1;
+      messageText.value = "";
+    }
+    return;
+  }
+
+  // 如果菜单没显示，且按下的是回车键，则走正常的发送逻辑
+  if (e.key === "Enter") {
+    handleEnterKey(e);
+  }
+};
+
+/**
+ * 处理 @ 引用点击事件
+ * @param item 选中的引用项
+ */
+const selectMention = async (item: any) => {
+  // 1. 把输入框里刚才打的 @xxx 给删掉
+  messageText.value = messageText.value.replace(/@([^\s]*)$/, "");
+
+  // 2. 如果选的是剪贴板，特殊处理：读取剪贴板文字直接塞进输入框
+  if (item.type === "clipboard") {
+    try {
+      const clipboardText = await navigator.clipboard.readText();
+      messageText.value += clipboardText;
+    } catch (e) {
+      window.$message?.warning(t("components.messageInput.msg.clipboardReadFailed"));
+    }
+  }
+  // 3. 如果选的是文件，完美复用你之前的附件系统！直接变成文件卡片！
+  else {
+    // 检查是否已经添加过，防止重复添加
+    const exists = attachments.value.find((a) => a.name === item.name);
+    if (!exists) {
+      if (attachments.value.length >= maxAttachments) {
+        window.$message?.warning(t("components.messageInput.msg.maxAttachments", { count: maxAttachments }));
+      } else {
+        attachments.value.push({
+          type: "file",
+          path: item.path, // 真实的物理路径
+          name: item.name
+        });
+      }
+    }
+  }
+
+  showMentionMenu.value = false;
+
+  // 选完后自动让输入框重新聚焦
+  nextTick(() => {
+    const inputEl = document.querySelector(".input-container textarea") as HTMLTextAreaElement;
+    if (inputEl) inputEl.focus();
+  });
+};
 
 /**
  * 应用快捷指令
@@ -579,8 +795,17 @@ const sendMessage = () => {
 
   emit("send-message", finalMessage);
 
+  // 将本次发送的纯文本存入历史记录（排除全空和连续重复的内容）
+  if (text && sentHistory.value[0] !== text) {
+    sentHistory.value.unshift(text); // 插到最前面
+    if (sentHistory.value.length > 20) {
+      sentHistory.value.pop(); // 限制最多存 20 条
+    }
+  }
+
   messageText.value = "";
   attachments.value = [];
+  historyIndex.value = -1; // 发送完毕，重置回溯索引
   // 清除草稿
   localStorage.removeItem(DRAFT_KEY);
 };
@@ -727,6 +952,23 @@ const handleFillInput = (text: string) => {
     }
   });
 };
+
+// 监听菜单状态或搜索词的变化，每次变化时重置选中的索引为 0
+watch([showMentionMenu, showSlashMenu, filteredMentions], () => {
+  selectedMenuIndex.value = 0;
+});
+
+// 监听输入框内容，判断是否唤起 @ 菜单
+watch(messageText, (newVal) => {
+  // 匹配以 @ 开头，且后面跟着非空字符（不含空格）的字符串，直到光标末尾
+  const match = newVal.match(/@([^\s]*)$/);
+  if (match) {
+    showMentionMenu.value = true;
+    mentionKeyword.value = match[1]; // 提取 @ 后面的搜索词
+  } else {
+    showMentionMenu.value = false;
+  }
+});
 
 watch(messageText, (newVal) => {
   if (newVal.trim()) {

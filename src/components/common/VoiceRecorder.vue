@@ -13,8 +13,12 @@
         </div>
 
         <div v-if="isRecording" class="status-recording">
-          <div class="recording-animation">
-            <div class="pulse-dot"></div>
+          <div class="voice-wave-animation">
+            <div class="wave-bar"></div>
+            <div class="wave-bar"></div>
+            <div class="wave-bar"></div>
+            <div class="wave-bar"></div>
+            <div class="wave-bar"></div>
           </div>
           <span>{{ formatTime(recordingTime) }} {{ t("components.voiceRecorder.recording") }}</span>
         </div>
@@ -104,8 +108,8 @@
 import { useI18n } from "vue-i18n";
 
 import { MittEnum } from "@/enums";
-import { useMitt } from "@/hooks/useMitt";
-import { useVoiceRecordRust } from "@/hooks/useVoiceRecordRust";
+import { useMitt } from "@/hooks/useMitt.ts";
+import { useVoiceRecordRust } from "@/hooks/useVoiceRecordRust.ts";
 import { remove } from "@tauri-apps/plugin-fs";
 
 const { t } = useI18n();
@@ -183,7 +187,7 @@ const handleTranscribe = async () => {
     const worker = initWhisperWorker();
 
     worker.onmessage = (e) => {
-      const { status, text, error } = e.data;
+      const { status, text } = e.data;
 
       if (status === "loading") {
         console.log("Whisper: 正在加载模型...");
@@ -200,7 +204,7 @@ const handleTranscribe = async () => {
         }
         isTranscribing.value = false;
       } else if (status === "error") {
-        window.$message?.error("模型转写失败: " + error);
+        window.$message?.error(t("components.voiceRecorder.msg.transcribeFailed"));
         isTranscribing.value = false;
       }
     };
@@ -370,10 +374,6 @@ onUnmounted(() => {
 
     .recording-animation {
       position: relative;
-      .pulse-dot {
-        @apply size-8px bg-#13987f rounded-full;
-        animation: pulse 1.5s infinite;
-      }
     }
   }
 
@@ -469,15 +469,51 @@ onUnmounted(() => {
   }
 }
 
-@keyframes pulse {
+.voice-wave-animation {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  height: 14px;
+
+  .wave-bar {
+    width: 3px;
+    background-color: #13987f;
+    border-radius: 2px;
+    animation: waveform 1s ease-in-out infinite;
+  }
+
+  /* 给不同柱子设置不同的延迟和高度缩放，形成起伏不定的自然声波效果 */
+  .wave-bar:nth-child(1) {
+    animation-delay: 0s;
+    height: 60%;
+  }
+  .wave-bar:nth-child(2) {
+    animation-delay: 0.2s;
+    height: 100%;
+  }
+  .wave-bar:nth-child(3) {
+    animation-delay: 0.4s;
+    height: 40%;
+  }
+  .wave-bar:nth-child(4) {
+    animation-delay: 0.1s;
+    height: 80%;
+  }
+  .wave-bar:nth-child(5) {
+    animation-delay: 0.3s;
+    height: 50%;
+  }
+}
+
+@keyframes waveform {
   0%,
   100% {
-    opacity: 1;
-    transform: scale(1);
+    transform: scaleY(0.5);
+    opacity: 0.8;
   }
   50% {
-    opacity: 0.5;
-    transform: scale(1.2);
+    transform: scaleY(1);
+    opacity: 1;
   }
 }
 
