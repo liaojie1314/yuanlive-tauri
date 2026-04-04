@@ -33,11 +33,21 @@ if (process.env.NODE_ENV === "development") {
 }
 
 const app = createApp(App);
-app.use(router).use(pinia).use(setupI18n).directive("resize", vResize).mount("#app");
-app.config.errorHandler = (err) => {
-  if (err instanceof AppException) {
-    window.$message.error(err.message);
-    return;
-  }
-  throw err;
-};
+
+async function bootstrap() {
+  app.use(pinia);
+  app.directive("resize", vResize);
+  await setupI18n(app);
+  app.use(router);
+  await router.isReady();
+  app.config.errorHandler = (err) => {
+    if (err instanceof AppException) {
+      window.$message.error(err.message);
+      return;
+    }
+    throw err;
+  };
+  app.mount("#app");
+}
+
+bootstrap();

@@ -10,6 +10,9 @@ import {
 } from "vue-router";
 
 import { TauriCommandEnum } from "@/enums";
+import MobileLogin from "#/views/MobileLogin.vue";
+import Splashscreen from "#/views/Splashscreen.vue";
+import MobileForgetPassword from "#/views/MobileForgetPassword.vue";
 
 /**! 创建窗口后再跳转页面就会导致样式没有生效所以不能使用懒加载路由的方式，有些页面需要快速响应的就不需要懒加载 */
 const { BASE_URL } = import.meta.env;
@@ -26,17 +29,17 @@ const getMobileRoutes = (): Array<RouteRecordRaw> => [
   {
     path: "/mobile/login",
     name: "mobileLogin",
-    component: () => import("@/mobile/views/MobileLogin.vue")
+    component: MobileLogin
   },
   {
     path: "/mobile/forgetPassword",
     name: "mobileForgetPassword",
-    component: () => import("@/mobile/views/MobileForgetPassword.vue")
+    component: MobileForgetPassword
   },
   {
     path: "/mobile/splashscreen",
     name: "splashscreen",
-    component: () => import("@/mobile/views/Splashscreen.vue")
+    component: Splashscreen
   },
   {
     path: "/mobile/home",
@@ -253,6 +256,22 @@ const getDesktopRoutes = (): Array<RouteRecordRaw> => [
     path: "/modal-remoteLogin",
     name: "modal-remoteLogin",
     component: () => import("@/views/loginWindow/RemoteLoginModal.vue")
+  },
+  // plugins
+  {
+    path: "/reader",
+    name: "reader",
+    component: () => import("@/plugins/reader/Reader.vue")
+  },
+  {
+    path: "/library",
+    name: "library",
+    component: () => import("@/plugins/reader/Library.vue")
+  },
+  {
+    path: "/drawio",
+    name: "drawio",
+    component: () => import("@/plugins/drawio/index.vue")
   }
 ];
 

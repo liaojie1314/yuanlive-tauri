@@ -151,8 +151,8 @@ export async function loadLanguage(lang: Locale) {
 /**
  * Ensure that pinia is initialized first.
  */
-export const setupI18n = (app: App) => {
+export const setupI18n = async (app: App) => {
   app.use(i18n);
-  loadLanguage("zh-CN");
+  await loadLanguage("zh-CN");
   return i18n;
 };
