@@ -167,6 +167,10 @@ export enum TauriCommandEnum {
   WS_IS_CONNECTED = "ws_is_connected",
   // 发送消息
   WS_SEND_MESSAGE = "ws_send_message",
+  // 解析漫画目录
+  PARSE_COMIC_DIRECTORY = "parse_comic_directory",
+  // 扫描漫画库
+  SCAN_COMIC_LIBRARY = "scan_comic_library",
   /** desktop专属 */
   // 推送窗口数据
   PUSH_WINDOW_PAYLOAD = "push_window_payload",

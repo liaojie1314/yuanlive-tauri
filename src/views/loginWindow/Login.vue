@@ -242,8 +242,8 @@ const MAX_BOTTOM_TEXT_LEN = 6;
 const timerWorker = new Worker(new URL("@/workers/timer.worker.ts", import.meta.url));
 
 // 输入框占位符
-const accountPH = ref(t("auth.input.account.placeholder"));
-const passwordPH = ref(t("auth.input.pass.placeholder"));
+const accountPH = computed(() => t("auth.input.account.placeholder"));
+const passwordPH = computed(() => t("auth.input.pass.placeholder"));
 // 协议
 const protocol = ref(true);
 const moreShow = ref(false);
@@ -330,15 +330,6 @@ watchEffect(
 watch([driverSteps, driverConfig], ([steps, config]) => {
   reinitialize(steps, config);
 });
-
-// 网络连接状态变化时，更新登录按钮状态
-watch(
-  () => isOnline,
-  (newVal) => {
-    loginDisabled.value = !newVal;
-    loginText.value = newVal ? t("auth.button.login.default") : t("auth.button.login.networkError");
-  }
-);
 
 // 监听 Worker 消息
 timerWorker.onmessage = (e) => {

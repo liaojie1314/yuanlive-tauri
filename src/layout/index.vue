@@ -46,7 +46,8 @@ const isVideoUploadOpen = ref(false);
 const requiresInitialSync = ref(true);
 const loadingPercentage = ref(10);
 const isDraggingFiles = ref(false);
-const loadingText = ref("正在加载应用...");
+const loadingTextKey = ref("home.index.loading");
+const loadingText = computed(() => t(loadingTextKey.value));
 // 记录首次登录状态，避免重复阻塞首屏
 const shouldBlockInitialRender = computed(() => requiresInitialSync.value && firstEnter.value);
 const { overlayVisible, markAsyncLoaded } = useOverlayController({
@@ -59,7 +60,7 @@ const { overlayVisible, markAsyncLoaded } = useOverlayController({
 // 修改异步组件的加载配置 - 优化加载性能
 const AsyncLeft = defineAsyncComponent({
   loader: async () => {
-    loadingText.value = "正在加载左侧面板...";
+    loadingTextKey.value = "home.index.loadingLeftPanel";
     const comp = await import("./left/index.vue");
     loadingPercentage.value = 50;
     markAsyncLoaded();
@@ -71,7 +72,7 @@ const AsyncLeft = defineAsyncComponent({
 
 const AsyncRight = defineAsyncComponent({
   loader: async () => {
-    loadingText.value = "正在加载右侧面板...";
+    loadingTextKey.value = "home.index.loadingRightPanel";
     const comp = await import("./right/index.vue");
     loadingPercentage.value = 100;
     markAsyncLoaded();

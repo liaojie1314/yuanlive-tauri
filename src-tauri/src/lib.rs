@@ -315,6 +315,7 @@ fn get_invoke_handlers() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Se
         fs_create_dir, fs_get_file_info, fs_list_dir, fs_move_file, fs_read_file,
         fs_read_file_lines, fs_search_file, fs_write_file,
     };
+    use crate::command::reader_command::{parse_comic_directory, scan_comic_library};
     use crate::command::request_command::{login_command, request_command};
     use crate::command::setting_command::{get_settings, update_settings};
     use crate::command::token_command::{get_token, remove_token, update_token};
@@ -407,6 +408,9 @@ fn get_invoke_handlers() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Se
         screenshot,
         #[cfg(desktop)]
         set_height,
+        // 漫画目录解析
+        parse_comic_directory,
+        scan_comic_library,
         #[cfg(desktop)]
         toggle_system_audio_listen,
         #[cfg(desktop)]

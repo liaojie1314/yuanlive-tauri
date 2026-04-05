@@ -41,8 +41,18 @@ export function useLogin() {
   const { isOnline } = useNetwork();
   const loading = ref(false);
 
+  const loginStatus = ref<"idle" | "loading" | "success">("idle");
   // 登录按钮的文本内容
-  const loginText = ref(isOnline.value ? t("auth.button.login.default") : t("auth.button.login.networkError"));
+  const loginText = computed(() => {
+    if (loginStatus.value === "loading") {
+      return t("auth.status.loggingIn");
+    }
+    if (loginStatus.value === "success") {
+      return t("auth.status.successRedirect");
+    }
+    // idle 状态下，根据网络状态返回
+    return isOnline.value ? t("auth.button.login.default") : t("auth.button.login.networkError");
+  });
   const loginDisabled = ref(!isOnline.value);
   // 账号信息
   const userInfo = ref({
@@ -86,13 +96,13 @@ export function useLogin() {
     // await openHomeWindow();
     // return;
     loading.value = true;
-    loginText.value = t("auth.status.loggingIn");
+    loginStatus.value = "loading";
     loginDisabled.value = true;
     const hasStoredUserInfo = !!userStore.userInfo?.email;
     if (auto && !hasStoredUserInfo) {
       loading.value = false;
       loginDisabled.value = false;
-      loginText.value = isOnline.value ? t("auth.button.login.default") : t("auth.button.login.networkError");
+      loginStatus.value = "idle";
       uiState.value = "manual";
       settingStore.setAutoLogin(false);
       info("自动登录信息已失效，请手动登录");
@@ -105,7 +115,7 @@ export function useLogin() {
     if (!account) {
       loading.value = false;
       loginDisabled.value = false;
-      loginText.value = isOnline.value ? t("auth.button.login.default") : t("auth.button.login.networkError");
+      loginStatus.value = "idle";
       if (auto) {
         uiState.value = "manual";
         settingStore.setAutoLogin(false);
@@ -133,7 +143,7 @@ export function useLogin() {
       .then(async (_) => {
         loginDisabled.value = true;
         loading.value = false;
-        loginText.value = t("auth.status.successRedirect");
+        loginStatus.value = "success";
         await userStore.getUserDetail();
         await webSocketRust.initConnect();
         await openHomeWindow();
@@ -143,12 +153,12 @@ export function useLogin() {
         window.$message.error(e);
         loading.value = false;
         loginDisabled.value = false;
-        loginText.value = t("auth.button.login.default");
+        loginStatus.value = "idle";
         // 如果是自动登录失败，切换到手动登录界面并重置按钮状态
         if (auto) {
           uiState.value = "manual";
           loginDisabled.value = false;
-          loginText.value = t("auth.button.login.default");
+          loginStatus.value = "idle";
           settingStore.setAutoLogin(false);
           // 自动填充之前尝试登录的账号信息到手动登录表单
           if (userStore.userInfo) {
