@@ -1,0 +1,49 @@
+{
+  "drawio": {
+    "loading": "正在初始化绘图引擎...",
+    "placeholder": "输入指令，例如：画一个 H5 端登录流程图...",
+    "generate": "生成图表",
+    "save": "保存图表",
+    "export": "导出图片",
+    "exportPNG": "导出PNG",
+    "unsavedWarning": "您的图表尚未保存。是否将当前进度暂存为草稿，以便下次打开时继续编辑？",
+    "discardAndExit": "放弃更改并退出",
+    "saveDraftAndExit": "暂存草稿并退出",
+    "msg": {
+      "loading": "AI 正在构思流程图...",
+      "success": "图表生成完毕！",
+      "error": "生成失败，请重试",
+      "saveSuccess": "文件保存成功！",
+      "saveError": "保存失败",
+      "exportSuccess": "成功导出 {name}！",
+      "exportError": "导出失败！",
+      "warningTitle": "未保存提示"
+    }
+  },
+  "reader": {
+    "library": "我的漫画",
+    "add": "添加漫画",
+    "empty": "书架空空如也，快去添加漫画吧！",
+    "importBatch": "导入漫画库 (包含多本漫画的文件夹)",
+    "addSingle": "添加单本漫画 (只包含当前漫画内容)",
+    "reading": "正在阅读:",
+    "selectComicFolder": "选择一本漫画的文件夹",
+    "unnamedComic": "未命名漫画",
+    "selectBatchFolder": "选择包含多本漫画的【根目录】",
+    "directory": "目录 ({count} 章)",
+    "loading": "正在拼命加载图片...",
+    "prevChapter": "上一章",
+    "nextChapter": "下一章",
+    "bottom": "到底啦",
+    "msg": {
+      "addSuccess": "添加成功",
+      "addExist": "该漫画已在书架中",
+      "addError": "添加失败",
+      "noComicFolder": "该目录下未发现任何包含图片的漫画文件夹",
+      "importSuccess": "成功导入 {count} 本漫画",
+      "importExist": "选定目录中的漫画均已在书架中",
+      "importError": "批量扫描漫画库失败",
+      "loadError": "漫画资源加载失败"
+    }
+  }
+}

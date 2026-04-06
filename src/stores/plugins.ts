@@ -1,3 +1,5 @@
+import { useI18n } from "vue-i18n";
+
 import { PluginEnum, StoresEnum } from "@/enums";
 
 export type Plugin = {
@@ -26,7 +28,50 @@ export type Plugin = {
 export const usePluginsStore = defineStore(
   StoresEnum.PLUGINS,
   () => {
-    const pluginsList = ref<Plugin[]>([]);
+    const { t } = useI18n();
+
+    const pluginsList = computed<Plugin[]>(() => [
+      {
+        icon: "bookmark",
+        url: "library",
+        state: PluginEnum.BUILTIN,
+        isAdd: true,
+        dot: false,
+        progress: 0,
+        size: {
+          width: 1000,
+          height: 600,
+          minWidth: 800,
+          minHeight: 520
+        },
+        window: {
+          resizable: true
+        },
+        miniShow: false,
+        title: t("home.plugins.comic"),
+        shortTitle: t("home.plugins.comicShortTitle")
+      },
+      {
+        icon: "layers",
+        url: "drawio",
+        state: PluginEnum.BUILTIN,
+        isAdd: true,
+        dot: false,
+        progress: 0,
+        size: {
+          width: 1240,
+          height: 800,
+          minWidth: 880,
+          minHeight: 600
+        },
+        window: {
+          resizable: true
+        },
+        miniShow: false,
+        title: t("home.plugins.drawio"),
+        shortTitle: t("home.plugins.drawioShortTitle")
+      }
+    ]);
     /** 插件内容 */
     const plugins = ref<Plugin[]>([]);
     /** 插件查看模式 */
@@ -122,6 +167,13 @@ export const usePluginsStore = defineStore(
       { deep: true, immediate: true }
     );
 
+    watch(
+      pluginsList,
+      (latest) => {
+        syncPluginsWithLocale(latest);
+      },
+      { deep: true }
+    );
     initStore();
 
     return {

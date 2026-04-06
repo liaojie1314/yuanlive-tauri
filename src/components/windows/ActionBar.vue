@@ -152,7 +152,8 @@ const {
   maxW = true,
   closeW = true,
   isDrag = true,
-  iconColor = ""
+  iconColor = "",
+  interceptClose = false
 } = defineProps<{
   minW?: boolean;
   maxW?: boolean;
@@ -161,7 +162,9 @@ const {
   proxy?: boolean;
   isDrag?: boolean;
   iconColor?: string;
+  interceptClose?: boolean;
 }>();
+const emitVue = defineEmits(["closeIntercepted"]);
 
 const { t } = useI18n();
 
@@ -239,6 +242,10 @@ const updateWindowMaximized = async () => {
 
 /** 处理关闭窗口事件 */
 const handleCloseWin = async () => {
+  if (interceptClose) {
+    emitVue("closeIntercepted");
+    return;
+  }
   if (appWindow.label === "home") {
     if (!tips.value.notTips) {
       tipsRef.show = true;

@@ -4,7 +4,10 @@
     "hotTags": "Hot Tags",
     "moreLive": "More Live",
     "parseDragFileFailed": "Failed to parse dragged files",
-    "unableParseDragFile": "Unable to parse dragged files"
+    "unableParseDragFile": "Unable to parse dragged files",
+    "loading": "Loading application...",
+    "loadingLeftPanel": "Loading left panel...",
+    "loadingRightPanel": "Loading right panel..."
   },
   "aiChat": {
     "selected": "Selected",
@@ -40,7 +43,7 @@
       "watchHistory": "history",
       "watchLater": "later",
       "myReservation": "reservation",
-      "aiNotes": "AINotes",
+      "aiNotes": "notes",
       "collectionFolder": "collection folder",
       "videos": "videos"
     }
@@ -65,6 +68,10 @@
     "pluginManage": "Plugin Management"
   },
   "plugins": {
+    "comic": "Comic Reader",
+    "comicShortTitle": "Reader",
+    "drawio": "Drawio",
+    "drawioShortTitle": "Drawio",
     "status": {
       "builtin": "Built-in",
       "uninstalling": "Uninstalling"

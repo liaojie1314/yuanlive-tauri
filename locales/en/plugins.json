@@ -1,0 +1,49 @@
+{
+  "drawio": {
+    "loading": "Initializing draw.io engine...",
+    "placeholder": "Input instructions, e.g. draw a H5 login flowchart...",
+    "generate": "Generate chart",
+    "save": "Save chart",
+    "export": "Export image",
+    "exportPNG": "Export PNG",
+    "unsavedWarning": "Your chart is not saved. Do you want to save it draft?",
+    "discardAndExit": "Discard changes",
+    "saveDraftAndExit": "Save draft",
+    "msg": {
+      "loading": "AI is thinking about the flowchart...",
+      "success": "Chart generated successfully!",
+      "error": "Chart generation failed, please try again later!",
+      "saveSuccess": "File saved successfully!",
+      "saveError": "Save failed",
+      "exportSuccess": "Successfully exported {name}!",
+      "exportError": "Export failed!",
+      "warningTitle": "Unsaved Warning"
+    }
+  },
+  "reader": {
+    "library": "My Comics",
+    "add": "Add Comic",
+    "empty": "Your library is empty, go add some comics!",
+    "importBatch": "Import comic library",
+    "addSingle": "Add single comic",
+    "reading": "Reading:",
+    "selectComicFolder": "Select a comic folder",
+    "unnamedComic": "Unnamed Comic",
+    "selectBatchFolder": "Select the root directory of the comic library",
+    "directory": "Directory ({count} chapters)",
+    "loading": "Loading images...",
+    "prevChapter": "Previous Chapter",
+    "nextChapter": "Next Chapter",
+    "bottom": "Bottom of the comic",
+    "msg": {
+      "addSuccess": "Add Success",
+      "addExist": "Comic already exists in your library",
+      "addError": "Add Error",
+      "noComicFolder": "No comic folder found in the selected directory",
+      "importSuccess": "Successfully imported {count} comics",
+      "importExist": "All comics in the selected directory already exist in your library",
+      "importError": "Failed to scan the comic library batch",
+      "loadError": "Failed to load comic resources"
+    }
+  }
+}
