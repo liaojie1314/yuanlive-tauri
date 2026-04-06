@@ -1,5 +1,20 @@
 # Changelog
 
+## <small>0.6.2 (2026-04-06)</small>
+
+* feat: :sparkles: commit emoji ([da56eb8](https://github.com/liaojie1314/yuanlive-tauri/commit/da56eb8))
+* feat: :sparkles: local voice2text ([bc06d8e](https://github.com/liaojie1314/yuanlive-tauri/commit/bc06d8e))
+* feat: :sparkles: reader command ([a243dd2](https://github.com/liaojie1314/yuanlive-tauri/commit/a243dd2))
+* feat(api): :sparkles: ai history api ([e53145e](https://github.com/liaojie1314/yuanlive-tauri/commit/e53145e))
+* feat(component): :sparkles: listen video and CC(local model) ([178859a](https://github.com/liaojie1314/yuanlive-tauri/commit/178859a))
+* feat(plugin): :sparkles: drawio and comic reader builtin plugin ([c312fcd](https://github.com/liaojie1314/yuanlive-tauri/commit/c312fcd))
+* feat(view): :sparkles: facial motion capture ([7d99d8c](https://github.com/liaojie1314/yuanlive-tauri/commit/7d99d8c))
+* feat(worker): :sparkles: whisper worker ([ef6909c](https://github.com/liaojie1314/yuanlive-tauri/commit/ef6909c))
+* docs: :memo: progress ([e73553d](https://github.com/liaojie1314/yuanlive-tauri/commit/e73553d))
+* fix: :bug: app view import ([40d9773](https://github.com/liaojie1314/yuanlive-tauri/commit/40d9773))
+* perf(component): :zap: markdown render ([111b83c](https://github.com/liaojie1314/yuanlive-tauri/commit/111b83c))
+* perf(component): :zap: messageInput ([b253d89](https://github.com/liaojie1314/yuanlive-tauri/commit/b253d89))
+
 ## <small>0.6.1 (2026-04-01)</small>
 
 * fix: :bug: update ([6aee333](https://github.com/liaojie1314/yuanlive-tauri/commit/6aee333))
