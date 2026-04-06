@@ -78,13 +78,13 @@ interface ComicMeta {
 }
 
 const CACHE_KEY = "comic-library";
-const addMenuOptions = [
-  { label: t("plugins.reader.importBatch"), key: "batch" },
-  { label: t("plugins.reader.addSingle"), key: "single" }
-];
 
 const comicList = ref<ComicMeta[]>([]);
 const loading = ref(false);
+const addMenuOptions = computed(() => [
+  { label: t("plugins.reader.importBatch"), key: "batch" },
+  { label: t("plugins.reader.addSingle"), key: "single" }
+]);
 
 /** 保存到本地存储 */
 const saveLibrary = () => {
