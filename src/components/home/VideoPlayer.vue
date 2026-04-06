@@ -1265,8 +1265,8 @@ const toggleLike = async () => {
   } else {
     res = await cancelLikeVideoApi(playlistStore.currentVideo?.id);
   }
-  isLiked.value = res?.isLiked || false;
-  likeCount.value = res?.count || 0;
+  isLiked.value = res.isLiked || isLiked.value;
+  likeCount.value = res.count || likeCount.value;
 };
 
 /** 切换收藏状态 */

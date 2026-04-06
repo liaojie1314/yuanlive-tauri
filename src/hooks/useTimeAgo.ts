@@ -117,6 +117,11 @@ export function useBatchTimeAgo() {
     return formatTimeAgoCore(targetDate, now.value, t, locale.value);
   };
 
+  const formatGroupDate = (timestamp: number | Date): string => {
+    const targetDate = timestamp instanceof Date ? timestamp : new Date(timestamp);
+    return formatMonthDay(targetDate, locale.value);
+  };
+
   setupTimer();
   onUnmounted(() => {
     clearTimer();
@@ -124,6 +129,7 @@ export function useBatchTimeAgo() {
 
   return {
     formatTimeAgo,
+    formatGroupDate,
     clearTimer
   };
 }

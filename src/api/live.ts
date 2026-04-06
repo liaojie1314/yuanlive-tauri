@@ -1,6 +1,6 @@
 import { UrlEnum } from "@/enums";
-import type { HotCategoryItem, FollowLiveItem, LiveItem } from "./types";
 import { request } from "@/utils/RequestUtils.ts";
+import type { HotCategoryItem, ChildCategoryItem, FollowLiveItem, LiveItem } from "./types";
 
 /**
  * 获取直播类别
@@ -19,6 +19,16 @@ export async function getLiveCategoryApi() {
 export async function getHotCategoryApi() {
   return await request<HotCategoryItem[]>({
     url: UrlEnum.GET_HOT_CATEGORY
+  });
+}
+
+/**
+ * 获取子类别
+ * @returns 子类别
+ */
+export async function getChildCategoryApi() {
+  return await request<ChildCategoryItem[]>({
+    url: UrlEnum.GET_CHILD_CATEGORY
   });
 }
 

@@ -265,7 +265,13 @@
     "pinned": "置顶",
     "deleteSelected": "确认删除选中的 {count} 个对话吗？",
     "deleteConfirm": "确认删除该对话吗？",
-    "clearAllConfirm": "确认清空所有历史对话吗？"
+    "clearAllConfirm": "确认清空所有历史对话吗？",
+    "msg": {
+      "clearAllSuccess": "已成功清空所有历史对话",
+      "clearAllFailed": "清空所有历史对话失败",
+      "deleteSuccess": "已成功删除选中的对话",
+      "deleteFailed": "删除选中的对话失败"
+    }
   },
   "videoSidePanel": {
     "comment": "评论",
@@ -354,5 +360,11 @@
       "openAiSubtitle": "开启AI字幕",
       "closeAiSubtitle": "关闭AI字幕"
     }
+  },
+  "historyCard": {
+    "unwatchedVideos": "{count} 个作品未看",
+    "follow": "关注",
+    "followed": "已关注",
+    "live": "直播中"
   }
 }

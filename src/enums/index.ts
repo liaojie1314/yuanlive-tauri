@@ -62,6 +62,8 @@ export enum UrlEnum {
   GET_LIVE_CATEGORY = "getLiveCategory",
   // 获取热门类别
   GET_HOT_CATEGORY = "getHotCategory",
+  // 获取子类别
+  GET_CHILD_CATEGORY = "getChildCategory",
   // 获取人气前5的直播列表
   GET_TOP_FIVE_LIVE = "getTopFiveLive",
   // 获取当前直播类别的所有直播列表
@@ -88,6 +90,18 @@ export enum UrlEnum {
   CHECK_QR_STATUS = "checkQRStatus",
   // 发送邮箱验证码
   GET_CODE = "getCode",
+  // 获取AI历史会话
+  GET_HISTORY_CONVERSATION = "getHistoryConversation",
+  // 更新会话标题
+  UPDATE_CONVERSATION_TITLE = "updateConversationTitle",
+  // 固定会话
+  PIN_CONVERSATION = "pinConversation",
+  // 取消固定会话
+  UNPIN_CONVERSATION = "unpinConversation",
+  // 批量删除会话
+  BATCH_DELETE_CONVERSATION = "batchDeleteConversation",
+  // 删除所有会话
+  DELETE_ALL_CONVERSATION = "deleteAllConversation",
   // 地图坐标转换
   MAP_COORD_TRANSLATE = "mapCoordTranslate",
   // 地图逆地理编码

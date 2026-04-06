@@ -122,6 +122,12 @@ export type HotCategoryItem = {
   parentValue: string;
 };
 
+export type ChildCategoryItem = {
+  id: number;
+  label: string;
+  value: string;
+};
+
 export type FollowLiveItem = {
   username: string;
   avatar: string;
@@ -135,3 +141,13 @@ export type LiveItem = {
   coverImg: string;
   hotScore: number;
 };
+
+//========ai========
+export type AiConversationItem = {
+  id: string;
+  title: string;
+  timestamp: number;
+  isTop: boolean;
+};
+
+export type AiConversationPageResult = PageResult<AiConversationItem>;

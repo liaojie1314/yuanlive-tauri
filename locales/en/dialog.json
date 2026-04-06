@@ -116,6 +116,7 @@
     "agree": "I have read and agree to the",
     "agreeLink": "YuanLive Streamer Registration Agreement",
     "submit": "Submit Application",
+    "noCategory": "No live category available",
     "msg": {
       "completeInfo": "Please complete the application information",
       "applySuccess": "Application submitted, please wait for review"

@@ -41,7 +41,11 @@
           <n-select
             v-model:value="formValue.category"
             :options="categoryOptions"
-            :placeholder="t('dialog.applyStreamer.liveCategoryPlaceholder')" />
+            :placeholder="t('dialog.applyStreamer.liveCategoryPlaceholder')">
+            <template #empty>
+              <n-empty :description="t('dialog.applyStreamer.noCategory')" />
+            </template>
+          </n-select>
         </n-form-item>
 
         <n-form-item path="reason" :label="t('dialog.applyStreamer.reason')">
@@ -79,6 +83,9 @@
 import { useI18n } from "vue-i18n";
 import type { FormInst } from "naive-ui";
 
+import { getChildCategoryApi } from "@/api/live";
+import type { ChildCategoryItem } from "@/api/types";
+
 const { t } = useI18n();
 
 const props = defineProps<{
@@ -103,15 +110,8 @@ const rules = {
   category: [{ required: true, message: t("dialog.applyStreamer.rule.liveCategory"), trigger: ["blur", "change"] }]
 };
 
-// TODO: 模拟分区选项
-const categoryOptions = [
-  { label: "单机游戏", value: "game" },
-  { label: "生活娱乐", value: "life" },
-  { label: "知识分享", value: "knowledge" },
-  { label: "虚拟主播", value: "virtual" },
-  { label: "其他", value: "other" }
-];
-
+// 模拟子分区选项
+const categoryOptions = ref<ChildCategoryItem[]>([]);
 const formRef = ref<FormInst | null>(null);
 const loading = ref(false);
 const isAgreed = ref(false);
@@ -167,6 +167,10 @@ const submitData = async () => {
     isAgreed.value = false;
   }, 1500);
 };
+
+onMounted(async () => {
+  categoryOptions.value = await getChildCategoryApi();
+});
 </script>
 
 <style scoped></style>

@@ -116,6 +116,7 @@
     "agree": "我已阅读并同意",
     "agreeLink": "《YuanLive主播注册协议》",
     "submit": "提交申请",
+    "noCategory": "暂无直播分区",
     "msg": {
       "completeInfo": "请完善申请信息",
       "applySuccess": "申请已提交，请耐心等待审核"

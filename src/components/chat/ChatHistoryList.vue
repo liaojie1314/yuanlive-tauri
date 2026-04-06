@@ -71,17 +71,18 @@
       </template>
     </div>
 
-    <n-scrollbar v-if="!isCollapsed" class="flex-1">
+    <n-scrollbar v-if="!isCollapsed" class="flex-1" @scroll="handleScroll">
       <div v-for="(group, index) in displayGroups" class="p-3" :key="index">
         <div class="mb-2 text-xs font-medium text-[--user-text-color] opacity-80">{{ group.date }}</div>
 
         <div v-for="(item, itemIndex) in group.items" :key="itemIndex">
           <chat-history-item
             :title="item.title"
+            :time="formatTimeAgo(item.timestamp)"
             :active="item.id === activeChatId"
             :selection-mode="isSelectionMode"
             :selected="selectedIds.has(item.id)"
-            :is-pinned="item.isPinned"
+            :is-pinned="item.isPin"
             @click="handleChatClick(item.id)"
             @enter-multi-select="handleEnterMultiSelect(item.id)"
             @toggle-select="handleToggleSelect(item.id)"
@@ -97,11 +98,22 @@
 <script setup lang="ts">
 import { useI18n } from "vue-i18n";
 
+import { useBatchTimeAgo } from "@/hooks/useTimeAgo";
+import {
+  getHistoryConversationApi,
+  updateConversationTitleApi,
+  pinConversationApi,
+  unpinConversationApi,
+  batchDeleteConversationApi,
+  deleteAllConversationApi
+} from "@/api/aiHistory";
+
 defineOptions({
   name: "ChatHistoryList"
 });
 
 const { t } = useI18n();
+const { formatTimeAgo, formatGroupDate } = useBatchTimeAgo();
 
 defineProps<{
   activeChatId?: string;
@@ -110,19 +122,14 @@ defineProps<{
 const emit = defineEmits<{
   "new-chat": [];
   "select-chat": [id: string];
-  "rename-chat": [id: string, newTitle: string];
-  "toggle-pin-chat": [id: string, isPinned: boolean];
-  "delete-chat": [id: string];
-  "batch-delete-chat": [ids: string[]];
-  "clear-all": [];
   "toggle-collapse": [];
 }>();
 
 interface ChatItem {
   id: string;
   title: string;
-  date: string;
-  isPinned?: boolean;
+  timestamp: number;
+  isPin?: boolean;
 }
 
 // 定义日期分组类型
@@ -131,48 +138,26 @@ interface HistoryGroup {
   items: ChatItem[];
 }
 
+// 历史对话数据
+const historyGroups = ref<HistoryGroup[]>([]);
+const isSelectionMode = ref(false);
+const selectedIds = ref<Set<string>>(new Set());
+const pageNum = ref(1);
+const pageSize = ref(20);
+const isLoading = ref(false);
+const hasMore = ref(true);
+
 // 清空历史下拉菜单选项
-const clearMenuOptions = [
+const clearMenuOptions = computed(() => [
   {
     label: t("components.chatHistoryList.clearAll"),
     key: "clear"
   }
-];
-
-// 模拟历史对话数据
-const historyGroups = ref<HistoryGroup[]>([
-  {
-    date: "12月26日",
-    items: [
-      { id: "1", title: "马航MH370的真相是什么", date: "2023-12-26" },
-      { id: "2", title: "如何学习Vue 3", date: "2023-12-26" },
-      { id: "3", title: "推荐几本技术书籍", date: "2023-12-26" }
-    ]
-  },
-  {
-    date: "12月25日",
-    items: [
-      { id: "4", title: "AI的未来发展趋势", date: "2023-12-25" },
-      { id: "5", title: "什么是量子计算", date: "2023-12-25" },
-      { id: "6", title: "AI在医疗领域的应用", date: "2023-12-25" },
-      { id: "7", title: "推荐几本技术书籍", date: "2023-12-25" },
-      { id: "8", title: "最新的AI研究动态", date: "2023-12-25" },
-      { id: "9", title: "AI在教育领域的应用", date: "2023-12-25" },
-      { id: "10", title: "推荐几本技术书籍", date: "2023-12-25" },
-      { id: "11", title: "最新的AI研究动态", date: "2023-12-25" },
-      { id: "12", title: "AI在教育领域的应用", date: "2023-12-25" }
-    ]
-  }
 ]);
-
-const isSelectionMode = ref(false);
-const selectedIds = ref<Set<string>>(new Set());
-
 // 扁平化获取所有历史记录 ID，用于全选
 const allChatIds = computed(() => {
   return historyGroups.value.flatMap((group) => group.items.map((item) => item.id));
 });
-
 // 是否全选状态
 const isAllSelected = computed(() => {
   return allChatIds.value.length > 0 && selectedIds.value.size === allChatIds.value.length;
@@ -186,7 +171,7 @@ const displayGroups = computed(() => {
   historyGroups.value.forEach((group) => {
     const unpinnedItems: ChatItem[] = [];
     group.items.forEach((item) => {
-      if (item.isPinned) {
+      if (item.isPin) {
         pinnedItems.push(item);
       } else {
         unpinnedItems.push(item);
@@ -214,12 +199,16 @@ const displayGroups = computed(() => {
  * @param id 对话ID
  */
 const handleTogglePin = (id: string) => {
-  historyGroups.value.forEach((group) => {
+  historyGroups.value.forEach(async (group) => {
     const item = group.items.find((i) => i.id === id);
     if (item) {
-      item.isPinned = !item.isPinned;
-      // 通知外层（或后端）状态改变
-      emit("toggle-pin-chat", id, item.isPinned);
+      let res: { isPin: boolean };
+      if (item.isPin) {
+        res = await pinConversationApi(id);
+      } else {
+        res = await unpinConversationApi(id);
+      }
+      item.isPin = res.isPin || item.isPin;
     }
   });
 };
@@ -263,18 +252,25 @@ const handleBatchDelete = () => {
     negativeText: t("components.common.cancel"),
     onPositiveClick: () => {
       // 1. 本地更新视图
-      historyGroups.value = historyGroups.value
-        .map((group) => {
-          return {
-            ...group,
-            items: group.items.filter((item) => !selectedIds.value.has(item.id))
-          };
+      batchDeleteConversationApi(Array.from(selectedIds.value))
+        .then(() => {
+          historyGroups.value = historyGroups.value
+            .map((group) => {
+              return {
+                ...group,
+                items: group.items.filter((item) => !selectedIds.value.has(item.id))
+              };
+            })
+            .filter((group) => group.items.length > 0);
+          window.$message.success(t("components.chatHistoryList.msg.deleteSuccess"));
         })
-        .filter((group) => group.items.length > 0);
-      // 2. 派发事件通知外层或接口
-      emit("batch-delete-chat", Array.from(selectedIds.value));
-      // 3. 退出多选模式
-      cancelSelection();
+        .catch(() => {
+          window.$message.error(t("components.chatHistoryList.msg.deleteFailed"));
+        })
+        .finally(() => {
+          // 退出多选模式
+          cancelSelection();
+        });
     }
   });
 };
@@ -294,6 +290,59 @@ const handleNewChat = () => {
   emit("new-chat");
 };
 
+/** 加载历史对话列表 */
+const loadHistoryList = async () => {
+  if (isLoading.value || !hasMore.value) return;
+  isLoading.value = true;
+  try {
+    const res = await getHistoryConversationApi(pageNum.value, pageSize.value);
+    const records = res.list || [];
+    if (records.length < pageSize.value) {
+      hasMore.value = false; // 如果拉取的数据少于一页，说明到底了
+    }
+    records.forEach((apiItem) => {
+      const newItem: ChatItem = {
+        id: apiItem.id,
+        title: apiItem.title,
+        timestamp: apiItem.timestamp,
+        isPin: apiItem.isTop
+      };
+
+      const groupDate = formatGroupDate(apiItem.timestamp);
+
+      if (historyGroups.value.length === 0) {
+        historyGroups.value.push({ date: groupDate, items: [newItem] });
+      } else {
+        const lastGroup = historyGroups.value[historyGroups.value.length - 1];
+        if (lastGroup.date === groupDate) {
+          lastGroup.items.push(newItem);
+        } else {
+          historyGroups.value.push({ date: groupDate, items: [newItem] });
+        }
+      }
+    });
+
+    pageNum.value++; // 成功后页码 +1
+  } catch (error) {
+    console.error("获取历史会话失败:", error);
+  } finally {
+    isLoading.value = false;
+  }
+};
+
+/**
+ * 处理滚动事件：触底加载更多
+ * @param e 滚动事件对象
+ */
+const handleScroll = (e: Event) => {
+  const target = e.target as HTMLElement;
+  // 触底缓冲距离：距离底部还剩 50px 时触发加载
+  const distanceToBottom = target.scrollHeight - target.scrollTop - target.clientHeight;
+  if (distanceToBottom < 50) {
+    loadHistoryList();
+  }
+};
+
 /**
  * 处理选择对话
  * @param id 对话ID
@@ -308,14 +357,14 @@ const handleChatClick = (id: string) => {
  * @param newTitle 新标题
  */
 const handleRename = (id: string, newTitle: string) => {
-  // 本地更新对话标题
   historyGroups.value.forEach((group) => {
     const item = group.items.find((item) => item.id === id);
     if (item) {
-      item.title = newTitle;
+      updateConversationTitleApi(id, newTitle).then(() => {
+        item.title = newTitle;
+      });
     }
   });
-  emit("rename-chat", id, newTitle);
 };
 
 /**
@@ -340,17 +389,22 @@ const handleDelete = (id: string) => {
     negativeText: t("components.common.cancel"),
     onPositiveClick: () => {
       // 本地删除对话
-      historyGroups.value = historyGroups.value
-        .map((group) => {
-          const newItems = group.items.filter((item) => item.id !== id);
-          return {
-            ...group,
-            items: newItems
-          };
+      batchDeleteConversationApi([id])
+        .then(() => {
+          historyGroups.value = historyGroups.value
+            .map((group) => {
+              const newItems = group.items.filter((item) => item.id !== id);
+              return {
+                ...group,
+                items: newItems
+              };
+            })
+            .filter((group) => group.items.length > 0); // 过滤掉空分组
+          window.$message.success(t("components.chatHistoryList.msg.deleteSuccess"));
         })
-        .filter((group) => group.items.length > 0); // 过滤掉空分组
-      console.log("对话已删除:", id);
-      emit("delete-chat", id);
+        .catch(() => {
+          window.$message.error(t("components.chatHistoryList.msg.deleteFailed"));
+        });
     }
   });
 };
@@ -364,12 +418,21 @@ const handleClearAll = () => {
     negativeText: t("components.common.cancel"),
     onPositiveClick: () => {
       // 本地清空所有历史
-      historyGroups.value = [];
-      console.log("所有历史对话已清空");
-      emit("clear-all");
+      deleteAllConversationApi()
+        .then(() => {
+          historyGroups.value = [];
+          window.$message.success(t("components.chatHistoryList.msg.clearAllSuccess"));
+        })
+        .catch(() => {
+          window.$message.error(t("components.chatHistoryList.msg.clearAllFailed"));
+        });
     }
   });
 };
+
+onMounted(async () => {
+  loadHistoryList();
+});
 </script>
 
 <style scoped lang="scss">

@@ -263,7 +263,13 @@
     "pinned": "Pinned",
     "deleteSelected": "Confirm delete selected {count} items?",
     "deleteConfirm": "Confirm delete this item?",
-    "clearAllConfirm": "Confirm clear all history?"
+    "clearAllConfirm": "Confirm clear all history?",
+    "msg": {
+      "clearAllSuccess": "Successfully cleared all history",
+      "clearAllFailed": "Failed to clear all history",
+      "deleteSuccess": "Successfully deleted selected items",
+      "deleteFailed": "Failed to delete selected items"
+    }
   },
   "videoSidePanel": {
     "comment": "Comment",
@@ -354,5 +360,11 @@
       "openAiSubtitle": "open AI CC",
       "closeAiSubtitle": "close AI CC"
     }
+  },
+  "historyCard": {
+    "unwatchedVideos": "{count} videos unwatched",
+    "follow": "Follow",
+    "followed": "Followed",
+    "live": "Live"
   }
 }
