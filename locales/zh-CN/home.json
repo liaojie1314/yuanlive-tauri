@@ -35,6 +35,8 @@
     "noLikeVideo": "暂无喜欢的视频",
     "noLikeVideoTip": "去浏览视频，喜欢的话就点个赞吧",
     "noMore": "没有更多内容了",
+    "batchMode": "批量管理",
+    "exitBatchMode": "退出管理",
     "tab": {
       "works": "作品 {count}",
       "recommend": "推荐",
@@ -46,6 +48,86 @@
       "aiNotes": "AI笔记",
       "collectionFolder": "收藏夹",
       "videos": "视频"
+    },
+    "collection": {
+      "selectAll": "全选",
+      "selectedCount": "已选 {count} 个收藏夹",
+      "deleteCollection": "删除收藏夹",
+      "totalWorks": "共 {count} 个作品",
+      "selectedCollectedVideos": "已选 {count} 个收藏的视频",
+      "cancelCollect": "取消收藏",
+      "joinCollectionFolder": "加入收藏夹",
+      "searchCollectedVideos": "搜索你收藏的作品",
+      "noCollectedVideos": "暂无收藏视频",
+      "noCollectedVideosTip": "快去收藏一些喜欢的视频吧",
+      "addVideo": "添加视频",
+      "editCollectionFolder": "编辑收藏夹",
+      "deleteCollectionFolder": "删除收藏夹",
+      "msg": {
+        "delete": "已删除 {count} 个收藏夹",
+        "createSuccess": "创建成功",
+        "cancelCollect": "已取消收藏 {count} 个作品"
+      }
+    },
+    "history": {
+      "users": "用户",
+      "videos": "视频",
+      "lives": "直播",
+      "searchVideosPlaceholder": "搜索你观看的作品",
+      "filter": "筛选",
+      "watchProgress": "观看进度",
+      "videoDuration": "视频时长",
+      "videoCategory": "视频分类",
+      "noRecord": "暂无记录",
+      "msg": {
+        "clearHistory": "清空历史记录",
+        "confirmClearHistory": "确定要清空当前列表的所有记录吗？此操作不可恢复。",
+        "clearHistorySuccess": "已清空记录"
+      },
+      "options": {
+        "all": "不限",
+        "unseen": "未看完",
+        "seen": "已看完",
+        "under1m": "小于1分钟",
+        "under3m": "1-3分钟",
+        "under10m": "3-10分钟",
+        "over10m": "10分钟以上"
+      }
+    },
+    "later": {
+      "selectedCount": "已选 {count} 个作品",
+      "remove": "移除",
+      "removeSeen": "移除已看过的视频",
+      "noLaterVideo": "暂无稍后再看视频",
+      "addVideoTip": "把想看的视频添加到这里吧",
+      "msg": {
+        "removeVideos": "已移除 {count} 个作品",
+        "removeSeenVideos": "已移除看过的视频"
+      }
+    },
+    "like": {
+      "selectedCount": "已选 {count} 个喜欢的作品",
+      "cancelLike": "取消喜欢",
+      "searchLikedVideosPlaceholder": "搜索你赞过的作品",
+      "msg": {
+        "cancelLike": "已取消喜欢 {count} 个作品"
+      }
+    },
+    "recommend": {
+      "mutual": "互相关注的人可见",
+      "fans": "粉丝可见",
+      "noRecommend": "暂无推荐内容",
+      "noRecommendTip": "去点赞或收藏一些作品吧"
+    },
+    "workers": {
+      "delete": "删除",
+      "searchPlaceholder": "搜索你发布的作品",
+      "dateFilter": "日期筛选",
+      "noContent": "暂无内容",
+      "noPublishedWorks": "该账号还未发布过作品哦~",
+      "msg": {
+        "delete": "已删除 {count} 个作品"
+      }
     }
   },
   "profileEdit": {

@@ -25,7 +25,7 @@
   },
   "user": {
     "publishVideo": "Publish Video",
-    "manageVideo": "Video Management",
+    "manageVideo": "Video Manage",
     "openRecord": "Open Live Stream",
     "liveData": "Live Data",
     "notSupport": "Live streaming feature is only supported on Windows platform",
@@ -35,6 +35,8 @@
     "noLikeVideo": "No liked videos available",
     "noLikeVideoTip": "Browse videos and like your favorites",
     "noMore": "No more content available",
+    "batchMode": "batch",
+    "exitBatchMode": "exit",
     "tab": {
       "works": "works ({count})",
       "recommend": "recommend",
@@ -46,6 +48,86 @@
       "aiNotes": "notes",
       "collectionFolder": "collection folder",
       "videos": "videos"
+    },
+    "collection": {
+      "selectAll": "Select All",
+      "selectedCount": "{count} selected collection folders",
+      "deleteCollection": "Delete",
+      "totalWorks": "{count} total works",
+      "selectedCollectedVideos": "{count} selected collected videos",
+      "cancelCollect": "remove",
+      "joinCollectionFolder": "add",
+      "searchCollectedVideos": "Search Collected Videos",
+      "noCollectedVideos": "No collected videos available",
+      "noCollectedVideosTip": "Go to collect some videos first",
+      "addVideo": "Add Video",
+      "editCollectionFolder": "Edit Collection Folder",
+      "deleteCollectionFolder": "Delete Collection Folder",
+      "msg": {
+        "delete": "{count} collection folders deleted",
+        "createSuccess": "Collection folder created successfully",
+        "cancelCollect": "Cancel collect {count} works successfully"
+      }
+    },
+    "history": {
+      "users": "users",
+      "videos": "videos",
+      "lives": "lives",
+      "searchVideosPlaceholder": "Search videos you watched",
+      "filter": "Filter",
+      "watchProgress": "Watch Progress",
+      "videoDuration": "Video Duration",
+      "videoCategory": "Video Category",
+      "noRecord": "No record available",
+      "msg": {
+        "clearHistory": "Clear History",
+        "confirmClearHistory": "Are you sure you want to clear the history?",
+        "clearHistorySuccess": "History cleared successfully"
+      },
+      "options": {
+        "all": "All",
+        "unseen": "Unseen",
+        "seen": "Seen",
+        "under1m": "<1m",
+        "under3m": "1-3m",
+        "under10m": "3-10m",
+        "over10m": "10m+"
+      }
+    },
+    "later": {
+      "selectedCount": "{count} selected videos",
+      "remove": "remove",
+      "removeSeen": "Remove seen",
+      "noLaterVideo": "No later videos available",
+      "addVideoTip": "Add videos to watch later",
+      "msg": {
+        "removeVideos": "{count} videos removed",
+        "removeSeenVideos": "Seen videos removed successfully"
+      }
+    },
+    "like": {
+      "selectedCount": "{count} selected liked videos",
+      "cancelLike": "Cancel Like",
+      "searchLikedVideosPlaceholder": "Search liked videos",
+      "msg": {
+        "cancelLike": "Cancel like {count} works successfully"
+      }
+    },
+    "recommend": {
+      "mutual": "Mutual Followers",
+      "fans": "Fans",
+      "noRecommend": "No recommend content available",
+      "noRecommendTip": "Go to like or collect some videos first"
+    },
+    "workers": {
+      "delete": "delete",
+      "searchPlaceholder": "Search your published videos",
+      "dateFilter": "Date Filter",
+      "noContent": "No content available",
+      "noPublishedWorks": "This account has not published any works yet",
+      "msg": {
+        "delete": "{count} works deleted"
+      }
     }
   },
   "profileEdit": {

@@ -37,6 +37,19 @@
         {{ video.title }}
       </h3>
     </div>
+    <template v-if="selectable">
+      <div
+        v-if="selected"
+        class="pointer-events-none absolute inset-0 z-10 rounded-lg border-2 border-[#ff0050] bg-black/40 transition-all"></div>
+      <div class="absolute right-2 top-2 z-20">
+        <n-checkbox
+          size="large"
+          class="square-checkbox"
+          :checked="selected"
+          @update:checked="$emit('toggle-select', $event)" />
+      </div>
+      <div class="absolute inset-0 z-10" @click.stop="$emit('toggle-select', !selected)"></div>
+    </template>
   </div>
 </template>
 
@@ -56,8 +69,18 @@ interface Video {
   duration?: number;
 }
 
-const { video } = defineProps<{
+const {
+  video,
+  selectable = false,
+  selected = false
+} = defineProps<{
   video: Video;
+  selectable?: boolean;
+  selected?: boolean;
+}>();
+
+defineEmits<{
+  "toggle-select": [checked: boolean];
 }>();
 
 // 视频引用和状态
@@ -84,3 +107,9 @@ const pauseVideo = () => {
   }
 };
 </script>
+
+<style scoped lang="scss">
+:deep(.square-checkbox.n-checkbox .n-checkbox-box) {
+  border-radius: 2px !important;
+}
+</style>
