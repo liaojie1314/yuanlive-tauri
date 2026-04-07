@@ -340,7 +340,7 @@ fn get_invoke_handlers() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Se
     use desktop::cmd::set_height;
     #[cfg(desktop)]
     use desktop::cmd::{
-        agent_mouse_action, agent_type_text, screenshot, toggle_system_audio_listen,
+        agent_mouse_action, agent_type_text, convert_file, screenshot, toggle_system_audio_listen,
     };
     #[cfg(desktop)]
     use desktop::directory_scanner::{
@@ -413,6 +413,8 @@ fn get_invoke_handlers() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Se
         scan_comic_library,
         #[cfg(desktop)]
         toggle_system_audio_listen,
+        #[cfg(desktop)]
+        convert_file,
         #[cfg(desktop)]
         agent_mouse_action,
         #[cfg(desktop)]

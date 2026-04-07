@@ -106,6 +106,33 @@
         <span>{{ formatSecondsToTimeStr(pomodoroTimeLeft) }}</span>
       </div>
     </transition>
+    <transition name="fade">
+      <div
+        v-if="showConvertMenu"
+        class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-40 w-[250px] p-5 bg-white/80 backdrop-blur-2xl border border-white/50 rounded-2xl shadow-2xl flex flex-col gap-3">
+        <div class="flex flex-col items-center gap-1">
+          <i-mdi-file-swap class="text-32px text-[#13987f]" />
+          <span class="text-14px font-bold text-gray-800 text-center break-all">
+            {{ getFileName(droppedFilePath) }}
+          </span>
+          <span class="text-12px text-gray-500">你想让我把它变成什么格式？</span>
+        </div>
+
+        <div class="grid grid-cols-3 gap-2 mt-2">
+          <n-button
+            v-for="ext in availableFormats"
+            class="py-1.5 px-2 bg-black/5 hover:bg-[#13987f] hover:text-white rounded-lg text-12px font-bold transition-colors shadow-sm"
+            :key="ext"
+            @click="startConversion(ext)">
+            {{ ext.toUpperCase() }}
+          </n-button>
+        </div>
+
+        <n-button class="mt-2 text-12px text-gray-400 hover:text-gray-600 transition-colors" @click="cancelConversion">
+          取消
+        </n-button>
+      </div>
+    </transition>
     <canvas
       ref="canvasRef"
       class="block cursor-grab active:cursor-grabbing transition-all duration-1000"
@@ -216,10 +243,70 @@ const isVisionActive = ref(false);
 const currentVisualContext = ref("");
 const isListeningMusic = ref(false);
 const isVoiceChatting = ref(false);
+const showConvertMenu = ref(false);
+const droppedFilePath = ref("");
+const availableFormats = ref<string[]>([]);
+const isConverting = ref(false);
 
 // 音频与口型相关
 const audioContext = shallowRef<AudioContext | null>(null);
 const audioSource = shallowRef<AudioBufferSourceNode | null>(null);
+
+/**
+ * 从文件路径中提取文件名
+ * @param path 文件路径
+ * @returns 文件名
+ */
+const getFileName = (path: string) => path.split(/[/\\]/).pop() || "未知文件";
+
+/**
+ * 根据文件后缀推断可以转换的格式
+ * @param ext 文件后缀
+ * @returns 可以转换的格式列表
+ */
+const getFormatsByExt = (ext: string) => {
+  ext = ext.toLowerCase();
+  const imageExts = ["png", "jpg", "jpeg", "webp", "bmp", "ico"];
+  const videoExts = ["mp4", "webm", "avi", "mov"];
+  const audioExts = ["mp3", "wav", "ogg", "flac"];
+
+  if (imageExts.includes(ext)) return imageExts.filter((e) => e !== ext);
+  if (videoExts.includes(ext)) return [...videoExts.filter((e) => e !== ext), "gif", "mp3"]; // 视频可转GIF或提取音频
+  if (audioExts.includes(ext)) return audioExts.filter((e) => e !== ext);
+  return [];
+};
+
+/** 取消转换 */
+const cancelConversion = () => {
+  showConvertMenu.value = false;
+  droppedFilePath.value = "";
+};
+
+/**
+ * 开始转换
+ * @param targetExt 目标格式
+ */
+const startConversion = async (targetExt: string) => {
+  showConvertMenu.value = false;
+  isConverting.value = true;
+
+  speak(`好的！正在拼命施展魔法，把文件转成 ${targetExt.toUpperCase()} 格式...`);
+  if (live2dModel.value) live2dModel.value.motion("TapBody"); // 施法动作
+
+  try {
+    const outPath = await invoke<string>(TauriCommandEnum.CONVERT_FILE, {
+      sourcePath: droppedFilePath.value,
+      targetExt
+    });
+    speak("转换完成啦！文件已经保存在原来所在的目录咯~");
+    console.log("转换成功，文件路径:", outPath);
+  } catch (error) {
+    console.error("转换失败:", error);
+    speak(typeof error === "string" ? error : "哎呀，魔法失效了，转换失败...");
+  } finally {
+    isConverting.value = false;
+  }
+};
 
 /**
  * 平滑插值函数 (Lerp)，防止模型头部抖动得像帕金森
@@ -1348,6 +1435,35 @@ onMounted(async () => {
   } catch (e) {
     console.error("全局快捷键强绑失败:", e);
   }
+  const unlistenDragEnter = await listen("tauri://drag-enter", () => {
+    if (isSleeping.value || isConverting.value) return;
+    if (live2dModel.value) live2dModel.value.motion("TapBody");
+  });
+
+  // Tauri v2 标准拖拽事件：文件松开
+  const unlistenDragDrop = await listen<{ paths: string[] }>("tauri://drag-drop", (event) => {
+    if (isSleeping.value || isConverting.value) return;
+
+    const paths = event.payload.paths;
+    if (paths && paths.length > 0) {
+      const filePath = paths[0];
+      droppedFilePath.value = filePath;
+
+      const ext = filePath.split(".").pop() || "";
+      const formats = getFormatsByExt(ext);
+
+      if (formats.length > 0) {
+        availableFormats.value = formats;
+        showConvertMenu.value = true;
+        speak("哇，是给我的文件吗？你想把它变成什么样子？");
+      } else {
+        speak("呜...这种格式的文件我还不认识呢，换个图片或视频试试吧？");
+      }
+    }
+  });
+  // 挂载到 window，方便销毁
+  (window as any).__unlistenDragEnter = unlistenDragEnter;
+  (window as any).__unlistenDragDrop = unlistenDragDrop;
 });
 
 onUnmounted(async () => {
@@ -1384,6 +1500,8 @@ onUnmounted(async () => {
   // 清理面部追踪
   if (camera) camera.stop();
   if (faceMesh) faceMesh.close();
+  if ((window as any).__unlistenDragEnter) (window as any).__unlistenDragEnter();
+  if ((window as any).__unlistenDragDrop) (window as any).__unlistenDragDrop();
 });
 </script>
 

@@ -206,6 +206,8 @@ export enum TauriCommandEnum {
   AGENT_MOUSE_ACTION = "agent_mouse_action",
   // 模拟键盘自动打字
   AGENT_TYPE_TEXT = "agent_type_text",
+  // 转换文件
+  CONVERT_FILE = "convert_file",
   /** windows专属 */
   // 检查ffmpeg是否安装
   CHECK_FFMPEG_INSTALLED = "check_ffmpeg_installed",

@@ -7,9 +7,12 @@ use screenshots::image::{DynamicImage, ImageOutputFormat};
 use screenshots::Screen;
 use std::cmp;
 use std::io::Cursor;
+use std::path::Path;
 #[cfg(target_os = "windows")]
 use tauri::Emitter;
 use tauri::{AppHandle, LogicalSize, Manager, State};
+use tauri_plugin_shell::ShellExt;
+use tracing::{error, info};
 
 use crate::AudioState;
 
@@ -135,4 +138,74 @@ pub fn agent_type_text(text: String) -> Result<(), String> {
     // 像真人一样模拟按键依次敲下
     enigo.key_sequence(&text);
     Ok(())
+}
+
+/// 万能格式转换站
+#[tauri::command]
+pub async fn convert_file(
+    app: AppHandle,
+    source_path: String,
+    target_ext: String,
+) -> Result<String, String> {
+    let path = Path::new(&source_path);
+    let file_stem = path.file_stem().unwrap().to_string_lossy();
+    let parent_dir = path.parent().unwrap();
+
+    // 同目录下，同文件名，新后缀
+    let output_path = parent_dir.join(format!("{}_converted.{}", file_stem, target_ext));
+    let out_str = output_path.to_string_lossy().to_string();
+    let ext = target_ext.to_lowercase();
+
+    // 1. 图像类转换 (纯内存极速处理)
+    if ["png", "jpg", "jpeg", "webp", "bmp", "ico"].contains(&ext.as_str()) {
+        info!("开始图像转换: {} -> {}", source_path, ext);
+        let source_clone = source_path.clone();
+        let out_clone = out_str.clone();
+
+        let result = tokio::task::spawn_blocking(move || {
+            let img = image::open(&source_clone).map_err(|e| e.to_string())?;
+            img.save(&out_clone).map_err(|e| e.to_string())?;
+            Ok::<(), String>(())
+        })
+        .await;
+
+        return match result {
+            Ok(Ok(_)) => Ok(out_str),
+            Ok(Err(e)) => Err(format!("图片转换失败: {}", e)),
+            Err(_) => Err("线程执行异常".to_string()),
+        };
+    }
+
+    // 2. 音视频类转换 (使用你配置好的 Sidecar FFmpeg)
+    if ["mp4", "webm", "gif", "mp3", "wav", "ogg", "avi"].contains(&ext.as_str()) {
+        info!("开始音视频 Sidecar 转换: {} -> {}", source_path, ext);
+
+        // 组装 ffmpeg 参数
+        let command = app
+            .shell()
+            .sidecar("ffmpeg")
+            .map_err(|e| format!("FFmpeg Sidecar 初始化失败: {}", e))?
+            .args([
+                "-y", // 覆盖输出文件
+                "-i",
+                &source_path,
+                &out_str,
+            ]);
+
+        // 异步等待执行完成，绝对不卡死主进程！
+        let output = command
+            .output()
+            .await
+            .map_err(|e| format!("FFmpeg 运行异常: {}", e))?;
+
+        if output.status.success() {
+            return Ok(out_str);
+        } else {
+            let err_msg = String::from_utf8_lossy(&output.stderr);
+            error!("FFmpeg 转换出错: {}", err_msg);
+            return Err(format!("媒体转换失败: {}", err_msg));
+        }
+    }
+
+    Err(format!("暂不支持转换为此格式: {}", ext))
 }

@@ -91,8 +91,9 @@ async function downloadWithProgress(url, destPath) {
 // ---------------- 任务模块 (全自动无交互) ----------------
 
 async function downloadFFmpeg(platform, arch, binariesDir) {
-  if (platform !== "win32") return;
-  const tauriFilename = `ffmpeg-${RUST_ARCH_MAP[arch]}-${RUST_TARGET_MAP[platform]}.exe`;
+  // 动态判断文件后缀：Windows 需要 .exe，Linux/macOS 留空
+  const ext = platform === "win32" ? ".exe" : "";
+  const tauriFilename = `ffmpeg-${RUST_ARCH_MAP[arch]}-${RUST_TARGET_MAP[platform]}${ext}`;
   const targetFile = path.join(binariesDir, tauriFilename);
 
   if ((await fs.pathExists(targetFile)) && (await fs.stat(targetFile)).size > 0) {
@@ -100,11 +101,20 @@ async function downloadFFmpeg(platform, arch, binariesDir) {
     return;
   }
 
+  // 这里的命名规则(例如 linux-x64) 正好匹配 eugeneware/ffmpeg-static 仓库的 assets 命名
   const downloadFilename = `${PLATFORM_MAP[platform]}-${ARCH_MAP[arch]}`;
   console.log(`📦 [FFmpeg] 自动下载: ${downloadFilename}`);
+
   for (const mirror of FFMPEG_MIRRORS) {
     try {
       await downloadWithProgress(`${mirror}/${FFMPEG_VERSION}/${downloadFilename}`, targetFile);
+
+      // 给 Linux 和 macOS 下的二进制文件赋予可执行权限 (chmod 755) 否则 Tauri Sidecar 启动时会报 "Permission denied" 错误
+      if (platform !== "win32") {
+        await fs.chmod(targetFile, 0o755);
+        console.log(`🔑 [FFmpeg] 已赋予可执行权限 (chmod 755)`);
+      }
+
       console.log(`✨ [FFmpeg] 下载成功!`);
       return;
     } catch (err) {
