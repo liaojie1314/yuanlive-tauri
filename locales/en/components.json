@@ -128,8 +128,7 @@
     "forward": "Forward 5 seconds"
   },
   "thinkingBlock": {
-    "think": "Thinking process",
-    "thinkDuration": "Deep-thought duration (${duration}s)",
+    "think": "Thinking and executing process",
     "callTool": "Call tool:",
     "toolResult": "Tool result:"
   },
@@ -213,6 +212,7 @@
     "noRelatedFiles": "No related files found",
     "selectConfirm": "↑↓ Select, Enter Confirm",
     "clipboard": "System Clipboard",
+    "uploadFailed": "Upload failed, click retry",
     "modelType": {
       "auto": "Auto",
       "text": "Text",
@@ -225,7 +225,11 @@
       "maxAttachments": "Max {count} attachments",
       "remainingAttachments": "Max {count} remaining attachments",
       "fileCountExceeded": "File count exceeded max limit",
-      "clipboardReadFailed": "Failed to read clipboard content"
+      "clipboardReadFailed": "Failed to read clipboard content",
+      "maxSizeExceeded": "File {name} exceeds max size limit",
+      "filterDangerFiles": "Automatically filtered {count} unsupported file types!",
+      "waitUploading": "Attachments are currently uploading, please wait...",
+      "uploadFailed": "File upload failed, please try again."
     }
   },
   "trendingPrompts": {

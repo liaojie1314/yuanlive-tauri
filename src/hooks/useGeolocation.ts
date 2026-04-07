@@ -109,18 +109,49 @@ export const useGeolocation = () => {
    * @returns 包含原始坐标、转换后的坐标、位置信息和地址的对象
    */
   const getLocationWithTransform = async (options?: GeolocationOptions) => {
-    const position = await getCurrentPosition(options);
-    const { latitude, longitude } = position.coords;
-    // 转换坐标
-    const transformed = await transformCoordinates(latitude, longitude);
-    return {
-      original: { lat: latitude, lng: longitude },
-      transformed,
-      position,
-      address: "", // 后续可以通过逆地理编码获取
-      precision: state.value.precision,
-      timestamp: Date.now()
-    };
+    try {
+      // 1. 尝试使用高精度的 HTML5 浏览器定位
+      const position = await getCurrentPosition(options);
+      const { latitude, longitude } = position.coords;
+
+      // 转换坐标 (如 GCJ02 等)
+      const transformed = await transformCoordinates(latitude, longitude);
+      return {
+        original: { lat: latitude, lng: longitude },
+        transformed,
+        position,
+        address: "", // 后续可以通过逆地理编码获取
+        precision: state.value.precision,
+        timestamp: Date.now()
+      };
+    } catch (error) {
+      console.warn("HTML5 定位失败或被拒绝，正在降级为 IP 定位...", error);
+      // 降级方案：使用免费的 IP 定位 API
+      try {
+        // 这里使用 ipapi.co，也可以换成其他免费的如 ip-api.com
+        const response = await fetch("https://ipapi.co/json/");
+        const data = await response.json();
+
+        if (data && data.latitude && data.longitude) {
+          // IP 定位直接返回目标位置的粗略坐标，通常不需要额外加密偏移转换
+          const lat = parseFloat(data.latitude);
+          const lng = parseFloat(data.longitude);
+
+          return {
+            original: { lat, lng },
+            transformed: { lat, lng }, // IP 坐标一般是标准 WGS84，可视情况决定是否调 transformCoordinates
+            position: null,
+            address: `${data.country_name} ${data.region} ${data.city}`, // 顺便连地址都拿到了
+            precision: "low", // 标记为低精度
+            timestamp: Date.now()
+          };
+        }
+        throw new Error("IP 定位返回数据格式异常");
+      } catch (ipError) {
+        console.error("IP 定位降级也失败了:", ipError);
+        throw error;
+      }
+    }
   };
 
   /**

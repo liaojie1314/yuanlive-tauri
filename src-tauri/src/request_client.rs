@@ -580,6 +580,7 @@ pub enum Url {
     UnpinConversation,
     BatchDeleteConversation,
     DeleteAllConversation,
+    GetConversationMessage,
     MapCoordTranslate,
     MapReverseGeocode,
     MapStatic,
@@ -602,7 +603,7 @@ impl Url {
             Url::CheckQRStatus => (http::Method::GET, "user/auth/qrcode/check"),
             // 用户信息相关
             Url::GetUserInfo => (http::Method::GET, "user/user/getUserInfo"),
-            Url::GetSearchResult => (http::Method::GET, "user/user/search"),
+            Url::GetSearchResult => (http::Method::POST, "user/user/search"),
             Url::GetHotSearch => (http::Method::GET, "user/user/hotSearch"),
             Url::GetRecommendSearch => (http::Method::GET, "user/user/recommend"),
             // 直播相关
@@ -632,6 +633,9 @@ impl Url {
             ),
             Url::BatchDeleteConversation => (http::Method::DELETE, "ai/history/deleteSessions"),
             Url::DeleteAllConversation => (http::Method::DELETE, "ai/history/deleteAllSessions"),
+            Url::GetConversationMessage => {
+                (http::Method::POST, "ai/history/messages/{conversationId}")
+            }
             // 地图相关
             Url::MapCoordTranslate => (http::Method::GET, "map/coord/translate"),
             Url::MapReverseGeocode => (http::Method::GET, "map/geocode/reverse"),
@@ -683,6 +687,7 @@ impl Url {
             "unpinConversation" => Ok(Url::UnpinConversation),
             "batchDeleteConversation" => Ok(Url::BatchDeleteConversation),
             "deleteAllConversation" => Ok(Url::DeleteAllConversation),
+            "getConversationMessage" => Ok(Url::GetConversationMessage),
             // 地图相关
             "mapCoordTranslate" => Ok(Url::MapCoordTranslate),
             "mapReverseGeocode" => Ok(Url::MapReverseGeocode),

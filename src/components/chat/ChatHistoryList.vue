@@ -204,11 +204,11 @@ const handleTogglePin = (id: string) => {
     if (item) {
       let res: { isPin: boolean };
       if (item.isPin) {
-        res = await pinConversationApi(id);
-      } else {
         res = await unpinConversationApi(id);
+      } else {
+        res = await pinConversationApi(id);
       }
-      item.isPin = res.isPin || item.isPin;
+      item.isPin = res.isPin;
     }
   });
 };
@@ -302,7 +302,7 @@ const loadHistoryList = async () => {
     }
     records.forEach((apiItem) => {
       const newItem: ChatItem = {
-        id: apiItem.id,
+        id: apiItem.conversationId,
         title: apiItem.title,
         timestamp: apiItem.timestamp,
         isPin: apiItem.isTop

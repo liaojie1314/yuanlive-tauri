@@ -31,6 +31,20 @@
         </div>
 
         <div
+          v-if="item.isUploading"
+          class="absolute inset-0 z-10 flex items-center justify-center rounded-lg bg-black/40 backdrop-blur-[2px]">
+          <i-mdi-loading class="h-6 w-6 animate-spin text-white" />
+        </div>
+
+        <div
+          v-else-if="item.isError"
+          class="absolute inset-0 z-10 flex items-center justify-center rounded-lg bg-red-500/20 border border-red-500/50 backdrop-blur-[1px] cursor-pointer transition-colors hover:bg-red-500/30"
+          :title="t('components.messageInput.uploadFailed')"
+          @click.stop="retryUpload(item)">
+          <i-mdi-refresh class="h-6 w-6 rounded-full bg-white text-red-500 p-0.5 shadow-sm" />
+        </div>
+
+        <div
           class="absolute top-[-4px] right-[-4px] z-10 flex h-5 w-5 cursor-pointer items-center justify-center rounded-full bg-[--action-bar-icon-color] text-[--tray-bg-color] opacity-0 shadow-sm transition-colors group-hover:opacity-100 hover:bg-red-500"
           @click.stop="removeAttachment(index)">
           <i-mdi-close class="h-3 w-3" />
@@ -66,6 +80,7 @@
 
                 <img
                   v-else
+                  alt=""
                   class="h-4 w-4 object-contain"
                   :src="`/file/${getFileSuffix(item.name || '')}.svg`"
                   @error="(e) => ((e.target as HTMLImageElement).src = '/file/unknown.svg')" />
@@ -243,11 +258,13 @@ import { type SelectOption, NEllipsis } from "naive-ui";
 import { open } from "@tauri-apps/plugin-dialog";
 import { convertFileSrc, invoke } from "@tauri-apps/api/core";
 import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
+import { stat } from "@tauri-apps/plugin-fs";
 
-import { MittEnum, TauriCommandEnum } from "@/enums";
+import { MittEnum, TauriCommandEnum, UploadSceneEnum } from "@/enums";
 import { useSettingStore } from "@/stores/setting.ts";
 import { useMitt } from "@/hooks/useMitt.ts";
 import { useWindow } from "@/hooks/useWindow.ts";
+import { useUpload } from "@/hooks/useUpload";
 import { useImageViewer } from "@/hooks/useImageViewer.ts";
 import { useVideoViewer } from "@/hooks/useVideoViewer.ts";
 import { useGlobalShortcut } from "@/hooks/useGlobalShortcut.ts";
@@ -264,6 +281,7 @@ const { openVideoViewer } = useVideoViewer();
 const { handleScreenshot } = useGlobalShortcut();
 const { createWebviewWindow } = useWindow();
 const appWindow = WebviewWindow.getCurrent();
+const { uploadFile, onComplete, onError, resumeUpload, getTaskStatus } = useUpload();
 
 interface Props {
   status?: "loading" | "streaming" | "normal";
@@ -283,12 +301,52 @@ interface Attachment {
   path: string; // 原始文件路径 (用于发送/预览)
   previewUrl?: string; // 图片预览地址 (asset协议)
   name: string; // 文件名
+  taskId?: string; // 记录上传任务 ID
+  uploadUrl?: string; // 上传成功后服务器返回的真实 URL
+  isUploading?: boolean; // 是否正在上传中
+  isError?: boolean; // 标记是否上传失败
 }
 
 const DRAFT_KEY = "chat_input_draft";
 const maxAttachments = 6;
+const IMAGE_EXTS = ["png", "jpg", "jpeg", "webp", "gif", "bmp", "svg"];
+const AUDIO_EXTS = ["mp3", "wav", "ogg", "aac", "flac", "m4a", "amr"];
 const VIDEO_EXTS = ["mp4", "avi", "mov", "mkv", "wmv", "flv", "webm", "m4v"];
-// 快捷指令数据列表
+// 支持向量化的文档与代码格式
+const DOC_EXTS = [
+  "pdf",
+  "doc",
+  "docx",
+  "xls",
+  "xlsx",
+  "ppt",
+  "pptx",
+  "txt",
+  "md",
+  "csv",
+  "json",
+  "xml",
+  "html",
+  "css",
+  "js",
+  "ts",
+  "vue",
+  "jsx",
+  "tsx",
+  "py",
+  "java",
+  "c",
+  "cpp",
+  "rs",
+  "go",
+  "sql",
+  "sh",
+  "yaml",
+  "yml",
+  "ini"
+];
+// 用于全局拖拽/粘贴时的统一校验
+const ALL_ALLOWED_EXTS = [...IMAGE_EXTS, ...AUDIO_EXTS, ...VIDEO_EXTS, ...DOC_EXTS];
 const slashCommands = [
   { icon: "translate", label: "翻译", prompt: "请将以下内容翻译成中文，要求信达雅：" },
   { icon: "code", label: "代码解释", prompt: "请帮我逐行解释下面这段代码的原理：" },
@@ -627,8 +685,8 @@ const openDocumentPreview = async (item: Attachment) => {
 };
 
 /**
- * 选择文件 (图片/文件)
- * @param isImage 是否选择图片文件
+ * 选择文件 (动态设置 Tauri 操作系统过滤白名单)
+ * @param isImage 是否仅仅选择图片
  */
 const selectFiles = async (isImage: boolean) => {
   if (attachments.value.length >= maxAttachments) {
@@ -636,12 +694,14 @@ const selectFiles = async (isImage: boolean) => {
     return;
   }
   try {
+    const filters = isImage
+      ? [{ name: "Images", extensions: IMAGE_EXTS }]
+      : [{ name: "Supported Files", extensions: [...DOC_EXTS, ...AUDIO_EXTS, ...VIDEO_EXTS] }];
+
     const selected = await open({
       multiple: true,
       directory: false,
-      filters: isImage
-        ? [{ name: "Images", extensions: ["png", "jpg", "jpeg", "webp", "svg", "gif", "bmp"] }]
-        : undefined
+      filters: filters
     });
 
     if (selected) {
@@ -651,16 +711,51 @@ const selectFiles = async (isImage: boolean) => {
         window.$message.warning(t("components.messageInput.msg.remainingAttachments", { count: remainingSlots }));
         paths.length = remainingSlots;
       }
-      paths.forEach((path) => {
+
+      let rejectedCount = 0;
+
+      for (const path of paths) {
         const name = path.split(/[\\/]/).pop() || "unknown";
-        const isImg = isImage || /\.(png|jpg|jpeg|webp|gif|bmp)$/i.test(name);
+        const ext = name.split(".").pop()?.toLowerCase() || "";
+
+        if (!ALL_ALLOWED_EXTS.includes(ext)) {
+          rejectedCount++;
+          continue;
+        }
+
+        // 获取真实物理文件大小并拦截 10MB
+        const fileStat = await stat(path);
+        if (fileStat.size > 10 * 1024 * 1024) {
+          window.$message.warning(t("components.messageInput.msg.maxSizeExceeded", { name }));
+          continue;
+        }
+
+        // 构造符合 hook 要求的 ExtendedFile
+        const mockFile = {
+          name,
+          size: fileStat.size,
+          path, // Hook 内部会根据这个 path 走 Rust 直传
+          lastModified: fileStat.mtime?.getTime() || Date.now(),
+          slice: () => new Blob() // 兜底防止报错
+        } as unknown as File;
+
+        // 触发异步上传
+        const taskId = await uploadFile(mockFile, UploadSceneEnum.CHAT);
+
+        const isImg = IMAGE_EXTS.includes(ext);
         attachments.value.push({
           type: isImg ? "image" : "file",
           path: path,
           previewUrl: isImg ? convertFileSrc(path) : undefined,
-          name: name
+          name: name,
+          taskId,
+          isUploading: true // 标记处于上传状态
         });
-      });
+      }
+
+      if (rejectedCount > 0) {
+        window.$message.error(t("components.messageInput.msg.filterDangerFiles", { count: rejectedCount }));
+      }
     }
   } catch (err) {
     console.error("Failed to open dialog:", err);
@@ -674,39 +769,67 @@ const selectFiles = async (isImage: boolean) => {
 const handleGlobalFilesDrop = async (files: UploadFile[]) => {
   if (!files || files.length === 0) return;
   const remainingSlots = maxAttachments - attachments.value.length;
-  if (remainingSlots <= 0) {
-    window.$message.warning(t("components.messageInput.msg.fileCountExceeded"));
-    return;
-  }
+  if (remainingSlots <= 0) return;
+
   const filesToProcess = files.length > remainingSlots ? files.slice(0, remainingSlots) : files;
-  if (files.length > remainingSlots) {
-    window.$message.warning(t("components.messageInput.msg.remainingAttachments", { count: remainingSlots }));
-  }
-  filesToProcess.forEach((file) => {
+
+  let rejectedCount = 0;
+
+  for (const file of filesToProcess) {
     let name = "";
     let path = "";
-    let isImage = false;
-    let previewUrl: string | undefined;
+    let size = 0;
+    let actualFile: any = file;
 
+    // 区分是 Tauri 拖拽的物理路径，还是浏览器的 File 对象
     if ("kind" in file && file.kind === "path") {
       name = file.name;
       path = file.path;
-      isImage = /\.(png|jpg|jpeg|webp|gif|bmp)$/i.test(name) || file.type.startsWith("image/");
-      if (isImage) previewUrl = convertFileSrc(path);
+      const fileStat = await stat(path);
+      size = fileStat.size;
+      actualFile = {
+        name,
+        size,
+        path,
+        lastModified: fileStat.mtime?.getTime() || Date.now(),
+        slice: () => new Blob()
+      };
     } else if (file instanceof File) {
       name = file.name;
-      isImage = file.type.startsWith("image/");
-      const blobUrl = URL.createObjectURL(file);
-      path = blobUrl;
-      if (isImage) previewUrl = blobUrl;
+      path = URL.createObjectURL(file);
+      size = file.size;
     }
+
+    const ext = name.split(".").pop()?.toLowerCase() || "";
+
+    if (!ALL_ALLOWED_EXTS.includes(ext)) {
+      rejectedCount++;
+      continue;
+    }
+
+    // 大小限制 10MB
+    if (size > 10 * 1024 * 1024) {
+      window.$message.warning(t("components.messageInput.msg.maxSizeExceeded", { name }));
+      continue;
+    }
+
+    // 触发异步上传
+    const taskId = await uploadFile(actualFile as File, UploadSceneEnum.CHAT);
+
+    const isImage = IMAGE_EXTS.includes(ext);
     attachments.value.push({
       type: isImage ? "image" : "file",
       path: path,
-      previewUrl: previewUrl,
-      name: name
+      previewUrl: isImage ? (path.startsWith("blob:") ? path : convertFileSrc(path)) : undefined,
+      name: name,
+      taskId,
+      isUploading: true // 标记状态
     });
-  });
+  }
+
+  if (rejectedCount > 0) {
+    window.$message.error(t("components.messageInput.msg.filterDangerFiles", { count: rejectedCount }));
+  }
 };
 
 /**
@@ -728,41 +851,40 @@ const handleCameraConfirm = (base64Photo: string) => {
 
 /** 发送消息 */
 const sendMessage = () => {
-  // 1. 处理取消生成逻辑
   if (props.status === "streaming" || props.status === "loading") {
     emit("cancel-stream");
     return;
   }
   if (isBtnDisabled.value) return;
 
+  // 如果有文件还在上传中，禁止发送并提示用户
+  if (attachments.value.some((a) => a.isUploading)) {
+    window.$message.warning(t("components.messageInput.msg.waitUploading"));
+    return;
+  }
+
   const text = messageText.value.trim();
 
-  // 2. 定义媒体类型检测正则
-  // 视频后缀
-  const VIDEO_EXT_REGEX = /\.(mp4|avi|mov|mkv|wmv|flv|webm|m4v)$/i;
-  // 音频后缀
-  const AUDIO_EXT_REGEX = /\.(mp3|wav|ogg|aac|flac|m4a)$/i;
-
-  // 3. 重新分类附件
   const imagePaths: string[] = [];
   const videoPaths: string[] = [];
   const audioPaths: string[] = [];
   const filePaths: string[] = [];
 
   attachments.value.forEach((item) => {
-    // 转换路径
-    const assetUrl = item.previewUrl?.startsWith("blob:") ? item.previewUrl : convertFileSrc(item.path);
+    // 优先取服务端返回的在线 uploadUrl，如果万一没有，才降级使用本地路径
+    const finalUrl = item.uploadUrl || item.previewUrl || convertFileSrc(item.path);
 
+    const ext = item.name.split(".").pop()?.toLowerCase() || "";
     if (item.type === "image") {
-      imagePaths.push(assetUrl);
+      imagePaths.push(finalUrl);
     } else {
-      // 检查文件类型
-      if (VIDEO_EXT_REGEX.test(item.name)) {
-        videoPaths.push(assetUrl);
-      } else if (AUDIO_EXT_REGEX.test(item.name)) {
-        audioPaths.push(assetUrl);
+      // 直接用数组 includes 替代正则表达式！
+      if (VIDEO_EXTS.includes(ext)) {
+        videoPaths.push(finalUrl);
+      } else if (AUDIO_EXTS.includes(ext)) {
+        audioPaths.push(finalUrl);
       } else {
-        filePaths.push(assetUrl);
+        filePaths.push(finalUrl);
       }
     }
   });
@@ -952,6 +1074,41 @@ const handleFillInput = (text: string) => {
     }
   });
 };
+
+/**
+ * 点击重新上传的方法
+ * @param item 文件
+ */
+const retryUpload = (item: Attachment) => {
+  if (!item.taskId) return;
+  // 恢复 UI 状态
+  item.isError = false;
+  item.isUploading = true;
+  // 直接调用 Hook 提供的断点续传/重试核心方法
+  resumeUpload(item.taskId);
+};
+
+onComplete((res) => {
+  const att = attachments.value.find((a) => a.taskId === res.taskId);
+  if (att) {
+    att.uploadUrl = res.url;
+    att.isUploading = false;
+  }
+});
+
+// 错误监听与状态映射
+onError((err) => {
+  console.error("上传失败:", err);
+  window.$message?.error(t("components.messageInput.msg.uploadFailed"));
+  // 遍历寻找触发失败的任务
+  attachments.value.forEach((att) => {
+    // 利用 getTaskStatus 查询该任务在 Hook 里的状态
+    if (att.taskId && getTaskStatus(att.taskId) === "failed") {
+      att.isUploading = false;
+      att.isError = true;
+    }
+  });
+});
 
 // 监听菜单状态或搜索词的变化，每次变化时重置选中的索引为 0
 watch([showMentionMenu, showSlashMenu, filteredMentions], () => {

@@ -89,11 +89,15 @@ interface Props {
   maxImages?: number; // 最大上传数量
 }
 
-// 使用 withDefaults 为新增的可选属性赋予默认值
-const props = withDefaults(defineProps<Props>(), {
-  showImageUpload: false,
-  maxImages: 4
-});
+const {
+  show,
+  title,
+  reportTypes,
+  placeholder,
+  submitText,
+  showImageUpload = false,
+  maxImages = 4
+} = defineProps<Props>();
 
 const emit = defineEmits<{
   "update:show": [value: boolean];
@@ -106,7 +110,7 @@ const reportDescription = ref("");
 const selectedImages = ref<string[]>([]);
 
 const dialogVisible = computed({
-  get: () => props.show,
+  get: () => show,
   set: (value) => emit("update:show", value)
 });
 
@@ -124,10 +128,10 @@ const handleSelectImage = async () => {
       const paths = Array.isArray(selected) ? selected : [selected];
       const total = selectedImages.value.length + paths.length;
 
-      if (total > props.maxImages) {
-        window.$message?.warning(t("dialog.report.msg.maxImages", { count: props.maxImages }));
+      if (total > maxImages) {
+        window.$message?.warning(t("dialog.report.msg.maxImages", { count: maxImages }));
         // 截取剩余允许的数量
-        const allowed = paths.slice(0, props.maxImages - selectedImages.value.length);
+        const allowed = paths.slice(0, maxImages - selectedImages.value.length);
         selectedImages.value.push(...allowed);
       } else {
         selectedImages.value.push(...paths);

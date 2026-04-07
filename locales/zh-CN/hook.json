@@ -46,5 +46,8 @@
     "initFailed": "初始化扫描器失败",
     "selectDirectory": "请先选择目录",
     "selectDirectoryFailed": "选择目录失败"
+  },
+  "videoFrame": {
+    "extractFailed": "提取视频帧失败"
   }
 }

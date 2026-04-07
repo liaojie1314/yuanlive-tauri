@@ -76,3 +76,22 @@ export async function deleteAllConversationApi() {
     url: UrlEnum.DELETE_ALL_CONVERSATION
   });
 }
+
+/**
+ * 获取对话消息
+ * @param conversationId 对话id
+ * @param cursor 分页游标
+ * @param pageSize 每页数量
+ */
+export async function getConversationMessageApi(conversationId: string, cursor?: string, pageSize: number = 10) {
+  return await request({
+    url: UrlEnum.GET_CONVERSATION_MESSAGE,
+    pathParams: {
+      conversationId
+    },
+    body: {
+      cursor,
+      pageSize
+    }
+  });
+}

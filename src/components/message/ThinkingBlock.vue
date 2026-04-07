@@ -4,11 +4,8 @@
       class="flex cursor-pointer items-center justify-between rounded-lg border border-[--line-color] bg-[--input-area-bg] px-3 py-2 shadow-sm transition-colors duration-200 select-none hover:bg-[--tray-hover]"
       @click="isExpanded = !isExpanded">
       <div class="flex-y-center gap-2 text-xs">
-        <i-mdi-loading v-if="!isExpanded && duration === 0" class="h-4 w-4 animate-spin text-blue-500" />
-        <i-mdi-thought-bubble-outline v-else class="h-4 w-4 text-blue-500" />
-        <span class="font-medium text-[--text-color]">
-          {{ isExpanded ? "思考与执行过程" : $t("components.thinkingBlock.thinkDuration", { duration }) }}
-        </span>
+        <i-mdi-thought-bubble-outline class="h-4 w-4 text-blue-500" />
+        <span class="font-medium text-[--text-color]">{{ $t("components.thinkingBlock.think") }}</span>
       </div>
       <i-material-symbols-keyboard-arrow-down
         class="h-4 w-4 text-[--user-text-color] opacity-60 transition-transform duration-300"
@@ -81,7 +78,6 @@ defineOptions({ name: "ThinkingBlock" });
 
 defineProps<{
   content?: string;
-  duration?: number;
   toolCalls?: any[];
 }>();
 

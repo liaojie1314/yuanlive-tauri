@@ -109,6 +109,19 @@ export interface AiStreamPayload {
     systemPrompt?: string;
     mcpTools?: any[];
   };
+  env?: {
+    os?: {
+      type: string;
+      arch: string;
+      version: string;
+    };
+    location?: {
+      lat: number;
+      lng: number;
+      address?: string;
+    };
+    allowedWorkspaces?: string[];
+  };
   toolResults?: any[];
 }
 
@@ -116,7 +129,9 @@ export interface AiStreamPayload {
  * 流式数据回调函数
  */
 export interface StreamCallbacks {
+  onMessageIds?: (ids: { userMsgId: string; aiMsgId: string }) => void;
   onChunk?: (chunk: string) => void;
+  onThinking?: (thinkingChunk: string) => void;
   onToolCall?: (toolCall: any) => void;
   onDone?: (fullContent: string) => void;
   onError?: (error: string) => void;
@@ -153,19 +168,43 @@ export async function messageSendStream(
           if (data) {
             try {
               const parsedData = JSON.parse(data);
-              // 如果是工具调用指令，直接拦截并触发专门的回调，不当做普通文本处理
+
+              // 1. 提取并同步后端真实的双端消息 ID
+              if (parsedData.userMsgId && parsedData.aiMsgId) {
+                callbacks?.onMessageIds?.({
+                  userMsgId: parsedData.userMsgId,
+                  aiMsgId: parsedData.aiMsgId
+                });
+              }
+
+              // 2. 拦截工具调用
               if (parsedData.status === "tool_call" && parsedData.toolCall) {
                 callbacks?.onToolCall?.(parsedData.toolCall);
                 return;
               }
-              // 2如果是正常的结构化文本流，提取 chunk 字段
+
+              // 3. 提取思考过程 (Reasoning)
+              // 注意：如果只是思考帧，里面没有 content 字段
+              if (parsedData.thinking !== undefined && parsedData.thinking !== null) {
+                callbacks?.onThinking?.(parsedData.thinking);
+              }
+
+              // 4. 提取正常的结构化正文
+              if (parsedData.content && parsedData.content.text !== undefined) {
+                const textChunk = parsedData.content.text;
+                fullContent += textChunk;
+                callbacks?.onChunk?.(textChunk);
+                return;
+              }
+
+              // 5. 兼容老的纯 chunk 字段
               if (parsedData.chunk !== undefined) {
                 fullContent += parsedData.chunk;
                 callbacks?.onChunk?.(parsedData.chunk);
                 return;
               }
             } catch (_) {
-              // 解析失败说明后端传的不是 JSON，而是纯文本，走兜底逻辑原样拼接
+              // 解析失败走纯文本兜底
               fullContent += data;
               callbacks?.onChunk?.(data);
             }

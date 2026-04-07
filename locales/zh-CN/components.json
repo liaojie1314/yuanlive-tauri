@@ -128,8 +128,7 @@
     "forward": "快进5秒"
   },
   "thinkingBlock": {
-    "think": "思考过程",
-    "thinkDuration": "已深度思考 ({duration}s)",
+    "think": "思考与执行过程",
     "callTool": "调用工具:",
     "toolResult": "工具返回结果:"
   },
@@ -185,6 +184,7 @@
     "noRelatedFiles": "未找到相关文件",
     "selectConfirm": "↑↓ 选择, Enter 确认",
     "clipboard": "系统剪贴板",
+    "uploadFailed": "上传失败，点击重试",
     "modelType": {
       "auto": "自动",
       "text": "文字",
@@ -197,7 +197,11 @@
       "maxAttachments": "最多只能上传{count}个文件",
       "remainingAttachments": "最多只能再上传{count}个文件",
       "fileCountExceeded": "文件数量已达上限",
-      "clipboardReadFailed": "无法读取剪贴板内容"
+      "clipboardReadFailed": "无法读取剪贴板内容",
+      "maxSizeExceeded": "文件 {name} 超过 10MB 大小限制！",
+      "filterDangerFiles": "已自动过滤 {count} 个不支持的文件类型！",
+      "waitUploading": "有附件正在上传中，请稍等...",
+      "uploadFailed": "文件上传失败，请重试"
     }
   },
   "trendingPrompts": {

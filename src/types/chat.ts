@@ -59,7 +59,7 @@ export type ContentBlock = ThinkingBlock | TextBlock | ImageBlock | VideoBlock |
 
 // 原始消息数据 (后端 API 返回的数据结构)
 export interface MessageData {
-  id: number | string;
+  id?: string;
   // 核心字段：用 role 来判断是谁发的
   role: "user" | "assistant" | "system";
   sender?: string;

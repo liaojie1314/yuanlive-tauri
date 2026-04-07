@@ -27,7 +27,7 @@
                 :key="msg.id"
                 :message="msg"
                 :selection-mode="isMessageSelectionMode"
-                :selected="selectedMessageIds.has(msg.id)"
+                :selected="selectedMessageIds.has(msg.id!)"
                 @enter-multi-select="handleEnterMessageMultiSelect"
                 @toggle-select="handleToggleMessageSelect"
                 @resend-message="handleResend"
@@ -40,8 +40,12 @@
 
           <div v-else class="flex h-full min-h-[60vh] w-full flex-col items-center justify-center select-none">
             <div
-              class="mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-500 text-white shadow-lg shadow-blue-500/20">
-              <i-mdi-robot-outline class="h-10 w-10" />
+              class="absolute bottom-4 right-6 z-10 flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border border-[--line-color] bg-[--tray-bg-color] shadow-md transition-all duration-300 hover:bg-[--tray-hover] hover:shadow-lg active:scale-95"
+              :class="
+                showScrollToBottomBtn ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0 pointer-events-none'
+              "
+              @click="scrollToBottom(true, true)">
+              <i-mdi-arrow-down class="h-5 w-5 text-[--user-text-color]" />
             </div>
             <h2 class="mb-4 text-2xl font-bold text-[--text-color]">{{ $t("home.aiChat.startChat") }}</h2>
             <p class="mb-10 text-sm text-[--user-text-color] opacity-80">
@@ -114,13 +118,21 @@ import { useI18n } from "vue-i18n";
 import type { ScrollbarInst } from "naive-ui";
 import { arch, version } from "@tauri-apps/plugin-os";
 
-import type { MessageData, ToolCallDetail } from "@/types/chat";
-import { messageCancelStream } from "@/utils/RequestUtils";
+import { useAiStore } from "@/stores/ai";
+import { useUserStore } from "@/stores/user";
+import { nativeFsTools } from "@/utils/McpUtils";
+import { useGeolocation } from "@/hooks/useGeolocation";
 import { getOSType, isWindows } from "@/utils/PlatformUtils";
+import type { MessageData, ToolCallDetail } from "@/types/chat";
+import type { AiStreamPayload } from "@/utils/RequestUtils";
+import { messageCancelStream, messageSendStream } from "@/utils/RequestUtils";
 
 defineOptions({ name: "AiChat" });
 
 const { t } = useI18n();
+const aiStore = useAiStore();
+const userStore = useUserStore();
+const { getLocationWithTransform } = useGeolocation();
 
 const osType = ref();
 const osArch = ref();
@@ -143,15 +155,34 @@ const isAtBottom = ref(true);
  * @param e 滚动事件对象
  */
 const handleScroll = (e: Event) => {
-  const target = e.target as HTMLElement;
-  // 计算距离底部的距离
+  const target = (e.currentTarget || e.target) as HTMLElement;
+  // 1. 明确判断当前容器是否真的产生了滚动条
+  const hasScrollbar = target.scrollHeight > target.clientHeight;
+  // 2. 计算距离底部的精确像素
   const distanceToBottom = target.scrollHeight - target.scrollTop - target.clientHeight;
+  // 3. 只有在有滚动条，且距离底部超过 200px 时，才显示“回到大底部”按钮
+  showScrollToBottomBtn.value = hasScrollbar && distanceToBottom > 200;
+  // 4. 更新是否处于底部的状态（如果没有滚动条，永远视为在底部）
+  isAtBottom.value = !hasScrollbar || distanceToBottom < 100; // 阈值调小，更敏锐
+};
 
-  // 1. 控制“回到大底部”按钮的显示
-  showScrollToBottomBtn.value = distanceToBottom > 300;
-
-  // 2. 更新是否处于底部的状态
-  isAtBottom.value = distanceToBottom < 200;
+/**
+ * 滚动到消息列表底部
+ * @param force 是否强制滚动（用户自己发消息或点击回底按钮时传 true）
+ * @param isSmooth 是否使用平滑动画（流式打字时绝对不能设为 true，否则会疯狂抖动）
+ */
+const scrollToBottom = (force = false, isSmooth = false) => {
+  nextTick(() => {
+    // 只有在强制滚动 或 用户本身就在底部时，才执行滚动
+    if (force || isAtBottom.value) {
+      if (scrollbarRef.value && scrollContentRef.value) {
+        scrollbarRef.value.scrollTo({
+          top: scrollContentRef.value.scrollHeight,
+          behavior: isSmooth ? "smooth" : "auto"
+        });
+      }
+    }
+  });
 };
 
 /**
@@ -192,7 +223,7 @@ const handleBatchDeleteMessages = () => {
     negativeText: t("components.common.cancel"),
     onPositiveClick: () => {
       // 从本地列表中移除选中的消息
-      messages.value = messages.value.filter((msg) => !selectedMessageIds.value.has(msg.id));
+      messages.value = messages.value.filter((msg) => !selectedMessageIds.value.has(msg.id!));
       // TODO: 这里可以调用后端 API 删除数据库中的消息记录
 
       // 删除完成后退出多选模式
@@ -204,24 +235,6 @@ const handleBatchDeleteMessages = () => {
 /** 切换消息列表折叠状态 */
 const handleToggleCollapse = () => {
   isHistoryCollapsed.value = !isHistoryCollapsed.value;
-};
-
-/**
- * 滚动到消息列表底部
- * @param force 是否强制滚动（用户自己发消息或点击回底按钮时传 true）
- */
-const scrollToBottom = (force = false) => {
-  nextTick(() => {
-    // 只有在强制滚动 或 用户本身就在底部时，才执行滚动
-    if (force || isAtBottom.value) {
-      if (scrollbarRef.value && scrollContentRef.value) {
-        scrollbarRef.value.scrollTo({
-          top: scrollContentRef.value.scrollHeight,
-          behavior: "smooth"
-        });
-      }
-    }
-  });
 };
 
 /** 取消当前 AI 消息生成 */
@@ -272,10 +285,10 @@ const handleResend = (data: { id: string | number; content: string }) => {
 };
 
 /**
- * 发送消息
+ * 发送消息 (真实流式请求)
  * @param payload 消息内容
  */
-const handleSendMessage = (payload: {
+const handleSendMessage = async (payload: {
   type: string;
   content: string;
   options: { useReasoning: boolean; useNetwork: boolean };
@@ -284,117 +297,137 @@ const handleSendMessage = (payload: {
 
   if (!activeChatId.value) {
     activeChatId.value = "chat_" + Date.now();
-    // TODO: 这里可以发个事件告诉侧边栏去新增一条空历史记录
   }
 
-  // 1. 构造用户消息
+  // 1. 构造用户消息并压入
   const userMsg: MessageData = {
-    id: Date.now(),
+    id: String(userStore.userInfo?.uid || Date.now()),
     role: "user",
-    sender: "我",
-    avatar: "https://picsum.photos/id/1006/100/100",
+    sender: userStore.userInfo?.username || "我",
+    avatar: userStore.userInfo?.avatar || "https://picsum.photos/id/1006/100/100",
     content: payload.content,
     time: new Date().toLocaleTimeString()
   };
-
   messages.value.push(userMsg);
+  const reactiveUserMsg = messages.value[messages.value.length - 1];
   scrollToBottom(true);
 
-  // 2. 初始化 AI 消息气泡
+  // 2. 初始化 AI 消息气泡并压入
   chatStatus.value = "loading";
-  const aiMsgId = Date.now() + 1;
   const aiMsg: MessageData = {
-    id: aiMsgId,
+    id: String(Date.now() + 1),
     role: "assistant",
     sender: "AI助手",
     avatar: "https://picsum.photos/id/1005/100/100",
     time: new Date().toLocaleTimeString(),
     thinking: "",
     content: "",
-    thinkingTime: 0,
     toolCalls: [],
-    citations: [
-      {
-        id: 1,
-        title: "agent-builder-tasks.md",
-        type: "file",
-        snippet: "本地任务清单文档，记录了所有待办事项和开发进度...",
-        score: 0.95
+    citations: []
+  };
+  messages.value.push(aiMsg);
+  const reactiveAiMsg = messages.value[messages.value.length - 1];
+  scrollToBottom();
+
+  const requestId = `req_${Date.now()}`;
+  currentRequestId.value = requestId;
+
+  // 3. 提取 Agent 配置
+  const mcpTools: any[] = [];
+  const allAvailableTools = [...nativeFsTools, ...aiStore.cachedWindowsTools];
+  for (const [_, config] of Object.entries(aiStore.mcpConfig)) {
+    if (config.enabled && config.activeTools.length > 0) {
+      const activeSchemas = allAvailableTools.filter((tool) => config.activeTools.includes(tool.name));
+      mcpTools.push(...toRaw(activeSchemas));
+    }
+  }
+
+  // 4. 安全地获取地理位置 (带 2000ms 超时保护)
+  let locationData;
+  try {
+    const locResult = (await Promise.race([
+      getLocationWithTransform({ timeout: 6000, enableHighAccuracy: false }),
+      new Promise((_, reject) => setTimeout(() => reject(new Error("获取位置超时")), 6000))
+    ])) as any;
+
+    locationData = {
+      lat: locResult.transformed?.lat || locResult.original?.lat,
+      lng: locResult.transformed?.lng || locResult.original?.lng,
+      address: locResult.address || ""
+    };
+  } catch (e) {
+    console.warn("无法获取地理位置，降级为无位置状态发送:", e);
+  }
+
+  // 5. 构建带 env 的完整请求载荷
+  const streamPayload: AiStreamPayload = {
+    clientMsgId: requestId,
+    conversationId: activeChatId.value,
+    content: payload.content,
+    options: payload.options,
+    agentSettings: {
+      systemPrompt: aiStore.systemPrompt || undefined,
+      mcpTools: mcpTools.length > 0 ? mcpTools : undefined
+    },
+    env: {
+      os: {
+        type: osType.value,
+        arch: osArch.value,
+        version: osVersion.value
       },
-      {
-        id: 2,
-        title: "百度",
-        type: "web",
-        url: "https://www.baidu.com",
-        snippet: "本地任务清单文档，记录了所有待办事项和开发进度..."
-      },
-      {
-        id: 3,
-        title: "b站",
-        type: "web",
-        url: "https://www.bilibili.com",
-        snippet: "本地任务清单文档，记录了所有待办事项和开发进度..."
-      },
-      {
-        id: 4,
-        title: "1.pdf",
-        type: "file",
-        snippet: "本地任务清单文档，记录了所有待办事项和开发进度...",
-        score: 0.85
-      },
-      {
-        id: 5,
-        title: "1.png",
-        type: "file",
-        snippet: "本地任务清单文档，记录了所有待办事项和开发进度...",
-        score: 0.65
-      }
-    ]
+      location: locationData,
+      allowedWorkspaces: toRaw(aiStore.allowedWorkspaces)
+    }
   };
 
-  messages.value.push(aiMsg);
-  scrollToBottom();
-  // 直接操作 aiMsg 是没有响应式的。
-  const reactiveAiMsg = messages.value[messages.value.length - 1];
-  // 3. 启动第一阶段模拟，传入代理对象
-  simulatePhase1(reactiveAiMsg);
+  try {
+    chatStatus.value = "streaming";
+
+    await messageSendStream(streamPayload, requestId, {
+      onMessageIds: ({ userMsgId, aiMsgId }) => {
+        if (reactiveUserMsg.id !== userMsgId) reactiveUserMsg.id = userMsgId;
+        if (reactiveAiMsg.id !== aiMsgId) reactiveAiMsg.id = aiMsgId;
+      },
+      onChunk: (chunk) => {
+        reactiveAiMsg.content += chunk;
+        scrollToBottom();
+      },
+      onThinking: (thinkingChunk) => {
+        if (reactiveAiMsg.thinking === undefined) reactiveAiMsg.thinking = "";
+        reactiveAiMsg.thinking += thinkingChunk;
+        scrollToBottom();
+      },
+      onToolCall: (toolCall) => {
+        chatStatus.value = "normal";
+        reactiveAiMsg.toolCalls!.push({
+          id: toolCall.id || `call_${Date.now()}`,
+          name: toolCall.name,
+          args: toolCall.args || {},
+          status: "pending"
+        });
+        scrollToBottom();
+      },
+      onDone: () => {
+        chatStatus.value = "normal";
+        currentRequestId.value = null;
+        scrollToBottom();
+      },
+      onError: (err) => {
+        chatStatus.value = "normal";
+        currentRequestId.value = null;
+        reactiveAiMsg.content += `\n\n**[请求异常: ${err}]**`;
+        scrollToBottom();
+      }
+    });
+  } catch (error) {
+    console.error("流式请求抛出异常:", error);
+    chatStatus.value = "normal";
+    currentRequestId.value = null;
+  }
 };
 
 /**
- * 模拟阶段 1: 大模型思考并下发 tool_call 指令
- * @param aiMsg 要更新的 AI 消息对象
- */
-const simulatePhase1 = (aiMsg: MessageData) => {
-  chatStatus.value = "streaming";
-  const thinkText =
-    "用户要求读取本地任务清单，我需要调用 file_read 工具来获取 E 盘的 agent-builder-tasks.md 文件内容...\n";
-  let tIndex = 0;
-
-  const thinkInterval = setInterval(() => {
-    if (tIndex < thinkText.length) {
-      aiMsg.thinking += thinkText[tIndex];
-      tIndex++;
-      scrollToBottom();
-    } else {
-      clearInterval(thinkInterval);
-
-      // 大模型停止生成文字，下发工具调用请求，状态设为 pending
-      aiMsg.toolCalls!.push({
-        id: "call_" + Date.now(),
-        name: "file_read",
-        args: { file_path: "E:/workspace/agent-builder-tasks.md" },
-        status: "pending"
-      });
-
-      // 释放输入框锁定，让用户可以点击授权卡片
-      chatStatus.value = "normal";
-      scrollToBottom();
-    }
-  }, 50);
-};
-
-/**
- * 执行或拒绝本地工具并通知大模型
+ * 执行或拒绝本地工具并通知大模型继续生成
  * @param message 要更新的消息对象
  * @param tool 要执行的工具调用详情
  * @param isAllowed 是否允许执行该工具
@@ -402,109 +435,65 @@ const simulatePhase1 = (aiMsg: MessageData) => {
 const executeLocalTool = async (message: MessageData, tool: ToolCallDetail, isAllowed: boolean) => {
   chatStatus.value = "loading";
 
-  // 更新思考区块中的状态为执行中/错误
+  // 1. 更新 UI 状态
   tool.status = isAllowed ? "executing" : "error";
   tool.result = isAllowed ? "" : "用户拒绝了系统授权。";
   scrollToBottom();
 
+  // 2. 真实执行工具逻辑
   if (isAllowed) {
-    // 模拟 Tauri 读取耗时
-    setTimeout(() => {
-      tool.result = "## Agent 待办事项\n- M4-01: 数据库设计\n- M4-02: 后端 API 对接\n进度: 未开始";
-      tool.status = "success"; // 变成绿色打勾图标
-      scrollToBottom();
-
-      // 带着工具执行结果，触发第二阶段生成
-      simulatePhase2(message);
-    }, 1500);
-  } else {
-    setTimeout(() => {
-      simulatePhase2(message);
-    }, 500);
-  }
-};
-
-/**
- * 模拟阶段 2: 大模型拿到本地工具结果后，继续生成最终回答
- * @param aiMsg 要更新的 AI 消息对象
- */
-const simulatePhase2 = (aiMsg: MessageData) => {
-  chatStatus.value = "streaming";
-
-  const toolResult = aiMsg.toolCalls![0].status;
-  // 测试数据
-  //   `我已经成功读取了本地文件！为了全面测试最新的渲染引擎，我整理了以下**全类型富文本报告** :rocket:：
-
-  // ### 1. 扩展排版语法
-  // 这是一段包含**加粗**、*斜体*、~~删除线~~，以及特定的 ==高亮显示 (Mark)== 的文本。
-  // 利用上下标插件，我们可以写出化学式 H~2~O 和方程式 $X^2$（或纯文本的 2^10^）。
-  // 名词缩写测试：把鼠标悬停在下方的 HTML 上试试看。
-  // *[HTML]: Hyper Text Markup Language (超文本标记语言)
-
-  // ### 2. 定义列表 (Deflist)
-  // 前端工程化
-  // : 构建现代 Web 系统的规范与实践。
-  // : 包含 TypeScript, Vite, Vue 等技术栈。
-
-  // ### 3. GFM 任务列表与表格
-  // - [x] 迁移到 \`markdown-it\` 解析引擎
-  // - [x] 修复 DOMPurify 清洗 MathML 的问题
-  // - [ ] 测试所有插件的边界兼容性
-
-  // | 模块名称 | 语言 | 状态 | 耗时评估 |
-  // | :--- | :---: | :---: | ---: |
-  // | 核心解析器 | TypeScript | 🟢 稳定 | ~20ms |
-  // | 样式与动画 | CSS/Sass | 🟡 调优中 | ~15ms |
-
-  // ### 4. 高阶数学公式 (KaTeX)
-  // 物理学中最著名的质能方程是 $E = mc^2$。下面是更复杂的**薛定谔方程**块级渲染：
-  // $$
-  // i\\hbar\\frac{\\partial}{\\partial t}\\Psi(\\mathbf{r},t) = \\hat{H}\\Psi(\\mathbf{r},t)
-  // $$
-
-  // ### 5. 跨语言代码高亮测试
-  // 这是带有你自定义 Header 和操作按钮的 Vue 组件代码：
-  // \`\`\`vue
-  // <template>
-  //   <div class="hello">{{ msg }}</div>
-  // </template>
-  // <script setup lang="ts">
-  // import { ref } from 'vue';
-  // const msg = ref('Hello Tauri & Vue!');
-  // <\/script>
-  // \`\`\`
-
-  // 以及系统底层的 Rust 代码块：
-  // \`\`\`rust
-  // fn main() {
-  //     let target = "World";
-  //     println!("Hello, {}! 🦀", target);
-  // }
-  // \`\`\`
-
-  // > **💡 智能提示**：您可以直接点击上方代码块的**运行**按钮来进行预览，或者使用**复制/下载**功能。相关参考信息见文末脚注[^1]。
-
-  // ---
-  // [^1]: 这是一个 Footnote (脚注) 测试。通常用于引用文献或补充详细的长文本解释。`
-  const contentText =
-    toolResult === "success"
-      ? "我已经成功读取了本地文件！根据文件内容，你当前有以下待办事项：\n\n1. **M4-01**: 数据库设计\n2. **M4-02**: 后端 API 对接\n\n请问需要我帮忙写代码吗？\n```python\nprint('hello world')\n```"
-      : "好的，我已经取消了本地文件读取操作。如果你需要查询任务，请随时授权。";
-
-  let cIndex = 0;
-
-  const contentInterval = setInterval(() => {
-    if (cIndex < contentText.length) {
-      aiMsg.content += contentText[cIndex];
-      cIndex++;
-      scrollToBottom();
-    } else {
-      clearInterval(contentInterval);
-      chatStatus.value = "normal";
-      aiMsg.thinkingTime = 3;
-      scrollToBottom();
+    try {
+      // TODO: 未来在这里替换为真实的 Tauri invoke，比如 await invoke('read_file', { path: tool.args.file_path })
+      await new Promise((resolve) => setTimeout(resolve, 800)); // 模拟本地耗时
+      tool.result = `(模拟执行结果) 成功读取数据，时间：${new Date().toLocaleTimeString()}`;
+      tool.status = "success";
+    } catch (e: any) {
+      tool.result = `执行本地工具失败: ${e.message || String(e)}`;
+      tool.status = "error";
     }
-  }, 30);
+  }
+  scrollToBottom();
+
+  // 3. 构建第二阶段请求：把工具结果提交给大模型
+  const requestId = `req_${Date.now()}`;
+  currentRequestId.value = requestId;
+
+  const streamPayload: AiStreamPayload = {
+    clientMsgId: requestId,
+    conversationId: activeChatId.value,
+    content: "", // 此时不发送新提问，只发工具结果
+    toolResults: [
+      {
+        tool_call_id: tool.id,
+        result: tool.result
+      }
+    ]
+  };
+
+  try {
+    chatStatus.value = "streaming";
+    await messageSendStream(streamPayload, requestId, {
+      onChunk: (chunk) => {
+        message.content += chunk;
+        scrollToBottom();
+      },
+      onDone: () => {
+        chatStatus.value = "normal";
+        currentRequestId.value = null;
+        scrollToBottom();
+      },
+      onError: (err) => {
+        chatStatus.value = "normal";
+        currentRequestId.value = null;
+        message.content += `\n\n**[工具结果提交异常: ${err}]**`;
+        scrollToBottom();
+      }
+    });
+  } catch (error) {
+    console.error("提交工具结果异常:", error);
+    chatStatus.value = "normal";
+    currentRequestId.value = null;
+  }
 };
 
 /**

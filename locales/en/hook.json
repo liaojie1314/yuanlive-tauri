@@ -46,5 +46,8 @@
     "initFailed": "Failed to initialize scanner",
     "selectDirectory": "Please select a directory first",
     "selectDirectoryFailed": "Failed to select directory"
+  },
+  "videoFrame": {
+    "extractFailed": "Failed to extract video frames"
   }
 }

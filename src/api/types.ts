@@ -144,10 +144,30 @@ export type LiveItem = {
 
 //========ai========
 export type AiConversationItem = {
-  id: string;
+  conversationId: string;
   title: string;
   timestamp: number;
   isTop: boolean;
 };
 
 export type AiConversationPageResult = PageResult<AiConversationItem>;
+
+export type AiPageResult<T> = {
+  hasMore: boolean; // 是否有更多
+  nextCursor: string; // 下一页游标
+  messages: T[];
+};
+
+export type AiMessage = {
+  clientId: string; // 客户端消息ID
+  userId: string;
+  aiId: string;
+  role: string; // 角色:user或assistant
+  sender: string; // 发送者
+  avatar: string; // 头像
+  content: object; // 内容
+  time: number; // 时间戳
+  thinking: string; // 思考的内容
+};
+
+export type AiMessagePageResult = PageResult<AiMessage>;

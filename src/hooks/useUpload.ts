@@ -1,7 +1,7 @@
 import { createEventHook } from "@vueuse/core";
 import { invoke } from "@tauri-apps/api/core";
 
-import type { UploadProgress, UploadResult, UploadStatus, UploadTask, ChunkInfo } from "@/types/upload";
+import type { ChunkInfo, UploadProgress, UploadResult, UploadStatus, UploadTask } from "@/types/upload";
 import { TauriCommandEnum, UploadSceneEnum } from "@/enums";
 
 // 定义扩展的 File 接口，Tauri 环境下 File 对象可能包含 path
@@ -80,6 +80,7 @@ export const useUpload = () => {
       case UploadSceneEnum.AVATAR:
       case UploadSceneEnum.VIDEO_COVER:
       case UploadSceneEnum.LIVE_COVER:
+      case UploadSceneEnum.CHAT:
         return { chunkSize: 2 * 1024 * 1024, retryCount: 3, directUploadThreshold: 2 * 1024 * 1024 };
       case UploadSceneEnum.VIDEO:
         return { chunkSize: 16 * 1024 * 1024, retryCount: 5, directUploadThreshold: 16 * 1024 * 1024 };
@@ -248,10 +249,10 @@ export const useUpload = () => {
       uploadStatus.value = "completed";
     } catch (e) {
       console.error("直接上传失败", e);
-      triggerError(e as Error);
       task.status = "failed";
       isUploading.value = false;
       uploadStatus.value = "failed";
+      triggerError(e as Error);
     }
   };
 
@@ -340,10 +341,10 @@ export const useUpload = () => {
         return;
       }
       console.error("上传流程失败:", error);
-      triggerError(error as Error);
       task.status = "failed";
       isUploading.value = false;
       uploadStatus.value = "failed";
+      triggerError(error as Error);
     }
   };
 

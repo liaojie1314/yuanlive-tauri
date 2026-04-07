@@ -22,7 +22,7 @@ export async function getUserInfoApi() {
 export async function getSearchResultApi(query: string, pageNum?: number, pageSize?: number) {
   return await request<SearchResultPageResult>({
     url: UrlEnum.GET_SEARCH_RESULT,
-    params: {
+    body: {
       query,
       pageNum,
       pageSize

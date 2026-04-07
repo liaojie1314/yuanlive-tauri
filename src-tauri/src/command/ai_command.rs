@@ -63,6 +63,7 @@ pub struct AiMessageRequest {
     pub content: AiMessageContent,
     pub options: Option<AiMessageOptions>,
     pub agent_settings: Option<AgentSettings>,
+    pub env: Option<serde_json::Value>,
     pub tool_results: Option<Vec<serde_json::Value>>, // 接收本地工具执行后的结果
 }
 

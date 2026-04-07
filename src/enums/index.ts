@@ -102,6 +102,8 @@ export enum UrlEnum {
   BATCH_DELETE_CONVERSATION = "batchDeleteConversation",
   // 删除所有会话
   DELETE_ALL_CONVERSATION = "deleteAllConversation",
+  // 获取AI会话消息
+  GET_CONVERSATION_MESSAGE = "getConversationMessage",
   // 地图坐标转换
   MAP_COORD_TRANSLATE = "mapCoordTranslate",
   // 地图逆地理编码

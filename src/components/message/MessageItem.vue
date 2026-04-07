@@ -77,58 +77,76 @@
                     isSelf && isCollapsed && showCollapseToggle ? 'max-h-[140px]' : 'max-h-[5000px]',
                     isSelf && showCollapseToggle ? 'pr-7' : ''
                   ]">
-                  <div v-for="block in blocks" class="w-full" :key="block.id" @contextmenu="handleBlockContext(block)">
-                    <thinking-block
-                      v-if="block.type === 'thinking'"
-                      :content="block.content"
-                      :duration="block.duration"
-                      :tool-calls="block.toolCalls" />
-
+                  <div
+                    v-if="
+                      !isSelf &&
+                      !message.content &&
+                      !message.thinking &&
+                      (!message.toolCalls || message.toolCalls.length === 0)
+                    "
+                    class="flex h-6 items-center gap-1.5 px-1 py-1">
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                  </div>
+                  <template v-else>
                     <div
-                      v-else-if="block.type === 'text' && isSelf"
-                      v-text="block.content"
-                      class="text-[13px] leading-relaxed break-words whitespace-pre-wrap"></div>
+                      v-for="block in blocks"
+                      class="w-full"
+                      :key="block.id"
+                      @contextmenu="handleBlockContext(block)">
+                      <thinking-block
+                        v-if="block.type === 'thinking'"
+                        :content="block.content"
+                        :duration="block.duration"
+                        :tool-calls="block.toolCalls" />
 
-                    <markdown-block
-                      v-else-if="block.type === 'text' && !isSelf"
-                      :content="block.content"
-                      :is-self="isSelf" />
+                      <div
+                        v-else-if="block.type === 'text' && isSelf"
+                        v-text="block.content"
+                        class="text-[13px] leading-relaxed break-words whitespace-pre-wrap"></div>
 
-                    <image-block v-else-if="block.type === 'image'" :url="block.url" />
-                    <video-block v-else-if="block.type === 'video'" :url="block.url" :cover-img="block.coverImg" />
-                    <audio-block v-else-if="block.type === 'audio'" :url="block.url" />
-                    <file-block
-                      v-else-if="block.type === 'file'"
-                      :url="block.url"
-                      :name="block.name"
-                      :is-self="isSelf" />
+                      <markdown-block
+                        v-else-if="block.type === 'text' && !isSelf"
+                        :content="block.content"
+                        :is-self="isSelf" />
 
-                    <div
-                      v-if="!isSelf && pendingTool"
-                      class="pointer-events-auto mt-2 flex flex-col gap-2 rounded-lg border border-orange-500/30 bg-orange-500/10 p-3">
-                      <div class="flex-y-center gap-2 text-xs font-bold text-orange-600 dark:text-orange-400">
-                        <i-mdi-shield-alert-outline class="h-4 w-4" />
-                        {{ t("components.messageItem.systemPermissionRequest") }}
-                      </div>
-                      <div class="text-xs text-[--text-color] opacity-90">
-                        {{ t("components.messageItem.executeLocalTool") }}
-                        <strong>{{ pendingTool.name }}</strong>
-                        {{ t("components.messageItem.executeLocalToolDesc") }}
-                      </div>
-                      <div class="mt-1 flex-end-center gap-2">
-                        <div
-                          class="cursor-pointer rounded-md bg-[--input-area-bg] px-3 py-1 text-xs text-[--user-text-color] transition-colors hover:bg-[--line-color]"
-                          @click="$emit('deny-tool', pendingTool)">
-                          {{ t("components.messageItem.denyExecuteLocalTool") }}
+                      <image-block v-else-if="block.type === 'image'" :url="block.url" />
+                      <video-block v-else-if="block.type === 'video'" :url="block.url" :cover-img="block.coverImg" />
+                      <audio-block v-else-if="block.type === 'audio'" :url="block.url" />
+                      <file-block
+                        v-else-if="block.type === 'file'"
+                        :url="block.url"
+                        :name="block.name"
+                        :is-self="isSelf" />
+
+                      <div
+                        v-if="!isSelf && pendingTool"
+                        class="pointer-events-auto mt-2 flex flex-col gap-2 rounded-lg border border-orange-500/30 bg-orange-500/10 p-3">
+                        <div class="flex-y-center gap-2 text-xs font-bold text-orange-600 dark:text-orange-400">
+                          <i-mdi-shield-alert-outline class="h-4 w-4" />
+                          {{ t("components.messageItem.systemPermissionRequest") }}
                         </div>
-                        <div
-                          class="cursor-pointer rounded-md bg-orange-500 px-3 py-1 text-xs text-white shadow-sm transition-colors hover:bg-orange-600"
-                          @click="$emit('allow-tool', pendingTool)">
-                          {{ t("components.messageItem.allowExecuteLocalTool") }}
+                        <div class="text-xs text-[--text-color] opacity-90">
+                          {{ t("components.messageItem.executeLocalTool") }}
+                          <strong>{{ pendingTool.name }}</strong>
+                          {{ t("components.messageItem.executeLocalToolDesc") }}
+                        </div>
+                        <div class="mt-1 flex-end-center gap-2">
+                          <div
+                            class="cursor-pointer rounded-md bg-[--input-area-bg] px-3 py-1 text-xs text-[--user-text-color] transition-colors hover:bg-[--line-color]"
+                            @click="$emit('deny-tool', pendingTool)">
+                            {{ t("components.messageItem.denyExecuteLocalTool") }}
+                          </div>
+                          <div
+                            class="cursor-pointer rounded-md bg-orange-500 px-3 py-1 text-xs text-white shadow-sm transition-colors hover:bg-orange-600"
+                            @click="$emit('allow-tool', pendingTool)">
+                            {{ t("components.messageItem.allowExecuteLocalTool") }}
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
+                  </template>
 
                   <citation-block
                     v-if="!isSelf && message.citations && message.citations.length > 0"
@@ -556,5 +574,36 @@ onMounted(() => {
   color: var(--text-color) !important;
   line-height: 1.6;
   padding: 4px 0 !important;
+}
+
+/* AI 等待回复打字机动画 */
+.typing-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: var(--user-text-color);
+  animation: typing-bounce 1.4s infinite ease-in-out both;
+}
+
+/* 利用动画延迟制造波浪效果 */
+.typing-dot:nth-child(1) {
+  animation-delay: -0.32s;
+}
+
+.typing-dot:nth-child(2) {
+  animation-delay: -0.16s;
+}
+
+@keyframes typing-bounce {
+  0%,
+  80%,
+  100% {
+    transform: scale(0.4);
+    opacity: 0.3;
+  }
+  40% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
 }
 </style>

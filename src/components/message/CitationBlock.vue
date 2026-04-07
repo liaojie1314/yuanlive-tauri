@@ -68,10 +68,16 @@
 </template>
 
 <script setup lang="ts">
+import { useI18n } from "vue-i18n";
+import { convertFileSrc, invoke } from "@tauri-apps/api/core";
+import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
+
+import { TauriCommandEnum } from "@/enums";
 import type { Citation } from "@/types/chat";
 import { useWindow } from "@/hooks/useWindow";
 
-const { createExternalWebviewWindow } = useWindow();
+const { t } = useI18n();
+const { createExternalWebviewWindow, createWebviewWindow } = useWindow();
 
 defineProps<{
   citations?: Citation[];
@@ -92,7 +98,47 @@ const handleCitationClick = async (cite: Citation) => {
       await createExternalWebviewWindow(cite.title, url);
     }
   } else if (cite.type === "file") {
-    console.log("预览本地文件:", cite.title);
+    const windowLabel = "previewFile";
+    const ext = cite.title?.split(".").pop()?.toLowerCase() || "";
+    const absolutePath = cite.url || "";
+    // 将绝对物理路径转换为 Tauri 的 asset 协议以便前端读取
+    const assetUrl = absolutePath ? convertFileSrc(absolutePath) : "";
+    // 1. 组装发给预览窗口的 Payload
+    const payload = {
+      uid: "current_user_id",
+      conversationId: "current_conversation",
+      snippet: cite.snippet, // 将引用的片段文字传递过去，触发预览窗口的 Mark.js 高亮
+      resourceFile: {
+        fileName: cite.title || "Unknown File",
+        absolutePath: absolutePath,
+        nativePath: absolutePath,
+        url: assetUrl,
+        localExists: !!absolutePath,
+        type: { ext, mime: "" }
+      }
+    };
+
+    try {
+      // 2. 将 Payload 推送到 Rust 后端暂存
+      await invoke(TauriCommandEnum.PUSH_WINDOW_PAYLOAD, {
+        label: windowLabel,
+        payload
+      }).catch(() => console.warn("Push payload warning"));
+
+      // 3. 检查预览窗口是否已开启
+      const existingWin = await WebviewWindow.getByLabel(windowLabel);
+      if (existingWin) {
+        // 如果窗口已经存在，发送事件更新数据并唤起窗口
+        await existingWin.emit("preview-file-update", { payload });
+        await existingWin.setFocus();
+      } else {
+        // 如果窗口不存在，创建新窗口
+        await createWebviewWindow(cite.title || "预览文件", windowLabel, 900, 720, "", true);
+      }
+    } catch (error) {
+      console.error("打开引用文件预览失败:", error);
+      window.$message.error(t("components.messageInput.msg.previewFailed"));
+    }
   }
 };
 </script>
