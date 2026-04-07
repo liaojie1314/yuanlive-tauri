@@ -301,14 +301,15 @@ const loadHistoryList = async () => {
       hasMore.value = false; // 如果拉取的数据少于一页，说明到底了
     }
     records.forEach((apiItem) => {
+      const timestamp = apiItem.timestamp.toString().length === 10 ? apiItem.timestamp * 1000 : apiItem.timestamp;
       const newItem: ChatItem = {
         id: apiItem.conversationId,
         title: apiItem.title,
-        timestamp: apiItem.timestamp,
+        timestamp: timestamp,
         isPin: apiItem.isTop
       };
 
-      const groupDate = formatGroupDate(apiItem.timestamp);
+      const groupDate = formatGroupDate(timestamp);
 
       if (historyGroups.value.length === 0) {
         historyGroups.value.push({ date: groupDate, items: [newItem] });

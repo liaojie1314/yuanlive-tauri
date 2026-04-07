@@ -170,4 +170,4 @@ export type AiMessage = {
   thinking: string; // 思考的内容
 };
 
-export type AiMessagePageResult = PageResult<AiMessage>;
+export type AiMessagePageResult = AiPageResult<AiMessage>;

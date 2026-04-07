@@ -1,10 +1,10 @@
 import { UrlEnum } from "@/enums";
 import { request } from "@/utils/RequestUtils.ts";
-import type { AiConversationPageResult } from "@/api/types";
+import type { AiConversationPageResult, AiMessagePageResult } from "@/api/types";
 
 /**
  * 获取历史对话列表
- * @returns 历史对话列表
+ * @returns 历史对话
  */
 export async function getHistoryConversationApi(pageNum?: number, pageSize?: number) {
   return await request<AiConversationPageResult>({
@@ -84,7 +84,7 @@ export async function deleteAllConversationApi() {
  * @param pageSize 每页数量
  */
 export async function getConversationMessageApi(conversationId: string, cursor?: string, pageSize: number = 10) {
-  return await request({
+  return await request<AiMessagePageResult>({
     url: UrlEnum.GET_CONVERSATION_MESSAGE,
     pathParams: {
       conversationId

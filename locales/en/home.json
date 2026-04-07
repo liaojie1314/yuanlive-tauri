@@ -16,7 +16,8 @@
     "confirmDeleteSelected": "Are you sure you want to delete the selected {count} messages?",
     "stopGenerate": "Stop generating",
     "startChat": "Start a new chat",
-    "welcome": "I can help you answer questions, write code, analyze data, and more."
+    "welcome": "I can help you answer questions, write code, analyze data, and more.",
+    "loadFailed": "Failed to load AI chat"
   },
   "follow": {
     "followers": "Followers ({count})",

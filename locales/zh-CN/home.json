@@ -16,7 +16,8 @@
     "confirmDeleteSelected": "确定要删除选中的 {count} 条消息吗？",
     "stopGenerate": "已停止生成",
     "startChat": "开始与 AI 对话",
-    "welcome": "我是一个智能助手，可以帮助您解答问题、编写代码、分析数据等。"
+    "welcome": "我是一个智能助手，可以帮助您解答问题、编写代码、分析数据等。",
+    "loadFailed": "加载失败"
   },
   "follow": {
     "followers": "关注人({count})",
