@@ -8,8 +8,8 @@
       <n-flex justify="center" data-tauri-drag-region class="pt-35px w-full">
         <n-avatar
           fallback-src="/logo.webp"
-          src="/logo.webp"
           class="welcome size-80px rounded-50% border-(2px solid #fff) dark:border-(2px solid #606060)"
+          :src="userInfo.avatar"
           :color="themes.content === ThemeEnum.DARK ? '#282828' : '#fff'" />
       </n-flex>
 
@@ -77,7 +77,7 @@
           <n-avatar
             round
             fallback-src="/logo.webp"
-            src="/logo.webp"
+            :src="userInfo.avatar"
             :size="110"
             :color="themes.content === ThemeEnum.DARK ? '#282828' : '#fff'" />
         </n-flex>
@@ -361,9 +361,14 @@ onMounted(async () => {
     uiState.value = "auto";
     await normalLogin("desktop", true);
   } else {
-    // 手动登录模式，自动填充第一个历史账号
+    // 手动登录模式
     uiState.value = "manual";
-    // TODO: 获取历史登录账号
+    // 从store中获取历史登录账号，自动填充到输入框
+    if (userStore.userInfo) {
+      userInfo.value.account = userStore.userInfo.username || userStore.userInfo.email || "";
+      userInfo.value.avatar = userStore.userInfo.avatar || "";
+      userInfo.value.uid = userStore.userInfo.uid || "";
+    }
   }
 
   window.addEventListener("click", closeMenu, true);

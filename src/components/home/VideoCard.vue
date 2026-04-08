@@ -21,7 +21,7 @@
 
       <div class="absolute bottom-2 left-2 flex-y-center text-xs text-white drop-shadow-md">
         <i-mdi-heart class="mr-1 h-3.5 w-3.5 text-red-500" />
-        <span class="font-medium">{{ formatNumber(video.likes) }}</span>
+        <span class="font-medium">{{ formatNumber(video.likes, locale) }}</span>
       </div>
 
       <div
@@ -54,7 +54,11 @@
 </template>
 
 <script setup lang="ts">
+import { useI18n } from "vue-i18n";
+
 import { formatNumber, formatSecondsToTimeStr } from "@/utils/FormattingUtils";
+
+const { locale } = useI18n();
 
 defineOptions({
   name: "VideoCard"

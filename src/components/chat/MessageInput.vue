@@ -1064,7 +1064,7 @@ const handleModelChange = (value: string) => {
  */
 const handleFillInput = (text: string) => {
   messageText.value = text;
-  // 填充后让文本框自动获得焦点 TODO: 是否自动发送
+  // 填充后让文本框自动获得焦点
   nextTick(() => {
     const inputEl = document.querySelector(".input-container textarea") as HTMLTextAreaElement;
     if (inputEl) {

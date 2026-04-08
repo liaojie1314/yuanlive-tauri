@@ -132,15 +132,15 @@ export const formatTimeStrToSeconds = (timeStr: string): number => {
 };
 
 /**
- * 格式化数字
- * @param num 要格式化的数字
- * @returns 格式化后的字符串 TODO: 优化格式化逻辑
+ * 格式化数字 (支持 i18n 自动单位转换)
+ * @param num 需要格式化的数字
+ * @param locale 当前的语言环境，默认为 'zh-CN'
  */
-export const formatNumber = (num: number): string => {
-  if (num >= 10000) {
-    return (num / 10000).toFixed(1) + "万";
-  }
-  return num.toString();
+export const formatNumber = (num: number, locale: string = "zh-CN"): string => {
+  return new Intl.NumberFormat(locale, {
+    notation: "compact", // 开启紧凑模式 (自动使用 万、亿、K、M 等单位)
+    maximumFractionDigits: 1 // 最多保留1位小数，且会自动去除末尾的 .0
+  }).format(num);
 };
 
 /**

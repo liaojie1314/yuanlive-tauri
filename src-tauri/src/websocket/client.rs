@@ -297,7 +297,6 @@ impl WebSocketClient {
         let was_reconnecting = self.is_reconnecting.swap(false, Ordering::SeqCst);
         self.update_state(ConnectionState::Connected, was_reconnecting)
             .await;
-        // TODO: 同步先前消息
         // 标记为已连接
         self.is_ws_connected.store(true, Ordering::SeqCst);
         // 发送待发消息

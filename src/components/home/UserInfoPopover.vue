@@ -69,10 +69,10 @@
 
       <!-- 数据统计 -->
       <div class="mt-2 text-[13px] text-[--text-color]">
-        <span class="text-base font-bold">{{ formatNumber(user.following || 0) }}</span>
+        <span class="text-base font-bold">{{ formatNumber(user.following || 0, locale) }}</span>
         <span class="ml-1 text-[--user-text-color]">关注</span>
         <span class="mx-2 text-[--user-text-color]">·</span>
-        <span class="text-base font-bold">{{ formatNumber(user.followers || 0) }}</span>
+        <span class="text-base font-bold">{{ formatNumber(user.followers || 0, locale) }}</span>
         <span class="ml-1 text-[--user-text-color]">粉丝</span>
       </div>
 
@@ -90,7 +90,7 @@
           <span class="z-10 text-[13px] font-medium text-[#eb7333]">
             {{
               user.isBroadcaster
-                ? `粉丝团 ${formatNumber(user.fanClubCount || 0)}人`
+                ? `粉丝团 ${formatNumber(user.fanClubCount || 0, locale)}人`
                 : user.fanClub?.isJoined
                   ? `粉丝团 Lv.${user.fanClub.level}`
                   : "加入粉丝团"
@@ -109,7 +109,7 @@
             :class="user.isBroadcaster || user.vip?.isVip ? 'text-yellow-600 dark:text-yellow-500' : 'text-[#8b929e]'">
             {{
               user.isBroadcaster
-                ? `会员 ${formatNumber(user.vipCount || 0)}人`
+                ? `会员 ${formatNumber(user.vipCount || 0, locale)}人`
                 : user.vip?.isVip
                   ? "尊贵会员"
                   : "会员未开通"
@@ -128,7 +128,10 @@
 </template>
 
 <script setup lang="ts">
+import { useI18n } from "vue-i18n";
 import { formatNumber } from "@/utils/FormattingUtils";
+
+const { locale } = useI18n();
 
 export interface PopoverUser {
   id?: string | number;

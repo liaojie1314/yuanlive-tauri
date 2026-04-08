@@ -52,7 +52,6 @@ interface CategoryInfo {
   children?: CategoryInfo[];
 }
 
-// TODO: 是否进行i18n，需要后端对其他进行支持
 const categories = ref<CategoryInfo[]>([{ name: "全部", value: "all", children: [] }]);
 
 const localActiveCategory = ref(props.activeCategory);

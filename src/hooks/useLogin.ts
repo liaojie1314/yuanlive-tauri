@@ -98,7 +98,7 @@ export function useLogin() {
     loading.value = true;
     loginStatus.value = "loading";
     loginDisabled.value = true;
-    const hasStoredUserInfo = !!userStore.userInfo?.email;
+    const hasStoredUserInfo = !!(userStore.userInfo?.email || userStore.userInfo?.username);
     if (auto && !hasStoredUserInfo) {
       loading.value = false;
       loginDisabled.value = false;
@@ -110,9 +110,9 @@ export function useLogin() {
     }
     const account =
       auto && userStore.userInfo ? userStore.userInfo?.username || userStore.userInfo?.email : userInfo.value.account;
-    const password = userStore.userInfo?.password ?? userInfo.value.password;
+    const password = auto ? "" : userInfo.value.password;
 
-    if (!account) {
+    if (!account || (!auto && !password)) {
       loading.value = false;
       loginDisabled.value = false;
       loginStatus.value = "idle";
@@ -124,50 +124,49 @@ export function useLogin() {
       return;
     }
 
-    // 存储此次登陆设备指纹
-    const deviceId = await getEnhancedFingerprint();
-    localStorage.setItem(StorageKeyEnum.DEVICE_ID, deviceId);
+    try {
+      // 存储此次登陆设备指纹
+      const deviceId = await getEnhancedFingerprint();
+      localStorage.setItem(StorageKeyEnum.DEVICE_ID, deviceId);
 
-    await ensureAppStateReady();
+      await ensureAppStateReady();
 
-    invoke(TauriCommandEnum.LOGIN_COMMAND, {
-      data: {
-        account,
-        password,
-        device,
-        deviceID: deviceId,
-        isAutoLogin: auto,
-        uid: auto ? userStore.userInfo!.uid : null
-      }
-    })
-      .then(async (_) => {
-        loginDisabled.value = true;
-        loading.value = false;
-        loginStatus.value = "success";
-        await userStore.getUserDetail();
-        await webSocketRust.initConnect();
-        await openHomeWindow();
-      })
-      .catch((e) => {
-        console.error("登录异常: ", e);
-        window.$message.error(e);
-        loading.value = false;
-        loginDisabled.value = false;
-        loginStatus.value = "idle";
-        // 如果是自动登录失败，切换到手动登录界面并重置按钮状态
-        if (auto) {
-          uiState.value = "manual";
-          loginDisabled.value = false;
-          loginStatus.value = "idle";
-          settingStore.setAutoLogin(false);
-          // 自动填充之前尝试登录的账号信息到手动登录表单
-          if (userStore.userInfo) {
-            userInfo.value.account = userStore.userInfo.username || userStore.userInfo.email;
-            userInfo.value.avatar = userStore.userInfo.avatar!;
-            userInfo.value.uid = userStore.userInfo.uid;
-          }
+      await invoke(TauriCommandEnum.LOGIN_COMMAND, {
+        data: {
+          account,
+          password,
+          device,
+          deviceID: deviceId,
+          isAutoLogin: auto,
+          uid: auto ? userStore.userInfo!.uid : null
         }
       });
+      loginDisabled.value = true;
+      loading.value = false;
+      loginStatus.value = "success";
+      await userStore.getUserDetail();
+      await webSocketRust.initConnect();
+      await openHomeWindow();
+    } catch (e: any) {
+      console.error("登录异常: ", e);
+      window.$message.error(typeof e === "string" ? e : e.message);
+      loading.value = false;
+      loginStatus.value = "idle";
+      // 如果是自动登录失败，切换到手动登录界面并重置按钮状态
+      if (auto) {
+        uiState.value = "manual";
+        loginDisabled.value = false;
+        settingStore.setAutoLogin(false);
+        // 自动填充之前尝试登录的账号信息到手动登录表单
+        if (userStore.userInfo) {
+          userInfo.value.account = userStore.userInfo.username || userStore.userInfo.email || "";
+          userInfo.value.avatar = userStore.userInfo.avatar || "";
+          userInfo.value.uid = userStore.userInfo.uid;
+        }
+      } else {
+        loginDisabled.value = !(userInfo.value.account && userInfo.value.password && isOnline.value);
+      }
+    }
   };
 
   /**

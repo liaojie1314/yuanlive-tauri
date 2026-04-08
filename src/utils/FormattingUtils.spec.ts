@@ -133,9 +133,14 @@ describe("FormattingUtils 工具函数集合测试", () => {
     });
 
     it("大于等于 10000 的数字转为 万 单位并保留一位小数", () => {
-      expect(formatNumber(10000)).toBe("1.0万");
+      expect(formatNumber(10000)).toBe("1万");
       expect(formatNumber(15400)).toBe("1.5万");
-      expect(formatNumber(200000)).toBe("20.0万");
+      expect(formatNumber(200000)).toBe("20万");
+      expect(formatNumber(15000, "zh-CN")).toBe("1.5万");
+      expect(formatNumber(10000, "zh-CN")).toBe("1万");
+      expect(formatNumber(150000000, "zh-CN")).toBe("1.5亿");
+      expect(formatNumber(15000, "en-US")).toBe("15K");
+      expect(formatNumber(15000000, "en-US")).toBe("15M");
     });
   });
 });
