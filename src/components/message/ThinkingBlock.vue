@@ -18,16 +18,16 @@
       <div class="overflow-hidden">
         <div class="rounded-lg border border-[--line-color] bg-[--tray-bg-color] p-4">
           <div
-            v-if="content"
+            v-if="displayContent.text"
             class="mb-4 text-xs leading-relaxed whitespace-pre-wrap text-[--user-text-color] opacity-90">
-            {{ content }}
+            {{ displayContent.text }}
           </div>
 
-          <div v-if="toolCalls && toolCalls.length > 0" class="relative mt-2 ml-1 flex flex-col">
+          <div v-if="displayContent.tools.length > 0" class="relative mt-2 ml-1 flex flex-col">
             <div class="absolute top-3 bottom-2 left-[7px] z-0 w-[1.5px] bg-[--line-color] opacity-60"></div>
 
             <div
-              v-for="tool in toolCalls"
+              v-for="tool in displayContent.tools"
               class="relative z-10 mb-5 flex flex-col gap-1.5 pl-6 last:mb-0"
               :key="tool.id">
               <div class="absolute top-0.5 left-0 flex h-4 w-4 items-center justify-center bg-[--tray-bg-color]">
@@ -76,10 +76,63 @@
 <script setup lang="ts">
 defineOptions({ name: "ThinkingBlock" });
 
-defineProps<{
+const props = defineProps<{
   content?: string;
   toolCalls?: any[];
 }>();
 
 const isExpanded = ref(true);
+
+/**
+ * 解析 content 中的工具调用信息，并将其与外部传入的 toolCalls 合并，形成最终展示的数据结构
+ * 1. 使用正则提取所有 "TOOL: [...]" 格式的工具调用信息
+ * 2. 解析每个工具调用的 JSON 数组，提取工具名称、参数和结果
+ * 3. 将解析出的工具调用信息与 props.toolCalls 合并，确保前端插件调用和后端自执行的工具调用都能正确展示
+ * 4. 返回一个包含纯文本内容和完整工具调用信息的对象
+ */
+const displayContent = computed(() => {
+  let rawText = props.content || "";
+  const parsedTools: any[] = [];
+
+  // 使用正则匹配所有 "TOOL: [...]" 格式的字符串
+  const toolRegex = /TOOL:\s*(\[[\s\S]*?\])(?=\n|$)/g;
+  let match;
+
+  while ((match = toolRegex.exec(rawText)) !== null) {
+    try {
+      // match[1] 是工具的 JSON 数组部分
+      const toolArray = JSON.parse(match[1]);
+
+      toolArray.forEach((item: any, index: number) => {
+        // 根据你的日志，后端嵌套了一层 {"text": "{...}"}
+        if (item.text) {
+          try {
+            const innerData = JSON.parse(item.text);
+            parsedTools.push({
+              id: `parsed_tool_${Date.now()}_${index}`,
+              // 如果有 query 字段说明是搜索，否则显示通用名称
+              name: innerData.query ? "search_engine" : "backend_tool",
+              args: innerData.query ? { query: innerData.query } : {},
+              // 将 results 数组格式化为美观的 JSON 字符串展示
+              result: innerData.results ? JSON.stringify(innerData.results, null, 2) : "执行成功",
+              status: "success"
+            });
+          } catch (e) {
+            console.warn("解析内部 TOOL 参数失败", item.text);
+          }
+        }
+      });
+      rawText = rawText.replace(match[0], "");
+    } catch (e) {
+      console.warn("解析 TOOL 数组失败", match[1]);
+    }
+  }
+
+  const allTools = [...(props.toolCalls || []), ...parsedTools];
+
+  return {
+    text: rawText.trim(),
+    tools: allTools
+  };
+});
 </script>

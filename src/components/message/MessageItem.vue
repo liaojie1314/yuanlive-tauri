@@ -72,9 +72,9 @@
 
                 <div
                   ref="contentRef"
-                  class="w-full overflow-hidden transition-[max-height] duration-300 ease-in-out"
+                  class="w-full transition-[max-height] duration-300 ease-in-out"
                   :class="[
-                    isSelf && isCollapsed && showCollapseToggle ? 'max-h-[140px]' : 'max-h-[5000px]',
+                    isSelf && isCollapsed && showCollapseToggle ? 'max-h-[140px] overflow-hidden' : 'max-h-none',
                     isSelf && showCollapseToggle ? 'pr-7' : ''
                   ]">
                   <div
