@@ -49,7 +49,7 @@
       <div
         ref="scrollContainer"
         class="flex-1 overflow-y-auto overflow-x-hidden px-4 flex flex-col items-center bg-[var(--bg-popover)] relative transition-colors duration-300">
-        <div v-if="loading" class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+        <div v-if="loading" class="absolute inset-0 flex flex-col items-center justify-center z-10">
           <n-spin size="large" />
           <div class="mt-4 text-[var(--user-text-color)]">{{ t("plugins.reader.loading") }}</div>
         </div>
@@ -100,12 +100,14 @@ import { invoke, convertFileSrc } from "@tauri-apps/api/core";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 
 import { TauriCommandEnum } from "@/enums";
+import { parseBaoziComic, parseBaoziChapterImages } from "@/utils/ComicParser";
 
 const { t } = useI18n();
 const route = useRoute();
 
 interface Chapter {
   name: string;
+  url?: string; // 在线特有：章节的网页链接
   pages: string[];
 }
 interface ComicBook {
@@ -114,24 +116,52 @@ interface ComicBook {
 }
 
 const comicPath = route.query.path as string;
+const comicSource = (route.query.source as string) || "local";
 
 const loading = ref(true);
 const scrollContainer = ref<HTMLElement | null>(null);
 const comicData = ref<ComicBook | null>(null);
 const currentChapterIndex = ref(0);
 
-// 将后端返回的本地绝对路径转为前端可用的 tauri URL
+// 统一页面地址获取
 const currentPages = computed(() => {
   if (!comicData.value || comicData.value.chapters.length === 0) return [];
   const chapter = comicData.value.chapters[currentChapterIndex.value];
+  // 如果是在线漫画，图片URL不需要 convertFileSrc
+  if (comicSource !== "local") {
+    return chapter.pages || [];
+  }
+  // 如果是本地，才转换
   return chapter.pages.map((path) => convertFileSrc(path));
 });
+
+/**
+ * 加载章节内的具体图片
+ * @param index 章节索引
+ */
+const loadChapterContent = async (index: number) => {
+  if (!comicData.value) return;
+  const chapter = comicData.value.chapters[index];
+
+  // 如果是在线包子漫画，并且该章节还没抓取过图片，则动态抓取
+  if (comicSource === "baozi" && (!chapter.pages || chapter.pages.length === 0) && chapter.url) {
+    loading.value = true;
+    try {
+      chapter.pages = await parseBaoziChapterImages(chapter.url);
+    } catch (e) {
+      window.$message?.error(t("plugins.reader.msg.getChapterError"));
+    } finally {
+      loading.value = false;
+    }
+  }
+};
 
 /**
  * 切换章节
  * @param index 章节索引
  */
 const selectChapter = async (index: number) => {
+  await loadChapterContent(index);
   currentChapterIndex.value = index;
   // 切换章节后滚动条回到顶部
   await nextTick();
@@ -142,13 +172,26 @@ const selectChapter = async (index: number) => {
 
 onMounted(async () => {
   await getCurrentWebviewWindow().show();
-  if (!comicPath) return;
+
+  if (!comicPath) {
+    loading.value = false;
+    window.$message?.error(t("plugins.reader.msg.noPathError"));
+    return;
+  }
+
   try {
-    // 重新调用后端解析目录获取全部章节数据
-    const res: ComicBook = await invoke(TauriCommandEnum.PARSE_COMIC_DIRECTORY, {
-      rootPath: comicPath
-    });
-    comicData.value = res;
+    if (comicSource === "local") {
+      const res: ComicBook = await invoke(TauriCommandEnum.PARSE_COMIC_DIRECTORY, {
+        rootPath: comicPath
+      });
+      comicData.value = res;
+    } else if (comicSource === "baozi") {
+      const res: ComicBook = await parseBaoziComic(comicPath);
+      comicData.value = res;
+      if (comicData.value.chapters.length > 0) {
+        await loadChapterContent(0);
+      }
+    }
   } catch (err) {
     console.error("加载漫画数据失败:", err);
     window.$message?.error(t("plugins.reader.msg.loadError"));

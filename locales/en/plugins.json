@@ -35,6 +35,12 @@
     "prevChapter": "Previous Chapter",
     "nextChapter": "Next Chapter",
     "bottom": "Bottom of the comic",
+    "unknownComic": "Unknown Comic",
+    "localComic": "Local Comic",
+    "onlineComic": "Online Comic",
+    "noCover": "No Cover",
+    "selectLine": "Select Line:",
+    "noData": "No data available, please try switching lines",
     "msg": {
       "addSuccess": "Add Success",
       "addExist": "Comic already exists in your library",
@@ -43,7 +49,13 @@
       "importSuccess": "Successfully imported {count} comics",
       "importExist": "All comics in the selected directory already exist in your library",
       "importError": "Failed to scan the comic library batch",
-      "loadError": "Failed to load comic resources"
+      "loadError": "Failed to load comic resources",
+      "noDataError": "No comic data available, please try switching lines",
+      "networkRequestError": "Network request failed, please try switching lines or retry later",
+      "collectSuccess": "Successfully collected to local comic library",
+      "collectExist": "Comic already exists in your library",
+      "getChapterError": "Failed to get chapter image",
+      "noPathError": "Failed to load comic path parameter"
     }
   }
 }

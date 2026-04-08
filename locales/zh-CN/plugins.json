@@ -35,6 +35,12 @@
     "prevChapter": "上一章",
     "nextChapter": "下一章",
     "bottom": "到底啦",
+    "unknownComic": "未知漫画",
+    "localComic": "本地漫画",
+    "onlineComic": "在线漫画",
+    "noCover": "无封面",
+    "selectLine": "选择线路:",
+    "noData": "暂无数据，请尝试切换线路",
     "msg": {
       "addSuccess": "添加成功",
       "addExist": "该漫画已在书架中",
@@ -43,7 +49,13 @@
       "importSuccess": "成功导入 {count} 本漫画",
       "importExist": "选定目录中的漫画均已在书架中",
       "importError": "批量扫描漫画库失败",
-      "loadError": "漫画资源加载失败"
+      "loadError": "漫画资源加载失败",
+      "noDataError": "未获取到漫画数据，请尝试切换其他线路",
+      "networkRequestError": "网络请求失败，请切换线路或重试",
+      "collectSuccess": "已成功收藏到本地漫画书架",
+      "collectExist": "该漫画已在书架中",
+      "getChapterError": "获取该章节图片失败",
+      "noPathError": "未获取到漫画路径参数，加载失败"
     }
   }
 }

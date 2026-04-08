@@ -187,6 +187,8 @@ export enum TauriCommandEnum {
   PARSE_COMIC_DIRECTORY = "parse_comic_directory",
   // 扫描漫画库
   SCAN_COMIC_LIBRARY = "scan_comic_library",
+  // 获取在线漫画详情
+  FETCH_HTML_SOURCE = "fetch_html_source",
   /** desktop专属 */
   // 推送窗口数据
   PUSH_WINDOW_PAYLOAD = "push_window_payload",

@@ -196,3 +196,27 @@ pub async fn parse_comic_directory(root_path: String) -> Result<ComicBook, Strin
 
     Ok(ComicBook { cover, chapters })
 }
+
+#[tauri::command]
+pub async fn fetch_html_source(url: String) -> Result<String, String> {
+    // 使用 reqwest 发起请求，伪装成浏览器
+    let client = reqwest::Client::builder()
+        .user_agent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36")
+        .timeout(std::time::Duration::from_secs(15))
+        .build()
+        .map_err(|e| e.to_string())?;
+
+    let response = client
+        .get(&url)
+        .header("Referer", "https://www.bzmgcn.com/")
+        .send()
+        .await
+        .map_err(|e| format!("网络请求失败: {}", e))?;
+
+    if response.status().is_success() {
+        let text = response.text().await.map_err(|e| e.to_string())?;
+        Ok(text)
+    } else {
+        Err(format!("请求失败，状态码: {}", response.status()))
+    }
+}
