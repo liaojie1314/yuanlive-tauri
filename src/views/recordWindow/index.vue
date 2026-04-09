@@ -371,6 +371,8 @@ import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { TauriCommandEnum, UploadSceneEnum } from "@/enums";
 import { useWindow } from "@/hooks/useWindow";
 import { useUpload } from "@/hooks/useUpload";
+import { getChildCategoryApi } from "@/api/live";
+import type { ChildCategoryItem } from "@/api/types";
 
 const { t } = useI18n();
 const {
@@ -428,12 +430,7 @@ const liveRoomConfig = reactive({
   announcement: "",
   coverUrl: "" // 封面图 URL
 });
-const categoryOptions = [
-  { label: "🎮 游戏直播", value: "game" },
-  { label: "🎤 娱乐唱见", value: "entertainment" },
-  { label: "💻 编程学习", value: "coding" }
-];
-
+const categoryOptions = ref<ChildCategoryItem[]>([]);
 // 水印图片对象
 const logoImg = new Image();
 
@@ -1339,6 +1336,11 @@ onUploadError((err) => {
 
 onMounted(async () => {
   await getCurrentWebviewWindow().show();
+  // 获取分类列表
+  const res = await getChildCategoryApi();
+  if (res.length > 0) {
+    categoryOptions.value = res || [];
+  }
   try {
     ffmpegInstalled.value = await invoke(TauriCommandEnum.CHECK_FFMPEG_INSTALLED);
     console.log("[Env] FFmpeg:", ffmpegInstalled.value);

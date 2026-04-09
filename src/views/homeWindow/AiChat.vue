@@ -48,21 +48,14 @@
               {{ $t("home.aiChat.welcome") }}
             </p>
 
-            <div class="flex max-w-[800px] flex-wrap justify-center gap-4">
+            <div
+              v-for="item in aiRecommendations"
+              class="flex max-w-[800px] flex-wrap justify-center gap-4"
+              :key="item">
               <div
                 class="cursor-pointer rounded-full border border-[--line-color] bg-[--input-area-bg] px-5 py-2.5 text-sm text-[--text-color] opacity-80 transition-all hover:bg-[--tray-hover] hover:opacity-100 hover:shadow-sm"
-                @click="handleQuickAction('帮我写一段 Python 代码')">
-                帮我写一段 Python 代码
-              </div>
-              <div
-                class="cursor-pointer rounded-full border border-[--line-color] bg-[--input-area-bg] px-5 py-2.5 text-sm text-[--text-color] opacity-80 transition-all hover:bg-[--tray-hover] hover:opacity-100 hover:shadow-sm"
-                @click="handleQuickAction('解释什么是闭包')">
-                解释什么是闭包
-              </div>
-              <div
-                class="cursor-pointer rounded-full border border-[--line-color] bg-[--input-area-bg] px-5 py-2.5 text-sm text-[--text-color] opacity-80 transition-all hover:bg-[--tray-hover] hover:opacity-100 hover:shadow-sm"
-                @click="handleQuickAction('如何优化 SQL 查询')">
-                如何优化 SQL 查询
+                @click="handleQuickAction(item)">
+                {{ item }}
               </div>
             </div>
           </div>
@@ -122,7 +115,7 @@ import { getOSType, isWindows } from "@/utils/PlatformUtils";
 import type { MessageData, ToolCallDetail } from "@/types/chat";
 import type { AiStreamPayload } from "@/utils/RequestUtils";
 import { messageCancelStream, messageSendStream } from "@/utils/RequestUtils";
-import { getConversationMessageApi } from "@/api/aiHistory";
+import { getConversationMessageApi, getAiRecommendationApi } from "@/api/aiHistory";
 
 defineOptions({ name: "AiChat" });
 
@@ -134,6 +127,7 @@ const { getLocationWithTransform } = useGeolocation();
 const osType = ref();
 const osArch = ref();
 const osVersion = ref();
+const aiRecommendations = ref<string[]>([]);
 const chatStatus = ref<"loading" | "streaming" | "normal">("normal");
 const activeChatId = ref<string>("");
 const isHistoryCollapsed = ref<boolean>(false);
@@ -625,8 +619,9 @@ const loadMessages = async (isFirstPage = false) => {
   }
 };
 
-onMounted(() => {
-  // initTestData();
+onMounted(async () => {
+  const res = await getAiRecommendationApi();
+  aiRecommendations.value = res || [];
   osType.value = getOSType();
   osArch.value = arch();
   osVersion.value = version();

@@ -581,6 +581,7 @@ pub enum Url {
     BatchDeleteConversation,
     DeleteAllConversation,
     GetConversationMessage,
+    GetAiRecommendation,
     MapCoordTranslate,
     MapReverseGeocode,
     MapStatic,
@@ -636,6 +637,7 @@ impl Url {
             Url::GetConversationMessage => {
                 (http::Method::POST, "ai/history/messages/{conversationId}")
             }
+            Url::GetAiRecommendation => (http::Method::GET, "ai/history/getRecommendations"),
             // 地图相关
             Url::MapCoordTranslate => (http::Method::GET, "map/coord/translate"),
             Url::MapReverseGeocode => (http::Method::GET, "map/geocode/reverse"),
@@ -688,6 +690,7 @@ impl Url {
             "batchDeleteConversation" => Ok(Url::BatchDeleteConversation),
             "deleteAllConversation" => Ok(Url::DeleteAllConversation),
             "getConversationMessage" => Ok(Url::GetConversationMessage),
+            "getAiRecommendation" => Ok(Url::GetAiRecommendation),
             // 地图相关
             "mapCoordTranslate" => Ok(Url::MapCoordTranslate),
             "mapReverseGeocode" => Ok(Url::MapReverseGeocode),

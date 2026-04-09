@@ -104,6 +104,8 @@ export enum UrlEnum {
   DELETE_ALL_CONVERSATION = "deleteAllConversation",
   // 获取AI会话消息
   GET_CONVERSATION_MESSAGE = "getConversationMessage",
+  // 获取3条AI推荐
+  GET_AI_RECOMMENDATION = "getAiRecommendation",
   // 地图坐标转换
   MAP_COORD_TRANSLATE = "mapCoordTranslate",
   // 地图逆地理编码
