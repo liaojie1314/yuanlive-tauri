@@ -1,5 +1,8 @@
 import type { Metric } from "web-vitals";
+import { invoke } from "@tauri-apps/api/core";
 import { onCLS, onFCP, onINP, onLCP, onTTFB } from "web-vitals";
+
+import { StorageKeyEnum, TauriCommandEnum } from "@/enums";
 
 type WebVitalMetric =
   | (Metric & { type: "web-vital" })
@@ -13,9 +16,27 @@ type WebVitalMetric =
 
 type Reporter = (metric: WebVitalMetric) => void;
 
-const defaultReporter: Reporter = (metric) => {
-  const label = metric.type === "web-vital" ? metric.name : "longtask";
-  console.info("[performance]", label, metric);
+const defaultReporter: Reporter = async (metric) => {
+  // 规范化事件名称
+  const eventName = metric.type === "web-vital" ? `WebVital_${metric.name}` : "LongTask";
+  const deviceID = localStorage.getItem(StorageKeyEnum.DEVICE_ID) || "anonymous_fallback_id";
+  const propertiesWithId = {
+    ...metric,
+    distinct_id: deviceID
+  };
+  const isDev = import.meta.env.DEV;
+  // 仅在开发环境打印，避免污染生产环境控制台
+  if (isDev) {
+    console.info("[performance]", eventName, metric);
+    return;
+  }
+  // 生产环境进行上报
+  invoke(TauriCommandEnum.TRACK_EVENT, {
+    event: eventName,
+    properties: propertiesWithId
+  }).catch((err) => {
+    console.error(`[Telemetry] Failed to send ${eventName} to Rust:`, err);
+  });
 };
 
 let hasStarted = false;

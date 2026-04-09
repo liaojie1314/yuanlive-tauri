@@ -15,7 +15,6 @@ import { useWindow } from "@/hooks/useWindow.ts";
 import { isDesktop } from "@/utils/PlatformUtils";
 import { ensureAppStateReady } from "@/utils/AppStateReady.ts";
 import { invokeSilently } from "@/utils/TauriInvokeHandler.ts";
-import { getEnhancedFingerprint } from "@/services/fingerprint.ts";
 
 export function useLogin() {
   const userStore = useUserStore();
@@ -125,9 +124,7 @@ export function useLogin() {
     }
 
     try {
-      // 存储此次登陆设备指纹
-      const deviceId = await getEnhancedFingerprint();
-      localStorage.setItem(StorageKeyEnum.DEVICE_ID, deviceId);
+      const deviceId = localStorage.getItem(StorageKeyEnum.DEVICE_ID);
 
       await ensureAppStateReady();
 

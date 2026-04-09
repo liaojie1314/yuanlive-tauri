@@ -290,6 +290,7 @@ fn common_setup(app_handle: AppHandle) -> Result<(), Box<dyn std::error::Error>>
                 child: std::sync::Mutex::new(None),
             });
             app_handle.manage(AudioState(std::sync::Mutex::new(None)));
+            crate::command::telemetry::init(&app_handle);
             APP_STATE_READY.store(true, Ordering::SeqCst);
             if let Err(e) = app_handle.emit("app-state-ready", ()) {
                 warn!("Failed to emit app-state-ready event: {}", e);
@@ -308,23 +309,21 @@ fn common_setup(app_handle: AppHandle) -> Result<(), Box<dyn std::error::Error>>
 // 公共的命令处理器函数
 fn get_invoke_handlers() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Send + Sync + 'static
 {
-    use crate::command::ai_command::{ai_message_cancel_stream, ai_message_send_stream};
-    use crate::command::app_state_command::is_app_state_ready;
-    use crate::command::file_command::get_files_meta;
-    use crate::command::fs_command::{
+    use crate::command::ai::{ai_message_cancel_stream, ai_message_send_stream};
+    use crate::command::app_state::is_app_state_ready;
+    use crate::command::fs::{
         fs_create_dir, fs_get_file_info, fs_list_dir, fs_move_file, fs_read_file,
-        fs_read_file_lines, fs_search_file, fs_write_file,
+        fs_read_file_lines, fs_search_file, fs_write_file, get_files_meta,
     };
-    use crate::command::reader_command::{
-        fetch_html_source, parse_comic_directory, scan_comic_library,
-    };
-    use crate::command::request_command::{login_command, request_command};
-    use crate::command::setting_command::{get_settings, update_settings};
-    use crate::command::token_command::{get_token, remove_token, update_token};
-    use crate::command::tts_command::{
+    use crate::command::reader::{fetch_html_source, parse_comic_directory, scan_comic_library};
+    use crate::command::request::{login_command, request_command};
+    use crate::command::setting::{get_settings, update_settings};
+    use crate::command::telemetry::track_event;
+    use crate::command::token::{get_token, remove_token, update_token};
+    use crate::command::tts::{
         check_file_exists, download_model_file, generate_piper_speech, get_models_dir,
     };
-    use crate::command::upload_command::{
+    use crate::command::upload::{
         check_uploaded_chunks_command, merge_chunks_command, upload_chunk_by_path_command,
         upload_chunk_bytes_command,
     };
@@ -442,5 +441,6 @@ fn get_invoke_handlers() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Se
         hide_splash_screen,
         #[cfg(target_os = "ios")]
         set_webview_keyboard_adjustment,
+        track_event,
     ]
 }

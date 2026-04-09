@@ -189,6 +189,8 @@ export enum TauriCommandEnum {
   SCAN_COMIC_LIBRARY = "scan_comic_library",
   // 获取在线漫画详情
   FETCH_HTML_SOURCE = "fetch_html_source",
+  // 埋点事件
+  TRACK_EVENT = "track_event",
   /** desktop专属 */
   // 推送窗口数据
   PUSH_WINDOW_PAYLOAD = "push_window_payload",

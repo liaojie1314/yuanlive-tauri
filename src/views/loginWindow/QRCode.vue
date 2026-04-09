@@ -78,9 +78,8 @@ import router from "@/router";
 import { useWindow } from "@/hooks/useWindow";
 import { useGlobalStore } from "@/stores/global";
 import { useSettingStore } from "@/stores/setting";
-import { getEnhancedFingerprint } from "@/services/fingerprint";
 import { generateQRCodeApi, checkQRStatusApi } from "@/api/auth";
-import { StorageKeyEnum, TauriCommandEnum, ThemeEnum } from "@/enums";
+import { TauriCommandEnum, ThemeEnum } from "@/enums";
 
 const { t } = useI18n();
 const { createWebviewWindow } = useWindow();
@@ -277,9 +276,6 @@ const handleError = (key: ScanStatusTextKey = "generalError") => {
 
 onMounted(async () => {
   showTray.value = false;
-  // 存储此次登陆设备指纹
-  const deviceId = await getEnhancedFingerprint();
-  localStorage.setItem(StorageKeyEnum.DEVICE_ID, deviceId);
   await handleQRCode();
 });
 
