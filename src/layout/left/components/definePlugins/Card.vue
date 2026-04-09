@@ -13,7 +13,12 @@
               class="box bg-[--plugin-bg-color]"
               :size="8"
               :class="{ 'filter-shadow': page.shadow }">
-              <svg class="size-38px color-#999">
+              <img
+                v-if="isImageIcon(plugin.icon)"
+                alt=""
+                class="size-38px object-cover rounded-8px"
+                :src="getIconUrl(plugin)" />
+              <svg v-else class="size-38px color-#999">
                 <use :href="`#${plugin.icon}`"></use>
               </svg>
               <p class="text-(12px #666)">{{ plugin.title }}</p>
@@ -62,8 +67,13 @@
                 {
                   'filter-shadow': page.shadow
                 }
-              ]">
-              <svg class="size-38px color-#555">
+              ]"
+              @click="openPluginHandler(plugin)">
+              <img
+                v-if="isImageIcon(plugin.iconAction || plugin.icon)"
+                class="size-38px object-cover rounded-8px shadow-sm"
+                :src="getIconUrl(plugin)" />
+              <svg v-else class="size-38px color-#555">
                 <use :href="`#${plugin.iconAction || plugin.icon}`"></use>
               </svg>
               <p class="text-(12px #666)">{{ plugin.title }}</p>
@@ -143,14 +153,18 @@
 </template>
 <script setup lang="ts">
 import { useI18n } from "vue-i18n";
+import { invoke } from "@tauri-apps/api/core";
 import { emitTo } from "@tauri-apps/api/event";
 import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
 
-import { PluginEnum } from "@/enums";
-import { useSettingStore } from "@/stores/setting.ts";
-import { usePluginsStore, type Plugin } from "@/stores/plugins.ts";
+import { PluginEnum, TauriCommandEnum } from "@/enums";
+import { useWindow } from "@/hooks/useWindow";
+import { isWindows } from "@/utils/PlatformUtils";
+import { useSettingStore } from "@/stores/setting";
+import { usePluginsStore, type Plugin } from "@/stores/plugins";
 
 const { t } = useI18n();
+const { createPluginWindow } = useWindow();
 const appWindow = WebviewWindow.getCurrent();
 const settingStore = useSettingStore();
 const pluginsStore = usePluginsStore();
@@ -167,41 +181,106 @@ const allPlugins = computed(() => {
 });
 
 /**
- * 处理插件状态
- * @param plugin 插件
+ * 打开插件窗口
+ * @param plugin 插件对象
  */
-const handleState = (plugin: Plugin) => {
-  if (plugin.state === PluginEnum.INSTALLED) return;
-  const updatedPlugin = { ...plugin, state: PluginEnum.DOWNLOADING };
-  pluginsStore.updatePlugin(updatedPlugin);
+const openPluginHandler = (plugin: Plugin) => {
+  if (plugin.state === PluginEnum.INSTALLED) {
+    createPluginWindow(plugin);
+  }
+};
 
+/**
+ * 判断图标是否为图片
+ * @param icon 图标字符串
+ * @returns 是否为图片
+ */
+const isImageIcon = (icon: string) => {
+  if (!icon) return false;
+  const str = icon.trim().toLowerCase();
+  return str.endsWith(".png") || str.endsWith(".jpg") || str.endsWith(".jpeg") || str.startsWith("http");
+};
+
+/**
+ * 获取插件图标的真实渲染路径
+ * @param plugin 插件对象
+ * @returns 图标真实渲染路径
+ */
+const getIconUrl = (plugin: Plugin) => {
+  const icon = plugin.iconAction || plugin.icon;
+  if (!icon) return "";
+  if (icon.startsWith("http://") || icon.startsWith("https://")) {
+    return icon;
+  }
+  if (isImageIcon(icon)) {
+    const baseUrl = isWindows() ? `http://plugin.localhost/${plugin.url}` : `plugin://localhost/${plugin.url}`;
+    return `${baseUrl}/${icon}`;
+  }
+  return "";
+};
+
+/**
+ * 处理插件状态：执行真实下载安装
+ * @param plugin 插件对象
+ */
+const handleState = async (plugin: Plugin) => {
+  if (plugin.state === PluginEnum.INSTALLED) return;
+  const updatedPlugin = { ...plugin, state: PluginEnum.DOWNLOADING, progress: 0 };
+  pluginsStore.updatePlugin(updatedPlugin);
   const interval = setInterval(() => {
     const currentPlugin = allPlugins.value.find((p) => p.url === plugin.url);
     if (!currentPlugin) {
       clearInterval(interval);
       return;
     }
-    if (currentPlugin.progress < 100) {
-      pluginsStore.updatePlugin({ ...currentPlugin, progress: currentPlugin.progress + 50 });
-    } else {
-      clearInterval(interval);
-      pluginsStore.addPlugin({ ...currentPlugin, state: PluginEnum.INSTALLED, progress: 0 });
+    if (currentPlugin.progress < 90) {
+      pluginsStore.updatePlugin({ ...currentPlugin, progress: currentPlugin.progress + 10 });
     }
   }, 500);
+
+  try {
+    const manifestData: any = await invoke(TauriCommandEnum.DOWNLOAD_PLUGIN, {
+      pluginUrl: plugin.url,
+      downloadUrl: plugin.downloadUrl
+    });
+    clearInterval(interval);
+    pluginsStore.updatePlugin({ ...updatedPlugin, progress: 100 });
+    setTimeout(() => {
+      pluginsStore.addPlugin({
+        ...updatedPlugin,
+        ...manifestData,
+        state: PluginEnum.INSTALLED,
+        progress: 0
+      });
+      window.$message?.success(t("home.plugins.msg.installSuccess", { name: manifestData.title || plugin.title }));
+    }, 500);
+  } catch (error) {
+    clearInterval(interval);
+    console.error("插件下载失败:", error);
+    window.$message?.error(t("home.plugins.msg.downloadFailed", { name: plugin.title }));
+    pluginsStore.updatePlugin({ ...updatedPlugin, state: PluginEnum.NOT_INSTALLED, progress: 0 });
+  }
 };
 
 /**
  * 处理插件卸载
  * @param plugin 插件
  */
-const handleUnload = (plugin: Plugin) => {
+const handleUnload = async (plugin: Plugin) => {
   const updatedPlugin = { ...plugin, state: PluginEnum.UNINSTALLING };
   pluginsStore.updatePlugin(updatedPlugin);
-
-  setTimeout(() => {
-    handleDelete(updatedPlugin);
-    pluginsStore.removePlugin(updatedPlugin);
-  }, 2000);
+  try {
+    await invoke(TauriCommandEnum.UNINSTALL_PLUGIN, { pluginUrl: plugin.url });
+    setTimeout(() => {
+      handleDelete(updatedPlugin);
+      pluginsStore.removePlugin(updatedPlugin);
+      window.$message?.success(t("home.plugins.msg.uninstallSuccess", { name: plugin.title }));
+    }, 500);
+  } catch (error) {
+    console.error("物理卸载失败:", error);
+    window.$message?.error(t("home.plugins.msg.uninstallFailed", { name: plugin.title }));
+    pluginsStore.updatePlugin({ ...plugin, state: PluginEnum.INSTALLED });
+  }
 };
 
 /**

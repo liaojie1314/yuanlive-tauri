@@ -7,20 +7,32 @@
       :data-source="allPlugins"
       :item-height="70">
       <template #item="{ item: plugin, index }">
-        <n-flex align="center" justify="space-between" class="p-[10px_20px]">
+        <n-flex align="center" justify="space-between" class="p-[10px_20px]" @click="openPluginHandler(plugin)">
           <n-flex align="center" :size="14">
             <n-flex align="center" justify="center" class="size-48px rounded-50% bg-#7676760f">
               <Transition mode="out-in">
+                <img
+                  v-if="
+                    (plugin.state === PluginEnum.NOT_INSTALLED || plugin.state === PluginEnum.DOWNLOADING) &&
+                    isImageIcon(plugin.icon)
+                  "
+                  class="size-34px object-cover rounded-6px"
+                  :src="getIconUrl(plugin)" />
+
                 <svg
-                  v-if="plugin.state === PluginEnum.NOT_INSTALLED || plugin.state === PluginEnum.DOWNLOADING"
+                  v-else-if="plugin.state === PluginEnum.NOT_INSTALLED || plugin.state === PluginEnum.DOWNLOADING"
                   class="size-34px color-#999">
                   <use :href="`#${plugin.icon}`"></use>
                 </svg>
-                <template v-else>
-                  <svg class="size-34px color-#555">
-                    <use :href="`#${plugin.iconAction || plugin.icon}`"></use>
-                  </svg>
-                </template>
+
+                <img
+                  v-else-if="isImageIcon(plugin.iconAction || plugin.icon)"
+                  class="size-34px object-cover rounded-6px shadow-sm"
+                  :src="getIconUrl(plugin)" />
+
+                <svg v-else class="size-34px color-#555">
+                  <use :href="`#${plugin.iconAction || plugin.icon}`"></use>
+                </svg>
               </Transition>
             </n-flex>
 
@@ -130,13 +142,17 @@
 
 <script setup lang="ts">
 import { useI18n } from "vue-i18n";
+import { invoke } from "@tauri-apps/api/core";
 import { emitTo } from "@tauri-apps/api/event";
 import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
 
-import { PluginEnum } from "@/enums";
-import { usePluginsStore, type Plugin } from "@/stores/plugins.ts";
+import { PluginEnum, TauriCommandEnum } from "@/enums";
+import { useWindow } from "@/hooks/useWindow";
+import { isWindows } from "@/utils/PlatformUtils";
+import { usePluginsStore, type Plugin } from "@/stores/plugins";
 
 const { t } = useI18n();
+const { createPluginWindow } = useWindow();
 const appWindow = WebviewWindow.getCurrent();
 const pluginsStore = usePluginsStore();
 const { plugins, pluginsList } = storeToRefs(pluginsStore);
@@ -151,40 +167,106 @@ const allPlugins = computed(() => {
 });
 
 /**
- * 处理插件状态
- * @param plugin 插件
+ * 处理插件状态：执行真实下载安装
+ * @param plugin 插件对象
  */
-const handleState = (plugin: Plugin) => {
+const handleState = async (plugin: Plugin) => {
   if (plugin.state === PluginEnum.INSTALLED) return;
-  const updatedPlugin = { ...plugin, state: PluginEnum.DOWNLOADING };
+  const updatedPlugin = { ...plugin, state: PluginEnum.DOWNLOADING, progress: 0 };
   pluginsStore.updatePlugin(updatedPlugin);
   const interval = setInterval(() => {
-    // 获取最新状态
     const currentPlugin = allPlugins.value.find((p) => p.url === plugin.url);
     if (!currentPlugin) {
       clearInterval(interval);
       return;
     }
-    if (currentPlugin.progress < 100) {
-      pluginsStore.updatePlugin({ ...currentPlugin, progress: currentPlugin.progress + 50 });
-    } else {
-      clearInterval(interval);
-      pluginsStore.addPlugin({ ...currentPlugin, state: PluginEnum.INSTALLED, progress: 0 });
+    if (currentPlugin.progress < 90) {
+      pluginsStore.updatePlugin({ ...currentPlugin, progress: currentPlugin.progress + 10 });
     }
   }, 500);
+
+  try {
+    const manifestData: any = await invoke(TauriCommandEnum.DOWNLOAD_PLUGIN, {
+      pluginUrl: plugin.url,
+      downloadUrl: plugin.downloadUrl
+    });
+    clearInterval(interval);
+    pluginsStore.updatePlugin({ ...updatedPlugin, progress: 100 });
+    setTimeout(() => {
+      pluginsStore.addPlugin({
+        ...updatedPlugin,
+        ...manifestData,
+        state: PluginEnum.INSTALLED,
+        progress: 0
+      });
+      window.$message?.success(t("home.plugins.msg.installSuccess", { name: manifestData.title || plugin.title }));
+    }, 500);
+  } catch (error) {
+    clearInterval(interval);
+    console.error("插件下载失败:", error);
+    window.$message?.error(t("home.plugins.msg.downloadFailed", { name: plugin.title }));
+    pluginsStore.updatePlugin({ ...updatedPlugin, state: PluginEnum.NOT_INSTALLED, progress: 0 });
+  }
+};
+
+/**
+ * 打开插件窗口
+ * @param plugin 插件对象
+ */
+const openPluginHandler = (plugin: Plugin) => {
+  if (plugin.state === PluginEnum.INSTALLED) {
+    createPluginWindow(plugin);
+  }
+};
+
+/**
+ * 判断图标是否为图片
+ * @param icon 图标字符串
+ * @returns 是否为图片
+ */
+const isImageIcon = (icon: string) => {
+  if (!icon) return false;
+  const str = icon.trim().toLowerCase();
+  return str.endsWith(".png") || str.endsWith(".jpg") || str.endsWith(".jpeg") || str.startsWith("http");
+};
+
+/**
+ * 获取插件图标的真实渲染路径
+ * @param plugin 插件对象
+ * @returns 图标真实渲染路径
+ */
+const getIconUrl = (plugin: Plugin) => {
+  const icon = plugin.iconAction || plugin.icon;
+  if (!icon) return "";
+  if (icon.startsWith("http://") || icon.startsWith("https://")) {
+    return icon;
+  }
+  if (isImageIcon(icon)) {
+    const baseUrl = isWindows() ? `http://plugin.localhost/${plugin.url}` : `plugin://localhost/${plugin.url}`;
+    return `${baseUrl}/${icon}`;
+  }
+  return "";
 };
 
 /**
  * 处理插件卸载
  * @param plugin 插件
  */
-const handleUnload = (plugin: Plugin) => {
+const handleUnload = async (plugin: Plugin) => {
   const updatedPlugin = { ...plugin, state: PluginEnum.UNINSTALLING };
   pluginsStore.updatePlugin(updatedPlugin);
-  setTimeout(() => {
-    handleDelete(updatedPlugin);
-    pluginsStore.removePlugin(updatedPlugin);
-  }, 2000);
+  try {
+    await invoke(TauriCommandEnum.UNINSTALL_PLUGIN, { pluginUrl: plugin.url });
+    setTimeout(() => {
+      handleDelete(updatedPlugin);
+      pluginsStore.removePlugin(updatedPlugin);
+      window.$message?.success(t("home.plugins.msg.uninstallSuccess", { name: plugin.title }));
+    }, 500);
+  } catch (error) {
+    console.error("物理卸载失败:", error);
+    window.$message?.error(t("home.plugins.msg.uninstallFailed", { name: plugin.title }));
+    pluginsStore.updatePlugin({ ...plugin, state: PluginEnum.INSTALLED });
+  }
 };
 
 /**

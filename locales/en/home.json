@@ -164,6 +164,12 @@
       "pin": "Pin to sidebar",
       "unpin": "Unpin",
       "uninstall": "Uninstall"
+    },
+    "msg": {
+      "installSuccess": "Plugin [{name}] installed successfully!",
+      "downloadFailed": "Plugin [{name}] download failed",
+      "uninstallSuccess": "Plugin [{name}] uninstalled successfully",
+      "uninstallFailed": "Plugin [{name}] uninstall failed"
     }
   },
   "menu": {

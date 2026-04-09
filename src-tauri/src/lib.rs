@@ -87,6 +87,40 @@ pub fn run() {
 fn setup_desktop() -> Result<(), CommonError> {
     use device_query::{DeviceQuery, DeviceState};
     tauri::Builder::default()
+        .register_uri_scheme_protocol("plugin", |app, request| {
+            let uri_path = request.uri().path();
+            let data_dir = app.app_handle().path().app_local_data_dir().unwrap();
+            let plugins_dir = data_dir.join("plugins");
+            let asset_path = plugins_dir.join(&uri_path[1..]);
+            match std::fs::read(&asset_path) {
+                Ok(content) => {
+                    let mime_type = match asset_path
+                        .extension()
+                        .and_then(|e: &std::ffi::OsStr| e.to_str())
+                    {
+                        Some("html") => "text/html",
+                        Some("js") | Some("mjs") => "application/javascript",
+                        Some("css") => "text/css",
+                        Some("png") => "image/png",
+                        Some("jpg") | Some("jpeg") => "image/jpeg",
+                        Some("json") => "application/json",
+                        _ => "application/octet-stream",
+                    };
+                    tauri::http::Response::builder()
+                        .header("Access-Control-Allow-Origin", "*")
+                        .header("Content-Type", mime_type)
+                        .body(content)
+                        .unwrap()
+                }
+                Err(_) => {
+                    println!("插件资源加载失败 (404): {:?}", asset_path);
+                    tauri::http::Response::builder()
+                        .status(404)
+                        .body(Vec::new())
+                        .unwrap()
+                }
+            }
+        })
         .init_plugin()
         .init_window_event()
         .setup(move |app| {
@@ -315,6 +349,7 @@ fn get_invoke_handlers() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Se
         fs_create_dir, fs_get_file_info, fs_list_dir, fs_move_file, fs_read_file,
         fs_read_file_lines, fs_search_file, fs_write_file, get_files_meta,
     };
+    use crate::command::plugin::{download_plugin, uninstall_plugin};
     use crate::command::reader::{fetch_html_source, parse_comic_directory, scan_comic_library};
     use crate::command::request::{login_command, request_command};
     use crate::command::setting::{get_settings, update_settings};
@@ -409,6 +444,8 @@ fn get_invoke_handlers() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Se
         screenshot,
         #[cfg(desktop)]
         set_height,
+        uninstall_plugin,
+        download_plugin,
         // 漫画目录解析
         parse_comic_directory,
         scan_comic_library,

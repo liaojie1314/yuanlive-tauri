@@ -1,6 +1,7 @@
 pub mod ai;
 pub mod app_state;
 pub mod fs;
+pub mod plugin;
 pub mod reader;
 pub mod request;
 pub mod setting;

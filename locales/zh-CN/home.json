@@ -164,6 +164,12 @@
       "pin": "固定侧边栏",
       "unpin": "取消固定",
       "uninstall": "卸载"
+    },
+    "msg": {
+      "installSuccess": "插件 [{name}] 安装成功！",
+      "downloadFailed": "插件 [{name}] 下载失败",
+      "uninstallSuccess": "插件 [{name}] 已卸载",
+      "uninstallFailed": "插件 [{name}] 卸载失败"
     }
   },
   "menu": {

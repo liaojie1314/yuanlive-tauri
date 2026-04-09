@@ -3,9 +3,10 @@ import { LogicalSize } from "@tauri-apps/api/dpi";
 import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { UserAttentionType } from "@tauri-apps/api/window";
 
-import { EventEnum, TauriCommandEnum } from "@/enums";
-import { isCompatibility, isDesktop, isWindows, isWindows10 } from "@/utils/PlatformUtils";
 import { useI18nGlobal } from "@/services/i18n";
+import { EventEnum, TauriCommandEnum } from "@/enums";
+import type { Plugin } from "@/stores/plugins";
+import { isCompatibility, isDesktop, isWindows, isWindows10 } from "@/utils/PlatformUtils";
 
 // 判断是兼容的系统
 const isCompatibilityMode = computed(() => isCompatibility());
@@ -237,6 +238,48 @@ export const useWindow = () => {
   };
 
   /**
+   * 专门用于打开本地插件的独立窗口
+   * @param plugin 插件配置对象
+   */
+  const createPluginWindow = async (plugin: Plugin) => {
+    if (!isDesktop()) return null;
+    const label = `plugin_${plugin.url}`;
+    const baseUrl = isWindows()
+      ? `http://plugin.localhost/${plugin.url}` // Windows 专属格式
+      : `plugin://localhost/${plugin.url}`; // Mac/Linux 格式
+
+    const pluginUrl = `${baseUrl}/index.html`;
+
+    console.log("准备加载插件地址:", pluginUrl);
+    const existingWin = await WebviewWindow.getByLabel(label);
+    if (existingWin) {
+      await existingWin.setFocus();
+      return existingWin;
+    }
+    const webview = new WebviewWindow(label, {
+      url: pluginUrl,
+      title: plugin.title || "插件窗口",
+      width: plugin.size?.width || 800,
+      height: plugin.size?.height || 600,
+      minWidth: plugin.size?.minWidth || 400,
+      minHeight: plugin.size?.minHeight || 300,
+      resizable: plugin.window?.resizable ?? true,
+      center: true,
+      decorations: true,
+      transparent: false,
+      titleBarStyle: "visible",
+      hiddenTitle: false,
+      ...(isWindows10() ? { shadow: false } : {})
+    });
+    await webview.once("tauri://error", async (e) => {
+      console.error(`插件 [${plugin.title}] 窗口创建失败:`, e);
+      window.$message?.error(t("components.window.createWindowFail", { label: plugin.title }));
+      await checkWinExist(label);
+    });
+    return webview;
+  };
+
+  /**
    * 向指定标签的窗口发送载荷（payload），可用于窗口之间通信。
    * @param windowLabel - 要发送载荷的窗口标签，通常是在创建窗口时指定的 label。
    * @param payload - 要发送的 JSON 数据对象，不限制字段内容。
@@ -332,6 +375,7 @@ export const useWindow = () => {
     createWebviewWindow,
     createModalWindow,
     createExternalWebviewWindow,
+    createPluginWindow,
     sendWindowPayload,
     getWindowPayload,
     resizeWindow,

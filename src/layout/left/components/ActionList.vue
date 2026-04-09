@@ -19,8 +19,9 @@
         :key="item.url"
         :class="[{ active: activeUrl === item.url }]"
         :title="item.title"
-        @click="pageJumps(item.url, item.title, item.size, item.window)">
-        <svg class="size-20px">
+        @click="openPlugin(item)">
+        <img v-if="isImageIcon(item.icon)" alt="" class="size-20px object-cover rounded-8px" :src="getIconUrl(item)" />
+        <svg v-else class="size-20px">
           <use :href="`#${item.icon}`"></use>
         </svg>
         <p class="text-[16px] select-none">{{ item.title }}</p>
@@ -120,15 +121,16 @@ import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { leftHook } from "../hook.ts";
 import { useLogin } from "@/hooks/useLogin";
 import { useWindow } from "@/hooks/useWindow";
+import { isWindows } from "@/utils/PlatformUtils";
 import { useCheckUpdate } from "@/hooks/useCheckUpdate";
 import { useTauriListener } from "@/hooks/useTauriListener";
-import { usePluginsStore, type Plugin } from "@/stores/plugins.ts";
-import { PluginEnum, TauriCommandEnum } from "@/enums/index.ts";
+import { PluginEnum, TauriCommandEnum } from "@/enums/index";
+import { usePluginsStore, type Plugin } from "@/stores/plugins";
 import DefinePlugins from "./definePlugins/index.vue";
 
 const { t } = useI18n();
 const { logout } = useLogin();
-const { createWebviewWindow } = useWindow();
+const { createWebviewWindow, createPluginWindow } = useWindow();
 const { checkUpdate } = useCheckUpdate();
 const pluginsStore = usePluginsStore();
 const { plugins } = storeToRefs(pluginsStore);
@@ -297,6 +299,57 @@ const handleResize = async (e: Event) => {
         pluginsStore.updatePlugin({ ...i, miniShow: false });
       }
     });
+  }
+};
+
+/**
+ * 判断图标是否为图片
+ * @param icon 图标字符串
+ * @returns 是否为图片
+ */
+const isImageIcon = (icon: string) => {
+  if (!icon) return false;
+  const str = icon.trim().toLowerCase();
+  return str.endsWith(".png") || str.endsWith(".jpg") || str.endsWith(".jpeg") || str.startsWith("http");
+};
+
+/**
+ * 获取插件图标的真实渲染路径
+ * @param plugin 插件对象
+ * @returns 图标真实渲染路径
+ */
+const getIconUrl = (plugin: Plugin) => {
+  const icon = plugin.iconAction || plugin.icon;
+  if (!icon) return "";
+  if (icon.startsWith("http://") || icon.startsWith("https://")) {
+    return icon;
+  }
+  if (isImageIcon(icon)) {
+    const baseUrl = isWindows() ? `http://plugin.localhost/${plugin.url}` : `plugin://localhost/${plugin.url}`;
+    return `${baseUrl}/${icon}`;
+  }
+  return "";
+};
+
+/**
+ * 打开插件窗口
+ * @param plugin 插件对象
+ */
+const openPlugin = (plugin: Plugin) => {
+  if (plugin.state === PluginEnum.BUILTIN) {
+    pageJumps(plugin.url, plugin.title, plugin.size, plugin.window);
+  } else if (plugin.state === PluginEnum.INSTALLED) {
+    openPluginHandler(plugin);
+  }
+};
+
+/**
+ * 打开插件窗口
+ * @param plugin 插件对象
+ */
+const openPluginHandler = (plugin: Plugin) => {
+  if (plugin.state === PluginEnum.INSTALLED) {
+    createPluginWindow(plugin);
   }
 };
 

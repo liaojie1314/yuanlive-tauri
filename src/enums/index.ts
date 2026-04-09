@@ -191,6 +191,10 @@ export enum TauriCommandEnum {
   FETCH_HTML_SOURCE = "fetch_html_source",
   // 埋点事件
   TRACK_EVENT = "track_event",
+  // 下载插件
+  DOWNLOAD_PLUGIN = "download_plugin",
+  // 卸载插件
+  UNINSTALL_PLUGIN = "uninstall_plugin",
   /** desktop专属 */
   // 推送窗口数据
   PUSH_WINDOW_PAYLOAD = "push_window_payload",

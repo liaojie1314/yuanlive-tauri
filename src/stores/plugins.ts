@@ -14,6 +14,7 @@ export type Plugin = {
   dot?: boolean;
   progress: number;
   miniShow: boolean;
+  downloadUrl?: string;
   size?: {
     width: number;
     height: number;
@@ -30,7 +31,7 @@ export const usePluginsStore = defineStore(
   () => {
     const { t } = useI18n();
 
-    const pluginsList = computed<Plugin[]>(() => [
+    const builtinPluginsList = computed<Plugin[]>(() => [
       {
         icon: "bookmark",
         url: "library",
@@ -38,15 +39,8 @@ export const usePluginsStore = defineStore(
         isAdd: true,
         dot: false,
         progress: 0,
-        size: {
-          width: 1000,
-          height: 600,
-          minWidth: 800,
-          minHeight: 520
-        },
-        window: {
-          resizable: true
-        },
+        size: { width: 1000, height: 600, minWidth: 800, minHeight: 520 },
+        window: { resizable: true },
         miniShow: false,
         title: t("home.plugins.comic"),
         shortTitle: t("home.plugins.comicShortTitle")
@@ -58,20 +52,17 @@ export const usePluginsStore = defineStore(
         isAdd: true,
         dot: false,
         progress: 0,
-        size: {
-          width: 1240,
-          height: 800,
-          minWidth: 880,
-          minHeight: 600
-        },
-        window: {
-          resizable: true
-        },
+        size: { width: 1240, height: 800, minWidth: 880, minHeight: 600 },
+        window: { resizable: true },
         miniShow: false,
         title: t("home.plugins.drawio"),
         shortTitle: t("home.plugins.drawioShortTitle")
       }
     ]);
+
+    const marketPluginsList = ref<Plugin[]>([]);
+
+    const pluginsList = computed<Plugin[]>(() => [...builtinPluginsList.value, ...marketPluginsList.value]);
     /** 插件内容 */
     const plugins = ref<Plugin[]>([]);
     /** 插件查看模式 */
@@ -151,6 +142,34 @@ export const usePluginsStore = defineStore(
       plugins.value = mergedPlugins;
     };
 
+    /** 模拟从后端获取线上插件列表 */
+    const fetchMarketPlugins = async () => {
+      try {
+        // 模拟网络延迟
+        await new Promise((resolve) => setTimeout(resolve, 500));
+
+        const resData: Plugin[] = [
+          {
+            icon: "https://cdn.jsdelivr.net/gh/liaojie1314/PicGo@master/images/202301141212847.png",
+            url: "monster-slayer", // 必须对应 zip 包名
+            state: PluginEnum.NOT_INSTALLED,
+            isAdd: false,
+            dot: false,
+            progress: 0,
+            version: "1.0.0",
+            miniShow: false,
+            title: "深渊打怪",
+            shortTitle: "打怪",
+            downloadUrl: "http://127.0.0.1:8080/monster-slayer.zip"
+          }
+        ];
+
+        marketPluginsList.value = resData;
+      } catch (error) {
+        console.error("获取远程插件失败:", error);
+      }
+    };
+
     watch(
       plugins,
       (currentPlugins) => {
@@ -175,6 +194,7 @@ export const usePluginsStore = defineStore(
       { deep: true }
     );
     initStore();
+    fetchMarketPlugins();
 
     return {
       plugins,
