@@ -16,31 +16,30 @@ import { initializePlatform, isMobile } from "@/utils/PlatformUtils.ts";
 import { setupI18n } from "@/services/i18n.ts";
 import { getEnhancedFingerprint } from "@/services/fingerprint";
 
-const deviceId = await getEnhancedFingerprint();
-localStorage.setItem(StorageKeyEnum.DEVICE_ID, deviceId);
-initializePlatform();
-startWebVitalObserver();
-// Initialize memory monitor
-const memoryMonitor = getMemoryMonitor();
-memoryMonitor.start();
-
-if (process.env.NODE_ENV === "development") {
-  import("@/utils/Console.ts").then((module) => {
-    /**! 控制台打印项目版本信息(不需要可手动关闭)*/
-    module.consolePrint();
-  });
-
-  if (isMobile()) {
-    import("eruda").then((module) => {
-      const eruda = "default" in module ? module.default : module;
-      eruda.init();
-    });
-  }
-}
-
 const app = createApp(App);
 
 async function bootstrap() {
+  const deviceId = await getEnhancedFingerprint();
+  localStorage.setItem(StorageKeyEnum.DEVICE_ID, deviceId);
+  initializePlatform();
+  startWebVitalObserver();
+  // Initialize memory monitor
+  const memoryMonitor = getMemoryMonitor();
+  memoryMonitor.start();
+
+  if (process.env.NODE_ENV === "development") {
+    import("@/utils/Console.ts").then((module) => {
+      /**! 控制台打印项目版本信息(不需要可手动关闭)*/
+      module.consolePrint();
+    });
+
+    if (isMobile()) {
+      import("eruda").then((module) => {
+        const eruda = "default" in module ? module.default : module;
+        eruda.init();
+      });
+    }
+  }
   app.use(pinia);
   app.directive("resize", vResize);
   await setupI18n(app);
