@@ -1,5 +1,19 @@
 # Changelog
 
+## <small>0.6.3 (2026-04-09)</small>
+
+* build: :package: updater pkg ([838a1c1](https://github.com/liaojie1314/yuanlive-tauri/commit/838a1c1))
+* fix: :bug: top-level await ([6dff3dc](https://github.com/liaojie1314/yuanlive-tauri/commit/6dff3dc))
+* fix(component): :bug: ai message height and tools render ([4ce7d61](https://github.com/liaojie1314/yuanlive-tauri/commit/4ce7d61))
+* feat: :sparkles: event tracking and upload(posthog) ([fb2a3df](https://github.com/liaojie1314/yuanlive-tauri/commit/fb2a3df))
+* feat: :sparkles: file convert ([8303f01](https://github.com/liaojie1314/yuanlive-tauri/commit/8303f01))
+* feat: :sparkles: online plugin install ([23b84b0](https://github.com/liaojie1314/yuanlive-tauri/commit/23b84b0))
+* feat(api): :sparkles: ai stream message ai(base) ([9585a59](https://github.com/liaojie1314/yuanlive-tauri/commit/9585a59))
+* feat(api): :sparkles: get conversation messages api ([aba3b25](https://github.com/liaojie1314/yuanlive-tauri/commit/aba3b25))
+* feat(plugin): :sparkles: online comic parser(baozi) ([46d40fa](https://github.com/liaojie1314/yuanlive-tauri/commit/46d40fa))
+* perf: :zap: autoLogin and formatNumber ([7ca6fad](https://github.com/liaojie1314/yuanlive-tauri/commit/7ca6fad))
+* refactor(view): :recycle: user tab ([d5797a6](https://github.com/liaojie1314/yuanlive-tauri/commit/d5797a6))
+
 ## <small>0.6.2 (2026-04-06)</small>
 
 * feat: :sparkles: commit emoji ([da56eb8](https://github.com/liaojie1314/yuanlive-tauri/commit/da56eb8))
