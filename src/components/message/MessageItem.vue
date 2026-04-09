@@ -199,6 +199,14 @@
                   @click="$emit('dislike-message', message.id)" />
                 <i-material-symbols-share class="action-icon text-sm" @click="$emit('share-message', message.id)" />
               </template>
+              <div class="relative flex-center">
+                <i-mdi-loading v-if="isLoading" class="text-sm text-blue-500 animate-spin" />
+                <i-mdi-volume-high
+                  v-else-if="isPlaying"
+                  title="停止朗读"
+                  class="action-icon text-sm text-blue-500 animate-pulse"
+                  @click="stopReading" />
+              </div>
             </div>
           </div>
           <div class="flex-shrink-0 text-[10px] text-[--user-text-color] opacity-80" :class="isSelf ? 'mr-4' : 'ml-4'">
@@ -224,6 +232,7 @@ import { writeFile } from "@tauri-apps/plugin-fs";
 import { writeText, writeImage } from "@tauri-apps/plugin-clipboard-manager";
 
 import type { MessageData } from "@/types/chat";
+import { useLocalTTS } from "@/hooks/useLocalTTS";
 import { normalizeMessage } from "@/utils/MessageAdapter";
 
 defineOptions({
@@ -231,6 +240,7 @@ defineOptions({
 });
 
 const { t } = useI18n();
+const { readAloud, stop: stopReading, isPlaying, isLoading } = useLocalTTS();
 
 const props = defineProps<{
   message: MessageData;
@@ -287,7 +297,7 @@ const contextMenuOptions = computed(() => {
       options.push({ label: t("components.messageItem.label.copyMedia"), key: "copy_media" });
       options.push({ label: t("components.messageItem.label.saveMedia"), key: "save_media" });
     } else if (["video", "audio", "file"].includes(target.type)) {
-      options.push({ label: t("components.messageItem.label.saveMedia"), key: "save_media" });
+      options.push({ label: t("components.messageItem.label.saveFiles"), key: "save_files" });
     }
   } else {
     // 鼠标点在了气泡空白处：提供一个保底的全局复制功能
@@ -341,15 +351,33 @@ const handleContextMenuSelect = (item: any) => {
     case "copy_media":
       handleCopyMedia();
       break;
+    case "save_files":
     case "save_media":
-      handleSaveMedia();
+      handleSaveFiles();
       break;
     case "delete":
       emit("enter-multi-select", props.message.id);
       break;
-    case "read":
-      console.log("触发朗读功能");
+    case "read": {
+      // 提取出要朗读的文本
+      let textToRead = "";
+      if (activeBlock.value && ["text", "thinking"].includes(activeBlock.value.type)) {
+        textToRead = activeBlock.value.content;
+      } else {
+        // 如果没有精准点中文字，默认读整段
+        textToRead = blocks.value
+          .filter((b: any) => ["text", "thinking"].includes(b.type))
+          .map((b: any) => b.content)
+          .join(" ");
+      }
+      // 如果正在播放同一条消息，点击视为“停止”；否则开始朗读
+      if (isPlaying.value) {
+        stopReading();
+      } else {
+        readAloud(textToRead);
+      }
       break;
+    }
     case "favorite":
       console.log("触发收藏功能");
       break;
@@ -357,7 +385,7 @@ const handleContextMenuSelect = (item: any) => {
 };
 
 /** 保存逻辑 */
-const handleSaveMedia = async () => {
+const handleSaveFiles = async () => {
   // 只保存当前用户右键的那一个具体文件
   const block = activeBlock.value;
   if (!block || !["image", "video", "audio", "file"].includes(block.type)) return;

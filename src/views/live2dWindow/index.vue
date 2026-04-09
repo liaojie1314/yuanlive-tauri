@@ -165,22 +165,24 @@
 </template>
 
 <script setup lang="ts">
-import * as PIXI from "pixi.js";
 import { FaceMesh } from "@mediapipe/face_mesh";
 import { Camera } from "@mediapipe/camera_utils";
 import { listen } from "@tauri-apps/api/event";
-import { Live2DModel } from "pixi-live2d-display";
+import { invoke } from "@tauri-apps/api/core";
 import { LogicalPosition } from "@tauri-apps/api/window";
-import { convertFileSrc, invoke } from "@tauri-apps/api/core";
 import { isRegistered, register, unregister } from "@tauri-apps/plugin-global-shortcut";
 import { getAllWebviewWindows, getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 
 import { EventEnum, TauriCommandEnum } from "@/enums";
-import { useAgentStore } from "@/stores/agent.ts";
+import { useLive2D } from "@/hooks/useLive2D";
+import { useAgentStore } from "@/stores/agent";
+import { useLocalTTS } from "@/hooks/useLocalTTS";
 import { formatSecondsToTimeStr, formatTime } from "@/utils/FormattingUtils";
 
 const agentStore = useAgentStore();
 const appWindow = getCurrentWebviewWindow();
+const { readAloud, stop: stopSpeaking, isPlaying } = useLocalTTS();
+const { initEngine, loadModel, setFaceTracking, triggerMotion, setFocus, live2dModel } = useLive2D();
 
 const farewellPhrases = [
   "那我先撤啦，换个伙伴来陪你~",
@@ -189,17 +191,12 @@ const farewellPhrases = [
   "溜了溜了，希望你会喜欢新朋友！",
   "我去休息啦，马上叫别人来接班~"
 ];
-// 挂载 PIXI 到 window (插件必需)
-(window as any).PIXI = PIXI;
+
 let bubbleTimer: any = null;
 let typingTimer: any = null;
 let lipSyncInterval: any = null;
-let kokoroTtsInstance: any = null;
 let pomodoroTimer: any = null;
-const synth = window.speechSynthesis; // 浏览器原生TTS
 let isDragging = false;
-let pixiApp: PIXI.Application | null = null;
-let initPromise: Promise<void> | null = null;
 let unlistenAudio: any = null;
 let dragOffset = { x: 0, y: 0 };
 let mediaRecorder: MediaRecorder | null = null;
@@ -208,23 +205,16 @@ let wsEventListener: any = null;
 let vadAudioCtx: AudioContext | null = null;
 let vadAnalyser: AnalyserNode | null = null;
 let vadDataArray: Uint8Array | null = null;
-let lastSpeakTime = 0; // 最后一次大声说话的时间戳
+let lastSpeakTime = 0;
 let camera: Camera | null = null;
 let faceMesh: FaceMesh | null = null;
-const faceTarget = { x: 0, y: 0, z: 0, eyeL: 1, eyeR: 1, mouth: 0, hasFace: false };
-const smoothedHead = { x: 0, y: 0, z: 0, eyeL: 1, eyeR: 1, mouth: 0 };
-const ttsWorker = new Worker(new URL("@/workers/kokoro.worker.ts", import.meta.url), { type: "module" });
-
 // 面部捕捉 (VTuber 模式)
 const isFaceTracking = ref(false);
 const videoRef = ref<HTMLVideoElement | null>(null);
 const isPomodoroActive = ref(false);
-const pomodoroTimeLeft = ref(25 * 60); // 25分钟 (1500秒)
-// 是否处于休眠状态
+const pomodoroTimeLeft = ref(25 * 60);
 const isSleeping = ref(false);
-const isTtsLoading = ref(false);
 const canvasRef = ref<HTMLCanvasElement | null>(null);
-const live2dModel = ref<any>(null);
 // 气泡相关
 const showBubble = ref(false);
 const bubbleText = ref("");
@@ -233,7 +223,7 @@ const textRef = ref<HTMLElement | null>(null);
 const isScrolling = ref(false);
 const scrollDuration = ref("5s");
 const isTyping = ref(false);
-// 备忘录
+// 备忘录与工具状态
 const showMemoInput = ref(false);
 const memoText = ref("");
 const memoInputRef = ref<any>(null);
@@ -247,10 +237,6 @@ const showConvertMenu = ref(false);
 const droppedFilePath = ref("");
 const availableFormats = ref<string[]>([]);
 const isConverting = ref(false);
-
-// 音频与口型相关
-const audioContext = shallowRef<AudioContext | null>(null);
-const audioSource = shallowRef<AudioBufferSourceNode | null>(null);
 
 /**
  * 从文件路径中提取文件名
@@ -271,7 +257,7 @@ const getFormatsByExt = (ext: string) => {
   const audioExts = ["mp3", "wav", "ogg", "flac"];
 
   if (imageExts.includes(ext)) return imageExts.filter((e) => e !== ext);
-  if (videoExts.includes(ext)) return [...videoExts.filter((e) => e !== ext), "gif", "mp3"]; // 视频可转GIF或提取音频
+  if (videoExts.includes(ext)) return [...videoExts.filter((e) => e !== ext), "gif", "mp3"];
   if (audioExts.includes(ext)) return audioExts.filter((e) => e !== ext);
   return [];
 };
@@ -291,7 +277,7 @@ const startConversion = async (targetExt: string) => {
   isConverting.value = true;
 
   speak(`好的！正在拼命施展魔法，把文件转成 ${targetExt.toUpperCase()} 格式...`);
-  if (live2dModel.value) live2dModel.value.motion("TapBody"); // 施法动作
+  triggerMotion("TapBody");
 
   try {
     const outPath = await invoke<string>(TauriCommandEnum.CONVERT_FILE, {
@@ -309,15 +295,6 @@ const startConversion = async (targetExt: string) => {
 };
 
 /**
- * 平滑插值函数 (Lerp)，防止模型头部抖动得像帕金森
- * @param start 起始值
- * @param end 结束值
- * @param amt 插值比例
- * @returns 平滑后的值
- */
-const lerp = (start: number, end: number, amt: number) => (1 - amt) * start + amt * end;
-
-/**
  * 计算两点之间真实 2D 物理距离的辅助函数
  * @param p1 点1
  * @param p2 点2
@@ -328,13 +305,11 @@ const calcDistance = (p1: any, p2: any) => Math.hypot(p1.x - p2.x, p1.y - p2.y);
 /** 切换面部捕捉 (VTuber 模式) */
 const toggleFaceTracking = async () => {
   if (isSleeping.value) return;
-
   isFaceTracking.value = !isFaceTracking.value;
 
   if (isFaceTracking.value) {
     speak("正在建立神经链接，初次加载 AI 模型需要几十秒，请稍等哦...");
-
-    if (live2dModel.value) live2dModel.value.focus(0, 0);
+    setFocus(0, 0);
 
     faceMesh = new FaceMesh({
       locateFile: (file) => `https://fastly.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`
@@ -354,66 +329,43 @@ const toggleFaceTracking = async () => {
 
       if (!isModelReallyReady) {
         isModelReallyReady = true;
-        console.log("✅ MediaPipe 引擎已真实启动并跑通第一帧！");
         speak("神经链接完成！动动脑袋和嘴巴试试看？");
       }
 
       if (results.multiFaceLandmarks && results.multiFaceLandmarks.length > 0) {
-        faceTarget.hasFace = true;
         const landmarks = results.multiFaceLandmarks[0];
-
         const nose = landmarks[1];
         const leftEye = landmarks[33];
         const rightEye = landmarks[263];
         const chin = landmarks[152];
         const topHead = landmarks[10];
 
-        // --- 1. 转头、点头、歪头 ---
         const eyeCenterX = (leftEye.x + rightEye.x) / 2;
         const eyeDistX = calcDistance(leftEye, rightEye);
-        const targetX = ((nose.x - eyeCenterX) / eyeDistX) * -150;
+        const targetX = Math.max(-30, Math.min(30, ((nose.x - eyeCenterX) / eyeDistX) * -150));
 
         const verticalCenter = (chin.y + topHead.y) / 2;
         const faceHeight = chin.y - topHead.y;
-        const targetY = ((nose.y - verticalCenter) / faceHeight) * -200;
+        const targetY = Math.max(-30, Math.min(30, ((nose.y - verticalCenter) / faceHeight) * -200));
 
         const rollAngle = Math.atan2(rightEye.y - leftEye.y, rightEye.x - leftEye.x);
-        const targetZ = rollAngle * (180 / Math.PI);
+        const targetZ = Math.max(-30, Math.min(30, rollAngle * (180 / Math.PI)));
 
-        faceTarget.x = Math.max(-30, Math.min(30, targetX));
-        faceTarget.y = Math.max(-30, Math.min(30, targetY));
-        faceTarget.z = Math.max(-30, Math.min(30, targetZ));
+        const leftEAR = calcDistance(landmarks[145], landmarks[159]) / calcDistance(landmarks[33], landmarks[133]);
+        const rightEAR = calcDistance(landmarks[374], landmarks[386]) / calcDistance(landmarks[362], landmarks[263]);
 
-        // --- 2. 眨眼 EAR 算法 ---
-        const leftEyeWidth = calcDistance(landmarks[33], landmarks[133]);
-        const leftEyeHeight = calcDistance(landmarks[145], landmarks[159]);
-        const leftEAR = leftEyeHeight / leftEyeWidth;
-
-        const rightEyeWidth = calcDistance(landmarks[362], landmarks[263]);
-        const rightEyeHeight = calcDistance(landmarks[374], landmarks[386]);
-        const rightEAR = rightEyeHeight / rightEyeWidth;
-
-        faceTarget.eyeL = leftEAR > 0.16 ? 1 : 0;
-        faceTarget.eyeR = rightEAR > 0.16 ? 1 : 0;
-
-        // --- 3. 嘴部张合算法 ---
-        // 提取上下嘴唇内侧中点的坐标
-        const upperLip = landmarks[13];
-        const lowerLip = landmarks[14];
-        const mouthOpenDist = calcDistance(upperLip, lowerLip);
-
-        // 用脸部高度做归一化，防止你离屏幕近时嘴巴自动张大
-        // 0.015 是闭嘴的误差阈值，乘以 15 是放大倍数（可根据需要微调）
-        const targetMouth = (mouthOpenDist / faceHeight - 0.015) * 15;
-        faceTarget.mouth = Math.max(0, Math.min(1, targetMouth));
+        const mouthOpenDist = calcDistance(landmarks[13], landmarks[14]);
+        const targetMouth = Math.max(0, Math.min(1, (mouthOpenDist / faceHeight - 0.015) * 15));
+        setFaceTracking({
+          x: targetX,
+          y: targetY,
+          z: targetZ,
+          eyeL: leftEAR > 0.16 ? 1 : 0,
+          eyeR: rightEAR > 0.16 ? 1 : 0,
+          mouth: targetMouth
+        });
       } else {
-        faceTarget.hasFace = false;
-        faceTarget.x = 0;
-        faceTarget.y = 0;
-        faceTarget.z = 0;
-        faceTarget.eyeL = 1;
-        faceTarget.eyeR = 1;
-        faceTarget.mouth = 0; // 找不到人脸时闭嘴
+        setFaceTracking(null);
       }
     });
 
@@ -422,9 +374,7 @@ const toggleFaceTracking = async () => {
       if (videoRef.value) {
         camera = new Camera(videoRef.value, {
           onFrame: async () => {
-            if (faceMesh && isFaceTracking.value) {
-              await faceMesh.send({ image: videoRef.value! });
-            }
+            if (faceMesh && isFaceTracking.value) await faceMesh.send({ image: videoRef.value! });
           },
           width: 480,
           height: 360
@@ -432,7 +382,6 @@ const toggleFaceTracking = async () => {
         camera.start();
       }
     } catch (e) {
-      console.error("面部模型加载失败:", e);
       speak("哎呀，AI 模型加载失败了，请检查一下网络哦。");
       isFaceTracking.value = false;
     }
@@ -446,147 +395,30 @@ const toggleFaceTracking = async () => {
       faceMesh.close();
       faceMesh = null;
     }
-    if (live2dModel.value) live2dModel.value.focus(0, 0);
+    setFaceTracking(null);
+    setFocus(0, 0);
   }
 };
 
-/** 初始化双引擎模型 */
-const initKokoroTTS = async () => {
-  if (kokoroTtsInstance) return;
-
-  if (!initPromise) {
-    initPromise = (async () => {
-      isTtsLoading.value = true;
-      try {
-        console.log("后台线程: 开始加载 Kokoro 模型...");
-        await runInWorker({ action: "init" });
-        kokoroTtsInstance = true;
-        console.log("✅ Kokoro 模型后台加载成功！");
-      } catch (error) {
-        console.error("❌ 后台模型加载失败:", error);
-        initPromise = null;
-        throw error;
-      } finally {
-        isTtsLoading.value = false;
-      }
-    })();
-  }
-  await initPromise;
-};
-
-/**
- * 使用 Piper 引擎生成语音
- * @param text 要播放的文本
- * @param model 当前使用的语音模型
- * @param onReady 音频准备完毕的回调函数
- */
-const playPiperTTS = async (text: string, model: any, onReady: () => void) => {
-  const lang = detectLanguage(text);
-  // 1. 获取模型根目录
-  const baseModelsDir: string = await invoke(TauriCommandEnum.GET_MODELS_DIR);
-  const separator = baseModelsDir.includes("\\") ? "\\" : "/";
-  // 2. 直接从传进来的 model 拿 fileName
-  const modelPath = `${baseModelsDir}${separator}${model.fileName}`;
-  const outputPath = `${baseModelsDir}${separator}temp_piper.wav`;
-  console.log(`后台线程: Piper 使用 [${model.name}] 播报${lang}...`);
-  // 3. 呼叫 Rust 端生成 .wav 文件
-  await invoke(TauriCommandEnum.GENERATE_PIPER_SPEECH, {
-    text,
-    modelPath,
-    outputPath
-  });
-  // 4. 读取刚生成的音频文件
-  const audioUrl = convertFileSrc(outputPath);
-  // 加上时间戳，强制突破浏览器的强缓存，否则永远只播第一句！
-  const response = await fetch(`${audioUrl}?t=${Date.now()}`);
-  if (!response.ok) throw new Error("读取音频文件失败");
-  const arrayBuffer = await response.arrayBuffer();
-  // 5. 解码为 AudioBuffer 并交给口型同步系统播放
-  if (!audioContext.value) audioContext.value = new AudioContext();
-  const audioBuffer = await audioContext.value.decodeAudioData(arrayBuffer);
-  onReady();
-  playAudioBufferWithLipSync(audioBuffer);
-};
-
-/**
- * 在 worker 中运行指定任务
- * @param payload 要发送到 worker 的任务数据
- */
-const runInWorker = (payload: any): Promise<any> => {
-  return new Promise((resolve, reject) => {
-    const handler = (e: MessageEvent) => {
-      if (e.data.action === payload.action) {
-        ttsWorker.removeEventListener("message", handler); // 用完就清理监听器
-        if (e.data.status === "success") {
-          resolve(e.data);
-        } else {
-          reject(new Error(e.data.error));
-        }
-      }
-    };
-    ttsWorker.addEventListener("message", handler);
-    ttsWorker.postMessage(payload);
-  });
-};
-
-/**
- * 播放 AudioBuffer 并同步口型
- * @param audioBuffer 要播放的音频缓冲区
- */
-const playAudioBufferWithLipSync = (audioBuffer: AudioBuffer) => {
-  stopSpeaking();
-  const newSource = audioContext.value!.createBufferSource();
-  newSource.buffer = audioBuffer;
-  audioSource.value = newSource;
-  const analyser = audioContext.value!.createAnalyser();
-  analyser.fftSize = 256;
-  newSource.connect(analyser);
-  analyser.connect(audioContext.value!.destination);
-  newSource.start(0);
-  const dataArray = new Uint8Array(analyser.frequencyBinCount);
+/** 开始随机口型动画 (根据 isPlaying 状态自动触发) */
+const startRandomLipSync = () => {
+  if (lipSyncInterval) clearInterval(lipSyncInterval);
   lipSyncInterval = setInterval(() => {
     if (!live2dModel.value?.internalModel?.coreModel) return;
-    analyser.getByteFrequencyData(dataArray);
-    let sum = 0;
-    const checkCount = Math.min(20, dataArray.length);
-    for (let i = 0; i < checkCount; i++) sum += dataArray[i];
-    const avg = sum / checkCount;
-    let openValue = avg / 60;
-    if (openValue > 1) openValue = 1;
-    if (openValue < 0.1) openValue = 0;
-    live2dModel.value.internalModel.coreModel.setParameterValueById("ParamMouthOpenY", openValue);
-  }, 33);
-  newSource.onended = () => stopSpeaking();
+    const value = Math.random() * 0.8;
+    live2dModel.value.internalModel.coreModel.setParameterValueById("ParamMouthOpenY", value);
+  }, 100);
 };
 
-/**
- * 使用纯前端 Kokoro 生成英文音频
- * @param text 要播放的文本
- * @param model 当前使用的语音模型
- * @param onReady 音频准备完毕的回调函数
- */
-const playLocalModelTTS = async (text: string, model: any, onReady: () => void) => {
-  await initKokoroTTS();
-  // 获取本地模型的根目录绝对路径
-  const baseModelsDir: string = await invoke(TauriCommandEnum.GET_MODELS_DIR);
-  const assetBaseUrl = convertFileSrc(baseModelsDir);
-  const currentVoiceId = model.voiceId || "af_bella";
-  console.log(`后台线程: Kokoro 使用 [${currentVoiceId}] 播报英文...`);
-
-  // 把动态的 voiceId 传给 Worker
-  const result = await runInWorker({
-    action: "generate",
-    text,
-    voiceId: currentVoiceId,
-    assetBaseUrl
-  });
-
-  if (!audioContext.value) audioContext.value = new AudioContext();
-  const audioBuffer = audioContext.value.createBuffer(1, result.audio.length, result.sampling_rate);
-  audioBuffer.copyToChannel(result.audio, 0);
-
-  onReady();
-  playAudioBufferWithLipSync(audioBuffer);
+/** 停止口型动画 */
+const stopLipSync = () => {
+  if (lipSyncInterval) {
+    clearInterval(lipSyncInterval);
+    lipSyncInterval = null;
+  }
+  if (live2dModel.value?.internalModel?.coreModel) {
+    live2dModel.value.internalModel.coreModel.setParameterValueById("ParamMouthOpenY", 0);
+  }
 };
 
 /**
@@ -606,8 +438,6 @@ const startDrag = (e: MouseEvent) => {
  */
 const handleDrag = async (e: PointerEvent) => {
   if (!isDragging) return;
-
-  // 使用 Web API 获取屏幕尺寸 (比 Tauri Monitor API 更符合前端坐标系)
   const screenWidth = window.screen.availWidth;
   const screenHeight = window.screen.availHeight;
   const winWidth = window.innerWidth;
@@ -616,7 +446,6 @@ const handleDrag = async (e: PointerEvent) => {
   let newX = e.screenX - dragOffset.x;
   let newY = e.screenY - dragOffset.y;
 
-  // 边界限制
   if (newX < 0) newX = 0;
   if (newY < 0) newY = 0;
   if (newX > screenWidth - winWidth - 10) newX = screenWidth - winWidth - 10;
@@ -629,203 +458,6 @@ const stopDrag = () => {
   isDragging = false;
   window.removeEventListener("pointermove", handleDrag);
   window.removeEventListener("pointerup", stopDrag);
-};
-
-/** 停止Speaking */
-const stopSpeaking = () => {
-  // 1. 停止后端音频
-  if (audioSource.value) {
-    try {
-      audioSource.value.stop();
-    } catch {}
-    audioSource.value = null;
-  }
-  // 2. 停止原生 TTS
-  if (synth && typeof synth.cancel === "function") {
-    synth.cancel();
-  }
-
-  // 3. 停止口型动画
-  if (lipSyncInterval) {
-    clearInterval(lipSyncInterval);
-    lipSyncInterval = null;
-  }
-
-  // 4. 恢复闭嘴状态
-  if (live2dModel.value?.internalModel?.coreModel) {
-    live2dModel.value.internalModel.coreModel.setParameterValueById("ParamMouthOpenY", 0);
-  }
-};
-
-/**
- * 播放系统 TTS (降级方案 - 随机口型)
- * @param text 要播放的文本
- */
-const playSystemTTS = async (text: string) => {
-  stopSpeaking(); // 先清理
-  // 1. 尝试使用浏览器原生 API
-  if (window.speechSynthesis) {
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = "zh-CN";
-    utterance.rate = 1.0;
-    // 模拟口型
-    utterance.onstart = () => {
-      startRandomLipSync(); // 把下面的定时器逻辑抽成一个函数方便复用
-    };
-    utterance.onend = () => stopSpeaking();
-    utterance.onerror = () => {
-      // 如果浏览器报错，也尝试切到 Rust
-      invokeRustTTS(text);
-    };
-    window.speechSynthesis.speak(utterance);
-    return;
-  }
-};
-
-/**
- * 调用 Rust 后端 TTS
- * @param text 要播放的文本
- */
-const invokeRustTTS = async (text: string) => {
-  try {
-    // 开始模拟口型 (因为系统 TTS 不给回调，我们只能估算时间)
-    startRandomLipSync();
-    // 1. 自动识别语言
-    const lang = detectLanguage(text);
-    console.log(`识别语言: ${lang}, 调用系统 TTS...`);
-    // 2. 传给 Rust
-    await invoke(TauriCommandEnum.SPEAK_SYSTEM, { text, lang });
-    // 3. 估算结束时间 (清理口型)
-    // 英文语速通常比中文快，可以微调
-    const charRate = lang === "zh" ? 250 : 150;
-    const duration = Math.max(2000, text.length * charRate);
-    setTimeout(() => {
-      stopSpeaking();
-    }, duration);
-  } catch (e) {
-    console.error("Rust TTS 也失败了:", e);
-    stopSpeaking();
-  }
-};
-
-/**
- * 自动识别文本语言
- * @param text 要识别的文本
- * @returns 识别到的语言，"zh" 或 "en"
- */
-const detectLanguage = (text: string): string => {
-  // 正则表达式：只要包含任何中文字符，就认为是中文
-  if (/[\u4e00-\u9fa5]/.test(text)) {
-    return "zh";
-  }
-  // 否则默认英文
-  return "en";
-};
-
-/** 开始随机口型动画 */
-const startRandomLipSync = () => {
-  if (lipSyncInterval) clearInterval(lipSyncInterval);
-  lipSyncInterval = setInterval(() => {
-    if (!live2dModel.value?.internalModel?.coreModel) return;
-    const value = Math.random() * 0.8;
-    live2dModel.value.internalModel.coreModel.setParameterValueById("ParamMouthOpenY", value);
-  }, 100);
-};
-
-/**
- * 加载或切换 Live2D 模型
- * @param modelUrl 模型的 json 地址
- */
-const loadLive2dModel = async (modelUrl: string) => {
-  if (!pixiApp) return;
-
-  try {
-    if (live2dModel.value) {
-      pixiApp.stage.removeChild(live2dModel.value);
-      live2dModel.value.destroy();
-      live2dModel.value = null;
-    }
-
-    const model = await Live2DModel.from(modelUrl);
-
-    // 1. 劫持常规的鼠标焦点 (保留)
-    const originalFocus = model.focus.bind(model);
-    model.focus = (x: number, y: number, ...args: any[]) => {
-      if (isSleeping.value) {
-        originalFocus(0, 0, ...args);
-      } else {
-        originalFocus(x, y, ...args);
-      }
-    };
-
-    const coreModel = model.internalModel.coreModel as any;
-    // 备份原本的顶点渲染逻辑
-    const originalCoreUpdate = coreModel.update.bind(coreModel);
-
-    coreModel.update = (...args: any[]) => {
-      if (isFaceTracking.value) {
-        // 这能极大地掩盖 AI 掉帧带来的跳跃感，让动作看起来像水一样丝滑
-        smoothedHead.x = lerp(smoothedHead.x, faceTarget.x, 0.08);
-        smoothedHead.y = lerp(smoothedHead.y, faceTarget.y, 0.08);
-        smoothedHead.z = lerp(smoothedHead.z, faceTarget.z, 0.08);
-
-        smoothedHead.eyeL = lerp(smoothedHead.eyeL, faceTarget.eyeL, 0.3);
-        smoothedHead.eyeR = lerp(smoothedHead.eyeR, faceTarget.eyeR, 0.3);
-
-        // 嘴部插值 (嘴巴需要反应快点，系数用 0.3)
-        smoothedHead.mouth = lerp(smoothedHead.mouth, faceTarget.mouth, 0.3);
-
-        coreModel.setParameterValueById("ParamAngleX", smoothedHead.x);
-        coreModel.setParameterValueById("ParamAngleY", smoothedHead.y);
-        coreModel.setParameterValueById("ParamAngleZ", smoothedHead.z);
-        coreModel.setParameterValueById("ParamBodyAngleX", smoothedHead.x * 0.5);
-        coreModel.setParameterValueById("ParamEyeLOpen", smoothedHead.eyeL);
-        coreModel.setParameterValueById("ParamEyeROpen", smoothedHead.eyeR);
-        coreModel.setParameterValueById("ParamMouthOpenY", smoothedHead.mouth);
-      }
-
-      originalCoreUpdate(...args);
-    };
-
-    live2dModel.value = model;
-    pixiApp.stage.addChild(model);
-
-    const updateLayout = () => {
-      const screenW = pixiApp!.renderer.screen.width;
-      const screenH = pixiApp!.renderer.screen.height;
-      model.anchor.set(0, 0);
-      const rawWidth = model.internalModel.originalWidth || model.width;
-      const rawHeight = model.internalModel.originalHeight || model.height;
-      const scaleX = screenW / rawWidth;
-      const scaleY = (screenH * 0.9) / rawHeight;
-      const scale = Math.min(scaleX, scaleY);
-      model.scale.set(scale);
-      model.x = (screenW - model.width) / 2;
-      model.y = screenH - model.height;
-    };
-
-    updateLayout();
-    pixiApp.renderer.on("resize", updateLayout);
-
-    model.on("hit", (hitAreas) => {
-      if (isSleeping.value) {
-        isSleeping.value = false;
-        speak("唔...主人你叫我呀，我醒啦！");
-        return;
-      }
-      if (isPomodoroActive.value) {
-        const focusQuotes = ["嘘，专心工作哦~", "我在看着你呢，别摸鱼啦！", "快写代码，写完再陪你玩~"];
-        speak(focusQuotes[Math.floor(Math.random() * focusQuotes.length)]);
-        return;
-      }
-      if (hitAreas.includes("Body")) {
-        model.motion("TapBody");
-        speak("有什么我可以帮你的吗？");
-      }
-    });
-  } catch (e) {
-    console.error("Live2D Load Failed:", e);
-  }
 };
 
 /**
@@ -861,7 +493,7 @@ const checkScroll = () => {
 
   if (textWidth > containerWidth + 2) {
     isScrolling.value = true;
-    const distance = textWidth - containerWidth + 20; // +20 缓冲，防止切字
+    const distance = textWidth - containerWidth + 20;
     const duration = Math.max(3, distance / 40);
     scrollDuration.value = `${duration}s`;
     containerRef.value.style.setProperty("--scroll-distance", `-${distance}px`);
@@ -889,63 +521,30 @@ const speak = async (text: string) => {
   if (bubbleTimer) clearTimeout(bubbleTimer);
   if (typingTimer) clearInterval(typingTimer);
 
-  // 让气泡先显示“思考中”，掩盖大模型生成的耗时
   bubbleText.value = "🤔...";
   isTyping.value = false;
 
-  const startVisuals = () => {
-    typeWriter(text, async () => {
-      await nextTick();
-      checkScroll();
+  typeWriter(text, async () => {
+    await nextTick();
+    checkScroll();
 
-      if (!isScrolling.value) {
-        const stayTime = Math.max(2500, text.length * 200);
-        bubbleTimer = setTimeout(() => {
-          showBubble.value = false;
-        }, stayTime);
-      }
-    });
-  };
-
-  // 2. 音频生成智能路由管道
-  if (live2dModel.value) {
-    try {
-      // 检测语言 ("zh" 还是 "en")
-      const lang = detectLanguage(text);
-      // 去字典里拿当前语言启用的模型
-      const targetModel = agentStore.activeModels[lang];
-      if (!targetModel) {
-        throw new Error(`当前没有开启 [${lang === "zh" ? "中文" : "英文"}] 的本地模型，触发降级`);
-      }
-      // 根据拿到的模型引擎，分发给不同通道
-      if (targetModel.engine === "Piper") {
-        await playPiperTTS(text, targetModel, startVisuals);
-      } else if (targetModel.engine === "Kokoro") {
-        await playLocalModelTTS(text, targetModel, startVisuals);
-      } else {
-        throw new Error("未知的 AI 引擎");
-      }
-    } catch (e1) {
-      console.warn("本地 TTS 跳过/失败，降级到系统 TTS:", e1);
-      // 🥈 降级路线：原生 TTS兜底
-      playSystemTTS(text);
-      startVisuals();
+    if (!isScrolling.value) {
+      const stayTime = Math.max(2500, text.length * 200);
+      bubbleTimer = setTimeout(() => {
+        showBubble.value = false;
+      }, stayTime);
     }
-  } else {
-    startVisuals();
-  }
+  });
+  await readAloud(text);
 };
 
-// --- AI 能力 ---
+/** 处理语音聊天 */
 const handleVoiceChat = async () => {
   if (isSleeping.value) return;
 
-  // 1. 关闭连麦
   if (isVoiceChatting.value) {
     isVoiceChatting.value = false;
-    if (mediaRecorder && mediaRecorder.state !== "inactive") {
-      mediaRecorder.stop();
-    }
+    if (mediaRecorder && mediaRecorder.state !== "inactive") mediaRecorder.stop();
     if (vadAudioCtx) {
       vadAudioCtx.close();
       vadAudioCtx = null;
@@ -958,83 +557,59 @@ const handleVoiceChat = async () => {
     return;
   }
 
-  // 2. 开启连麦
   try {
     speak("麦克风已接通，你可以直接跟我说话啦~");
-    // === 🔽 下行：监听后端大模型发来的消息 ===
     wsEventListener = await listen("websocket-event", (event: any) => {
       const wsEvent = event.payload;
-      // 过滤出收到消息的事件
-      if (wsEvent.type === "messageReceived") {
-        const msg = wsEvent.message;
-        // 假设后端返回: { "type": "AI_REPLY", "text": "你好呀" }
-        if (msg.type === "AI_REPLY" && msg.text) {
-          speak(msg.text); // 直接调用你现成的 speak 函数播报！
-        }
+      if (wsEvent.type === "messageReceived" && wsEvent.message.type === "AI_REPLY") {
+        if (wsEvent.message.text) speak(wsEvent.message.text);
       }
     });
-    // === 🔼 上行：获取麦克风流并做静音检测 (VAD) ===
+
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    // 接入 VAD 分析器
     vadAudioCtx = new AudioContext();
     const source = vadAudioCtx.createMediaStreamSource(stream);
     vadAnalyser = vadAudioCtx.createAnalyser();
     vadAnalyser.fftSize = 256;
     source.connect(vadAnalyser);
     vadDataArray = new Uint8Array(vadAnalyser.frequencyBinCount);
+
     mediaRecorder = new MediaRecorder(stream);
-    // 每 500ms 触发一次切片发送
     mediaRecorder.ondataavailable = async (e) => {
       if (e.data.size > 0 && isVoiceChatting.value) {
-        // 计算当前这 0.5 秒内的平均音量能量
         vadAnalyser!.getByteFrequencyData(vadDataArray as any);
         const sum = vadDataArray!.reduce((a, b) => a + b, 0);
         const avgVolume = sum / vadDataArray!.length;
         const now = Date.now();
-        const SILENCE_THRESHOLD = 10; // 阈值：过滤风扇/底噪，人声通常大于 10
-        const TAIL_MARGIN_MS = 1500; // 拖尾：停止说话后继续发送 1.5 秒，防断句
-        if (avgVolume > SILENCE_THRESHOLD) {
-          lastSpeakTime = now;
-        }
-        // 如果在说话，或者在停顿拖尾期内，则发送！
-        if (now - lastSpeakTime < TAIL_MARGIN_MS) {
+        if (avgVolume > 10) lastSpeakTime = now;
+
+        if (now - lastSpeakTime < 1500) {
           const buffer = await e.data.arrayBuffer();
-          // 转成 Base64
           const base64Audio = btoa(String.fromCharCode(...new Uint8Array(buffer)));
-          // 调用 Rust 的 ws_send_message 接口发送
-          await invoke("ws_send_message", {
-            params: {
-              data: {
-                type: "USER_AUDIO",
-                audio: base64Audio
-              }
-            }
-          });
+          await invoke("ws_send_message", { params: { data: { type: "USER_AUDIO", audio: base64Audio } } });
         }
       }
     };
-    mediaRecorder.start(500); // 启动录制，每 500ms 吐一次切片
+    mediaRecorder.start(500);
     isVoiceChatting.value = true;
   } catch (e) {
-    console.error("连麦初始化失败:", e);
     speak("哎呀，麦克风没打开，或者网络不通哦...");
     isVoiceChatting.value = false;
   }
 };
 
+/** 捕获屏幕 */
 const captureScreen = async () => {
   if (isSleeping.value) return;
-  // 切换状态
   isVisionActive.value = !isVisionActive.value;
   if (isVisionActive.value) {
     speak("视觉模块已开启，我会留意你的屏幕哦~");
-    if (live2dModel.value) live2dModel.value.motion("TapBody");
+    triggerMotion("TapBody");
     try {
       const pos = await appWindow.outerPosition();
       const base64Data = await invoke<string>("screenshot", { x: pos.x, y: pos.y });
       currentVisualContext.value = `data:image/png;base64,${base64Data}`;
     } catch (error) {
-      console.error("截图失败:", error);
       isVisionActive.value = false;
     }
   } else {
@@ -1043,84 +618,57 @@ const captureScreen = async () => {
   }
 };
 
-// --- Agent 键鼠接管 ---
+/** Agent 键鼠接管 */
 const operateKeyboard = async () => {
   if (isSleeping.value) return;
-
   speak("Agent 权限已确认！准备给你变个小魔术...");
+  triggerMotion("TapBody");
 
-  if (live2dModel.value) {
-    live2dModel.value.motion("TapBody"); // 让她动一下，表示发功
-  }
-
-  // 延迟 4 秒执行，留给用户“双手离开键盘”的准备时间
   setTimeout(async () => {
     speak("请双手离开键盘和鼠标哦！3... 2... 1...");
-
     setTimeout(async () => {
       try {
-        // 获取屏幕中心坐标
         const screenW = window.screen.availWidth;
         const screenH = window.screen.availHeight;
         const centerX = Math.floor(screenW / 2);
         const centerY = Math.floor(screenH / 2);
 
-        // 1. 指挥 Rust 抢夺鼠标控制权，瞬间移动到屏幕正中央！
         await invoke(TauriCommandEnum.AGENT_MOUSE_ACTION, { x: centerX, y: centerY, click: false });
-
-        // 2. 停顿 0.5 秒，营造真实感
         await new Promise((r) => setTimeout(r, 500));
-
-        // 3. 围绕中心画一个正方形（模拟人类鼠标晃动寻找焦点）
         await invoke(TauriCommandEnum.AGENT_MOUSE_ACTION, { x: centerX + 100, y: centerY, click: false });
         await new Promise((r) => setTimeout(r, 200));
         await invoke(TauriCommandEnum.AGENT_MOUSE_ACTION, { x: centerX + 100, y: centerY + 100, click: false });
         await new Promise((r) => setTimeout(r, 200));
         await invoke(TauriCommandEnum.AGENT_MOUSE_ACTION, { x: centerX, y: centerY + 100, click: false });
         await new Promise((r) => setTimeout(r, 200));
-        await invoke(TauriCommandEnum.AGENT_MOUSE_ACTION, { x: centerX, y: centerY, click: true }); // 最后点一下左键！
-
-        // 4. 停顿一下，然后自动敲字！
+        await invoke(TauriCommandEnum.AGENT_MOUSE_ACTION, { x: centerX, y: centerY, click: true });
         await new Promise((r) => setTimeout(r, 500));
-
-        // （如果你此时鼠标焦点刚好在一个输入框里，比如记事本或浏览器地址栏，她就会直接把字打进去）
         await invoke(TauriCommandEnum.AGENT_TYPE_TEXT, { text: "Hello! I am HuaYan, your AI Desktop Agent!" });
 
         speak("操作完毕！我是不是越来越像个真正的人类了？");
       } catch (e) {
-        console.error("Agent 操作失败:", e);
         speak("哎呀，系统底层好像不让我碰鼠标呢...");
       }
     }, 3000);
   }, 4000);
 };
 
-// --- 陪伴功能 ---
+/** 启动番茄钟 */
 const startPomodoro = () => {
-  // 如果已经在专注中，再次点击就是“提前取消”
   if (isPomodoroActive.value) {
     clearInterval(pomodoroTimer);
     isPomodoroActive.value = false;
     speak("番茄钟已取消，不要有压力，随时可以重新开始哦~");
     return;
   }
-
-  // 开启番茄钟
   isPomodoroActive.value = true;
-  pomodoroTimeLeft.value = 25 * 60; // 重置为 25 分钟
+  pomodoroTimeLeft.value = 25 * 60;
   speak("好的，接下来25分钟我会安静陪你，专注加油哦！");
+  triggerMotion("TapBody");
 
-  // 如果模型有举手的动作，可以顺便播一个，没有的话会自动忽略
-  if (live2dModel.value) {
-    live2dModel.value.motion("TapBody");
-  }
-
-  // 开始每秒倒计时
   pomodoroTimer = setInterval(() => {
-    if (pomodoroTimeLeft.value > 0) {
-      pomodoroTimeLeft.value--;
-    } else {
-      // 时间到！
+    if (pomodoroTimeLeft.value > 0) pomodoroTimeLeft.value--;
+    else {
       clearInterval(pomodoroTimer);
       isPomodoroActive.value = false;
       speak("时间到啦！辛苦了，站起来活动一下，喝口水吧~");
@@ -1128,77 +676,42 @@ const startPomodoro = () => {
   }, 1000);
 };
 
+/** 跟随音乐 */
 const playMusic = async () => {
   if (isSleeping.value) return;
-
   isListeningMusic.value = !isListeningMusic.value;
 
   if (isListeningMusic.value) {
     speak("音乐雷达已开启，放首动感的歌试试吧~");
-    console.log("🟢 [音频雷达] 已启动，正在监听系统声音...");
-
     try {
-      // 通知 Rust 开启内录
       await invoke(TauriCommandEnum.TOGGLE_SYSTEM_AUDIO_LISTEN, { enable: true });
-
       let smoothedEnergy = 0;
-      let lastLogTime = 0; // 用于日志节流
-
-      // 高频接收系统音量
       unlistenAudio = await listen<number>("system-audio-level", (event) => {
         if (!live2dModel.value?.internalModel?.coreModel) return;
-
         const rms = event.payload;
-
-        // 1. 降低增益倍数：从 6.0 降到 2.5 (如果还是很容易 100%，可以降到 1.5)
-        let targetEnergy = rms * 2.5;
-
-        // 2. 噪音门 (Noise Gate)：如果能量太小（系统底噪/白噪音），直接归零，防止她一直瞎哆嗦
-        if (targetEnergy < 0.03) targetEnergy = 0;
-
-        // 3. 封顶限制，防止超出 100%
-        targetEnergy = Math.min(1.0, targetEnergy);
-
-        // 4. 平滑插值 (Lerp)
-        // 让当前的能量慢慢去追赶目标能量，0.2 是平滑系数（越小越丝滑，越大越神经质）
+        const targetEnergy = Math.min(1.0, Math.max(0, rms * 2.5 > 0.03 ? rms * 2.5 : 0));
         smoothedEnergy += (targetEnergy - smoothedEnergy) * 0.2;
 
-        const now = Date.now();
-        if (smoothedEnergy > 0.05 && now - lastLogTime > 300) {
-          const bar = "█".repeat(Math.floor(smoothedEnergy * 20));
-          console.log(`🎵 [节奏感知] 能量: ${(smoothedEnergy * 100).toFixed(0).padStart(3, " ")}% | ${bar}`);
-          lastLogTime = now;
-        }
-
-        // 身体摇摆
-        const time = now / 300;
+        const time = Date.now() / 300;
         const swing = Math.sin(time) * 15 * smoothedEnergy;
 
         live2dModel.value.internalModel.coreModel.setParameterValueById("ParamBodyAngleY", swing);
         live2dModel.value.internalModel.coreModel.setParameterValueById("ParamBodyAngleZ", swing * 0.5);
-
-        // 嘴巴微张打节拍
         live2dModel.value.internalModel.coreModel.setParameterValueById("ParamMouthOpenY", smoothedEnergy * 0.8);
       });
     } catch (e) {
-      console.warn("开启系统音频监听被拦截:", e);
       isListeningMusic.value = false;
       speak(typeof e === "string" ? e : "哎呀，抓不到系统的声音呢...");
     }
   } else {
-    // 关闭监听
-    console.log("🔴 [音频雷达] 已关闭。");
     speak("音乐雷达已关闭~");
     try {
       await invoke(TauriCommandEnum.TOGGLE_SYSTEM_AUDIO_LISTEN, { enable: false });
     } catch (e) {}
-
     if (unlistenAudio) {
       unlistenAudio();
       unlistenAudio = null;
     }
-
-    // 将身体姿态归位回正
     if (live2dModel.value) {
       live2dModel.value.internalModel.coreModel.setParameterValueById("ParamBodyAngleY", 0);
       live2dModel.value.internalModel.coreModel.setParameterValueById("ParamBodyAngleZ", 0);
@@ -1207,98 +720,78 @@ const playMusic = async () => {
   }
 };
 
-// 唤出弹窗
+/** 快速记事 */
 const quickMemo = async () => {
-  if (isSleeping.value) return; // 睡觉时不能记笔记
+  if (isSleeping.value) return;
   showMemoInput.value = true;
-  memoText.value = ""; // 清空上次的输入
+  memoText.value = "";
   speak("想到什么啦？快写下来~");
   await nextTick();
   memoInputRef.value?.focus();
 };
 
-// 隐藏弹窗
+/** 隐藏记事框 */
 const hideMemo = () => {
   showMemoInput.value = false;
   memoText.value = "";
 };
 
-// 统一的键盘事件拦截器
+/** 处理键盘事件 */
 const handleKeydown = (e: KeyboardEvent) => {
   if (e.key === "Enter") {
-    // 如果同时按下了 Shift 键，就放行，让 textarea 正常换行
     if (e.shiftKey) return;
-
-    // 如果没按 Shift，就是纯回车，那么阻止默认换行行为，并保存！
     e.preventDefault();
     saveMemo();
-  } else if (e.key === "Escape") {
-    // 按 Esc 取消
-    hideMemo();
-  }
+  } else if (e.key === "Escape") hideMemo();
 };
 
-// 保存并收起
+/** 保存记事 */
 const saveMemo = () => {
   if (!memoText.value.trim()) {
-    hideMemo(); // 如果没写字就按了回车，直接关掉即可
+    hideMemo();
     return;
   }
-
-  // 存入 Store
   agentStore.addMemo(memoText.value);
   hideMemo();
-
-  // 给予正反馈
   speak("记下来啦，放心交给我吧！");
-
-  // 如果模型有动作，让她开心地点个头或者举个手
-  if (live2dModel.value) {
-    live2dModel.value.motion("TapBody");
-  }
+  triggerMotion("TapBody");
 };
 
-// --- 控制功能 ---
+/** 切换模型 */
 const switchLive2dModel = () => {
-  // 1. 随机抽取一句离别台词
   const randomPhrase = farewellPhrases[Math.floor(Math.random() * farewellPhrases.length)];
-  // 2. 让当前的模型说出这句话
   speak(randomPhrase);
-  console.log(`🎭 准备切换模型，当前模型正在道别: ${randomPhrase}`);
-  // 3. 延迟 3 秒钟（预留给她发声和做口型的时间），然后再真正切换模型
   setTimeout(() => {
     agentStore.nextLive2dModel();
   }, 3000);
 };
 
+/** 切换点击穿透 */
 const toggleClickThrough = async () => {
   isClickThrough.value = !isClickThrough.value;
-  // 让 Tauri 窗口忽略所有鼠标事件
   await appWindow.setIgnoreCursorEvents(isClickThrough.value);
 
   if (isClickThrough.value) {
-    // 视觉提示：进入穿透模式时，让模型稍微变半透明一点，方便区分
-    if (pixiApp && pixiApp.view) {
-      (pixiApp.view as HTMLCanvasElement).style.opacity = "0.7";
-    }
+    if (canvasRef.value) canvasRef.value.style.opacity = "0.7";
     speak("已开启防误触，现在你点不到我啦！按下 CommandOrControl+Shift+R 随时解除哦~");
   } else {
-    // 恢复实体
-    if (pixiApp && pixiApp.view) {
-      (pixiApp.view as HTMLCanvasElement).style.opacity = "1";
-    }
+    if (canvasRef.value) canvasRef.value.style.opacity = "1";
     speak("实体化恢复！我又可以被摸到啦~");
   }
 };
 
+/** 进入睡眠模式 */
 const sleepMode = () => {
-  if (isSleeping.value) return; // 如果已经在睡觉了，就不管了
+  if (isSleeping.value) return;
   isSleeping.value = true;
   speak("我先去眯一会儿，工作加油哦，点我就可以唤醒我~");
-  if (live2dModel.value) {
-    live2dModel.value.focus(0, 0);
-  }
+  setFocus(0, 0);
 };
+
+watch(isPlaying, (val) => {
+  if (val) startRandomLipSync();
+  else stopLipSync();
+});
 
 onMounted(async () => {
   if (!canvasRef.value) return;
@@ -1306,36 +799,25 @@ onMounted(async () => {
   const windows = await getAllWebviewWindows();
   const isLoginWindowAlive = windows.some((w) => w.label === "login");
 
-  // 1. 窗口右下角定位
   const screenW = window.screen.availWidth;
   const screenH = window.screen.availHeight;
-  const winW = window.outerWidth;
-  const winH = window.outerHeight;
-  const x = screenW - winW; // 紧贴右边
-  const y = screenH - winH; // 紧贴底边
-  await appWindow.setPosition(new LogicalPosition(x - 10, y));
-  if (agentStore.isOpenAgent && !isLoginWindowAlive) {
-    await appWindow.show();
-  } else {
-    await appWindow.hide();
-  }
+  await appWindow.setPosition(new LogicalPosition(screenW - window.outerWidth - 10, screenH - window.outerHeight));
 
-  // 监听用户登录成功事件
+  if (agentStore.isOpenAgent && !isLoginWindowAlive) await appWindow.show();
+  else await appWindow.hide();
+
   const unlistenLogin = await listen(EventEnum.LOGIN_SUCCESS, async () => {
     if (agentStore.isOpenAgent) {
       await appWindow.show();
       speak("欢迎回来！我已经准备好陪你工作啦~");
-      if (live2dModel.value) live2dModel.value.motion("TapBody");
+      triggerMotion("TapBody");
     }
   });
 
-  // 监听用户登出事件
   const unlistenLogout = await listen(EventEnum.LOGOUT, async () => {
-    // 登出时，无论开关状态，必须强制隐藏桌宠
     await appWindow.hide();
   });
 
-  // 挂载到 window，方便在 onUnmounted 里销毁
   (window as any).__unlistenLogin = unlistenLogin;
   (window as any).__unlistenLogout = unlistenLogout;
 
@@ -1343,14 +825,11 @@ onMounted(async () => {
     () => agentStore.isOpenAgent,
     async (newVal) => {
       if (newVal) {
-        // 开关打开：显示窗口并打招呼
         await appWindow.show();
         speak("我回来啦！有什么需要帮忙的吗？");
-        if (live2dModel.value) live2dModel.value.motion("TapBody");
+        triggerMotion("TapBody");
       } else {
-        // 开关关闭：道别后隐藏窗口
         speak("那我先去休息啦，有事在设置里叫我哦~");
-        // 延迟 3 秒，等她把话说完再隐身
         setTimeout(async () => {
           await appWindow.hide();
         }, 3000);
@@ -1358,100 +837,62 @@ onMounted(async () => {
     }
   );
 
-  // 2. Pixi 初始化
-  pixiApp = new PIXI.Application({
-    view: canvasRef.value,
-    autoStart: true,
-    resizeTo: window,
-    backgroundAlpha: 0,
-    antialias: true,
-    resolution: window.devicePixelRatio || 1,
-    autoDensity: true
+  initEngine(canvasRef.value);
+  await loadModel(agentStore.currentLive2dUrl, (hitAreas) => {
+    if (isSleeping.value) {
+      isSleeping.value = false;
+      speak("唔...主人你叫我呀，我醒啦！");
+      return;
+    }
+    if (isPomodoroActive.value) {
+      const focusQuotes = ["嘘，专心工作哦~", "我在看着你呢，别摸鱼啦！", "快写代码，写完再陪你玩~"];
+      speak(focusQuotes[Math.floor(Math.random() * focusQuotes.length)]);
+      return;
+    }
+    if (hitAreas.includes("Body")) {
+      triggerMotion("TapBody");
+      speak("有什么我可以帮你的吗？");
+    }
   });
 
-  // 3. Live2D 模型加载
-  await loadLive2dModel(agentStore.currentLive2dUrl);
-
-  // 4. 监听 Store 中模型 URL 的变化，一旦变化自动热加载新模型！
   watch(
     () => agentStore.currentLive2dUrl,
-    (newUrl) => {
-      loadLive2dModel(newUrl);
-    }
+    (newUrl) => loadModel(newUrl)
   );
 
-  // 开启全局鼠标视线追踪
   const unlistenMouse = await listen<[number, number]>("global-mouse-move", async (event) => {
-    if (!live2dModel.value) return;
-    if (isSleeping.value) return;
-    if (isFaceTracking.value) return;
-
-    const [globalPhysicalX, globalPhysicalY] = event.payload;
-
+    if (!live2dModel.value || isSleeping.value || isFaceTracking.value) return;
     try {
-      // 1. 获取当前窗口在屏幕上的绝对物理坐标
+      const [globalPhysicalX, globalPhysicalY] = event.payload;
       const pos = await appWindow.outerPosition();
-      // 2. 获取当前显示器的缩放比例 (比如 Windows 的 125%, 150%)
       const factor = await appWindow.scaleFactor();
-
-      // 3. 将全局物理坐标 转化为 前端能理解的逻辑坐标
-      const logicalGlobalX = globalPhysicalX / factor;
-      const logicalGlobalY = globalPhysicalY / factor;
-      const logicalWinX = pos.x / factor;
-      const logicalWinY = pos.y / factor;
-
-      // 4. 计算出鼠标相对于咱们透明窗口左上角的相对坐标
-      const relX = logicalGlobalX - logicalWinX;
-      const relY = logicalGlobalY - logicalWinY;
-
-      // 5. 神奇的 focus 方法：无论坐标是正数还是负数（哪怕鼠标在屏幕边缘），
-      // Pixi-Live2D 都会自动将其映射为正确的头部仰角和转头角度！
-      live2dModel.value.focus(relX, relY);
-    } catch (e) {
-      // 忽略拖拽窗口时可能产生的短暂获取坐标异常
-    }
+      setFocus(globalPhysicalX / factor - pos.x / factor, globalPhysicalY / factor - pos.y / factor);
+    } catch (e) {}
   });
 
-  // 记得将这个解绑函数存到一个外层变量里，方便在 onUnmounted 里调用
   (window as any).__unlistenMouse = unlistenMouse;
 
-  // 强制绑定全局快捷键逻辑 ---
   try {
     const shortcutKey = "CommandOrControl+Shift+R";
-    // 1. 检查是否已经被注册（比如上次关闭窗口时没卸载干净）
-    const isReg = await isRegistered(shortcutKey);
-    if (isReg) {
-      console.log(`⚠️ 检测到快捷键 [${shortcutKey}] 被残留占用，正在强制释放...`);
-      // 2. 强制强拆旧的绑定
-      await unregister(shortcutKey);
-    }
-    // 3. 重新干净地绑定全新的事件
+    if (await isRegistered(shortcutKey)) await unregister(shortcutKey);
     await register(shortcutKey, (event) => {
-      if (event.state === "Pressed") {
-        toggleClickThrough();
-      }
+      if (event.state === "Pressed") toggleClickThrough();
     });
-    console.log(`✅ 快捷键 [${shortcutKey}] 强制绑定成功！`);
   } catch (e) {
     console.error("全局快捷键强绑失败:", e);
   }
+
   const unlistenDragEnter = await listen("tauri://drag-enter", () => {
     if (isSleeping.value || isConverting.value) return;
-    if (live2dModel.value) live2dModel.value.motion("TapBody");
+    triggerMotion("TapBody");
   });
 
-  // Tauri v2 标准拖拽事件：文件松开
   const unlistenDragDrop = await listen<{ paths: string[] }>("tauri://drag-drop", (event) => {
     if (isSleeping.value || isConverting.value) return;
-
     const paths = event.payload.paths;
     if (paths && paths.length > 0) {
-      const filePath = paths[0];
-      droppedFilePath.value = filePath;
-
-      const ext = filePath.split(".").pop() || "";
-      const formats = getFormatsByExt(ext);
-
+      droppedFilePath.value = paths[0];
+      const formats = getFormatsByExt(paths[0].split(".").pop() || "");
       if (formats.length > 0) {
         availableFormats.value = formats;
         showConvertMenu.value = true;
@@ -1461,45 +902,33 @@ onMounted(async () => {
       }
     }
   });
-  // 挂载到 window，方便销毁
+
   (window as any).__unlistenDragEnter = unlistenDragEnter;
   (window as any).__unlistenDragDrop = unlistenDragDrop;
 });
 
 onUnmounted(async () => {
   stopSpeaking();
+  stopLipSync();
   window.removeEventListener("pointermove", handleDrag);
   window.removeEventListener("pointerup", stopDrag);
   if (typingTimer) clearInterval(typingTimer);
   if (bubbleTimer) clearTimeout(bubbleTimer);
-  if (audioContext.value) {
-    try {
-      audioContext.value.close();
-    } catch {}
-  }
-  if ((window as any).__unlistenMouse) {
-    (window as any).__unlistenMouse();
-  }
+
+  if ((window as any).__unlistenMouse) (window as any).__unlistenMouse();
   if ((window as any).__unlistenLogin) (window as any).__unlistenLogin();
   if ((window as any).__unlistenLogout) (window as any).__unlistenLogout();
-  // 清理连麦
-  if (mediaRecorder && mediaRecorder.state !== "inactive") {
-    mediaRecorder.stop();
-  }
-  if (vadAudioCtx) {
-    vadAudioCtx.close();
-  }
-  if (wsEventListener) {
-    wsEventListener();
-  }
+
+  if (mediaRecorder && mediaRecorder.state !== "inactive") mediaRecorder.stop();
+  if (vadAudioCtx) vadAudioCtx.close();
+  if (wsEventListener) wsEventListener();
+
   try {
     await unregister("CommandOrControl+Shift+R");
-  } catch (e) {
-    console.warn("注销全局快捷键失败:", e);
-  }
-  // 清理面部追踪
+  } catch (e) {}
   if (camera) camera.stop();
   if (faceMesh) faceMesh.close();
+
   if ((window as any).__unlistenDragEnter) (window as any).__unlistenDragEnter();
   if ((window as any).__unlistenDragDrop) (window as any).__unlistenDragDrop();
 });
