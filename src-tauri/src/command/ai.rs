@@ -1,9 +1,106 @@
 use crate::request_client::Url;
 use crate::AppData;
+use base64::{prelude::BASE64_STANDARD, Engine};
 use futures::StreamExt;
 use serde::{Deserialize, Serialize};
 use tauri::{ipc::Channel, State};
 use tracing::{error, info};
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AudioStreamEvent {
+    pub request_id: String,
+    pub event_type: String,   // "chunk" | "done" | "error"
+    pub data: Option<String>, // Base64 编码的音频二进制数据
+    pub error: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct TtsRequest {
+    pub text: String,
+    pub voice: Option<String>,
+}
+
+/// 拉取 AI 语音流并切片发送给前端
+#[tauri::command]
+pub async fn ai_tts_stream(
+    state: State<'_, AppData>,
+    body: TtsRequest,
+    request_id: String,
+    on_event: Channel<AudioStreamEvent>,
+) -> Result<(), String> {
+    info!("开始请求 TTS 音频流, text: {}", body.text);
+    let response = {
+        let mut rc = state.rc.lock().await;
+        let (method, path) = Url::TtsStream.get_url();
+        rc.request_stream(
+            method,
+            path.to_string(),
+            Some(body),
+            None::<serde_json::Value>,
+        )
+        .await
+        .map_err(|e| {
+            error!("TTS 请求失败: {}", e);
+            let _ = on_event.send(AudioStreamEvent {
+                request_id: request_id.clone(),
+                event_type: "error".to_string(),
+                data: None,
+                error: Some(e.to_string()),
+            });
+            e.to_string()
+        })?
+    };
+    let request_id_clone = request_id.clone();
+    // 在后台任务中处理二进制流
+    let join_handle = tokio::spawn(async move {
+        let mut stream = response.bytes_stream();
+        while let Some(chunk_result) = stream.next().await {
+            match chunk_result {
+                Ok(chunk) => {
+                    // 将收到的音频字节序列化为 Base64
+                    let base64_audio = BASE64_STANDARD.encode(&chunk);
+                    let chunk_event = AudioStreamEvent {
+                        request_id: request_id_clone.clone(),
+                        event_type: "chunk".to_string(),
+                        data: Some(base64_audio),
+                        error: None,
+                    };
+
+                    if let Err(e) = on_event.send(chunk_event) {
+                        error!("发送音频 Chunk 失败: {}", e);
+                        break; // 前端断开连接，停止拉取
+                    }
+                }
+                Err(e) => {
+                    error!("读取音频流失败: {}", e);
+                    let _ = on_event.send(AudioStreamEvent {
+                        request_id: request_id_clone.clone(),
+                        event_type: "error".to_string(),
+                        data: None,
+                        error: Some(e.to_string()),
+                    });
+                    break;
+                }
+            }
+        }
+        // 流结束
+        let _ = on_event.send(AudioStreamEvent {
+            request_id: request_id_clone.clone(),
+            event_type: "done".to_string(),
+            data: None,
+            error: None,
+        });
+        info!("TTS 音频流处理完成");
+    });
+    // 同样放入任务管理器，方便前端中途随时掐断朗读
+    {
+        let mut tasks = state.stream_tasks.lock().await;
+        tasks.insert(request_id, join_handle);
+    }
+    Ok(())
+}
 
 //// 使用 untagged 宏，如果前端传字符串，解析为 Text；如果是对象，解析为 Mixed
 #[derive(Debug, Clone, Serialize, Deserialize)]

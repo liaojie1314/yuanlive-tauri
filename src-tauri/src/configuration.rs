@@ -3,8 +3,11 @@ use tauri::{AppHandle, Manager};
 
 // 后端服务配置设置
 #[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+#[serde(rename_all = "camelCase")]
 pub struct BackendSettings {
+    #[serde(alias = "base_url")]
     pub base_url: String,
+    #[serde(alias = "ws_url")]
     pub ws_url: String,
 }
 

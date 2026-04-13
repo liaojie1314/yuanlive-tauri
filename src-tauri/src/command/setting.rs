@@ -1,7 +1,8 @@
 use crate::configuration::BackendSettings;
+use crate::utils::config_store::save_config;
 use crate::AppData;
 use serde::{Deserialize, Serialize};
-use tauri::State;
+use tauri::{AppHandle, State};
 use tracing::info;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -22,11 +23,15 @@ pub async fn get_settings(state: State<'_, AppData>) -> Result<BackendSettings, 
 pub async fn update_settings(
     state: State<'_, AppData>,
     settings: UpdateSettingsReq,
+    app_handle: AppHandle,
 ) -> Result<(), String> {
     let mut config = state.config.lock().await;
     config.base_url = settings.base_url.clone();
     config.ws_url = settings.ws_url.clone();
     info!("updated settings: {:?}", config);
+    if let Err(e) = save_config(&app_handle, &config) {
+        tracing::error!("Failed to save config to disk: {}", e);
+    }
     state
         .rc
         .lock()

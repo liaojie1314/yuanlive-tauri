@@ -179,6 +179,7 @@
     "executeLocalToolDesc": ", may involve reading files or executing commands.",
     "denyExecuteLocalTool": "Deny execution",
     "allowExecuteLocalTool": "Allow execution",
+    "stopRead": "Stop reading",
     "label": {
       "edit": "Edit",
       "copy": "Copy text",
@@ -194,7 +195,8 @@
       "saveSuccess": "File saved to: {path}",
       "saveFailed": "File save failed",
       "copySuccess": "Media copied to clipboard",
-      "copyFailed": "Media copy failed"
+      "copyFailed": "Media copy failed",
+      "noTextToRead": "No text to read"
     }
   },
   "messageInput": {

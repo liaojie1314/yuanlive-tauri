@@ -151,6 +151,7 @@
     "allowExecuteLocalTool": "允许执行",
     "expand": "展开",
     "collapse": "收起",
+    "stopRead": "停止朗读",
     "label": {
       "edit": "修改",
       "copy": "复制文本",
@@ -166,7 +167,8 @@
       "saveSuccess": "文件已保存至: {path}",
       "saveFailed": "文件保存失败",
       "copySuccess": "图片已复制到系统剪贴板",
-      "copyFailed": "图片复制失败"
+      "copyFailed": "图片复制失败",
+      "noTextToRead": "没有检测到可以朗读的文字哦"
     }
   },
   "messageInput": {

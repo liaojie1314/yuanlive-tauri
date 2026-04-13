@@ -573,6 +573,7 @@ pub enum Url {
     LikeVideo,
     CancelLikeVideo,
     UnlikeVideo,
+    TtsStream,
     MessageSendStream,
     GetHistoryConversation,
     UpdateConversationTitle,
@@ -625,6 +626,7 @@ impl Url {
             Url::UnlikeVideo => (http::Method::GET, "live/record/unlikeVideo/{id}"),
             // AI 相关
             Url::MessageSendStream => (http::Method::POST, "ai/chat/stream"),
+            Url::TtsStream => (http::Method::POST, "ai/tts/stream"),
             Url::GetHistoryConversation => (http::Method::GET, "ai/history/listSessions"),
             Url::UpdateConversationTitle => (http::Method::POST, "ai/history/updateTitle"),
             Url::PinConversation => (http::Method::GET, "ai/history/pinSession/{conversationId}"),
@@ -683,6 +685,7 @@ impl Url {
             "unlikeVideo" => Ok(Url::UnlikeVideo),
             // AI 相关
             "messageSendStream" => Ok(Url::MessageSendStream),
+            "ttsStream" => Ok(Url::TtsStream),
             "getHistoryConversation" => Ok(Url::GetHistoryConversation),
             "updateConversationTitle" => Ok(Url::UpdateConversationTitle),
             "pinConversation" => Ok(Url::PinConversation),

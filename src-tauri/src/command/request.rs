@@ -1,12 +1,14 @@
 use crate::request_client::{AuthResp, LoginReq, RefreshTokenReq, Request, Url};
+use crate::utils::user_store::save_user_info;
 use crate::AppData;
-use tauri::{Emitter, State};
+use tauri::{AppHandle, Emitter, State};
 use tracing::info;
 
 #[tauri::command]
 pub async fn login_command(
     data: LoginReq,
     state: State<'_, AppData>,
+    app_handle: AppHandle,
 ) -> Result<Option<AuthResp>, String> {
     if data.is_auto_login {
         // 自动登录逻辑
@@ -33,7 +35,7 @@ pub async fn login_command(
 
             // 处理刷新成功后的逻辑
             if let Some(login_resp) = &res {
-                handle_login_success(login_resp, &state).await?;
+                handle_login_success(login_resp, &state, &app_handle).await?;
             }
             info!("Automatic login successful");
             Ok(res)
@@ -50,7 +52,7 @@ pub async fn login_command(
 
         // 登录成功后处理用户信息和token保存
         if let Some(login_resp) = &res {
-            handle_login_success(login_resp, &state).await?;
+            handle_login_success(login_resp, &state, &app_handle).await?;
         }
 
         info!("Manual login successful");
@@ -61,6 +63,7 @@ pub async fn login_command(
 async fn handle_login_success(
     login_resp: &AuthResp,
     state: &State<'_, AppData>,
+    app_handle: &AppHandle,
 ) -> Result<(), String> {
     info!("handle_login_success, login_resp: {:?}", login_resp);
     // 设置用户信息
@@ -68,6 +71,11 @@ async fn handle_login_success(
     user_info.uid = login_resp.uid.clone();
     user_info.token = login_resp.access_token.clone();
     user_info.refresh_token = login_resp.refresh_token.clone();
+
+    // 保存用户信息到本地磁盘
+    if let Err(e) = save_user_info(app_handle, &user_info) {
+        tracing::error!("Failed to save user_info to disk: {}", e);
+    }
 
     // 同时更新request_client的token
     let mut rc = state.rc.lock().await;

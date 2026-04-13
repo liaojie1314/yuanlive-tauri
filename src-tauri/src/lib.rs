@@ -9,12 +9,15 @@ mod mobile;
 mod request_client;
 #[cfg(desktop)]
 mod tray;
+pub mod utils;
 pub mod websocket;
 mod webview_helper;
 
 use crate::configuration::{get_configuration, BackendSettings};
 use crate::error::CommonError;
 use crate::init::CustomInit;
+use crate::utils::config_store::load_config;
+use crate::utils::user_store::load_user_info;
 #[cfg(mobile)]
 use mobile::splash;
 use serde::{Deserialize, Serialize};
@@ -198,22 +201,24 @@ async fn initialize_app_data(
     ),
     CommonError,
 > {
-    // 加载配置
-    let configuration =
-        Arc::new(Mutex::new(get_configuration(&app_handle).map_err(|e| {
-            anyhow::anyhow!("Failed to load configuration: {}", e)
-        })?));
+    // 获取底层默认配置
+    let default_config = get_configuration(&app_handle)
+        .map_err(|e| anyhow::anyhow!("Failed to load configuration: {}", e))?;
+    // 尝试加载用户个人的配置覆盖它
+    let final_config = load_config(&app_handle, default_config);
+    // 将最终的配置存入全局状态
+    let configuration = Arc::new(Mutex::new(final_config.clone()));
+    // 初始化网络客户端
+    let mut rc = request_client::RequestClient::new(final_config.base_url.clone())?;
 
-    let rc: request_client::RequestClient =
-        request_client::RequestClient::new(configuration.lock().await.base_url.clone())?;
+    let loaded_user_info = load_user_info(&app_handle);
 
-    // 创建用户信息
-    let user_info = UserInfo {
-        token: Default::default(),
-        refresh_token: Default::default(),
-        uid: Default::default(),
-    };
-    let user_info = Arc::new(Mutex::new(user_info));
+    if !loaded_user_info.token.is_empty() {
+        rc.token = Some(loaded_user_info.token.clone());
+        rc.refresh_token = Some(loaded_user_info.refresh_token.clone());
+    }
+
+    let user_info = Arc::new(Mutex::new(loaded_user_info));
 
     Ok((user_info, Arc::new(Mutex::new(rc)), configuration))
 }

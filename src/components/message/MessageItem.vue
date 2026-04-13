@@ -203,8 +203,8 @@
                 <i-mdi-loading v-if="isLoading" class="text-sm text-blue-500 animate-spin" />
                 <i-mdi-volume-high
                   v-else-if="isPlaying"
-                  title="停止朗读"
                   class="action-icon text-sm text-blue-500 animate-pulse"
+                  :title="t('components.messageItem.stopRead')"
                   @click="stopReading" />
               </div>
             </div>
@@ -233,6 +233,7 @@ import { writeText, writeImage } from "@tauri-apps/plugin-clipboard-manager";
 
 import type { MessageData } from "@/types/chat";
 import { useLocalTTS } from "@/hooks/useLocalTTS";
+import { useStreamTTS } from "@/hooks/useStreamTTS";
 import { normalizeMessage } from "@/utils/MessageAdapter";
 
 defineOptions({
@@ -240,7 +241,8 @@ defineOptions({
 });
 
 const { t } = useI18n();
-const { readAloud, stop: stopReading, isPlaying, isLoading } = useLocalTTS();
+const localTts = useLocalTTS();
+const streamTts = useStreamTTS();
 
 const props = defineProps<{
   message: MessageData;
@@ -270,6 +272,8 @@ const isCollapsed = ref(true); // 默认折叠
 const showCollapseToggle = ref(false); // 是否需要显示右上角按钮
 const contentRef = ref<HTMLElement | null>(null);
 
+const isPlaying = computed(() => localTts.isPlaying.value || streamTts.isPlaying.value);
+const isLoading = computed(() => localTts.isLoading.value || streamTts.isLoading?.value);
 const isSelf = computed(() => props.message.role === "user");
 const blocks = computed(() => normalizeMessage(props.message));
 const bubbleClasses = computed(() => {
@@ -317,6 +321,26 @@ const pendingTool = computed(() => {
   return null;
 });
 
+/** 停止朗读 */
+const stopReading = () => {
+  localTts.stop();
+  streamTts.stop();
+};
+
+/**
+ * 朗读文本
+ * @param text 要朗读的文本
+ */
+const readAloud = async (text: string) => {
+  stopReading();
+  try {
+    await streamTts.readAloud(text);
+  } catch (error) {
+    console.warn("后端流式 TTS 呼叫失败，降级到本地模型:", error);
+    await localTts.readAloud(text);
+  }
+};
+
 /**
  * 鼠标悬浮并右键点击到具体的积木时，记录该块
  * @param block 具体的积木块
@@ -359,18 +383,24 @@ const handleContextMenuSelect = (item: any) => {
       emit("enter-multi-select", props.message.id);
       break;
     case "read": {
-      // 提取出要朗读的文本
-      let textToRead = "";
-      if (activeBlock.value && ["text", "thinking"].includes(activeBlock.value.type)) {
+      // 1. 最高优先级：用户鼠标划选的高亮文字
+      let textToRead = window.getSelection()?.toString().trim() || "";
+      // 2. 次优先级：如果没划选文字，但明确右键点在了某个文本/思考区块上
+      if (!textToRead && activeBlock.value && ["text", "thinking"].includes(activeBlock.value.type)) {
+        // 这里拿到的是含 Markdown 的源码，如果你怕读出符号，可以跳过这步直接走兜底
         textToRead = activeBlock.value.content;
-      } else {
-        // 如果没有精准点中文字，默认读整段
-        textToRead = blocks.value
-          .filter((b: any) => ["text", "thinking"].includes(b.type))
-          .map((b: any) => b.content)
-          .join(" ");
+        // 简单剔除常见的 markdown 符号
+        textToRead = textToRead.replace(/[*#`~>]/g, "").trim();
       }
-      // 如果正在播放同一条消息，点击视为“停止”；否则开始朗读
+      // 3. 兜底方案：啥都没选，点在了空白处，读取整条消息
+      if (!textToRead && contentRef.value) {
+        textToRead = contentRef.value.innerText.trim();
+      }
+      if (!textToRead) {
+        window.$message?.warning(t("components.messageItem.msg.noTextToRead"));
+        return;
+      }
+      // 执行状态切换
       if (isPlaying.value) {
         stopReading();
       } else {

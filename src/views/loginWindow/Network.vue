@@ -111,8 +111,8 @@ import { useI18n } from "vue-i18n";
 import { darkTheme, lightTheme } from "naive-ui";
 
 import router from "@/router";
-import { StorageKeyEnum, ThemeEnum } from "@/enums";
-import { updateSettings } from "@/utils/TauriCommand";
+import { ThemeEnum } from "@/enums";
+import { updateSettings, getSettings } from "@/utils/TauriCommand";
 import { useSettingStore } from "@/stores/setting";
 
 const { t } = useI18n();
@@ -186,6 +186,43 @@ const handleTab = async (tab: string) => {
   }
 };
 
+/**
+ * 清理后缀
+ * @param suffix 后缀
+ * @returns 清理后的后缀
+ */
+const cleanSuffix = (suffix: string) => {
+  if (!suffix) return "";
+  // 匹配开头的一个或多个斜杠并替换为空
+  return suffix.replace(/^\/+/, "");
+};
+
+/**
+ * 将完整的 URL 拆解并回显到表单配置中
+ * @param urlStr 完整的后端/WS地址
+ * @param prefix 'api' 或 'ws'
+ */
+const parseUrlToProxy = (urlStr: string, prefix: "api" | "ws") => {
+  if (!urlStr) {
+    savedProxy[`${prefix}Type`] = "";
+    savedProxy[`${prefix}Ip`] = "";
+    savedProxy[`${prefix}Port`] = "";
+    savedProxy[`${prefix}Suffix`] = "";
+    return;
+  }
+  try {
+    const url = new URL(urlStr);
+    // url.protocol 包含冒号，例如 "http:"，需要去掉
+    savedProxy[`${prefix}Type`] = url.protocol.replace(":", "");
+    savedProxy[`${prefix}Ip`] = url.hostname;
+    savedProxy[`${prefix}Port`] = url.port;
+    // url.pathname 包含前导斜杠，例如 "/api"，需要去掉
+    savedProxy[`${prefix}Suffix`] = url.pathname === "/" ? "" : url.pathname.replace(/^\/+/, "");
+  } catch (error) {
+    console.error(`解析 ${prefix} URL 失败:`, error);
+  }
+};
+
 /** 保存代理配置 */
 const handleSave = async () => {
   try {
@@ -196,27 +233,18 @@ const handleSave = async () => {
       window.$message.warning(t("auth.network.messages.incomplete"));
       return;
     }
-    let proxySettings: ProxySettings;
-    if (proxy.value === "api") {
-      // 保存到本地
-      proxySettings = {
-        ...savedProxy,
-        apiType: savedProxy.apiType,
-        apiIp: savedProxy.apiIp,
-        apiPort: savedProxy.apiPort,
-        apiSuffix: savedProxy.apiSuffix ? "/" + savedProxy.apiSuffix : ""
-      };
-    } else {
-      proxySettings = {
-        ...savedProxy,
-        wsType: savedProxy.wsType,
-        wsIp: savedProxy.wsIp,
-        wsPort: savedProxy.wsPort,
-        wsSuffix: savedProxy.wsSuffix ? "/" + savedProxy.wsSuffix : ""
-      };
-    }
-    const settings = JSON.stringify(proxySettings);
-    localStorage.setItem(StorageKeyEnum.PROXY_SETTINGS, settings);
+    const proxySettings: ProxySettings = {
+      apiType: savedProxy.apiType,
+      apiIp: savedProxy.apiIp,
+      apiPort: savedProxy.apiPort,
+      apiSuffix: cleanSuffix(savedProxy.apiSuffix),
+
+      wsType: savedProxy.wsType,
+      wsIp: savedProxy.wsIp,
+      wsPort: savedProxy.wsPort,
+      wsSuffix: cleanSuffix(savedProxy.wsSuffix)
+    };
+    Object.assign(savedProxy, proxySettings);
     await updateTauriSettings(proxySettings);
     window.$message.success(t("auth.network.messages.saveSuccess"));
   } catch (error) {
@@ -229,20 +257,30 @@ const handleSave = async () => {
  * @param proxySettings 代理配置
  */
 const updateTauriSettings = async (proxySettings: ProxySettings) => {
-  const baseUrl =
-    proxySettings.apiType + "://" + proxySettings.apiIp + ":" + proxySettings.apiPort + proxySettings.apiSuffix;
-  const wsUrl = proxySettings.wsType + "://" + proxySettings.wsIp + ":" + proxySettings.wsPort + proxySettings.wsSuffix;
+  const baseUrl = proxySettings.apiType
+    ? `${proxySettings.apiType}://${proxySettings.apiIp}:${proxySettings.apiPort}${proxySettings.apiSuffix ? "/" + proxySettings.apiSuffix : ""}`
+    : "";
+
+  const wsUrl = proxySettings.wsType
+    ? `${proxySettings.wsType}://${proxySettings.wsIp}:${proxySettings.wsPort}${proxySettings.wsSuffix ? "/" + proxySettings.wsSuffix : ""}`
+    : "";
+
   // 更新Tauri配置
   await updateSettings({ baseUrl, wsUrl }).catch((err) => {
     window.$message.error(t("auth.network.messages.saveFailed", { error: err }));
   });
 };
 
-onMounted(() => {
-  const proxySettings = localStorage.getItem(StorageKeyEnum.PROXY_SETTINGS);
-  if (proxySettings) {
-    const parsedProxySettings = JSON.parse(proxySettings) as ProxySettings;
-    Object.assign(savedProxy, parsedProxySettings);
+onMounted(async () => {
+  try {
+    const settings = await getSettings();
+    console.log(settings);
+    if (settings) {
+      parseUrlToProxy(settings.baseUrl, "api");
+      parseUrlToProxy(settings.wsUrl, "ws");
+    }
+  } catch (error) {
+    console.error("获取网络配置失败", error);
   }
 });
 </script>

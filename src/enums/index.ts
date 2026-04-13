@@ -161,6 +161,8 @@ export enum TauriCommandEnum {
   GET_TOKEN = "get_token",
   // 更新设置
   UPDATE_SETTINGS = "update_settings",
+  // 获取设置
+  GET_SETTINGS = "get_settings",
   // 获取文件元数据
   GET_FILES_META = "get_files_meta",
   // 获取模型专属目录
@@ -302,7 +304,6 @@ export enum PluginEnum {
 export enum StorageKeyEnum {
   DEVICE_ID = "deviceID",
   DEVICE_FINGERPRINT = "deviceFingerprint",
-  PROXY_SETTINGS = "proxySettings",
   SETTING = "setting",
   SEARCH_HISTORY = "searchHistory",
   TARGET_SETTING_ROUTE = "targetSettingRoute"

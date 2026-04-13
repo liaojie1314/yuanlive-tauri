@@ -15,7 +15,7 @@ pub enum ConnectionState {
 
 /// WebSocket 消息类型
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(tag = "type")]
+#[serde(tag = "cmd")]
 pub enum WsMessage {
     // 心跳消息 (PING)
     #[serde(rename = "PING")]

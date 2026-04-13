@@ -1,6 +1,7 @@
+use crate::utils::user_store::save_user_info;
 use crate::AppData;
 use serde::{Deserialize, Serialize};
-use tauri::State;
+use tauri::{AppHandle, State};
 use tracing::info;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -20,11 +21,22 @@ pub struct TokenResponse {
 
 /// 移除当前用户的token信息
 #[tauri::command]
-pub async fn remove_token(state: State<'_, AppData>) -> Result<(), String> {
+pub async fn remove_token(state: State<'_, AppData>, app_handle: AppHandle) -> Result<(), String> {
     info!("Removing user token info");
-    let mut rc = state.rc.lock().await;
-    rc.token = None;
-    rc.refresh_token = None;
+    {
+        let mut user_info = state.user_info.lock().await;
+        user_info.uid.clear();
+        user_info.token.clear();
+        user_info.refresh_token.clear();
+        if let Err(e) = save_user_info(&app_handle, &user_info) {
+            tracing::error!("Failed to clear local user_info: {}", e);
+        }
+    }
+    {
+        let mut rc = state.rc.lock().await;
+        rc.token = None;
+        rc.refresh_token = None;
+    }
     info!("Successfully removed user token info");
     Ok(())
 }
@@ -34,6 +46,7 @@ pub async fn remove_token(state: State<'_, AppData>) -> Result<(), String> {
 pub async fn update_token(
     req: UpdateUserTokenReq,
     state: State<'_, AppData>,
+    app_handle: AppHandle,
 ) -> Result<(), String> {
     info!("Updating user token info");
     {
@@ -41,6 +54,9 @@ pub async fn update_token(
         user_info.uid = req.uid.clone();
         user_info.token = req.token.clone();
         user_info.refresh_token = req.refresh_token.clone();
+        if let Err(e) = save_user_info(&app_handle, &user_info) {
+            tracing::error!("Failed to save updated user_info to disk: {}", e);
+        }
     }
     {
         let mut rc = state.rc.lock().await;
