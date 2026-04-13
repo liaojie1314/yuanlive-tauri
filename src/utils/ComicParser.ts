@@ -1,10 +1,7 @@
 import * as cheerio from "cheerio";
-import { useI18n } from "vue-i18n";
 import { invoke } from "@tauri-apps/api/core";
 
 import { TauriCommandEnum } from "@/enums";
-
-const { t } = useI18n();
 
 export interface Chapter {
   name: string;
@@ -77,7 +74,7 @@ export const parseBaoziComic = async (url: string): Promise<ComicBook> => {
     const htmlText: string = await invoke(TauriCommandEnum.FETCH_HTML_SOURCE, { url });
     const $ = cheerio.load(htmlText);
     // 提取标题
-    const title = $("h1.comics-detail__title").text().trim() || t("plugins.reader.unknownComic");
+    const title = $("h1.comics-detail__title").text().trim() || "unknown comic";
     // 提取封面 (优先使用 meta 标签)
     const cover = $('meta[name="og:image"]').attr("content") || $('meta[property="og:image"]').attr("content") || "";
     // 提取章节列表

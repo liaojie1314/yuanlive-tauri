@@ -4,7 +4,7 @@ import { check } from "@tauri-apps/plugin-updater";
 
 import { MittEnum } from "@/enums";
 import { useMitt } from "./useMitt";
-import { useSettingStore } from "@/stores/setting.ts";
+import { useSettingStore } from "@/stores/setting";
 import { isMobile } from "@/utils/PlatformUtils";
 
 /**

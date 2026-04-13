@@ -5,16 +5,16 @@ import { info } from "@tauri-apps/plugin-log";
 import { invoke } from "@tauri-apps/api/core";
 import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
 
-import webSocketRust from "@/services/webSocketRust.ts";
 import { EventEnum, StorageKeyEnum, TauriCommandEnum } from "@/enums";
 import { logoutApi } from "@/api/auth";
-import { useUserStore } from "@/stores/user.ts";
-import { useGlobalStore } from "@/stores/global.ts";
-import { useSettingStore } from "@/stores/setting.ts";
-import { useWindow } from "@/hooks/useWindow.ts";
+import webSocketRust from "@/services/webSocketRust";
+import { useUserStore } from "@/stores/user";
+import { useGlobalStore } from "@/stores/global";
+import { useSettingStore } from "@/stores/setting";
+import { useWindow } from "@/hooks/useWindow";
 import { isDesktop } from "@/utils/PlatformUtils";
-import { ensureAppStateReady } from "@/utils/AppStateReady.ts";
-import { invokeSilently } from "@/utils/TauriInvokeHandler.ts";
+import { ensureAppStateReady } from "@/utils/AppStateReady";
+import { invokeSilently } from "@/utils/TauriInvokeHandler";
 
 export function useLogin() {
   const userStore = useUserStore();
