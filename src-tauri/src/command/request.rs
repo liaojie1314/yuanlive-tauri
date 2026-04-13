@@ -2,7 +2,7 @@ use crate::request_client::{AuthResp, LoginReq, RefreshTokenReq, Request, Url};
 use crate::utils::user_store::save_user_info;
 use crate::AppData;
 use tauri::{AppHandle, Emitter, State};
-use tracing::info;
+use tracing::{error, info};
 
 #[tauri::command]
 pub async fn login_command(
@@ -14,9 +14,10 @@ pub async fn login_command(
         // 自动登录逻辑
         info!("Performing automatic login");
         if let Some(_uid) = &data.uid {
-            // 获取保存的用户信息
-            let user_info = state.user_info.lock().await;
-            let refresh_token = user_info.refresh_token.clone();
+            let refresh_token = {
+                let user_info = state.user_info.lock().await;
+                user_info.refresh_token.clone()
+            };
             // 检查refresh_token是否存在
             if refresh_token.is_empty() {
                 return Err("自动登录缺少刷新令牌".to_string());
@@ -66,24 +67,25 @@ async fn handle_login_success(
     app_handle: &AppHandle,
 ) -> Result<(), String> {
     info!("handle_login_success, login_resp: {:?}", login_resp);
-    // 设置用户信息
-    let mut user_info = state.user_info.lock().await;
-    user_info.uid = login_resp.uid.clone();
-    user_info.token = login_resp.access_token.clone();
-    user_info.refresh_token = login_resp.refresh_token.clone();
-
-    // 保存用户信息到本地磁盘
-    if let Err(e) = save_user_info(app_handle, &user_info) {
-        tracing::error!("Failed to save user_info to disk: {}", e);
+    {
+        let mut user_info = state.user_info.lock().await;
+        user_info.uid = login_resp.uid.clone();
+        user_info.token = login_resp.access_token.clone();
+        user_info.refresh_token = login_resp.refresh_token.clone();
+        // 保存用户信息到本地磁盘
+        if let Err(e) = save_user_info(app_handle, &user_info) {
+            error!("Failed to save user_info to disk: {}", e);
+        }
+        info!("handle_login_success, user_info updated");
     }
 
-    // 同时更新request_client的token
-    let mut rc = state.rc.lock().await;
-    rc.token = Some(login_resp.access_token.clone());
-    rc.refresh_token = Some(login_resp.refresh_token.clone());
-    rc.expire = Some(login_resp.expire);
-
-    info!("handle_login_success, user_info: {:?}", user_info);
+    {
+        let mut rc = state.rc.lock().await;
+        rc.token = Some(login_resp.access_token.clone());
+        rc.refresh_token = Some(login_resp.refresh_token.clone());
+        rc.expire = Some(login_resp.expire);
+        info!("handle_login_success, request_client token updated");
+    }
     Ok(())
 }
 
@@ -104,7 +106,7 @@ pub async fn request_command(
         match result {
             Ok(data) => Ok(data),
             Err(e) => {
-                tracing::error!("Request error: {}", e);
+                error!("Request error: {}", e);
                 if e.to_string().contains("请重新登录") {
                     app_handle.emit_to("home", "reLogin", ()).unwrap();
                 }
@@ -112,7 +114,7 @@ pub async fn request_command(
             }
         }
     } else {
-        tracing::error!("Invalid URL: {}", url);
+        error!("Invalid URL: {}", url);
         Err(format!("Invalid URL: {}", url))
     }
 }
