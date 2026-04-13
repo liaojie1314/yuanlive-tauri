@@ -156,7 +156,7 @@ export const usePluginsStore = defineStore(
             isAdd: false,
             dot: false,
             progress: 0,
-            version: "1.0.0",
+            version: "0.0.2",
             miniShow: false,
             title: "深渊打怪",
             shortTitle: "打怪",

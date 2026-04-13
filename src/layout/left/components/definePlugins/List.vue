@@ -60,8 +60,15 @@
                   <p class="text-(12px #777 center)">{{ t("home.plugins.status.builtin") }}</p>
                 </n-flex>
 
+                <n-flex
+                  v-else-if="plugin.state === PluginEnum.CAN_UPDATE"
+                  class="relative rounded-22px border-(1px solid #e6a23c) bg-#fdf6ec p-[4px_8px] z-10 cursor-pointer hover:bg-#f5dab1 transition-colors"
+                  @click.stop="handleState(plugin)">
+                  <p class="text-(12px #e6a23c center)">{{ t("home.plugins.update") }} V{{ plugin.version }}</p>
+                </n-flex>
+
                 <n-flex v-else class="relative rounded-22px bg-#e0e9fc size-fit p-[4px_8px]">
-                  <p class="text-(12px #4C77BD center)">{{ plugin.version }}</p>
+                  <p class="text-(12px #4C77BD center)">V{{ plugin.version }}</p>
                 </n-flex>
               </Transition>
             </n-flex>
@@ -105,7 +112,9 @@
 
           <!-- 插件操作 -->
           <n-popover
-            v-if="plugin.state === PluginEnum.INSTALLED || index === isCurrently"
+            v-if="
+              plugin.state === PluginEnum.INSTALLED || plugin.state === PluginEnum.CAN_UPDATE || index === isCurrently
+            "
             style="padding: 0"
             trigger="click"
             placement="bottom"
@@ -141,6 +150,7 @@
 </template>
 
 <script setup lang="ts">
+import semver from "semver";
 import { useI18n } from "vue-i18n";
 import { invoke } from "@tauri-apps/api/core";
 import { emitTo } from "@tauri-apps/api/event";
@@ -162,7 +172,25 @@ const isCurrently = ref(-1);
 const allPlugins = computed(() => {
   return pluginsList.value.map((item: Plugin) => {
     const matched = plugins.value.find((z: Plugin) => z.url === item.url);
-    return matched ? { ...item, state: matched.state, isAdd: matched.isAdd, progress: matched.progress } : item;
+    if (matched) {
+      let currentState = matched.state;
+      // 如果本地是已安装，且线上版本大于本地版本，切为可更新状态
+      if (
+        currentState === PluginEnum.INSTALLED &&
+        item.version &&
+        matched.version &&
+        semver.gt(item.version, matched.version)
+      ) {
+        currentState = PluginEnum.CAN_UPDATE;
+      }
+      return {
+        ...item,
+        state: currentState,
+        isAdd: matched.isAdd,
+        progress: matched.progress
+      };
+    }
+    return item;
   });
 });
 
@@ -171,7 +199,7 @@ const allPlugins = computed(() => {
  * @param plugin 插件对象
  */
 const handleState = async (plugin: Plugin) => {
-  if (plugin.state === PluginEnum.INSTALLED) return;
+  if ([PluginEnum.INSTALLED, PluginEnum.BUILTIN, PluginEnum.UNINSTALLING].includes(plugin.state)) return;
   const updatedPlugin = { ...plugin, state: PluginEnum.DOWNLOADING, progress: 0 };
   pluginsStore.updatePlugin(updatedPlugin);
   const interval = setInterval(() => {
@@ -214,7 +242,11 @@ const handleState = async (plugin: Plugin) => {
  * @param plugin 插件对象
  */
 const openPluginHandler = (plugin: Plugin) => {
-  if (plugin.state === PluginEnum.INSTALLED) {
+  if (
+    plugin.state === PluginEnum.INSTALLED ||
+    plugin.state === PluginEnum.BUILTIN ||
+    plugin.state === PluginEnum.CAN_UPDATE
+  ) {
     createPluginWindow(plugin);
   }
 };

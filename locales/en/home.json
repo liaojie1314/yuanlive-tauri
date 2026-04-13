@@ -155,6 +155,7 @@
     "comicShortTitle": "Reader",
     "drawio": "Drawio",
     "drawioShortTitle": "Drawio",
+    "update": "Update",
     "status": {
       "builtin": "Built-in",
       "uninstalling": "Uninstalling"

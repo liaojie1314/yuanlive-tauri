@@ -155,6 +155,7 @@
     "comicShortTitle": "漫画",
     "drawio": "Drawio",
     "drawioShortTitle": "Drawio",
+    "update": "更新",
     "status": {
       "builtin": "已内置",
       "uninstalling": "卸载中"
