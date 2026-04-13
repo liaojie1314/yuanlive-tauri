@@ -119,7 +119,8 @@
     "noCategory": "No live category available",
     "msg": {
       "completeInfo": "Please complete the application information",
-      "applySuccess": "Application submitted, please wait for review"
+      "applySuccess": "Application submitted, please wait for review",
+      "applyError": "Application failed, please try again"
     },
     "rule": {
       "realName": "Please enter your real name",

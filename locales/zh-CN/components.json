@@ -304,7 +304,8 @@
     "likes": "获赞",
     "uid": "YuanLive号:",
     "applyAnchor": "申请成为主播",
-    "saveLoginInfo": "保存登录信息"
+    "saveLoginInfo": "保存登录信息",
+    "anchor": "认证主播"
   },
   "videoPlayer": {
     "exitFullscreen": "退出全屏",

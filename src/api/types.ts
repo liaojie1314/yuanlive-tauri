@@ -58,7 +58,11 @@ export type UserInfoType = {
   //描述
   description?: string;
   // 出生日期
-  birthday?: number | null;
+  birthday?: number;
+  // 默认分类
+  defaultCategoryId?: number;
+  // 用户类型:USER-用户, ANCHOR-主播, ADMIN-管理员
+  role: string;
   // 设备类型
   device: string;
   userStats: UserStats;
@@ -88,6 +92,14 @@ export type HotSearchItem = {
 export type RecommendSearchItem = HotSearchItem & {
   // 是否是最推荐
   isMostRecommend: boolean;
+};
+
+export type ApplyAnchorReq = {
+  realName: string;
+  idCard: string;
+  phone: string;
+  categoryId: number;
+  reason: string;
 };
 
 //========follow========

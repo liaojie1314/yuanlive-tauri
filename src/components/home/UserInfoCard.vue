@@ -17,7 +17,10 @@
           <span class="cursor-pointer text-2xl font-semibold text-[--text-color] transition-colors hover:text-blue-500">
             {{ userInfo?.username }}
           </span>
-          <span title="认证用户" class="text-xl font-bold text-blue-500">
+          <span
+            v-if="userInfo?.role === 'ANCHOR'"
+            class="text-xl font-bold text-blue-500"
+            :title="$t('components.userInfo.anchor')">
             <i-mdi-check-decagram />
           </span>
         </div>
@@ -47,7 +50,7 @@
         </div>
       </div>
 
-      <div class="flex h-24 flex-col items-end justify-center gap-3">
+      <div v-if="userInfo?.role === 'USER'" class="flex h-24 flex-col items-end justify-center gap-3">
         <n-button
           v-if="true"
           type="primary"
@@ -71,7 +74,7 @@
 
     <follow-list-dialog v-model:show="dialogVisible" v-model:active-tab="activeTab" />
     <edit-profile-dialog v-model:show="editDialogVisible" />
-    <apply-streamer-dialog v-model:show="applyDialogVisible" @submit="handleApplySubmit" />
+    <apply-streamer-dialog v-model:show="applyDialogVisible" />
   </div>
 </template>
 
@@ -115,15 +118,6 @@ const openEditDialog = () => {
 /** 打开主播申请弹窗 */
 const openApplyDialog = () => {
   applyDialogVisible.value = true;
-};
-
-/**
- * 处理主播申请提交
- * @param data 主播申请数据
- */
-const handleApplySubmit = (data: any) => {
-  console.log("主播申请提交数据:", data);
-  // TODO: 发送申请主播请求
 };
 </script>
 

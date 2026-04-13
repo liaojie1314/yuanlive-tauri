@@ -83,6 +83,7 @@
 import { useI18n } from "vue-i18n";
 import type { FormInst } from "naive-ui";
 
+import { applyAnchorApi } from "@/api/user";
 import { getChildCategoryApi } from "@/api/live";
 import type { ChildCategoryItem } from "@/api/types";
 
@@ -93,7 +94,6 @@ const props = defineProps<{
 }>();
 const emit = defineEmits<{
   "update:show": [value: boolean];
-  submit: [data: any];
 }>();
 
 // 验证规则
@@ -152,20 +152,30 @@ const handleSubmit = (e: MouseEvent) => {
 /** 提交申请数据 */
 const submitData = async () => {
   loading.value = true;
-  // 模拟 API 请求
-  setTimeout(() => {
+  const categoryId = categoryOptions.value.find((item) => item.value === formValue.category)?.id;
+  console.log(categoryId);
+  try {
+    await applyAnchorApi({
+      realName: formValue.realName,
+      idCard: formValue.idCard,
+      phone: formValue.phone,
+      categoryId: categoryId || 0,
+      reason: formValue.reason
+    });
+  } catch (error) {
+    window.$message.error(t("dialog.applyStreamer.msg.applyError"));
+  } finally {
     loading.value = false;
-    window.$message.success(t("dialog.applyStreamer.msg.applySuccess"));
-    emit("submit", { ...formValue });
-    closeDialog();
-    // 重置表单
-    formValue.realName = "";
-    formValue.idCard = "";
-    formValue.phone = "";
-    formValue.category = null;
-    formValue.reason = "";
-    isAgreed.value = false;
-  }, 1500);
+  }
+  window.$message.success(t("dialog.applyStreamer.msg.applySuccess"));
+  closeDialog();
+  // 重置表单
+  formValue.realName = "";
+  formValue.idCard = "";
+  formValue.phone = "";
+  formValue.category = null;
+  formValue.reason = "";
+  isAgreed.value = false;
 };
 
 onMounted(async () => {

@@ -1,13 +1,19 @@
 import { UrlEnum } from "@/enums";
 import { request } from "@/utils/RequestUtils.ts";
-import type { SearchResultPageResult, HotSearchItem, RecommendSearchItem } from "@/api/types.ts";
+import type {
+  SearchResultPageResult,
+  HotSearchItem,
+  RecommendSearchItem,
+  ApplyAnchorReq,
+  UserInfoType
+} from "@/api/types.ts";
 
 /**
  * 获取用户详情
  * @returns 用户详情
  */
 export async function getUserInfoApi() {
-  return await request({
+  return await request<UserInfoType>({
     url: UrlEnum.GET_USER_INFO
   });
 }
@@ -41,5 +47,15 @@ export async function getHotSearchApi() {
 export async function getRecommendSearchApi() {
   return await request<RecommendSearchItem[]>({
     url: UrlEnum.GET_RECOMMEND_SEARCH
+  });
+}
+
+/**
+ * 申请主播
+ */
+export async function applyAnchorApi(data: ApplyAnchorReq) {
+  return await request({
+    url: UrlEnum.APPLY_ANCHOR,
+    body: data
   });
 }

@@ -29,7 +29,21 @@ describe("User Store 状态管理测试", () => {
 
   it("getUserDetail 成功时，应更新 userInfo，并返回获取到的数据", async () => {
     const store = useUserStore();
-    const mockResData = { uid: "10086", username: "测试玩家", avatar: "xxx" };
+    const mockResData = {
+      uid: "10086",
+      username: "测试玩家",
+      avatar: "xxx",
+      role: "USER",
+      email: "test@example.com",
+      gender: "UNKNOWN",
+      device: "desktop",
+      userStats: {
+        followerCount: 0,
+        followingCount: 0,
+        totalLikesReceived: 0,
+        followingLiveCount: 0
+      }
+    };
     // 让假 API 返回成功的数据
     vi.mocked(getUserInfoApi).mockResolvedValueOnce(mockResData);
     const consoleSpy = vi.spyOn(console, "log").mockImplementation(() => {});

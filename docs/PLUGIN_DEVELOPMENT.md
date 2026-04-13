@@ -25,9 +25,9 @@ my-plugin/                 # (解压后的根目录环境)
 
 ```json
 {
-  "url": "my-awesome-plugin",
-  "title": "我的超级插件",
-  "shortTitle": "超级插件",
+  "url": "my-plugin",
+  "title": "我的插件",
+  "shortTitle": "插件",
   "version": "1.0.0",
   "icon": "icon.png",
   "entry": "index.html",

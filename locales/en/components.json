@@ -302,7 +302,8 @@
     "likes": "Likes",
     "uid": "YuanLive ID:",
     "applyAnchor": "Apply to be an anchor",
-    "saveLoginInfo": "Save login info"
+    "saveLoginInfo": "Save login info",
+    "anchor": "Anchor"
   },
   "videoPlayer": {
     "exitFullscreen": "Exit fullscreen",

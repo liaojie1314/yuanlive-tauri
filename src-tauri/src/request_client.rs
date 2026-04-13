@@ -560,6 +560,7 @@ pub enum Url {
     GetSearchResult,
     GetHotSearch,
     GetRecommendSearch,
+    ApplyAnchor,
     GetLiveCategory,
     GetTopFiveLive,
     GetLiveListByCategory,
@@ -596,7 +597,7 @@ impl Url {
         match self {
             Url::Register => (http::Method::POST, "user/auth/register"),
             Url::Login => (http::Method::POST, "user/auth/login"),
-            Url::RefreshToken => (http::Method::POST, "user/user/refreshToken"),
+            Url::RefreshToken => (http::Method::POST, "user/auth/refreshToken"),
             Url::Logout => (http::Method::POST, "user/auth/logout"),
             Url::ForgetPassword => (http::Method::POST, "user/auth/forgetPassword"),
             Url::GetCode => (http::Method::POST, "user/auth/getCode"),
@@ -608,6 +609,7 @@ impl Url {
             Url::GetSearchResult => (http::Method::POST, "user/user/search"),
             Url::GetHotSearch => (http::Method::GET, "user/user/hotSearch"),
             Url::GetRecommendSearch => (http::Method::GET, "user/user/recommend"),
+            Url::ApplyAnchor => (http::Method::POST, "user/user/applyAnchor"),
             // 直播相关
             Url::GetTopFiveLive => (http::Method::GET, "live/room/popularRooms"),
             Url::GetLiveCategory => (http::Method::GET, "live/category/tree"),
@@ -667,6 +669,7 @@ impl Url {
             "getSearchResult" => Ok(Url::GetSearchResult),
             "getHotSearch" => Ok(Url::GetHotSearch),
             "getRecommendSearch" => Ok(Url::GetRecommendSearch),
+            "applyAnchor" => Ok(Url::ApplyAnchor),
             // 直播相关
             "getTopFiveLive" => Ok(Url::GetTopFiveLive),
             "getLiveCategory" => Ok(Url::GetLiveCategory),

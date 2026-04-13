@@ -69,7 +69,7 @@
     <!-- 自动登录 -->
     <n-flex v-else-if="uiState === 'auto'" vertical data-tauri-drag-region :size="29">
       <n-flex justify="center" class="mt-15px">
-        <img src="/logo.webp" alt="" class="w-140px h-60px" />
+        <img src="/logo.webp" alt="" class="size-15" />
       </n-flex>
       <n-flex vertical :size="30">
         <!-- 头像 -->
