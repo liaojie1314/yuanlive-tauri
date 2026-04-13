@@ -48,7 +48,8 @@
 
       <div
         ref="scrollContainer"
-        class="flex-1 overflow-y-auto overflow-x-hidden px-4 flex flex-col items-center bg-[var(--bg-popover)] relative transition-colors duration-300">
+        class="flex-1 overflow-y-auto overflow-x-hidden px-4 flex flex-col items-center bg-[var(--bg-popover)] relative transition-colors duration-300"
+        @scroll="handleScroll">
         <div v-if="loading" class="absolute inset-0 flex flex-col items-center justify-center z-10">
           <n-spin size="large" />
           <div class="mt-4 text-[var(--user-text-color)]">{{ t("plugins.reader.loading") }}</div>
@@ -114,9 +115,15 @@ interface ComicBook {
   cover: string;
   chapters: Chapter[];
 }
+interface ReadingProgress {
+  chapterIndex: number;
+  scrollTop: number;
+}
 
 const comicPath = route.query.path as string;
 const comicSource = (route.query.source as string) || "local";
+const PROGRESS_KEY = "comic-reading-progress";
+let scrollTimeout: ReturnType<typeof setTimeout> | null = null;
 
 const loading = ref(true);
 const scrollContainer = ref<HTMLElement | null>(null);
@@ -134,6 +141,58 @@ const currentPages = computed(() => {
   // 如果是本地，才转换
   return chapter.pages.map((path) => convertFileSrc(path));
 });
+
+/** 保存当前阅读进度 */
+const saveProgress = () => {
+  if (!scrollContainer.value || !comicPath) return;
+  try {
+    // 读取旧账本
+    const cache = JSON.parse(localStorage.getItem(PROGRESS_KEY) || "{}");
+    // 更新当前这本漫画的进度
+    cache[comicPath] = {
+      chapterIndex: currentChapterIndex.value,
+      scrollTop: scrollContainer.value.scrollTop
+    };
+    // 写回本地
+    localStorage.setItem(PROGRESS_KEY, JSON.stringify(cache));
+  } catch (e) {
+    console.error("保存进度失败", e);
+  }
+};
+
+/** 处理滚动事件 */
+const handleScroll = () => {
+  if (scrollTimeout) clearTimeout(scrollTimeout);
+  // 用户停止滚动 500ms 后才执行保存，极其丝滑
+  scrollTimeout = setTimeout(() => {
+    saveProgress();
+  }, 500);
+};
+
+/**
+ * 静默预加载图片列表
+ * @param urls 图片链接数组
+ * @param concurrency 并发数量（默认3张，避免瞬间占用过多带宽导致当前正在看的图片卡顿）
+ */
+const preloadImages = (urls: string[], concurrency: number = 3) => {
+  if (!urls || urls.length === 0) return;
+  let currentIndex = 0;
+  // 执行单张图片的加载
+  const loadNext = () => {
+    if (currentIndex >= urls.length) return; // 全部加载完毕
+    const url = urls[currentIndex++];
+    const img = new Image();
+    // 加载成功或失败后，继续加载下一张，形成队列
+    img.onload = loadNext;
+    img.onerror = loadNext;
+    // 赋值 src 触发浏览器后台静默下载
+    img.src = url;
+  };
+  // 启动指定数量的并发加载线
+  for (let i = 0; i < Math.min(concurrency, urls.length); i++) {
+    loadNext();
+  }
+};
 
 /**
  * 加载章节内的具体图片
@@ -154,20 +213,52 @@ const loadChapterContent = async (index: number) => {
       loading.value = false;
     }
   }
+  let urlsToPreload: string[] = [];
+  if (comicSource === "local") {
+    // 本地漫画需要转换路径
+    urlsToPreload = chapter.pages.map((path) => convertFileSrc(path));
+  } else {
+    // 在线漫画直接是 URL
+    urlsToPreload = chapter.pages || [];
+  }
+  // 延迟 500ms 执行，优先保证前台的第一、第二张图片能够第一时间被 n-image 渲染和加载
+  setTimeout(() => {
+    preloadImages(urlsToPreload, 3); // 开启 3 个并发线程悄悄下载
+  }, 500);
+
+  setTimeout(() => {
+    preloadImages(urlsToPreload, 3);
+
+    // 预读下一章 (仅限本地漫画或已经抓过在线目录的)
+    const nextIndex = index + 1;
+    if (comicData.value && nextIndex < comicData.value.chapters.length) {
+      const nextChapter = comicData.value.chapters[nextIndex];
+      // 如果本地漫画有下一章的路径，就提前预读下一章的前 2 张图
+      if (comicSource === "local" && nextChapter.pages) {
+        const nextUrls = nextChapter.pages.slice(0, 2).map((p) => convertFileSrc(p));
+        preloadImages(nextUrls, 1); // 用 1 个极低优先级的线程慢慢下
+      }
+    }
+  }, 500);
 };
 
 /**
  * 切换章节
  * @param index 章节索引
+ * @param resetScroll 是否需要回到顶部 (默认 true，读取进度时传 false)
  */
-const selectChapter = async (index: number) => {
+const selectChapter = async (index: number, resetScroll: boolean = true) => {
   await loadChapterContent(index);
   currentChapterIndex.value = index;
-  // 切换章节后滚动条回到顶部
+
   await nextTick();
   if (scrollContainer.value) {
-    scrollContainer.value.scrollTop = 0;
+    if (resetScroll) {
+      scrollContainer.value.scrollTop = 0;
+    }
   }
+  // 手动切章后，立刻保存一次进度
+  saveProgress();
 };
 
 onMounted(async () => {
@@ -180,6 +271,7 @@ onMounted(async () => {
   }
 
   try {
+    // 获取目录数据
     if (comicSource === "local") {
       const res: ComicBook = await invoke(TauriCommandEnum.PARSE_COMIC_DIRECTORY, {
         rootPath: comicPath
@@ -188,8 +280,25 @@ onMounted(async () => {
     } else if (comicSource === "baozi") {
       const res: ComicBook = await parseBaoziComic(comicPath);
       comicData.value = res;
-      if (comicData.value.chapters.length > 0) {
-        await loadChapterContent(0);
+    }
+    // 读取进度并跳转
+    if (comicData.value && comicData.value.chapters.length > 0) {
+      // 查账本
+      const cache = JSON.parse(localStorage.getItem(PROGRESS_KEY) || "{}");
+      const progress: ReadingProgress | undefined = cache[comicPath];
+      if (progress && progress.chapterIndex < comicData.value.chapters.length) {
+        // 发现历史进度！加载那个章节，并且不重置滚动条
+        await selectChapter(progress.chapterIndex, false);
+        // 延迟一点点时间，等图片 DOM 撑开高度后，再恢复滚动条位置
+        setTimeout(() => {
+          if (scrollContainer.value) {
+            scrollContainer.value.scrollTop = progress.scrollTop || 0;
+          }
+        }, 150);
+        window.$message?.success(t("plugins.reader.msg.restoreSuccess", { index: progress.chapterIndex + 1 }));
+      } else {
+        // 没看过这本，默认加载第 0 章
+        await selectChapter(0);
       }
     }
   } catch (err) {

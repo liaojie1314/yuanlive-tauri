@@ -55,7 +55,8 @@
       "collectSuccess": "Successfully collected to local comic library",
       "collectExist": "Comic already exists in your library",
       "getChapterError": "Failed to get chapter image",
-      "noPathError": "Failed to load comic path parameter"
+      "noPathError": "Failed to load comic path parameter",
+      "restoreSuccess": "Restored to chapter {index}"
     }
   }
 }

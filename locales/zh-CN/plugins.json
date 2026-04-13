@@ -55,7 +55,8 @@
       "collectSuccess": "已成功收藏到本地漫画书架",
       "collectExist": "该漫画已在书架中",
       "getChapterError": "获取该章节图片失败",
-      "noPathError": "未获取到漫画路径参数，加载失败"
+      "noPathError": "未获取到漫画路径参数，加载失败",
+      "restoreSuccess": "已恢复到第 {index} 章"
     }
   }
 }
